@@ -89,7 +89,7 @@ export default function Admin() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [commandOpen,setCommandOpen]=useState(false);
   const [commandQuery,setCommandQuery]=useState('');
-  const [navGroupsOpen,setNavGroupsOpen]=useState<Record<string,boolean>>({core:true,customers:false,people:false,field:false,money:false,operations:false,system:false});
+  const [activeWorkspace,setActiveWorkspace]=useState<string>('home');
 
   const [customers, setCustomers] = useState<Profile[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -123,6 +123,11 @@ const [availabilityForm, setAvailabilityForm] = useState({
     else url.searchParams.set('view', tab);
     window.history.replaceState({}, '', url);
   }, [tab]);
+
+  useEffect(()=>{
+    const ws=workspaceForTab(tab);
+    if(ws?.id!==activeWorkspace)setActiveWorkspace(ws.id);
+  },[tab]);
 
   useEffect(()=>{
     const handler=(e:KeyboardEvent)=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();setCommandOpen(true)}};
@@ -366,15 +371,17 @@ const handleDeleteAvailability = async (id: string) => {
     { id: 'visitors' as AdminTab, label: 'Site Visitors', Icon: Globe },
   ];
 
-  const navGroups = [
-    {id:'core',label:'Overview',items:['dashboard','command_center']},
-    {id:'customers',label:'Customers & Booking',items:['customers','crm','appointments','schedule','availability','archived','job_assignments','dispatch','fleet']},
-    {id:'people',label:'People & Workforce',items:['recruiting','employees','crews','messages','staff_schedule','timeclock','time_off','payroll_approval','training']},
-    {id:'field',label:'Field Sales & Territories',items:['sales','leads','territories']},
-    {id:'money',label:'Finance & Growth',items:['finance','reports','pay_settings','payments','marketing','retention']},
-    {id:'operations',label:'Operations',items:['inventory','equipment','tasks','documents','notifications','purchasing','incidents','approvals']},
-    {id:'system',label:'System & Security',items:['permissions','communications','automations','locations','continuity','audit','visitors']},
+  const workspaces = [
+    {id:'home',label:'Home',Icon:LayoutDashboard,items:['dashboard','command_center'] as AdminTab[]},
+    {id:'sales',label:'Sales',Icon:Target,items:['sales','leads','territories','marketing','retention'] as AdminTab[]},
+    {id:'customers',label:'Customers',Icon:Users,items:['customers','crm','appointments','schedule','availability','archived','fleet'] as AdminTab[]},
+    {id:'operations',label:'Operations',Icon:ListChecks,items:['dispatch','job_assignments','inventory','equipment','tasks','documents','notifications','purchasing','incidents','approvals'] as AdminTab[]},
+    {id:'people',label:'People',Icon:UserCheck,items:['employees','crews','recruiting','messages','staff_schedule','timeclock','time_off','payroll_approval','training'] as AdminTab[]},
+    {id:'finance',label:'Finance',Icon:DollarSign,items:['finance','payments','reports','pay_settings'] as AdminTab[]},
+    {id:'admin',label:'Admin',Icon:Settings2,items:['permissions','communications','automations','locations','continuity','audit','visitors'] as AdminTab[]},
   ];
+  const workspaceForTab=(id:AdminTab)=>workspaces.find(w=>w.items.includes(id))??workspaces[0];
+  const currentWorkspace=workspaceForTab(tab);
 
   // Monthly cashflow chart data (last 6 months)
   const cashflowData = (() => {
@@ -409,8 +416,18 @@ const handleDeleteAvailability = async (id: string) => {
           <div><p>{profile?.full_name ?? 'Admin'}</p><span>Administrator</span></div>
         </div>
 
-        <nav className="sidebar-nav grouped-sidebar">
-          {navGroups.map(g=><div className="nav-group" key={g.id}><button className="nav-group-title" onClick={()=>setNavGroupsOpen(p=>Object.fromEntries(navGroups.map(x=>[x.id,x.id===g.id?!p[g.id]:false])))}><span>{g.label}</span><ChevronUp size={14} className={navGroupsOpen[g.id]?'':'nav-chevron-closed'}/></button>{navGroupsOpen[g.id]&&g.items.map(id=>{const item=navItems.find(n=>n.id===id);if(!item)return null;const {label,Icon}=item;return <button key={id} className={`sidebar-item ${tab===id?'sidebar-active':''}`} onClick={()=>{setTab(id as AdminTab);setSidebarOpen(false)}}><Icon size={18}/>{label}</button>})}</div>)}
+        <nav className="sidebar-nav os-workspace-nav">
+          <div className="os-sidebar-section-label">WORKSPACES</div>
+          {workspaces.map(w=>{
+            const active=currentWorkspace.id===w.id;
+            return <button key={w.id} className={`os-workspace-button ${active?'active':''}`} onClick={()=>{setActiveWorkspace(w.id);setTab(w.items[0]);setSidebarOpen(false)}}>
+              <span className="os-workspace-icon"><w.Icon size={18}/></span>
+              <span>{w.label}</span>
+              <small>{w.items.length}</small>
+            </button>
+          })}
+          <div className="os-sidebar-section-label os-sidebar-section-gap">PINNED</div>
+          {(['command_center','appointments','leads'] as AdminTab[]).map(id=>{const item=navItems.find(n=>n.id===id);if(!item)return null;const {Icon,label}=item;return <button key={id} className={`os-pinned-link ${tab===id?'active':''}`} onClick={()=>{setTab(id);setSidebarOpen(false)}}><Icon size={16}/><span>{label}</span></button>})}
         </nav>
 
         <div className="sidebar-footer">
@@ -425,11 +442,17 @@ const handleDeleteAvailability = async (id: string) => {
       <main className="portal-main">
         <div className="portal-topbar">
           <button className="sidebar-toggle" onClick={() => setSidebarOpen(true)}><Menu size={20} /></button>
-          <div className="topbar-title"><h1>{navItems.find(n => n.id === tab)?.label}</h1></div>
+          <div className="topbar-title"><span>{currentWorkspace.label}</span><h1>{navItems.find(n => n.id === tab)?.label}</h1></div>
           <div className="os-topbar-actions">
             <button className="os-command-trigger" onClick={()=>setCommandOpen(true)}><Search size={16}/><span>Search workspace</span><kbd>⌘ K</kbd></button>
             <button className="btn-primary btn-sm" onClick={()=>setTab('appointments')}><Plus size={15}/> New work</button>
           </div>
+        </div>
+        <div className="os-secondary-nav">
+          <div className="os-secondary-nav-scroll">
+            {currentWorkspace.items.map(id=>{const item=navItems.find(n=>n.id===id);if(!item)return null;return <button key={id} className={tab===id?'active':''} onClick={()=>setTab(id)}>{item.label}</button>})}
+          </div>
+          <div className="os-view-context"><span className="os-live-dot"/>Live workspace</div>
         </div>
         {commandOpen&&<div className="os-command-backdrop" onClick={()=>setCommandOpen(false)}><div className="os-command-palette" onClick={e=>e.stopPropagation()}>
           <div className="os-command-input"><Search size={18}/><input autoFocus placeholder="Search pages, customers, appointments or employees…" value={commandQuery} onChange={e=>setCommandQuery(e.target.value)}/><button onClick={()=>setCommandOpen(false)}>ESC</button></div>
