@@ -82,7 +82,10 @@ export default function Admin() {
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
   const siteUrl=(import.meta.env.VITE_SITE_URL||'https://www.northsplash.com').replace(/\/$/,'');
-  const [tab, setTab] = useState<AdminTab>('dashboard');
+  const [tab, setTab] = useState<AdminTab>(() => {
+    const initial = new URLSearchParams(window.location.search).get('view');
+    return (initial || 'dashboard') as AdminTab;
+  });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [commandOpen,setCommandOpen]=useState(false);
   const [commandQuery,setCommandQuery]=useState('');
@@ -113,6 +116,13 @@ const [availabilityForm, setAvailabilityForm] = useState({
       navigate('/portal');
     }
   }, [user, profile, loading, navigate]);
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (tab === 'dashboard') url.searchParams.delete('view');
+    else url.searchParams.set('view', tab);
+    window.history.replaceState({}, '', url);
+  }, [tab]);
 
   useEffect(()=>{
     const handler=(e:KeyboardEvent)=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();setCommandOpen(true)}};

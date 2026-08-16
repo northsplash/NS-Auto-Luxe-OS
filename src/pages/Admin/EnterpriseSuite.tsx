@@ -211,10 +211,12 @@ export default function EnterpriseSuite({ section, employees, setEmployees, appo
   const importTerritoryHouses = async (territory: LeadTerritory) => {
     const ring=(territory.polygon_geojson as any)?.coordinates?.[0]; if(!ring?.length)return alert('Draw a polygon territory first.');
     try {
-      const poly=ring.slice(0,-1).map((p:number[])=>`${p[1]} ${p[0]}`).join(' ');
-      const q=`[out:json][timeout:25];(way[building](poly:"${poly}");node[addr:housenumber](poly:"${poly}"););out center tags;`;
-      const r=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'data='+encodeURIComponent(q)}); if(!r.ok)throw new Error('OpenStreetMap house lookup failed'); const json=await r.json();
-      const rows=(json.elements||[]).map((x:any)=>{const lat=x.lat??x.center?.lat,lng=x.lon??x.center?.lon;if(lat==null||lng==null)return null;const t=x.tags||{};const address=[t['addr:housenumber'],t['addr:street']].filter(Boolean).join(' ')||null;return {territory_id:territory.id,address,latitude:lat,longitude:lng,status:'unworked',source:'openstreetmap'}}).filter(Boolean).slice(0,1200);
+      const points=ring.slice(0,-1).map((p:number[])=>[Number(p[1]),Number(p[0])] as [number,number]);
+      const lats=points.map((p:[number,number])=>p[0]),lngs=points.map((p:[number,number])=>p[1]);
+      const {data:houseData,error:houseError}=await supabase.functions.invoke('territory-house-search',{body:{south:Math.min(...lats),west:Math.min(...lngs),north:Math.max(...lats),east:Math.max(...lngs),points}});
+      if(houseError)throw houseError;
+      if(!houseData?.success)throw new Error(houseData?.error||'House discovery is temporarily unavailable.');
+      const rows=(houseData.elements||[]).map((x:any)=>{const lat=x.lat??x.center?.lat,lng=x.lon??x.center?.lon;if(lat==null||lng==null)return null;const t=x.tags||{};const address=[t['addr:housenumber'],t['addr:street']].filter(Boolean).join(' ')||null;return {territory_id:territory.id,address,latitude:lat,longitude:lng,status:'unworked',source:'openstreetmap'}}).filter(Boolean).slice(0,1200);
       if(!rows.length)return alert('No mapped houses were returned for this territory. You can still add doors manually.');
       const {error}=await supabase.from('territory_doors').upsert(rows,{onConflict:'territory_id,latitude,longitude',ignoreDuplicates:true}); if(error)throw error; alert(`${rows.length} mapped houses loaded. D2D reps can now tap them.`); await audit('territory.houses_imported','territory',territory.id,{count:rows.length});
     } catch(err){alert(err instanceof Error?err.message:'Could not load houses');}

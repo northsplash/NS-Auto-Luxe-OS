@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { signIn, signUp } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
@@ -8,7 +8,9 @@ import { portalPath } from '@/lib/permissions';
 const SITE_URL=(import.meta.env.VITE_SITE_URL||'https://www.northsplash.com').replace(/\/$/,'');
 
 export default function Login() {
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
+  const [searchParams] = useSearchParams();
+  const siteUrl = (import.meta.env.VITE_SITE_URL || 'https://www.northsplash.com').replace(/\/$/, '');
+  const [mode, setMode] = useState<'signin' | 'signup'>(() => searchParams.get('mode') === 'signup' ? 'signup' : 'signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -25,6 +27,7 @@ export default function Login() {
     try {
       if (mode === 'signin') {
   const data = await signIn(email, password);
+  await supabase.functions.invoke('claim-customer-history').catch(() => null);
 
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
@@ -41,7 +44,8 @@ export default function Login() {
 
   navigate(destination);
 } else {
-        await signUp(email, password, name, phone);
+        const created = await signUp(email, password, name, phone);
+        if (created.session) await supabase.functions.invoke('claim-customer-history').catch(() => null);
         navigate('/portal');
       }
     } catch (err: any) {

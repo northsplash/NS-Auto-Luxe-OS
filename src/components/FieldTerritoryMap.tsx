@@ -254,12 +254,16 @@ export default function FieldTerritoryMap({
       const status = door.do_not_knock ? doorStatus('do_not_knock') : doorStatus(door.status || 'unworked');
       const selected = activeDoorId && door.id === activeDoorId;
       const routeIndex = door.id ? routeMap.get(door.id) : undefined;
-      const marker = L.circleMarker([Number(door.latitude), Number(door.longitude)], {
-        radius: selected ? 11 : routeIndex ? 9 : 7,
-        color: selected ? '#fff' : status.color,
-        fillColor: status.color,
-        fillOpacity: 1,
-        weight: selected ? 4 : 2,
+      const marker = L.marker([Number(door.latitude), Number(door.longitude)], {
+        keyboard: false,
+        riseOnHover: true,
+        icon: L.divIcon({
+          className: 'ns-door-marker-wrap',
+          html: `<span class="ns-door-marker ${selected ? 'selected' : ''}" style="--door-color:${status.color}"><span class="ns-door-roof"></span><span class="ns-door-body">${routeIndex ? `<b>${routeIndex}</b>` : '<i></i>'}</span></span>`,
+          iconSize: [30, 34],
+          iconAnchor: [15, 31],
+          popupAnchor: [0, -29],
+        }),
       });
       marker.on('click', (e: any) => { L.DomEvent.stopPropagation(e); onDoorClickRef.current?.(door); });
       const address = door.address || 'House';

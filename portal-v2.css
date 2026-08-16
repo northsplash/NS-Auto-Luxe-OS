@@ -193,3 +193,97 @@ input,select,textarea{font-family:inherit}.phase-panel input,.phase-panel select
 input,select,textarea{border-radius:9px!important;border:1px solid #d9cec3!important;background:#fff!important;min-height:40px;padding:9px 11px!important}.btn-primary{border-radius:9px!important}.data-table{overflow:hidden;border:1px solid var(--os-line);border-radius:12px}.data-table-head{background:#f4efe9!important;color:#6d6258!important;font-size:11px;letter-spacing:.08em;text-transform:uppercase}.data-table-row{background:#fff!important;border-top:1px solid #eee5dc!important}.data-table-row:hover{background:#fbf7f2!important}.guest-customer-row{background:#fffcf3!important}
 .os-command-backdrop{position:fixed;inset:0;background:rgba(18,13,9,.38);backdrop-filter:blur(4px);z-index:1000;display:grid;place-items:start center;padding-top:9vh}.os-command-palette{width:min(720px,calc(100vw - 28px));background:#fff;border:1px solid var(--os-line);border-radius:18px;box-shadow:0 28px 80px rgba(0,0,0,.2);overflow:hidden}.os-command-input{display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid var(--os-line)}.os-command-input input{flex:1;border:0!important;outline:0;box-shadow:none!important;font-size:16px}.os-command-input button{border:0;background:var(--os-soft);border-radius:7px;padding:6px 8px;font-size:10px;font-weight:800}.os-command-results{padding:8px;max-height:60vh;overflow:auto}.os-command-results>button{width:100%;display:grid;grid-template-columns:24px 1fr auto;align-items:center;gap:9px;text-align:left;border:0;background:transparent;border-radius:10px;padding:10px 11px}.os-command-results>button:hover{background:var(--os-soft)}.os-command-results small{color:var(--os-muted)}
 @media(max-width:760px){.portal-content{padding:18px 14px 40px}.portal-topbar{padding:0 14px}.os-command-trigger{min-width:40px;width:40px}.os-command-trigger span,.os-command-trigger kbd{display:none}.os-topbar-actions .btn-primary span{display:none}}
+
+
+/* =========================================================
+   NORTH SPLASH OS V6 — CRM WORKSPACE SYSTEM
+   ========================================================= */
+:root{
+  --ns-bg:#f5f2ed;
+  --ns-surface:#fffdf9;
+  --ns-surface-2:#f8f5f0;
+  --ns-ink:#17120f;
+  --ns-muted:#766d65;
+  --ns-line:#e6ddd3;
+  --ns-accent:#9d7651;
+  --ns-accent-soft:#eee4d9;
+  --ns-shadow:0 10px 28px rgba(45,32,23,.075);
+}
+.portal-layout{background:var(--ns-bg);}
+.portal-main{background:var(--ns-bg);color:var(--ns-ink);}
+.portal-main>.portal-topbar{background:rgba(255,253,249,.94);backdrop-filter:blur(18px);border-bottom:1px solid var(--ns-line);}
+.portal-content,.tab-content{max-width:1540px;margin-inline:auto;}
+.tab-header,.phase300-header{padding:8px 0 18px;border-bottom:1px solid var(--ns-line);margin-bottom:20px;}
+.tab-header h2,.phase300-header h2{font-size:clamp(26px,2.2vw,38px);letter-spacing:-.035em;line-height:1.02;}
+.tab-header p,.phase300-header p{color:var(--ns-muted);max-width:720px;}
+.phase-panel,.admin-card,.enterprise-card,.business-card,.operations-card,.crm-customer-detail,.lead-map-card,.territory-command-map,.territory-analytics-card,.crew-card{
+  background:var(--ns-surface)!important;
+  border:1px solid var(--ns-line)!important;
+  box-shadow:var(--ns-shadow)!important;
+  color:var(--ns-ink)!important;
+}
+.phase-panel.caramel,.caramel{background:var(--ns-surface)!important;color:var(--ns-ink)!important;}
+.phase-panel.caramel .eyebrow,.caramel .eyebrow{color:var(--ns-accent)!important;}
+.portal-main input,.portal-main select,.portal-main textarea{
+  background:#fff!important;border:1px solid #d9cec2!important;border-radius:10px!important;color:var(--ns-ink)!important;
+  min-height:42px;padding:10px 12px!important;box-shadow:0 1px 0 rgba(30,20,15,.02);
+}
+.portal-main textarea{min-height:92px;}
+.portal-main label{color:#4e463f;font-weight:700;font-size:12px;letter-spacing:.01em;}
+.btn-primary{border-radius:10px!important;min-height:40px;padding:10px 16px!important;box-shadow:0 6px 16px rgba(20,14,10,.14);}
+.btn-outline{background:#fffdf9!important;border:1px solid #d8ccbf!important;color:#241b15!important;border-radius:10px!important;min-height:40px;}
+.btn-outline:hover{border-color:var(--ns-accent)!important;background:var(--ns-accent-soft)!important;}
+.phase-kpi-row{gap:12px!important;}
+.phase-kpi,.admin-stat{background:var(--ns-surface)!important;border:1px solid var(--ns-line)!important;border-radius:14px!important;box-shadow:0 5px 18px rgba(45,32,23,.05)!important;}
+.phase-kpi strong,.admin-stat>strong{letter-spacing:-.035em;}
+.segmented-control{background:#ede7df!important;padding:4px!important;border-radius:11px!important;border:1px solid #e1d7cc!important;}
+.segmented-control button{border-radius:8px!important;color:#6c625a!important;}
+.segmented-control button.active{background:#fff!important;color:#17120f!important;box-shadow:0 2px 7px rgba(25,16,10,.1)!important;}
+.admin-table,.lead-command-table{border:1px solid var(--ns-line)!important;border-radius:14px!important;overflow:hidden;background:var(--ns-surface)!important;}
+.admin-table thead,.lead-command-head{background:#f3eee8!important;color:#62584f!important;}
+.admin-table tr:hover,.lead-command-row:hover{background:#faf6f1!important;}
+.portal-sidebar{box-shadow:12px 0 30px rgba(10,7,5,.08);}
+.portal-sidebar .nav-item,.portal-sidebar button{transition:background .16s ease,color .16s ease,transform .16s ease;}
+.portal-sidebar .nav-item:hover{transform:translateX(2px);}
+.portal-sidebar .nav-item.active{box-shadow:inset 3px 0 0 #c69a6a;background:linear-gradient(90deg,rgba(157,118,81,.30),rgba(157,118,81,.12))!important;}
+.search-control,.workspace-search{background:#fff!important;border:1px solid var(--ns-line)!important;border-radius:11px!important;}
+.territory-command-layout{align-items:start;}
+.territory-command-panel{position:sticky;top:74px;}
+.territory-command-panel .phase-panel{padding:18px!important;}
+.territory-selection-summary>div{background:#f7f2ec!important;border:1px solid #e6dbcf!important;}
+.admin-lead-kanban{gap:12px!important;align-items:start;}
+.admin-lead-kanban>section{background:#f1ece6!important;border:1px solid #e3d9ce!important;border-radius:14px!important;padding:10px!important;min-width:260px;}
+.admin-lead-kanban>section>header{padding:5px 4px 10px;}
+.admin-lead-kanban>section>div>button{background:#fff!important;border:1px solid #e5ddd4!important;box-shadow:0 3px 12px rgba(44,31,22,.05)!important;border-radius:11px!important;}
+.crm-command{gap:14px!important;}
+.crm-customer-list{background:#fffdf9!important;border:1px solid var(--ns-line)!important;border-radius:14px!important;padding:10px!important;box-shadow:var(--ns-shadow)!important;}
+.crm-customer-list>button{border-radius:10px!important;}
+.crm-customer-list>button.selected{background:var(--ns-accent-soft)!important;}
+.comm-log-row{background:#fff!important;border-bottom:1px solid #eee6de!important;}
+.empty-inspector{background:linear-gradient(180deg,#fffdf9,#f7f2ec)!important;border:1px dashed #dacdbf!important;border-radius:16px!important;}
+
+/* D2D map markers — compact, house-first interaction */
+.ns-door-marker-wrap{background:transparent!important;border:0!important;}
+.ns-door-marker{--door-color:#9d7651;display:block;position:relative;width:30px;height:34px;filter:drop-shadow(0 4px 4px rgba(22,14,9,.25));transform-origin:50% 90%;transition:transform .14s ease,filter .14s ease;}
+.ns-door-marker:hover{transform:translateY(-3px) scale(1.09);filter:drop-shadow(0 7px 6px rgba(22,14,9,.28));}
+.ns-door-marker.selected{transform:scale(1.18);filter:drop-shadow(0 0 0 rgba(0,0,0,0));}
+.ns-door-roof{position:absolute;left:5px;top:2px;width:20px;height:20px;background:var(--door-color);transform:rotate(45deg);border:2px solid #fff;border-radius:4px;}
+.ns-door-body{position:absolute;left:5px;top:11px;width:20px;height:19px;background:var(--door-color);border:2px solid #fff;border-top:0;border-radius:2px 2px 7px 7px;display:grid;place-items:center;color:#fff;font:800 10px/1 system-ui;}
+.ns-door-body:after{content:"";position:absolute;left:8px;bottom:3px;width:5px;height:8px;border-radius:1px;background:rgba(255,255,255,.92);}
+.ns-door-body i{width:5px;height:5px;border-radius:50%;background:#fff;box-shadow:0 0 0 2px rgba(255,255,255,.22);}
+.ns-door-marker.selected .ns-door-roof,.ns-door-marker.selected .ns-door-body{box-shadow:0 0 0 3px #17120f;}
+.ns-house-tooltip{border:0!important;border-radius:9px!important;box-shadow:0 8px 24px rgba(20,12,8,.18)!important;font-weight:700!important;}
+
+/* CRM-like record and board density */
+@media (min-width:1100px){
+  .portal-content,.tab-content{padding-left:28px!important;padding-right:28px!important;}
+  .phase-kpi-row{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))!important;}
+}
+@media (max-width:760px){
+  .portal-content,.tab-content{padding:14px!important;}
+  .tab-header,.phase300-header{margin-bottom:14px;}
+  .territory-command-panel{position:static;}
+  .phase-kpi-row{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+  .admin-lead-kanban{display:flex!important;overflow-x:auto!important;scroll-snap-type:x mandatory;padding-bottom:8px;}
+  .admin-lead-kanban>section{scroll-snap-align:start;min-width:84vw;}
+}
