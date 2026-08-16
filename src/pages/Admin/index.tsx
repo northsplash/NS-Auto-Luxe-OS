@@ -19,6 +19,7 @@ import EnterpriseSuite, { EnterpriseSection } from './EnterpriseSuite';
 import OperationsExpansion, { ExpansionSection } from './OperationsExpansion';
 import Phase300Suite from './Phase300Suite';
 import TeamMessaging from '@/components/TeamMessaging';
+import AdminDataManager from '@/components/AdminDataManager';
 
 type AdminTab =
   | 'dashboard'
@@ -89,6 +90,7 @@ export default function Admin() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [commandOpen,setCommandOpen]=useState(false);
   const [commandQuery,setCommandQuery]=useState('');
+  const [dataManagerOpen,setDataManagerOpen]=useState(false);
 
   const [customers, setCustomers] = useState<Profile[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -439,6 +441,7 @@ const handleDeleteAvailability = async (id: string) => {
           <div className="topbar-title"><span>{currentWorkspace.label}</span><h1>{navItems.find(n => n.id === tab)?.label}</h1></div>
           <div className="os-topbar-actions">
             <button className="os-command-trigger" onClick={()=>setCommandOpen(true)}><Search size={16}/><span>Search workspace</span><kbd>⌘ K</kbd></button>
+            <button className="btn-outline btn-sm os-manage-data" onClick={()=>setDataManagerOpen(true)}><Trash2 size={15}/> Manage data</button>
             <button className="btn-primary btn-sm" onClick={()=>setTab('appointments')}><Plus size={15}/> New work</button>
           </div>
         </div>
@@ -456,6 +459,8 @@ const handleDeleteAvailability = async (id: string) => {
             {employees.filter(e=>[e.name,e.email,e.role].filter(Boolean).join(' ').toLowerCase().includes(commandQuery.toLowerCase())).slice(0,5).map(e=><button key={e.id} onClick={()=>{setTab('employees');setCommandOpen(false)}}><UserCheck size={16}/><span>{e.name}</span><small>{e.role}</small></button>)}
           </div>
         </div></div>}
+
+        {dataManagerOpen&&<AdminDataManager section={tab} label={navItems.find(n=>n.id===tab)?.label||'Workspace'} onClose={()=>setDataManagerOpen(false)}/>}
 
         <div className="portal-content">
 
