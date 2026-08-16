@@ -89,7 +89,6 @@ export default function Admin() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [commandOpen,setCommandOpen]=useState(false);
   const [commandQuery,setCommandQuery]=useState('');
-  const [activeWorkspace,setActiveWorkspace]=useState<string>('home');
 
   const [customers, setCustomers] = useState<Profile[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -123,11 +122,6 @@ const [availabilityForm, setAvailabilityForm] = useState({
     else url.searchParams.set('view', tab);
     window.history.replaceState({}, '', url);
   }, [tab]);
-
-  useEffect(()=>{
-    const ws=workspaceForTab(tab);
-    if(ws?.id!==activeWorkspace)setActiveWorkspace(ws.id);
-  },[tab]);
 
   useEffect(()=>{
     const handler=(e:KeyboardEvent)=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();setCommandOpen(true)}};
@@ -420,7 +414,7 @@ const handleDeleteAvailability = async (id: string) => {
           <div className="os-sidebar-section-label">WORKSPACES</div>
           {workspaces.map(w=>{
             const active=currentWorkspace.id===w.id;
-            return <button key={w.id} className={`os-workspace-button ${active?'active':''}`} onClick={()=>{setActiveWorkspace(w.id);setTab(w.items[0]);setSidebarOpen(false)}}>
+            return <button key={w.id} className={`os-workspace-button ${active?'active':''}`} onClick={()=>{setTab(w.items[0]);setSidebarOpen(false)}}>
               <span className="os-workspace-icon"><w.Icon size={18}/></span>
               <span>{w.label}</span>
               <small>{w.items.length}</small>
