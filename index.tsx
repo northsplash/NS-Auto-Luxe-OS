@@ -853,8 +853,8 @@ const handleDeleteAvailability = async (id: string) => {
     <form
       onSubmit={handleSaveAvailability}
       style={{
-        background: '#111',
-        border: '1px solid #2a2a2a',
+        background: '#fffdfa',
+        border: '1px solid #e4d9cf',
         borderRadius: '14px',
         padding: '24px',
         marginBottom: '30px',
@@ -967,8 +967,8 @@ const handleDeleteAvailability = async (id: string) => {
 
     <div
       style={{
-        background: '#111',
-        border: '1px solid #2a2a2a',
+        background: '#fffdfa',
+        border: '1px solid #e4d9cf',
         borderRadius: '14px',
         padding: '24px',
       }}
@@ -985,7 +985,7 @@ const handleDeleteAvailability = async (id: string) => {
             <div
               key={item.id}
               style={{
-                border: '1px solid #292929',
+                border: '1px solid #e7ddd4',
                 borderRadius: '10px',
                 padding: '16px',
                 display: 'flex',
@@ -1009,7 +1009,7 @@ const handleDeleteAvailability = async (id: string) => {
 
                 <div
                   style={{
-                    color: '#999',
+                    color: '#7d7065',
                     marginTop: '5px',
                   }}
                 >

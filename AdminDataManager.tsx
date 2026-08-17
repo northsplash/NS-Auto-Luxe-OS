@@ -86,9 +86,14 @@ export default function AdminDataManager({section,label,onClose}:{section:DataMa
     if(!active)return;
     setLoading(true);setError('');setSelected(new Set());
     const {data,error}=await supabase.functions.invoke('admin-data-manager',{body:{action:'list',table:active,limit:250}});
-    if(error){setError(error.message);setRows([])}
-    else if(data?.error){setError(data.error);setRows([])}
-    else setRows(data?.rows||[]);
+    if(error||data?.error){
+      // Read-only fallback keeps the cleanup UI usable even before the Edge Function is redeployed.
+      let fallback=supabase.from(active).select('*').limit(250);
+      if(active==='profiles')fallback=fallback.eq('role','customer');
+      const result=await fallback;
+      if(result.error){setError(data?.error||error?.message||result.error.message);setRows([])}
+      else setRows((result.data||[]).sort((a:any,b:any)=>String(b.created_at||b.updated_at||'').localeCompare(String(a.created_at||a.updated_at||''))));
+    } else setRows(data?.rows||[]);
     setLoading(false);
   };
   useEffect(()=>{setActive(defs[0]?.table||'')},[section]);
@@ -107,7 +112,24 @@ export default function AdminDataManager({section,label,onClose}:{section:DataMa
     if(permanent&&ids.length>1){const typed=prompt(`Type ${phrase} to confirm bulk deletion.`);if(typed!==phrase)return;}
     setLoading(true);setError('');
     const {data,error}=await supabase.functions.invoke('admin-data-manager',{body:{action,table:def.table,ids}});
-    if(error)setError(error.message);else if(data?.error)setError(data.error);else{setChanged(true);await load()}
+    if(error||data?.error){
+      // Safe RLS-governed fallback for normal business tables. Auth profiles still require the admin Edge Function.
+      if(def.table==='profiles'){setError(data?.error||error?.message||'Admin data function is unavailable.')}
+      else{
+        let fallbackError:any=null;
+        if(action==='delete'){
+          const r=await supabase.from(def.table).delete().in('id',ids);fallbackError=r.error;
+        }else{
+          let patch:any={};
+          if(def.table==='lead_territories')patch={status:'inactive'};
+          if(def.table==='leads'){const cooldown=new Date();cooldown.setMonth(cooldown.getMonth()+6);patch={archived_at:new Date().toISOString(),archive_reason:'admin_archive',cooldown_until:cooldown.toISOString(),reactivation_status:'cooldown'};}
+          if(def.table==='automation_rules'||def.table==='communication_templates')patch={is_enabled:false};
+          const r=await supabase.from(def.table).update(patch).in('id',ids);fallbackError=r.error;
+        }
+        if(fallbackError)setError(`${data?.error||error?.message||'Edge Function unavailable'} · Direct fallback: ${fallbackError.message}`);
+        else{setChanged(true);await load()}
+      }
+    }else{setChanged(true);await load()}
     setLoading(false);
   };
 

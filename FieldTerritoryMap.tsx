@@ -32,6 +32,7 @@ type Props = {
   className?: string;
   autoFit?: boolean;
   mobileGestureLock?: boolean;
+  fieldMode?: boolean;
 };
 
 const LEAFLET_CSS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
@@ -56,7 +57,9 @@ export default function FieldTerritoryMap({
   className = '',
   autoFit = true,
   mobileGestureLock = true,
+  fieldMode = false,
 }: Props) {
+  const wrap = useRef<HTMLDivElement | null>(null);
   const el = useRef<HTMLDivElement | null>(null);
   const map = useRef<any>(null);
   const layers = useRef<any>(null);
@@ -119,7 +122,7 @@ export default function FieldTerritoryMap({
     const instance = L.map(el.current, {
       zoomControl: true,
       attributionControl: true,
-      preferCanvas: true,
+      preferCanvas: false,
       minZoom: 3,
       maxZoom: 20,
       scrollWheelZoom: true,
@@ -143,7 +146,7 @@ export default function FieldTerritoryMap({
       }
     });
     map.current = instance;
-    setTimeout(() => instance.invalidateSize(), 80);
+    setTimeout(() => instance.invalidateSize({ animate:false }), 80);
     return () => {
       instance.remove();
       map.current = null;
@@ -174,7 +177,6 @@ export default function FieldTerritoryMap({
       marker.on('drag', (event: any) => {
         const ll = event.target.getLatLng();
         points.current[index] = [ll.lat, ll.lng];
-        // Redrawing on drag gives immediate polygon resizing feedback.
         const saved = [...points.current];
         drawLayer.current.clearLayers();
         if (saved.length > 1) {
@@ -182,8 +184,7 @@ export default function FieldTerritoryMap({
         }
         saved.forEach((p, i) => {
           if (i === index) return;
-          const m = L.marker(p, { draggable:false, keyboard:false, icon:L.divIcon({className:'ns-territory-vertex-wrap',html:`<span class="ns-territory-vertex">${i+1}</span>`,iconSize:[28,28],iconAnchor:[14,14]}) });
-          m.addTo(drawLayer.current);
+          L.marker(p, { draggable:false, keyboard:false, icon:L.divIcon({className:'ns-territory-vertex-wrap',html:`<span class="ns-territory-vertex">${i+1}</span>`,iconSize:[28,28],iconAnchor:[14,14]}) }).addTo(drawLayer.current);
         });
         event.target.addTo(drawLayer.current);
       });
@@ -222,13 +223,13 @@ export default function FieldTerritoryMap({
           color: territory.id === selectedTerritoryId ? '#6e4d32' : (territory.color || '#9d7651'),
           fillColor: territory.color || '#9d7651',
           weight: territory.id === selectedTerritoryId ? 4 : 2,
-          fillOpacity: territory.id === selectedTerritoryId ? .17 : .08,
+          fillOpacity: territory.id === selectedTerritoryId ? .12 : .06,
         });
         bounds.push(...pts);
       } else if (territory.center_lat != null && territory.center_lng != null) {
         layer = L.circle([Number(territory.center_lat), Number(territory.center_lng)], {
           radius: territory.radius_meters || 1000,
-          color: territory.color || '#9d7651', weight: 2, fillOpacity: .06,
+          color: territory.color || '#9d7651', weight: 2, fillOpacity: .05,
         });
         bounds.push([Number(territory.center_lat), Number(territory.center_lng)]);
       }
@@ -252,57 +253,64 @@ export default function FieldTerritoryMap({
     visibleDoors.forEach(door => {
       if (!Number.isFinite(Number(door.latitude)) || !Number.isFinite(Number(door.longitude))) return;
       const status = door.do_not_knock ? doorStatus('do_not_knock') : doorStatus(door.status || 'unworked');
-      const selected = activeDoorId && door.id === activeDoorId;
+      const selected = Boolean(activeDoorId && door.id === activeDoorId);
       const routeIndex = door.id ? routeMap.get(door.id) : undefined;
+      const address = door.address || 'Mapped house';
       const marker = L.marker([Number(door.latitude), Number(door.longitude)], {
         keyboard: false,
         riseOnHover: true,
+        zIndexOffset: selected ? 1000 : 0,
         icon: L.divIcon({
-          className: 'ns-door-marker-wrap',
-          html: `<span class="ns-door-marker ${selected ? 'selected' : ''}" style="--door-color:${status.color}"><span class="ns-door-roof"></span><span class="ns-door-body">${routeIndex ? `<b>${routeIndex}</b>` : '<i></i>'}</span></span>`,
-          iconSize: [30, 34],
-          iconAnchor: [15, 31],
-          popupAnchor: [0, -29],
+          className: `ns-door-marker-wrap ${fieldMode ? 'field-mode' : ''}`,
+          html: `<span class="ns-door-marker ${selected ? 'selected' : ''}" style="--door-color:${status.color}">
+            <span class="ns-door-pin-halo"></span>
+            <span class="ns-door-house-icon"><span class="ns-door-roof"></span><span class="ns-door-body">${routeIndex ? `<b>${routeIndex}</b>` : '<i></i>'}</span></span>
+            <span class="ns-door-hover-card"><strong>${escapeText(address)}</strong><small>${escapeText(status.label)}</small><em>Click house to mark</em></span>
+          </span>`,
+          iconSize: fieldMode ? [34, 40] : [30, 36],
+          iconAnchor: fieldMode ? [17, 36] : [15, 32],
+          popupAnchor: [0, -31],
         }),
       });
       marker.on('click', (e: any) => { L.DomEvent.stopPropagation(e); onDoorClickRef.current?.(door); });
-      const address = door.address || 'House';
       marker.bindTooltip(`${routeIndex ? `<b>#${routeIndex}</b> · ` : ''}${escapeText(address)} · ${escapeText(status.label)}`, {
-        direction: 'top', sticky: true, permanent: showDoorLabels && Boolean(door.address), className: 'ns-house-tooltip',
+        direction: 'top', sticky: true, permanent: showDoorLabels && Boolean(door.address), className: 'ns-house-tooltip', offset:[0,-24],
       });
       marker.addTo(layers.current);
       bounds.push([Number(door.latitude), Number(door.longitude)]);
     });
 
-    // Leads without a loaded door remain visible as slightly larger rings.
     leads.forEach(lead => {
       if (lead.latitude == null || lead.longitude == null) return;
       if (lead.territory_door_id && visibleDoors.some(d => d.id === lead.territory_door_id)) return;
       const status = doorStatus(lead.status);
-      const marker = L.circleMarker([Number(lead.latitude), Number(lead.longitude)], {
-        radius: 9, color:'#fffdf9', weight:2, fillColor:status.color, fillOpacity:1,
+      const marker = L.marker([Number(lead.latitude), Number(lead.longitude)], {
+        keyboard:false,
+        riseOnHover:true,
+        icon:L.divIcon({
+          className:'ns-door-marker-wrap lead-only',
+          html:`<span class="ns-door-marker lead-ring" style="--door-color:${status.color}"><span class="ns-door-house-icon"><span class="ns-door-roof"></span><span class="ns-door-body"><i></i></span></span><span class="ns-door-hover-card"><strong>${escapeText(lead.address || lead.customer_name || 'Lead')}</strong><small>${escapeText(status.label)}</small><em>Click to open lead</em></span></span>`,
+          iconSize:[34,40],iconAnchor:[17,36],
+        }),
       });
       marker.on('click', (e: any) => {
         L.DomEvent.stopPropagation(e);
         onDoorClickRef.current?.({ latitude:Number(lead.latitude), longitude:Number(lead.longitude), address:lead.address, status:lead.status, territory_id:lead.territory_id, lead_id:lead.id });
       });
-      marker.bindTooltip(`${escapeText(lead.address || lead.customer_name || 'Lead')} · ${escapeText(status.label)}`, { sticky:true });
       marker.addTo(layers.current);
       bounds.push([Number(lead.latitude), Number(lead.longitude)]);
     });
 
-    // Only auto-fit when the underlying territory/door dataset changes.
-    // State changes such as selecting a house must NEVER reset the rep's zoom/center.
     const fitKey = JSON.stringify({
       territories: territories.map(t => [t.id, t.updated_at]),
       doors: visibleDoors.map(d => d.id),
       route: routeDoorIds,
     });
-    if (autoFit && !editable && bounds.length && bounds.length < 900 && lastFitKey.current !== fitKey) {
+    if (autoFit && !editable && bounds.length && bounds.length < 1200 && lastFitKey.current !== fitKey) {
       lastFitKey.current = fitKey;
-      try { map.current.fitBounds(bounds, { padding:[32,32], maxZoom:17, animate:false }); } catch { /* noop */ }
+      try { map.current.fitBounds(bounds, { padding:[32,32], maxZoom:18, animate:false }); } catch { /* noop */ }
     }
-  }, [territories, leads, visibleDoors, selectedTerritoryId, routeDoorIds, activeDoorId, showDoorLabels, autoFit, editable]);
+  }, [territories, leads, visibleDoors, selectedTerritoryId, routeDoorIds, activeDoorId, showDoorLabels, autoFit, editable, fieldMode]);
 
   useEffect(() => {
     if (!map.current || !locationLayer.current || !(window as any).L) return;
@@ -318,9 +326,21 @@ export default function FieldTerritoryMap({
   }, [liveLocation]);
 
   useEffect(() => {
-    if (!map.current) return;
-    const timer = setTimeout(() => map.current?.invalidateSize(), 100);
-    return () => clearTimeout(timer);
+    const onChange = () => {
+      const active = document.fullscreenElement === wrap.current;
+      setFullscreen(active);
+      setTimeout(() => map.current?.invalidateSize({ animate:false }), 80);
+      setTimeout(() => map.current?.invalidateSize({ animate:false }), 260);
+    };
+    document.addEventListener('fullscreenchange', onChange);
+    return () => document.removeEventListener('fullscreenchange', onChange);
+  }, []);
+
+  useEffect(() => {
+    if (!fullscreen) return;
+    const onKey = (e:KeyboardEvent) => { if(e.key === 'Escape' && document.fullscreenElement) document.exitFullscreen().catch(()=>{}); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, [fullscreen]);
 
   useEffect(() => {
@@ -334,10 +354,10 @@ export default function FieldTerritoryMap({
     if (!map.current || !mobileGestureLock || editable) return;
     const coarse = window.matchMedia?.('(pointer: coarse)').matches;
     if (!coarse) return;
-    const set = interactionEnabled;
+    const enabled = interactionEnabled || fullscreen;
     const controls = ['dragging','touchZoom','doubleClickZoom','scrollWheelZoom','boxZoom','keyboard'];
-    controls.forEach(name => { const control = map.current?.[name]; if (control) set ? control.enable?.() : control.disable?.(); });
-  }, [interactionEnabled, mobileGestureLock, editable, ready]);
+    controls.forEach(name => { const control = map.current?.[name]; if (control) enabled ? control.enable?.() : control.disable?.(); });
+  }, [interactionEnabled, mobileGestureLock, editable, ready, fullscreen]);
 
   const reset = () => {
     points.current = [];
@@ -352,21 +372,31 @@ export default function FieldTerritoryMap({
   const centerOnMe = () => {
     if (liveLocation && map.current) map.current.setView([liveLocation.latitude, liveLocation.longitude], 18, { animate:true });
   };
+  const toggleFullscreen = async () => {
+    try {
+      if (document.fullscreenElement === wrap.current) await document.exitFullscreen();
+      else if (wrap.current?.requestFullscreen) await wrap.current.requestFullscreen();
+      else setFullscreen(v=>!v);
+    } catch {
+      setFullscreen(v=>!v);
+    }
+    setTimeout(() => map.current?.invalidateSize({animate:false}), 120);
+  };
 
   return (
-    <div className={`field-map-wrap ${fullscreen ? 'field-map-fullscreen' : ''} ${className}`}>
+    <div ref={wrap} className={`field-map-wrap ${fullscreen ? 'field-map-fullscreen' : ''} ${fieldMode ? 'field-map-field-mode' : ''} ${className}`}>
       <div className="field-map-toolbar">
-        <button type="button" className="map-tool-btn" onClick={() => setFullscreen(v => !v)}>{fullscreen ? 'Exit Full Screen' : 'Full Screen'}</button>
+        <button type="button" className="map-tool-btn" onClick={toggleFullscreen}>{fullscreen ? 'Exit Full Screen' : 'Full Screen'}</button>
         {liveLocation && <button type="button" className="map-tool-btn" onClick={centerOnMe}>My Location</button>}
         {editable && <><button type="button" className="map-tool-btn" disabled={!points.current.length} onClick={undo}>Undo Point</button><button type="button" className="map-tool-btn" onClick={reset}>Clear</button></>}
       </div>
       <div ref={el} className="field-map-canvas" />
-      {mobileGestureLock && !editable && <div className={`map-interaction-toggle ${interactionEnabled?'active':''}`}><button type="button" onClick={()=>setInteractionEnabled(v=>!v)}>{interactionEnabled?'Done · Scroll Page':'Tap to Use Map'}</button></div>}
+      {mobileGestureLock && !editable && !fullscreen && <div className={`map-interaction-toggle ${interactionEnabled?'active':''}`}><button type="button" onClick={()=>setInteractionEnabled(v=>!v)}>{interactionEnabled?'Done · Scroll Page':'Tap to Use Map'}</button></div>}
       {editable && <div className="field-map-tools"><span>Click the map to add boundary points. Drag numbered points to resize. Right-click a point to remove it.</span><strong>{points.current.length} points</strong></div>}
     </div>
   );
 }
 
 function escapeText(value: string) {
-  return value.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c] || c));
+  return String(value || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c] || c));
 }
