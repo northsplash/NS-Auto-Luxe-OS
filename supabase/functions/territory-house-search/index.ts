@@ -5,9 +5,9 @@ const corsHeaders = {
 };
 
 const endpoints = [
-  'https://overpass.kumi.systems/api/interpreter',
+  'https://overpass.private.coffee/api/interpreter',
   'https://overpass-api.de/api/interpreter',
-  'https://overpass.nchc.org.tw/api/interpreter',
+  'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
 ];
 
 function inside(point: [number, number], polygon: [number, number][]) {
@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
     for(const url of endpoints){
       try{
         const ctl=new AbortController(); const timer=setTimeout(()=>ctl.abort(),22000);
-        const r=await fetch(url,{method:'POST',headers:{'content-type':'text/plain;charset=UTF-8'},body:q,signal:ctl.signal}); clearTimeout(timer);
+        const r=await fetch(url,{method:'POST',headers:{'content-type':'text/plain;charset=UTF-8','User-Agent':'NorthSplashOS/1.0 (territory-house-search)'},body:q,signal:ctl.signal}); clearTimeout(timer);
         if(!r.ok){last=`Provider returned ${r.status}`;continue;}
         const json=await r.json();
         const poly=(points as [number,number][]).filter(p=>Array.isArray(p)&&p.length===2);

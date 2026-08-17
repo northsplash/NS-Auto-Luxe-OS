@@ -334,14 +334,48 @@ function Metric({ label, value }: { label: string; value: string }) { return <di
 
 function Permissions({ profiles, employees, setEmployees, onSave }: { profiles: Profile[]; employees: Employee[]; setEmployees: React.Dispatch<React.SetStateAction<Employee[]>>; onSave: (person: Profile, role: PortalRole, permissions: Record<string, boolean>) => Promise<void> }) {
   const [selected, setSelected] = useState<string>(profiles[0]?.id || '');
+  const [openGroups,setOpenGroups]=useState<Record<string,boolean>>({});
   useEffect(()=>{if(!selected&&profiles[0])setSelected(profiles[0].id)},[profiles,selected]);
-  const person=profiles.find(p=>p.id===selected); const [role,setRole]=useState<PortalRole>('customer'); const [perms,setPerms]=useState<Record<string,boolean>>({}); const [linkEmployeeId,setLinkEmployeeId]=useState('');
+  const person=profiles.find(p=>p.id===selected);
+  const [role,setRole]=useState<PortalRole>('customer');
+  const [perms,setPerms]=useState<Record<string,boolean>>({});
+  const [linkEmployeeId,setLinkEmployeeId]=useState('');
   useEffect(()=>{if(person){const r=(person.role==='admin'?'owner':person.portal_role||'customer') as PortalRole;setRole(r);setPerms(person.role==='admin'?DEFAULT_ROLE_PERMISSIONS.owner:{...DEFAULT_ROLE_PERMISSIONS[r],...(person.permissions||{})});setLinkEmployeeId(employees.find(e=>e.user_id===person.id)?.id||employees.find(e=>e.email?.toLowerCase()===person.email?.toLowerCase())?.id||'');}},[person?.id,employees]);
   const applyRole=(r:PortalRole)=>{setRole(r);setPerms({...DEFAULT_ROLE_PERMISSIONS[r]});};
   const inviteEmployee=async(emp:Employee)=>{if(!emp.email)return alert('Add an email to the employee first.');const portal_role:PortalRole=emp.role==='d2d_agent'?'d2d':emp.role==='manager'?'manager':'employee';const {data,error}=await supabase.functions.invoke('invite-employee',{body:{employee_id:emp.id,portal_role,redirect_to:`${window.location.origin}/reset-password`}});if(error)return alert(error.message);alert(data?.invited?'Invite sent and employee linked.':'Existing login found and linked.');window.location.reload();};
   const linkEmployee=async()=>{if(!person||!linkEmployeeId)return; const {error}=await supabase.from('employees').update({user_id:person.id}).eq('id',linkEmployeeId); if(error)return alert(error.message); setEmployees(p=>p.map(e=>e.id===linkEmployeeId?{...e,user_id:person.id}:e.user_id===person.id?{...e,user_id:null}:e)); await audit('employee.login_linked','employee',linkEmployeeId,{profile_id:person.id});};
-  return <div className="tab-content"><Header title="Portal Permissions" subtitle="Choose portals and permissions, or send an employee login invite that links automatically." /><div style={{...card,marginBottom:18}}><h3>Employee Account Setup</h3><p style={{color:'#999'}}>Unlinked employees can be invited here. Their role chooses the starting portal automatically.</p><div className="invite-employee-grid">{employees.filter(e=>!e.user_id&&e.status!=='inactive').map(e=><div className="invite-employee-row" key={e.id}><div><strong>{e.name}</strong><small>{e.email||'Email required'} · {e.role.replaceAll('_',' ')}</small></div><button className="btn-sm btn-primary" disabled={!e.email} onClick={()=>inviteEmployee(e)}>Send / Link Invite</button></div>)}</div></div>
-    <div style={{display:'grid',gridTemplateColumns:'300px minmax(0,1fr)',gap:18}}><div style={card}><h3><Users size={18}/> Accounts</h3>{profiles.map(p=><button key={p.id} onClick={()=>setSelected(p.id)} style={{display:'block',width:'100%',textAlign:'left',padding:12,marginBottom:6,borderRadius:8,border:p.id===selected?'1px solid #c9a96e':'1px solid #292929',background:p.id===selected?'#19160f':'#0d0d0d',color:'#fff'}}><strong>{p.full_name||p.email||'Account'}</strong><small style={{display:'block',color:'#888'}}>{p.email} · {roleLabel(p.role==='admin'?'owner':p.portal_role)}</small></button>)}</div>
-      {person&&<div style={card}><div style={{display:'flex',justifyContent:'space-between',gap:12,alignItems:'start'}}><div><h3><UserCog size={18}/> {person.full_name||person.email}</h3><p style={{color:'#888'}}>{person.email}</p></div><button className="btn-primary" onClick={()=>onSave(person,role,perms)}><Save size={15}/> Save Access</button></div><div className="form-group"><label>Portal</label><select value={role} disabled={person.role==='admin'} onChange={e=>applyRole(e.target.value as PortalRole)}><option value="customer">Customer Portal</option><option value="manager">Manager Portal</option><option value="employee">Employee Portal</option><option value="d2d">D2D Sales Portal</option><option value="recruiter">Recruiting / Manager Portal</option><option value="finance">Finance / Manager Portal</option><option value="owner">Owner / Admin</option></select></div><div className="form-group"><label>Linked Employee Record</label><div style={{display:'flex',gap:8}}><select value={linkEmployeeId} onChange={e=>setLinkEmployeeId(e.target.value)}><option value="">Not linked</option>{employees.map(e=><option key={e.id} value={e.id}>{e.name} · {e.role.replaceAll('_',' ')} L{e.employment_level||1}</option>)}</select><button type="button" className="btn-outline" onClick={linkEmployee}>Link</button></div></div>{PERMISSION_GROUPS.map(g=><div key={g.label} style={{borderTop:'1px solid #242424',paddingTop:14,marginTop:14}}><strong>{g.label}</strong><div style={{...grid,marginTop:10}}>{g.permissions.map(([key,label])=><label key={key} style={{display:'flex',gap:10,alignItems:'start',fontSize:13}}><input type="checkbox" checked={Boolean(perms[key])} onChange={e=>setPerms(p=>({...p,[key]:e.target.checked}))}/><span>{label}<small style={{display:'block',color:'#777'}}>{key}</small></span></label>)}</div></div>)}<div style={{marginTop:18,padding:12,background:'#0b0b0b',borderRadius:10,color:'#aaa'}}>Employee account link: {employees.find(e=>e.user_id===person.id)?.name||'No employee profile linked to this login yet.'}</div></div>}</div>
+  const enabledCount=Object.values(perms).filter(Boolean).length;
+  return <div className="tab-content permissions-v3">
+    <Header title="Portal Permissions" subtitle="Choose a role preset, then fine-tune only the access that needs to be different." />
+    <section className="permission-invite-card">
+      <div><span className="eyebrow">ACCOUNT SETUP</span><h3>Invite unlinked employees</h3><p>Employee roles automatically choose the best starting portal. You can customize access after they join.</p></div>
+      <div className="permission-invite-list">{employees.filter(e=>!e.user_id&&e.status!=='inactive').slice(0,8).map(e=><div key={e.id}><div><strong>{e.name}</strong><small>{e.email||'Email required'} · {e.role.replaceAll('_',' ')}</small></div><button className="btn-outline" disabled={!e.email} onClick={()=>inviteEmployee(e)}>Send Invite</button></div>)}{!employees.some(e=>!e.user_id&&e.status!=='inactive')&&<span className="empty-text">All active employees are linked.</span>}</div>
+    </section>
+
+    <div className="permissions-layout-v3">
+      <aside className="permission-accounts">
+        <div className="permission-panel-head"><div><span className="eyebrow">ACCOUNTS</span><h3>{profiles.length} portal users</h3></div></div>
+        <div className="permission-account-list">{profiles.map(p=><button key={p.id} onClick={()=>setSelected(p.id)} className={p.id===selected?'selected':''}><span className="permission-avatar">{(p.full_name||p.email||'A')[0].toUpperCase()}</span><span><strong>{p.full_name||p.email||'Account'}</strong><small>{p.email}</small><em>{roleLabel(p.role==='admin'?'owner':p.portal_role)}</em></span></button>)}</div>
+      </aside>
+
+      {person&&<main className="permission-editor">
+        <div className="permission-editor-head">
+          <div><span className="eyebrow">ACCESS PROFILE</span><h2>{person.full_name||person.email}</h2><p>{person.email} · {enabledCount} permissions enabled</p></div>
+          <button className="btn-primary" onClick={()=>onSave(person,role,perms)}><Save size={15}/> Save Access</button>
+        </div>
+
+        <div className="permission-role-presets">
+          {(['customer','manager','employee','d2d','recruiter','finance','owner'] as PortalRole[]).map(r=><button key={r} disabled={person.role==='admin'&&r!=='owner'} className={role===r?'active':''} onClick={()=>applyRole(r)}><strong>{roleLabel(r)}</strong><small>{r==='owner'?'Full system':r==='d2d'?'Field sales':r==='manager'?'Team operations':r==='employee'?'Detailing operations':r==='customer'?'Customer only':'Specialized access'}</small></button>)}
+        </div>
+
+        <div className="permission-link-row"><div><span className="eyebrow">EMPLOYEE LINK</span><strong>{employees.find(e=>e.user_id===person.id)?.name||'No employee linked'}</strong></div><select value={linkEmployeeId} onChange={e=>setLinkEmployeeId(e.target.value)}><option value="">Not linked</option>{employees.map(e=><option key={e.id} value={e.id}>{e.name} · {e.role.replaceAll('_',' ')} L{e.employment_level||1}</option>)}</select><button type="button" className="btn-outline" onClick={linkEmployee}>Link</button></div>
+
+        <div className="permission-groups-v3">{PERMISSION_GROUPS.map(g=>{
+          const open=openGroups[g.label]??true;
+          const count=g.permissions.filter(([key])=>perms[key]).length;
+          return <section key={g.label} className="permission-group-v3"><button type="button" className="permission-group-title" onClick={()=>setOpenGroups(p=>({...p,[g.label]:!open}))}><span><strong>{g.label}</strong><small>{count}/{g.permissions.length} enabled</small></span><span>{open?'−':'+'}</span></button>{open&&<div className="permission-grid-v3">{g.permissions.map(([key,label])=><label key={key} className={perms[key]?'enabled':''}><input type="checkbox" checked={Boolean(perms[key])} onChange={e=>setPerms(p=>({...p,[key]:e.target.checked}))}/><span><strong>{label}</strong><small>{key}</small></span></label>)}</div>}</section>
+        })}</div>
+      </main>}
+    </div>
   </div>;
 }

@@ -17,3 +17,7 @@ The function proxies house discovery through server-side Overpass requests and a
 No new SQL migration is required for this release.
 
 `claim-customer-history` links older guest bookings to a customer account after the customer signs in with the same email.
+
+## Field Canvass V3
+After deploying this project to Vercel, deploy/update `territory-house-search` from `supabase/functions/territory-house-search/index.ts`.
+See `FIELD_CANVASS_V3_DEPLOYMENT.md` for the verification sequence.
