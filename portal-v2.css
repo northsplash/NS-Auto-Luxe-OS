@@ -370,3 +370,133 @@ input,select,textarea{border-radius:9px!important;border:1px solid #d9cec3!impor
 .permission-link-row{display:grid;grid-template-columns:minmax(180px,.45fr) minmax(0,1fr) auto;gap:8px;align-items:end;background:#f7f2ed;border:1px solid #e7ddd4;border-radius:11px;padding:10px;margin-bottom:10px}.permission-link-row strong{display:block;font-size:11px;margin-top:2px}.permission-groups-v3{display:grid;gap:7px}.permission-group-v3{border:1px solid #e7ddd4;border-radius:11px;overflow:hidden;background:#fff}.permission-group-title{width:100%;border:0;background:#faf6f2;color:#322b25;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;text-align:left}.permission-group-title span:first-child{display:flex;align-items:baseline;gap:8px}.permission-group-title strong{font-size:11px}.permission-group-title small{font-size:8px;color:#8a7d71}.permission-grid-v3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;border-top:1px solid #ede5de}.permission-grid-v3 label{display:grid;grid-template-columns:17px 1fr;gap:7px;padding:9px 10px;border-right:1px solid #f0e8e1;border-bottom:1px solid #f0e8e1;align-items:start;background:#fff;cursor:pointer}.permission-grid-v3 label.enabled{background:#f9f2ea}.permission-grid-v3 input{width:15px!important;height:15px!important;min-height:auto!important;accent-color:#9d7651}.permission-grid-v3 strong,.permission-grid-v3 small{display:block}.permission-grid-v3 strong{font-size:9px;color:#3b332c}.permission-grid-v3 small{font-size:7px;color:#94877c;margin-top:2px;word-break:break-word}
 @media(max-width:1000px){.permission-invite-card{grid-template-columns:1fr}.permissions-layout-v3{grid-template-columns:1fr}.permission-accounts{position:static}.permission-account-list{grid-template-columns:repeat(2,minmax(0,1fr));max-height:none}.permission-role-presets{grid-template-columns:repeat(3,minmax(0,1fr))}.permission-grid-v3{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:620px){.permission-invite-list,.permission-account-list,.permission-role-presets,.permission-grid-v3{grid-template-columns:1fr}.permission-link-row{grid-template-columns:1fr}.permission-editor-head{flex-direction:column}.permission-editor-head .btn-primary{width:100%}}
+
+/* ======================================================================
+   DEVICE EXPERIENCE V4 — desktop / iPad / phone field-first refinement
+   ====================================================================== */
+html,body,#root{min-height:100%;overscroll-behavior-y:none}
+.portal-main{min-height:100dvh}
+.portal-content{padding-bottom:max(44px,env(safe-area-inset-bottom))!important}
+
+/* richer but restrained North Splash canvas */
+.portal-main,.d2d-os .portal-main{
+  background:
+    radial-gradient(900px 460px at 92% -8%,rgba(183,145,108,.12),transparent 62%),
+    radial-gradient(720px 420px at 4% 74%,rgba(220,203,184,.15),transparent 65%),
+    linear-gradient(180deg,#fdfbf8 0%,#f7f3ee 48%,#f4efe9 100%)!important;
+}
+.v2-card,.d2d-map-shell,.phase-panel,.manager-panel,.permission-editor,.permission-accounts{
+  position:relative;
+}
+.v2-card:after,.d2d-map-shell:after,.manager-panel:after{
+  content:'';position:absolute;inset:0;pointer-events:none;border-radius:inherit;
+  background:linear-gradient(135deg,rgba(255,255,255,.38),transparent 34%);opacity:.55;
+}
+
+/* D2D: map is the primary work surface, controls stay compact */
+.d2d-field-page .v2-page-head{margin-bottom:4px!important}
+.d2d-map-shell{padding:10px!important}
+.d2d-map-topline{padding:2px 2px 8px!important}
+.d2d-kpi-strip{gap:9px!important}
+.d2d-kpi{min-height:84px!important;padding:12px 13px!important}
+.d2d-kpi strong{font-size:30px!important;line-height:1!important}
+.d2d-primary-map .field-map-canvas{height:clamp(560px,69dvh,850px)!important;min-height:560px!important}
+
+/* house markers: precise residential targets, not oversized pins */
+.field-map-field-mode .ns-door-marker{width:30px;height:36px}
+.field-map-field-mode .ns-door-house-icon{width:22px;height:24px}
+.field-map-field-mode .ns-door-roof{left:4px;width:16px;height:16px}
+.field-map-field-mode .ns-door-body{left:4px;top:8px;width:16px;height:15px}
+.field-map-field-mode .ns-door-marker:hover{transform:translateY(-4px) scale(1.14);z-index:9999}
+.field-map-field-mode .ns-door-hover-card{bottom:36px;min-width:174px;padding:9px 11px;background:rgba(55,45,37,.96)}
+.field-map-field-mode .ns-door-hover-card:after{background:rgba(55,45,37,.96)}
+
+/* Desktop canvass inspector: side drawer, not a giant floating banner */
+@media (min-width:901px){
+  .house-drawer-backdrop{position:fixed!important;inset:0!important;z-index:1500!important;background:rgba(42,32,24,.12)!important;backdrop-filter:none!important}
+  .house-drawer.field-house-sheet{
+    position:fixed!important;left:auto!important;right:18px!important;top:82px!important;bottom:18px!important;
+    transform:none!important;width:min(410px,calc(100vw - 36px))!important;max-width:410px!important;max-height:none!important;
+    border-radius:18px!important;padding:16px!important;overflow:auto!important;
+    box-shadow:0 22px 70px rgba(48,34,24,.20)!important;
+  }
+  .house-drawer-handle{display:none!important}
+  .house-quick-grid.field-quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .field-quick-grid button{min-height:48px!important}
+  .field-save-bar{position:sticky;bottom:-16px;z-index:5;background:linear-gradient(180deg,rgba(255,253,250,0),#fffdfa 20%);padding:16px 0 14px;margin-bottom:0}
+  .field-house-address h2{font-size:19px!important;line-height:1.15!important}
+}
+
+/* iPad/tablet: app shell becomes touch-first and map gets more room */
+@media (min-width:721px) and (max-width:1180px){
+  .portal-sidebar{position:fixed!important;left:-300px!important;width:286px!important;z-index:1200!important;transition:left .22s ease!important}
+  .portal-sidebar.sidebar-open{left:0!important}
+  .portal-main{margin-left:0!important}
+  .sidebar-toggle,.sidebar-close{display:grid!important;place-items:center}
+  .sidebar-backdrop{display:block!important;position:fixed!important;inset:0!important;background:rgba(34,25,19,.24)!important;z-index:1100!important;backdrop-filter:blur(2px)}
+  .portal-topbar{padding-left:max(14px,env(safe-area-inset-left))!important;padding-right:max(14px,env(safe-area-inset-right))!important}
+  .portal-content{padding:16px max(14px,env(safe-area-inset-right)) 42px max(14px,env(safe-area-inset-left))!important}
+  .d2d-primary-map .field-map-canvas{height:68dvh!important;min-height:540px!important}
+  .d2d-kpi-strip{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;overflow:visible!important}
+  .d2d-kpi{min-width:0!important}
+  .d2d-kpi strong{font-size:27px!important}
+  .v2-page-head h2{font-size:34px!important}
+  .data-table{overflow-x:auto!important;-webkit-overflow-scrolling:touch}
+  .admin-lead-kanban,.lead-kanban,.dispatch-v2{scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+}
+
+/* iPad portrait / large phones: bottom-sheet workflow */
+@media (max-width:900px){
+  .house-drawer-backdrop{position:fixed!important;inset:0!important;z-index:1500!important;display:flex!important;align-items:flex-end!important;background:rgba(39,29,22,.18)!important}
+  .house-drawer.field-house-sheet{
+    position:relative!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;transform:none!important;
+    width:100%!important;max-width:none!important;max-height:min(78dvh,720px)!important;border-radius:22px 22px 0 0!important;
+    padding:12px 16px max(16px,env(safe-area-inset-bottom))!important;overflow:auto!important;
+  }
+  .house-drawer-handle{display:block!important;width:42px;height:4px;border-radius:999px;background:#d8cec4;margin:0 auto 9px}
+  .field-house-head{position:sticky;top:-12px;z-index:6;background:#fffdfa;padding-top:10px!important}
+  .field-save-bar{position:sticky;bottom:calc(-1 * max(16px,env(safe-area-inset-bottom)));z-index:7;background:#fffdfa;padding:10px 0 max(16px,env(safe-area-inset-bottom));margin-bottom:0}
+  .field-house-actions{scrollbar-width:none}.field-house-actions::-webkit-scrollbar{display:none}
+}
+
+/* Phone: one-thumb field mode and readable admin cards */
+@media (max-width:720px){
+  .portal-topbar{min-height:58px!important;padding-top:env(safe-area-inset-top)!important;height:calc(58px + env(safe-area-inset-top))!important}
+  .portal-content{padding:11px 10px max(34px,env(safe-area-inset-bottom))!important}
+  .v2-page-head,.tab-header,.phase300-header{gap:8px!important;padding-bottom:10px!important}
+  .v2-page-head h2,.tab-header h2,.phase300-header h2{font-size:27px!important}
+  .v2-page-head p,.tab-header p,.phase300-header p{font-size:11px!important;line-height:1.4!important}
+  .v2-head-actions{display:grid!important;grid-template-columns:1fr 1fr;gap:7px!important}
+  .v2-head-actions>*{min-width:0!important;font-size:9px!important;padding:0 9px!important}
+  .d2d-kpi-strip{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;overflow:visible!important;gap:7px!important}
+  .d2d-kpi{min-width:0!important;min-height:72px!important;padding:10px!important;border-radius:12px!important}
+  .d2d-kpi:last-child{grid-column:span 2}
+  .d2d-kpi strong{font-size:25px!important}
+  .d2d-kpi span,.d2d-kpi small{font-size:8px!important}
+  .d2d-map-shell{margin:0 -4px;padding:6px!important;border-radius:14px!important}
+  .d2d-map-topline{gap:7px!important}.d2d-field-actions{display:grid!important;grid-template-columns:1fr 1fr;width:100%}.d2d-field-actions>*{font-size:9px!important;padding:0 8px!important}
+  .d2d-filter-row{margin:0 -2px;padding-bottom:7px!important}.status-filter{font-size:9px!important;padding:6px 8px!important}
+  .d2d-primary-map .field-map-canvas{height:61dvh!important;min-height:430px!important;max-height:680px!important}
+  .field-map-wrap{border-radius:11px!important}.field-map-toolbar{gap:3px!important;padding:4px!important}.map-tool-btn{min-height:32px!important;font-size:9px!important;padding:0 8px!important}
+  .field-map-field-mode .ns-door-marker{width:38px;height:44px}.field-map-field-mode .ns-door-house-icon{transform:translateX(-50%) scale(1.08)}
+  .house-quick-grid.field-quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.field-quick-grid button{min-height:52px!important}
+  .field-save-bar{grid-template-columns:minmax(0,1fr) 76px!important}.field-save-next{min-height:48px!important}.field-save-bar .btn-outline{min-width:0!important}
+  .house-form-grid{grid-template-columns:1fr!important}
+  .permission-editor,.permission-accounts,.permission-invite-card{padding:12px!important}
+  .permission-account-list,.permission-role-presets,.permission-grid-v3{grid-template-columns:1fr!important}
+  .data-table-head{display:none!important}.data-table-row{display:grid!important;grid-template-columns:1fr!important;gap:5px!important;padding:12px!important;border:1px solid #e7ddd4!important;border-radius:12px!important;margin-bottom:7px!important}.data-table{border:0!important;background:transparent!important;overflow:visible!important}
+  .admin-lead-kanban{grid-auto-columns:min(86vw,310px)!important}.lead-table-cards,.followup-grid,.assigned-job-grid,.task-grid,.qc-grid,.team-status-grid{grid-template-columns:1fr!important}
+}
+
+@media (max-width:420px){
+  .topbar-title h1{font-size:15px!important}.topbar-actions{gap:5px!important}
+  .v2-head-actions{grid-template-columns:1fr!important}.d2d-kpi-strip{grid-template-columns:1fr 1fr!important}
+  .d2d-primary-map .field-map-canvas{height:58dvh!important;min-height:400px!important}
+  .field-house-address h2{font-size:17px!important}.field-quick-label small{display:none}
+}
+
+/* Fullscreen safe areas on phones/tablets */
+.field-map-wrap:fullscreen .field-map-toolbar,.field-map-fullscreen .field-map-toolbar{
+  top:max(12px,env(safe-area-inset-top))!important;right:max(12px,env(safe-area-inset-right))!important;
+}
+.field-map-wrap:fullscreen .field-map-canvas,.field-map-fullscreen .field-map-canvas{height:100dvh!important;min-height:100dvh!important}
