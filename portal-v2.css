@@ -581,9 +581,210 @@ html,body,#root{min-height:100%;overscroll-behavior-y:none}
 .ns-maplibre-door{appearance:none!important;border:0!important;background:transparent!important;padding:0!important;margin:0!important;width:34px!important;height:42px!important;overflow:visible!important;cursor:pointer!important;position:relative!important}.ns-maplibre-door.field-mode{width:40px!important;height:48px!important}.ns-maplibre-door:focus-visible{outline:3px solid rgba(31,119,255,.52)!important;outline-offset:5px!important;border-radius:14px}.ns-maplibre-door .ns-door-marker{position:absolute;left:50%;bottom:0;transform:translateX(-50%);display:block}.ns-maplibre-door.selected .ns-door-marker{z-index:4}.ns-maplibre-door.selected .ns-door-pin-halo{animation:nsHousePulse 1.45s ease-out infinite!important}.ns-map-address-label{position:absolute;left:50%;bottom:-18px;transform:translateX(-50%);white-space:nowrap;max-width:175px;overflow:hidden;text-overflow:ellipsis;background:rgba(35,26,20,.88);color:#fff;border-radius:6px;padding:3px 5px;font-size:7px;font-weight:750;box-shadow:0 2px 8px rgba(0,0,0,.18);pointer-events:none}.ns-maplibre-door .ns-door-hover-card{pointer-events:none}.ns-maplibre-door:hover .ns-door-hover-card,.ns-maplibre-door:focus-visible .ns-door-hover-card{opacity:1!important;transform:translate(-50%,-8px)!important;visibility:visible!important}.ns-maplibre-vertex{border:2px solid #fff!important;padding:0!important;cursor:grab!important}.ns-maplibre-vertex:active{cursor:grabbing!important}.ns-user-location-dot{width:24px;height:24px;border-radius:50%;background:#1677ff;border:4px solid #fff;box-shadow:0 2px 13px rgba(17,73,145,.4);display:grid;place-items:center}.ns-user-location-dot span{display:block;width:6px;height:6px;border-radius:50%;background:#fff}.ns-user-location-accuracy{border-radius:50%;background:rgba(22,119,255,.09);border:1px solid rgba(22,119,255,.25);pointer-events:none}.field-map-fullscreen .map-engine-badge{bottom:18px}.field-map-fullscreen .map-style-switcher{background:rgba(255,255,255,.96)}
 @media(max-width:720px){.field-map-modern .field-map-toolbar{display:grid;grid-template-columns:1fr 1fr;gap:6px}.field-map-modern .field-map-toolbar>.map-tool-btn{justify-content:center;min-height:38px}.map-style-switcher{grid-column:1/-1;overflow-x:auto;justify-content:stretch}.map-style-switcher button{flex:1;min-width:64px;min-height:34px}.map-engine-badge{left:8px;bottom:8px}.ns-maplibre-door{width:40px!important;height:48px!important}.ns-maplibre-door.field-mode{width:44px!important;height:52px!important}.ns-maplibre-door .ns-door-hover-card{display:none!important}.ns-map-address-label{display:none}}
 
-/* --------------------------------------------------------------------------
-   D2D Field Intelligence V7
-   -------------------------------------------------------------------------- */
-.field-intel-page{padding-bottom:48px}.intel-live-strip{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin:0 0 16px}.intel-stat{display:flex;gap:12px;align-items:flex-start;padding:16px;border:1px solid rgba(76,54,38,.12);border-radius:18px;background:linear-gradient(145deg,rgba(255,255,255,.96),rgba(248,243,237,.9));box-shadow:0 8px 24px rgba(70,49,32,.06)}.intel-stat>svg{color:#9d7651;margin-top:3px}.intel-stat div{min-width:0;display:flex;flex-direction:column}.intel-stat span{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#856f5d}.intel-stat strong{font-size:24px;line-height:1.1;color:#2b2119;margin:4px 0}.intel-stat small{font-size:11px;color:#8e8075;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.field-intel-grid{display:grid;grid-template-columns:1fr 1.25fr;gap:16px}.intel-alert-card,.intel-street-card,.intel-timeline-card,.intel-session-card{min-height:300px}.intel-alert-list{display:flex;flex-direction:column;gap:10px}.intel-alert{display:flex;gap:12px;padding:13px 14px;border-radius:14px;background:#f7f4f0;border:1px solid rgba(76,54,38,.08)}.intel-alert>i{width:9px;height:9px;border-radius:50%;margin-top:5px;background:#8f857b;box-shadow:0 0 0 5px rgba(143,133,123,.1)}.intel-alert.warn>i{background:#c88937;box-shadow:0 0 0 5px rgba(200,137,55,.11)}.intel-alert.good>i{background:#66825d;box-shadow:0 0 0 5px rgba(102,130,93,.11)}.intel-alert.info>i{background:#6f8f8a;box-shadow:0 0 0 5px rgba(111,143,138,.11)}.intel-alert div{display:flex;flex-direction:column;gap:3px}.intel-alert strong{font-size:13px;color:#2c221b}.intel-alert span{font-size:12px;line-height:1.45;color:#7b6d62}.intel-street-list{display:flex;flex-direction:column;gap:12px}.intel-street-row{display:grid;grid-template-columns:minmax(0,1fr) 120px 42px;gap:12px;align-items:center}.intel-street-row>div:first-child{min-width:0;display:flex;flex-direction:column}.intel-street-row strong{font-size:13px;color:#30251d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.intel-street-row span{font-size:11px;color:#8b7b70}.intel-street-row>b{font-size:12px;color:#6e5846;text-align:right}.intel-street-progress{height:7px;border-radius:20px;background:#eee5dc;overflow:hidden}.intel-street-progress i{display:block;height:100%;border-radius:20px;background:linear-gradient(90deg,#b9926f,#836044)}.intel-timeline{display:flex;flex-direction:column;gap:6px}.intel-timeline button{display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:12px;align-items:center;width:100%;padding:10px 0;background:none;border:0;border-bottom:1px solid rgba(76,54,38,.08);text-align:left;cursor:pointer}.intel-timeline button>i{width:9px;height:9px;border-radius:50%}.intel-timeline button div{display:flex;flex-direction:column;min-width:0}.intel-timeline button strong{font-size:12px;color:#30251d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.intel-timeline button span,.intel-timeline time{font-size:11px;color:#887a6e}.intel-session-score{display:flex;align-items:baseline;gap:4px;margin:12px 0}.intel-session-score strong{font-size:64px;letter-spacing:-.05em;color:#9d7651}.intel-session-score span{font-size:16px;color:#8b7a6e}.intel-session-card>p{font-size:12px;line-height:1.55;color:#7b6d62;max-width:440px}.intel-session-lines{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px}.intel-session-lines span{padding:10px 12px;border-radius:12px;background:#f7f3ee;font-size:11px;color:#88786d;display:flex;flex-direction:column;gap:3px}.intel-session-lines b{font-size:12px;color:#33271e}.house-gps-badge{display:inline-flex;align-items:center;gap:4px;padding:5px 8px;border-radius:999px;background:#efe5dc;color:#7e6958;font-size:10px;font-weight:800}.house-gps-badge.verified{background:#e4eee2;color:#4c6847}
-@media(max-width:1100px){.intel-live-strip{grid-template-columns:repeat(3,minmax(0,1fr))}.field-intel-grid{grid-template-columns:1fr}}
-@media(max-width:700px){.intel-live-strip{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:4px}.intel-stat{min-width:190px;scroll-snap-align:start}.intel-street-row{grid-template-columns:minmax(0,1fr) 70px 36px}.intel-session-lines{grid-template-columns:1fr}.field-intel-grid{gap:12px}}
+/* ======================================================================
+   NORTH SPLASH UNIFIED WARM WORKSPACE THEME — V7.1
+   Applies the Team Messages visual language across every OS workspace.
+   Dark espresso is reserved for navigation/communication rails; working
+   surfaces stay warm ivory with caramel accents and restrained shadows.
+   ====================================================================== */
+:root{
+  --ns-flow-canvas:#f7f4ef;
+  --ns-flow-canvas-2:#f2ece5;
+  --ns-flow-surface:#fffdf9;
+  --ns-flow-surface-2:#fbf7f2;
+  --ns-flow-soft:#f1e8de;
+  --ns-flow-soft-2:#eadccd;
+  --ns-flow-line:#dfd2c6;
+  --ns-flow-line-strong:#cebba9;
+  --ns-flow-ink:#1f1712;
+  --ns-flow-muted:#78695e;
+  --ns-flow-muted-2:#9a887a;
+  --ns-flow-accent:#9d7651;
+  --ns-flow-accent-dark:#76563c;
+  --ns-flow-accent-soft:#e9d8c7;
+  --ns-flow-shell:#2b211a;
+  --ns-flow-shell-2:#211914;
+  --ns-flow-shell-text:#f8f1ea;
+  --ns-flow-success:#3aa36c;
+  --ns-flow-danger:#b85b50;
+  --ns-flow-shadow:0 12px 34px rgba(51,35,24,.065);
+  --ns-flow-shadow-lg:0 20px 58px rgba(51,35,24,.10);
+}
+
+/* Canvas + page rhythm */
+.portal-layout,.portal-main,.portal-content,.admin-portal,.manager-portal,.employee-portal,.d2d-portal,.customer-portal{background:var(--ns-flow-canvas)!important;color:var(--ns-flow-ink)!important}
+.portal-main{background:
+  radial-gradient(circle at 92% 3%,rgba(157,118,81,.055),transparent 30%),
+  linear-gradient(180deg,#faf8f4 0%,var(--ns-flow-canvas) 180px,var(--ns-flow-canvas) 100%)!important}
+.portal-content{padding-bottom:44px!important}
+.tab-content,.workspace-content,.admin-content,.manager-content,.employee-content,.d2d-content{color:var(--ns-flow-ink)!important}
+.tab-content h1,.tab-content h2,.tab-content h3,.tab-content h4,.workspace-content h1,.workspace-content h2,.workspace-content h3{color:var(--ns-flow-ink)!important}
+.tab-content p,.tab-content small,.workspace-content p,.workspace-content small{color:var(--ns-flow-muted)}
+
+/* Top bars / section headers */
+.portal-topbar,.admin-topbar,.manager-topbar,.employee-topbar,.customer-topbar{
+  background:rgba(255,253,249,.94)!important;
+  border-bottom:1px solid var(--ns-flow-line)!important;
+  box-shadow:0 2px 16px rgba(54,38,26,.025)!important;
+  backdrop-filter:blur(18px)!important
+}
+.v2-page-head,.section-header,.workspace-header,.admin-page-header,.portal-page-header{
+  border-bottom-color:var(--ns-flow-line)!important
+}
+.v2-page-head .eyebrow,.section-header .eyebrow,.workspace-header .eyebrow,.admin-page-header .eyebrow{
+  color:var(--ns-flow-accent-dark)!important
+}
+
+/* Primary navigation keeps the same elegant espresso rail as Messaging. */
+.portal-sidebar{
+  background:linear-gradient(180deg,var(--ns-flow-shell) 0%,var(--ns-flow-shell-2) 100%)!important;
+  border-right:1px solid rgba(255,255,255,.06)!important;
+  box-shadow:8px 0 28px rgba(34,24,18,.045)!important
+}
+.portal-sidebar,.portal-sidebar *{--ns-sidebar-text:#bbaea3}
+.sidebar-brand,.sidebar-user{border-color:rgba(255,255,255,.075)!important}
+.sidebar-user{background:rgba(255,255,255,.035)!important}
+.os-workspace-label,.sidebar-section-label{color:#8f8176!important}
+.os-workspace-button,.os-pinned-link,.sidebar-nav button,.sidebar-nav a{color:#b7aaa0!important}
+.os-workspace-button:hover,.os-pinned-link:hover,.sidebar-nav button:hover,.sidebar-nav a:hover{background:rgba(255,255,255,.06)!important;color:#fff!important}
+.os-workspace-button.active,.os-pinned-link.active,.sidebar-nav .active{
+  background:#f4eee8!important;color:#211813!important;border-color:#eadfd4!important;
+  box-shadow:0 7px 20px rgba(0,0,0,.15)!important
+}
+.os-workspace-button.active svg,.os-pinned-link.active svg,.sidebar-nav .active svg{color:var(--ns-flow-accent)!important}
+
+/* Surfaces */
+.admin-card,.phase-panel,.operations-panel,.enterprise-panel,.business-card,.dashboard-card,.metric-card,.stat-card,.summary-card,.customer-card,.employee-card,.manager-card,.detail-card,.recruit-card,.finance-card,.schedule-card,.calendar-card,.crm-card,.permission-card,.settings-card,.report-card,.automation-card,.training-card,.inventory-card,.dispatch-card,.crew-card,.territory-card,
+.portal-main .card,.portal-main .panel,.portal-main .widget{
+  background:var(--ns-flow-surface)!important;
+  border-color:var(--ns-flow-line)!important;
+  color:var(--ns-flow-ink)!important;
+  box-shadow:var(--ns-flow-shadow)!important
+}
+.admin-card-header,.panel-header,.card-header,.dashboard-card-header,.phase-panel-header{
+  border-bottom-color:var(--ns-flow-line)!important
+}
+.admin-card-header h3,.panel-header h3,.card-header h3{color:var(--ns-flow-ink)!important}
+.empty-text,.ops-muted,.muted,.subtitle,.helper-text{color:var(--ns-flow-muted)!important}
+
+/* Forms */
+.portal-main input:not([type="checkbox"]):not([type="radio"]),
+.portal-main select,.portal-main textarea,
+.house-drawer input,.house-drawer select,.house-drawer textarea{
+  background:#fff!important;color:var(--ns-flow-ink)!important;
+  border:1px solid #d9ccbf!important;border-radius:10px!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.75)!important
+}
+.portal-main input:focus,.portal-main select:focus,.portal-main textarea:focus,
+.house-drawer input:focus,.house-drawer select:focus,.house-drawer textarea:focus{
+  outline:none!important;border-color:#b69373!important;
+  box-shadow:0 0 0 3px rgba(157,118,81,.12)!important
+}
+.portal-main label,.form-group>label{color:#6e5c4f!important}
+
+/* Buttons: black is no longer the default. Caramel becomes the main action. */
+.portal-main .btn-primary,.portal-main button.btn-primary,.portal-main .primary-action,.portal-main .action-primary{
+  background:linear-gradient(180deg,#a47c59 0%,#8e6848 100%)!important;
+  border-color:#836044!important;color:#fff!important;
+  box-shadow:0 7px 18px rgba(126,90,61,.17)!important
+}
+.portal-main .btn-primary:hover,.portal-main button.btn-primary:hover,.portal-main .primary-action:hover,.portal-main .action-primary:hover{
+  background:linear-gradient(180deg,#98704f 0%,#7e593e 100%)!important;
+  transform:translateY(-1px)
+}
+.portal-main .btn-outline,.portal-main .btn-secondary,.portal-main .secondary-action{
+  background:#fff!important;color:#4d3b2f!important;border-color:#d8c9bc!important
+}
+.portal-main .btn-outline:hover,.portal-main .btn-secondary:hover,.portal-main .secondary-action:hover{
+  background:var(--ns-flow-soft)!important;color:#2d211a!important;border-color:#cdb7a5!important
+}
+.portal-main .btn-dark{background:var(--ns-flow-shell)!important;color:#fff!important;border-color:var(--ns-flow-shell)!important}
+
+/* Tabs and segmented controls */
+.portal-main .tabs,.portal-main .tab-bar,.portal-main .subtabs,.portal-main .workspace-tabs,.portal-main .admin-tabs{
+  background:rgba(255,253,249,.84)!important;border-color:var(--ns-flow-line)!important
+}
+.portal-main .tabs button,.portal-main .tab-bar button,.portal-main .subtabs button,.portal-main .workspace-tabs button,.portal-main .admin-tabs button{
+  color:#725f50!important;border-color:transparent!important
+}
+.portal-main .tabs button.active,.portal-main .tab-bar button.active,.portal-main .subtabs button.active,.portal-main .workspace-tabs button.active,.portal-main .admin-tabs button.active,
+.portal-main .tabs .active,.portal-main .subtabs .active{
+  background:var(--ns-flow-soft)!important;color:#2c2018!important;border-color:#d8c5b4!important;
+  box-shadow:0 3px 10px rgba(60,42,29,.05)!important
+}
+
+/* Tables/lists */
+.data-table,.admin-table,.table-shell,.list-shell{background:var(--ns-flow-surface)!important;border-color:var(--ns-flow-line)!important;box-shadow:var(--ns-flow-shadow)!important}
+.data-table-head,.admin-table thead,.table-head{background:#f1ece6!important;color:#716256!important;border-color:var(--ns-flow-line)!important}
+.data-table-row,.admin-table tbody tr,.table-row,.ops-list-row,.admin-row{
+  background:#fffdf9!important;color:var(--ns-flow-ink)!important;border-color:#ece3da!important
+}
+.data-table-row:hover,.admin-table tbody tr:hover,.table-row:hover,.ops-list-row:hover,.admin-row:hover{background:#faf5ef!important}
+.ops-label,.data-table-row small,.admin-row span{color:var(--ns-flow-muted)!important}
+
+/* Pills, badges, counts */
+.portal-main .badge,.portal-main .pill,.portal-main .status-pill,.portal-main .count-badge,.portal-main .chip{
+  border-color:#dbcabd!important
+}
+.portal-main .badge:not(.success):not(.danger):not(.warning),.portal-main .pill:not(.success):not(.danger):not(.warning),.portal-main .chip:not(.success):not(.danger):not(.warning){
+  background:#f4ece4!important;color:#624a38!important
+}
+
+/* Modals, drawers, inspectors */
+.portal-main .modal,.portal-main .modal-card,.portal-main .drawer,.portal-main .side-panel,.portal-main .record-drawer,.portal-main .inspector,
+.house-drawer,.message-info-rail{
+  background:var(--ns-flow-surface)!important;color:var(--ns-flow-ink)!important;border-color:var(--ns-flow-line)!important
+}
+.modal-backdrop,.drawer-backdrop{background:rgba(42,31,23,.28)!important;backdrop-filter:blur(3px)!important}
+
+/* Keep Messaging as the visual source of truth while harmonizing the surrounding page. */
+.messaging-page,.messages-page{background:transparent!important}
+.messaging-v6{border-color:var(--ns-flow-line)!important;box-shadow:var(--ns-flow-shadow-lg)!important}
+.messaging-v6 .message-channel-rail{background:linear-gradient(180deg,var(--ns-flow-shell),var(--ns-flow-shell-2))!important}
+.message-conversation,.message-info-rail{background:var(--ns-flow-surface)!important}
+.message-info-rail{border-left:1px solid var(--ns-flow-line)!important}
+.message-composer-shell{background:#fffdf9!important;border-color:#d8c9bc!important}
+
+/* D2D remains functional/color-coded, but its chrome follows the same warm system. */
+.d2d-field-page,.d2d-leads-shell,.d2d-workspace{background:transparent!important}
+.d2d-map-shell,.d2d-kpi,.d2d-map-topline,.v2-map-footer,.field-intel-card,.field-intel-panel{
+  background:var(--ns-flow-surface)!important;border-color:var(--ns-flow-line)!important;box-shadow:var(--ns-flow-shadow)!important
+}
+.status-filter:not(.active){background:#fffdf9!important;border-color:#dacabd!important;color:#5e4b3d!important}
+.status-filter.active{background:var(--ns-flow-shell)!important;border-color:var(--ns-flow-shell)!important;color:#fff!important}
+.map-style-switcher{background:#fffdf9!important;border-color:#d8c7b7!important}
+.map-style-switcher button.active{background:var(--ns-flow-shell)!important;color:#fff!important}
+.field-house-sheet{background:rgba(255,253,249,.99)!important}
+
+/* Territory command / Street View */
+.territory-command-map,.territory-command-panel .phase-panel,.territory-streetview,.territory-analytics-card,.territory-workspace-summary>div{
+  background:var(--ns-flow-surface)!important;border-color:var(--ns-flow-line)!important;box-shadow:var(--ns-flow-shadow)!important
+}
+.territory-selection-summary>div,.streetview-house-row{background:#faf5ef!important;border-color:#e6d9ce!important}
+.streetview-house-row.active{background:var(--ns-flow-shell)!important;color:#fff!important}
+.streetview-viewer-shell{background:#241c17!important}
+
+/* Calendars / scheduling / kanban */
+.calendar-grid,.schedule-grid,.dispatch-board,.kanban-board,.lead-kanban,.recruit-kanban{border-color:var(--ns-flow-line)!important}
+.calendar-day,.schedule-cell,.kanban-column,.lead-kanban-col,.recruit-column{background:#fffdf9!important;border-color:var(--ns-flow-line)!important}
+.calendar-day:hover,.schedule-cell:hover{background:#faf5ef!important}
+.lead-kanban-card,.kanban-card,.recruit-card{background:#fff!important;border-color:#e1d4c8!important;box-shadow:0 5px 16px rgba(50,35,24,.045)!important}
+
+/* Command palette */
+.os-command-backdrop{background:rgba(37,27,20,.34)!important}
+.os-command-palette{background:var(--ns-flow-surface)!important;border-color:var(--ns-flow-line)!important;box-shadow:0 28px 80px rgba(46,32,22,.22)!important}
+.os-command-results>button:hover{background:var(--ns-flow-soft)!important}
+.os-command-trigger{background:#fffdf9!important;border-color:var(--ns-flow-line)!important;color:var(--ns-flow-muted)!important}
+
+/* Mobile/tablet maintain the same palette, including bottom navigation. */
+@media(max-width:900px){
+  .portal-mobile-nav,.mobile-bottom-nav,.portal-bottom-nav{
+    background:rgba(43,33,26,.97)!important;border-top:1px solid rgba(255,255,255,.08)!important;
+    box-shadow:0 -12px 30px rgba(38,27,20,.13)!important
+  }
+  .portal-mobile-nav button,.mobile-bottom-nav button,.portal-bottom-nav button{color:#c3b7ad!important}
+  .portal-mobile-nav button.active,.mobile-bottom-nav button.active,.portal-bottom-nav button.active{color:#fff!important;background:rgba(157,118,81,.22)!important}
+  .portal-main{background:var(--ns-flow-canvas)!important}
+}
+
+/* Do not globally recolor semantic status indicators, map pins, charts or GPS. */
