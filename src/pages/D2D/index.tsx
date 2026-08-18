@@ -19,7 +19,7 @@ import TrainingPortal from '@/components/TrainingPortal';
 import TeamMessaging from '@/components/TeamMessaging';
 import {
   APPOINTMENT_STATUSES, CONTACTED_STATUSES, DOOR_STATUSES, REVISIT_STATUSES,
-  SOLD_STATUSES, doorStatus, haversineMeters, localDateTime, optimizeWalkingRoute,
+  SOLD_STATUSES, doorStatus, haversineMeters, localDateTime, optimizeWalkingRoute, rankNextBestHouse,
   percent, sameLocalDay,
 } from '@/lib/fieldOps';
 import { sendCommunication } from '@/lib/communications';
@@ -28,6 +28,7 @@ type Tab='territory'|'route'|'leads'|'followups'|'messages'|'performance'|'timec
 type LiveLocation={latitude:number;longitude:number;accuracy?:number|null};
 type OfflineAction={id:string;type:'save_lead'|'door_status';payload:any;created_at:string};
 const OFFLINE_KEY='ns_d2d_offline_queue_v2';
+const DOOR_CACHE_KEY='ns_d2d_territory_doors_v3';
 const STATUS_QUICK=['no_answer','revisit','interested','follow_up','estimate','appointment_set','sold','do_not_knock'] as const;
 
 const emptyForm=()=>({
@@ -92,7 +93,11 @@ export default function D2DPortal(){
     const currentTerritory=selectedTerritory||(t.data?.[0]?.id??'');
     setSelectedTerritory(currentTerritory);
     const ids=(t.data??[]).map(x=>x.id);
-    if(ids.length){const d=await supabase.from('territory_doors').select('*').in('territory_id',ids);setDoors(d.data??[])}else setDoors([]);
+    if(ids.length){
+      const d=await supabase.from('territory_doors').select('*').in('territory_id',ids);
+      if(!d.error){setDoors(d.data??[]);cacheTerritoryDoors(d.data??[])}
+      else {const cached=loadTerritoryDoors(ids);setDoors(cached)}
+    }else setDoors([]);
     if(r.data?.id){const rs=await supabase.from('territory_route_stops').select('*').eq('route_id',r.data.id).order('stop_order');setRouteDoorIds((rs.data??[]).filter(x=>x.status!=='completed').map(x=>x.door_id));}
     setBusy(false);
   };
@@ -163,7 +168,7 @@ export default function D2DPortal(){
       }
       const {data:fresh,error:freshError}=await supabase.from('territory_doors').select('*').eq('territory_id',territoryId);
       if(freshError)throw freshError;
-      setDoors(prev=>[...prev.filter(d=>d.territory_id!==territoryId),...(fresh??[])]);
+      setDoors(prev=>{const next=[...prev.filter(d=>d.territory_id!==territoryId),...(fresh??[])];cacheTerritoryDoors(next);return next;});
       attemptedDiscovery.current.add(territoryId);
     }catch(err:any){
       setHouseDiscoveryError(err?.message||'House discovery is temporarily unavailable.');
@@ -215,7 +220,7 @@ export default function D2DPortal(){
     if(door.id){const h=await supabase.from('territory_door_history').select('*').eq('door_id',door.id).order('created_at',{ascending:false}).limit(20);setHistory(h.data??[])}
     if(!address&&Number.isFinite(Number(door.latitude))&&Number.isFinite(Number(door.longitude))){
       const geo=await lookupAddress(Number(door.latitude),Number(door.longitude));address=geo?.address||'';
-      if(address){setForm(p=>({...p,address}));if(door.id){const patch={address,street_name:geo?.street||null,house_number:geo?.house_number||null,city:geo?.city||null,state:geo?.state||null,postal_code:geo?.postal_code||null};await supabase.from('territory_doors').update(patch).eq('id',door.id);setDoors(p=>p.map(x=>x.id===door.id?{...x,...patch}:x));}}
+      if(address){setForm(p=>({...p,address}));if(door.id){const patch={address,street_name:geo?.street||null,house_number:geo?.house_number||null,city:geo?.city||null,state:geo?.state||null,postal_code:geo?.postal_code||null};await supabase.from('territory_doors').update(patch).eq('id',door.id);setDoors(p=>{const next=p.map(x=>x.id===door.id?{...x,...patch}:x);cacheTerritoryDoors(next);return next;});}}
     }
   };
 
@@ -268,7 +273,7 @@ export default function D2DPortal(){
       try{await supabase.from('lead_activities').insert({lead_id:saved.id,employee_id:employee.id,activity_type:'field_update',previous_status:selectedDoor.status||null,new_status:nextStatus,notes:form.notes||null});}catch{/* keep field work moving */}
       if(selectedDoor.id){
         const patch:any={lead_id:saved.id,status:nextStatus,last_visited_at:new Date().toISOString(),last_employee_id:employee.id,notes:form.notes,next_follow_up_at:form.follow_up_at?new Date(form.follow_up_at).toISOString():null,...(nextStatus==='do_not_knock'?{do_not_knock:true}:{})};
-        const d=await supabase.from('territory_doors').update(patch).eq('id',selectedDoor.id).select().single();if(d.error)throw d.error;setDoors(p=>p.map(x=>x.id===selectedDoor.id?d.data:x));
+        const d=await supabase.from('territory_doors').update(patch).eq('id',selectedDoor.id).select().single();if(d.error)throw d.error;setDoors(p=>{const next=p.map(x=>x.id===selectedDoor.id?d.data:x);cacheTerritoryDoors(next);return next;});
         if(route?.id){await supabase.from('territory_route_stops').update({status:'completed',completed_at:new Date().toISOString()}).eq('route_id',route.id).eq('door_id',selectedDoor.id);setRouteDoorIds(p=>p.filter(id=>id!==selectedDoor.id));}
       }
       if(nextStatus==='appointment_set'&&form.appointment_at)await createAppointment(saved);
@@ -314,21 +319,15 @@ export default function D2DPortal(){
   };
   const toggleRoute=async()=>{if(!route)return;const status=route.status==='paused'?'active':'paused';const patch=status==='paused'?{status,paused_at:new Date().toISOString()}:{status,paused_at:null};await supabase.from('territory_routes').update(patch).eq('id',route.id);setRoute({...route,...patch});};
   const finishRoute=async()=>{if(!route)return;await supabase.from('territory_routes').update({status:'completed',ended_at:new Date().toISOString()}).eq('id',route.id);setRoute(null);setRouteDoorIds([]);};
-  const nextBest=()=>{const nextId=routeDoorIds[0];const door=nextId?doors.find(d=>d.id===nextId):optimizeWalkingRoute(live||territoryDoors[0]||{latitude:35.7796,longitude:-78.6382},territoryDoors.filter(d=>!d.do_not_knock&&['unworked','no_answer','revisit','follow_up'].includes(d.status||'unworked')))[0];if(door){pickDoor(door);setTab('territory')}else alert('No available house found.');};
+  const nextBest=()=>{const nextId=routeDoorIds[0];const start=live||(selectedDoor&&selectedDoor.latitude!=null&&selectedDoor.longitude!=null?{latitude:Number(selectedDoor.latitude),longitude:Number(selectedDoor.longitude)}:territoryDoors[0]||{latitude:35.7796,longitude:-78.6382});const door=nextId?doors.find(d=>d.id===nextId):rankNextBestHouse(start as any,territoryDoors.filter(d=>!d.do_not_knock&&['unworked','no_answer','revisit','follow_up'].includes(d.status||'unworked')))[0];if(door){pickDoor(door);setTab('territory')}else alert('No available house found.');};
 
   const saveAndNext=async()=>{
     const current=selectedDoor;
     if(!current)return;
     const ok=await saveLead(undefined,form.status);
     if(!ok)return;
-    const candidates=territoryDoors
-      .filter(d=>d.id!==current.id&&!d.do_not_knock&&['unworked','no_answer','revisit','follow_up'].includes(d.status||'unworked'))
-      .sort((a,b)=>{
-        const pa=(a.status==='unworked'?0:a.status==='revisit'?1:2),pb=(b.status==='unworked'?0:b.status==='revisit'?1:2);
-        if(pa!==pb)return pa-pb;
-        if(current.latitude==null||current.longitude==null)return 0;
-        return haversineMeters({latitude:Number(current.latitude),longitude:Number(current.longitude)},a)-haversineMeters({latitude:Number(current.latitude),longitude:Number(current.longitude)},b);
-      });
+    const start={latitude:Number(current.latitude??live?.latitude??35.7796),longitude:Number(current.longitude??live?.longitude??-78.6382)};
+    const candidates=rankNextBestHouse(start,territoryDoors.filter(d=>d.id!==current.id&&!d.do_not_knock&&['unworked','no_answer','revisit','follow_up'].includes(d.status||'unworked')));
     if(candidates[0])setTimeout(()=>pickDoor(candidates[0]),80);
   };
 
@@ -367,8 +366,8 @@ export default function D2DPortal(){
   const nextSuggestedDoor=(()=>{
     const eligible=territoryDoors.filter(d=>!d.do_not_knock&&['unworked','no_answer','revisit','follow_up'].includes(d.status||'unworked'));
     if(!eligible.length)return null;
-    if(!live)return eligible[0];
-    return [...eligible].sort((a,b)=>haversineMeters(live,a)-haversineMeters(live,b))[0];
+    const start=live||territoryDoors[0]||{latitude:35.7796,longitude:-78.6382};
+    return rankNextBestHouse(start,eligible)[0];
   })();
 
   return <div className="portal-layout d2d-os">
@@ -476,4 +475,6 @@ function HouseDrawer({door,form,setForm,history,manual,saving,onClose,onSave,onS
 function Kpi({label,value,detail}:{label:string;value:string;detail?:string}){return <div className="d2d-kpi"><span>{label}</span><strong>{value}</strong>{detail&&<small>{detail}</small>}</div>}
 function Goal({label,value,goal,moneyMode=false}:{label:string;value:number;goal:number;moneyMode?:boolean}){const pct=percent(value,goal);return <div className="goal-row"><div><span>{label}</span><strong>{moneyMode?money(value):value} / {moneyMode?money(goal):goal}</strong></div><div className="goal-track"><i style={{width:`${pct}%`}}/></div></div>}
 function loadOffline():OfflineAction[]{try{return JSON.parse(localStorage.getItem(OFFLINE_KEY)||'[]')}catch{return[]}}
+function cacheTerritoryDoors(doors:TerritoryDoor[]){try{localStorage.setItem(DOOR_CACHE_KEY,JSON.stringify({savedAt:Date.now(),doors:doors.slice(0,5000)}))}catch{/* storage can be unavailable/private */}}
+function loadTerritoryDoors(ids:string[]):TerritoryDoor[]{try{const parsed=JSON.parse(localStorage.getItem(DOOR_CACHE_KEY)||'{}');if(!Array.isArray(parsed?.doors))return[];return parsed.doors.filter((d:TerritoryDoor)=>ids.includes(String(d.territory_id||'')))}catch{return[]}}
 function getPosition():Promise<LiveLocation|null>{return new Promise(resolve=>{if(!navigator.geolocation)return resolve(null);navigator.geolocation.getCurrentPosition(p=>resolve({latitude:p.coords.latitude,longitude:p.coords.longitude,accuracy:p.coords.accuracy}),()=>resolve(null),{enableHighAccuracy:true,timeout:10000,maximumAge:30000})})}

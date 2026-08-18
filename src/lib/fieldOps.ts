@@ -68,7 +68,9 @@ export function optimizeWalkingRoute<T extends GeoPoint>(start: GeoPoint, stops:
     let bestScore = Number.POSITIVE_INFINITY;
     remaining.forEach((stop, index) => {
       const distance = haversineMeters(cursor, stop);
-      const priorityBoost = Math.max(0, doorStatus(stop.status).priority - 30) * 1.5;
+      // Field priority matters, but distance is still the dominant signal so the
+      // rep does not zig-zag across a neighborhood for a single high-value door.
+      const priorityBoost = Math.max(0, doorStatus(stop.status).priority - 30) * 2.25;
       const score = distance - priorityBoost;
       if (score < bestScore) { bestScore = score; bestIndex = index; }
     });
@@ -76,12 +78,46 @@ export function optimizeWalkingRoute<T extends GeoPoint>(start: GeoPoint, stops:
     ordered.push(next);
     cursor = next;
   }
-  return ordered;
+
+  // A small deterministic 2-opt pass removes obvious route crossings while
+  // remaining fast enough to run locally/offline on an iPad for a few hundred doors.
+  const route = [...ordered];
+  const maxPasses = route.length > 350 ? 1 : route.length > 180 ? 2 : 3;
+  for (let pass = 0; pass < maxPasses; pass++) {
+    let improved = false;
+    for (let i = 0; i < route.length - 2; i++) {
+      const a: GeoPoint = i === 0 ? start : route[i - 1];
+      const b = route[i];
+      for (let k = i + 1; k < route.length - 1; k++) {
+        const c = route[k], d = route[k + 1];
+        const before = haversineMeters(a, b) + haversineMeters(c, d);
+        const after = haversineMeters(a, c) + haversineMeters(b, d);
+        if (after + 2 < before) {
+          route.splice(i, k - i + 1, ...route.slice(i, k + 1).reverse());
+          improved = true;
+        }
+      }
+    }
+    if (!improved) break;
+  }
+  return route;
+}
+
+export function rankNextBestHouse<T extends GeoPoint>(start: GeoPoint, stops: T[]) {
+  return [...stops].sort((a, b) => {
+    const score = (door: T) => {
+      const distance = haversineMeters(start, door);
+      const priority = doorStatus(door.status).priority;
+      return distance - Math.max(0, priority - 30) * 2.5;
+    };
+    return score(a) - score(b);
+  });
 }
 
 export function formatDistance(meters: number) {
   if (!Number.isFinite(meters)) return '—';
-  if (meters < 1000) return `${Math.max(1, Math.round(meters))} ft`;
+  const feet = meters * 3.28084;
+  if (feet < 1320) return `${Math.max(1, Math.round(feet))} ft`;
   const miles = meters / 1609.344;
   return `${miles.toFixed(miles < 10 ? 1 : 0)} mi`;
 }
