@@ -1,63 +1,815 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  Award, BarChart3, Bell, CalendarClock, CheckCircle2, ChevronDown, ClipboardCheck,
-  Clock3, DollarSign, GraduationCap, ListChecks, LogOut, MapPinned, Menu, PackageSearch,
-  ShieldCheck, Target, Users, X, MessageCircle, Gauge,
+  LayoutDashboard, Calendar, CreditCard, Star, Plus, LogOut,
+  TrendingUp, Shield, Clock, CheckCircle, ChevronRight, Menu, X,
+  Car, Sparkles, ArrowUp
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { signOut } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
-import type {
-  Appointment, BusinessTask, Employee, EmployeeShift, Expense, InventoryItem, Lead,
-  Payment, RecruitingCandidate, TimeEntry, TrainingAssignment,
-} from '@/lib/supabase';
-import { money, RECRUITING_STAGES } from '@/lib/data';
-import { can } from '@/lib/permissions';
-import { localDateTime, sameLocalDay } from '@/lib/fieldOps';
+import { Appointment, Payment, Subscription } from '@/lib/supabase';
+import { money, calcSavings, PACKAGES, ADD_ONS, VEHICLE_SIZES, MEMBERSHIPS } from '@/lib/data';
 import { sendCommunication } from '@/lib/communications';
-import TeamMessaging from '@/components/TeamMessaging';
 
-type Tab='overview'|'dispatch'|'jobs'|'qc'|'team'|'crew'|'messages'|'schedule'|'timecards'|'recruiting'|'leads'|'training'|'tasks'|'inventory'|'finance';
-const card:React.CSSProperties={background:'#fffdf9',color:'#211811',border:'1px solid #e3d6ca',borderRadius:18,padding:20,boxShadow:'0 12px 34px rgba(48,32,21,.055)'};
+type Tab = 'dashboard' | 'appointments' | 'subscription' | 'billing';
 
-export default function ManagerPortal(){
- const {user,profile,loading}=useAuth();const navigate=useNavigate();const [tab,setTab]=useState<Tab>('overview');const [sidebar,setSidebar]=useState(false);const [groups,setGroups]=useState<Record<string,boolean>>({today:true,people:false,sales:false,operations:false});
- const [me,setMe]=useState<Employee|null>(null);const [employees,setEmployees]=useState<Employee[]>([]);const [crews,setCrews]=useState<any[]>([]);const [doorHistory,setDoorHistory]=useState<any[]>([]);const [appointments,setAppointments]=useState<Appointment[]>([]);const [shifts,setShifts]=useState<EmployeeShift[]>([]);const [times,setTimes]=useState<TimeEntry[]>([]);const [candidates,setCandidates]=useState<RecruitingCandidate[]>([]);const [leads,setLeads]=useState<Lead[]>([]);const [tasks,setTasks]=useState<BusinessTask[]>([]);const [inventory,setInventory]=useState<InventoryItem[]>([]);const [expenses,setExpenses]=useState<Expense[]>([]);const [payments,setPayments]=useState<Payment[]>([]);const [training,setTraining]=useState<TrainingAssignment[]>([]);const [busy,setBusy]=useState(true);
- useEffect(()=>{if(!loading&&(!user||!['manager','owner','recruiter','finance'].includes(profile?.portal_role||'')))navigate('/portal')},[user,profile,loading,navigate]);
- const load=async()=>{if(!user)return;setBusy(true);const {data:emp}=await supabase.from('employees').select('*').eq('user_id',user.id).maybeSingle();setMe(emp);const [e,a,s,t,c,l,tk,i,ex,p,tr,cg,dh]=await Promise.all([
-   supabase.from('employees').select('*').order('name'),supabase.from('appointments').select('*').order('scheduled_at'),supabase.from('employee_shifts').select('*').order('shift_date'),supabase.from('time_entries').select('*').order('clock_in',{ascending:false}).limit(300),supabase.from('recruiting_candidates').select('*').order('created_at',{ascending:false}),supabase.from('leads').select('*').order('created_at',{ascending:false}).limit(300),supabase.from('business_tasks').select('*').order('due_at'),supabase.from('inventory_items').select('*').order('name'),supabase.from('expenses').select('*').order('expense_date',{ascending:false}).limit(200),supabase.from('payments').select('*').order('created_at',{ascending:false}).limit(300),supabase.from('training_assignments').select('*').eq('manager_signoff_status','pending').order('updated_at',{ascending:false}),supabase.from('crew_groups').select('*').order('name'),supabase.from('territory_door_history').select('*').order('created_at',{ascending:false}).limit(10000),
- ]);setEmployees(e.data??[]);setAppointments(a.data??[]);setShifts(s.data??[]);setTimes(t.data??[]);setCandidates(c.data??[]);setLeads(l.data??[]);setTasks(tk.data??[]);setInventory(i.data??[]);setExpenses(ex.data??[]);setPayments(p.data??[]);setTraining(tr.data??[]);setCrews(cg.data??[]);setDoorHistory(dh.data??[]);setBusy(false)};useEffect(()=>{load()},[user]);
- const todayJobs=appointments.filter(a=>sameLocalDay(a.scheduled_at)&&a.status!=='cancelled'&&!a.archived);const activeEmployees=employees.filter(e=>e.status==='active');const openEntries=times.filter(t=>!t.clock_out);const qcQueue=appointments.filter(a=>a.qc_status==='pending'&&a.status!=='completed');const unassigned=todayJobs.filter(a=>!a.assigned_employee_id);const late=times.filter(t=>t.is_late&&sameLocalDay(t.clock_in));const overdueTasks=tasks.filter(t=>t.status!=='completed'&&t.due_at&&new Date(t.due_at)<new Date());const dueFollowups=leads.filter(l=>l.status==='follow_up'||(l.follow_up_at&&new Date(l.follow_up_at)<new Date()));
- const employeeName=(id?:string|null)=>employees.find(e=>e.id===id)?.name||'Unassigned';
- const updateAppointment=async(id:string,patch:Partial<Appointment>)=>{const {data,error}=await supabase.from('appointments').update(patch).eq('id',id).select().single();if(error)return alert(error.message);setAppointments(p=>p.map(x=>x.id===id?data:x))};
- const assign=async(appointmentId:string,employeeId:string|null)=>{const detailer=employees.find(e=>e.id===employeeId);await updateAppointment(appointmentId,{assigned_employee_id:employeeId,dispatch_status:employeeId?'assigned':'unassigned'} as any);const appt=appointments.find(a=>a.id===appointmentId);if(appt?.customer_email&&detailer)sendCommunication('detailer_assigned',{appointment_id:appt.id,recipient_email:appt.customer_email,variables:{customer_name:appt.customer_name||'Customer',employee_name:detailer.name,service_name:appt.service_name}}).catch(console.warn)};
- const qc=async(appt:Appointment,pass:boolean)=>{if(!me&&!can(profile,'appointments.manage'))return;const patch:any=pass?{qc_status:'passed',qc_completed_at:new Date().toISOString(),qc_by_employee_id:me?.id||null,status:'completed',field_status:'completed',completed_at:new Date().toISOString()}:{qc_status:'rework',field_status:'rework'};await updateAppointment(appt.id,patch);if(pass&&appt.customer_email)sendCommunication('job_completed',{appointment_id:appt.id,recipient_email:appt.customer_email,variables:{customer_name:appt.customer_name||'Customer',service_name:appt.service_name}}).catch(console.warn)};
- const approveTime=async(t:TimeEntry)=>{const {data,error}=await supabase.from('time_entries').update({status:'approved',approved_at:new Date().toISOString(),approved_by:user?.id||null}).eq('id',t.id).select().single();if(error)return alert(error.message);setTimes(p=>p.map(x=>x.id===t.id?data:x))};
- const updateCandidate=async(c:RecruitingCandidate,stage:string)=>{const prev=c.stage;const {data,error}=await supabase.from('recruiting_candidates').update({stage,updated_at:new Date().toISOString()}).eq('id',c.id).select().single();if(error)return alert(error.message);setCandidates(p=>p.map(x=>x.id===c.id?data:x));await supabase.from('recruiting_events').insert({candidate_id:c.id,event_type:'stage_change',previous_stage:prev,new_stage:stage,created_by:user?.id||null});const event=stage==='first_interview_pending'?'first_interview':stage==='second_interview_pending'?'second_interview':stage==='background_check'?'background_check':stage==='job_offer_pending'?'job_offer':stage==='scheduled_to_start'?'start_date':null;if(event&&c.email)sendCommunication(event,{candidate_id:c.id,recipient_email:c.email,variables:{candidate_name:c.full_name,position:c.position,interview_date:c.interview_date?localDateTime(c.interview_date):'To be scheduled',start_date:c.start_date||'',response_date:'as soon as possible'}}).catch(console.warn)};
- const signoff=async(a:TrainingAssignment,pass:boolean)=>{if(!me)return alert('Manager employee record required.');const {error}=await supabase.from('training_signoffs').insert({assignment_id:a.id,employee_id:a.employee_id,manager_employee_id:me.id,status:pass?'approved':'rework'});if(error)return alert(error.message);await supabase.from('training_assignments').update({manager_signoff_status:pass?'approved':'rework',status:pass?'completed':'in_progress',completed_at:pass?new Date().toISOString():null}).eq('id',a.id);setTraining(p=>p.filter(x=>x.id!==a.id))};
- const logout=async()=>{await signOut().catch(()=>{});navigate('/')};if(loading||busy)return <div className="portal-loading"><div className="portal-spinner"/><p>Loading manager portal…</p></div>;
- const nav:[Tab,string,any,string,boolean][]=[
-  ['overview','Today',Gauge,'today',true],['dispatch','Dispatch',CalendarClock,'today',can(profile,'appointments.manage')],['jobs','Appointments',ListChecks,'today',can(profile,'appointments.view')],['qc','Quality Control',ShieldCheck,'today',can(profile,'appointments.manage')],
-  ['team','Team Status',Users,'people',can(profile,'employees.view')],['crew','My Crew',Users,'people',can(profile,'employees.view')],['messages','Messages',MessageCircle,'people',true],['schedule','Schedule',CalendarClock,'people',can(profile,'schedule.view')],['timecards','Timecards',Clock3,'people',can(profile,'timecards.view')],['recruiting','Recruiting',Target,'people',can(profile,'recruiting.manage')],['training','Training Sign-Offs',GraduationCap,'people',can(profile,'employees.view')],
-  ['leads','Leads',Target,'sales',can(profile,'leads.view_all')],['tasks','Tasks',CheckCircle2,'operations',can(profile,'tasks.view_all')],['inventory','Inventory',PackageSearch,'operations',can(profile,'inventory.view')],['finance','Finance',DollarSign,'operations',can(profile,'finance.view')],
- ];const visible=nav.filter(n=>n[4]);if(!visible.some(n=>n[0]===tab)&&visible.length)setTab(visible[0][0]);
- return <div className="portal-layout manager-os"><aside className={`portal-sidebar ${sidebar?'sidebar-open':''}`}><div className="sidebar-header"><Link to="/" className="sidebar-brand"><div className="brand-mark brand-mark-sm">NS</div><div><strong>MANAGER</strong><small>NORTH SPLASH</small></div></Link><button className="sidebar-close" onClick={()=>setSidebar(false)}><X size={18}/></button></div><div className="sidebar-user"><div className="sidebar-avatar">{(me?.name||profile?.full_name||'M')[0]}</div><div><p>{me?.name||profile?.full_name||'Manager'}</p><span>{profile?.portal_role}</span></div></div><nav className="sidebar-nav">{[['today','Daily Operations'],['people','People'],['sales','Sales'],['operations','Business']].map(([id,label])=><div className="nav-group" key={id}><button className="nav-group-title" onClick={()=>setGroups(p=>Object.fromEntries(Object.keys(p).map(k=>[k,k===id?!p[id]:false])))}>{label}<ChevronDown size={14} className={groups[id]?'nav-chevron-open':''}/></button>{groups[id]&&visible.filter(n=>n[3]===id).map(([tid,l,Icon])=><button key={tid} className={`sidebar-item ${tab===tid?'sidebar-active':''}`} onClick={()=>{setTab(tid);setSidebar(false)}}><Icon size={18}/>{l}{tid==='qc'&&qcQueue.length>0&&<span className="nav-count">{qcQueue.length}</span>}</button>)}</div>)}</nav><div className="sidebar-footer"><button className="sidebar-item sidebar-signout" onClick={logout}><LogOut size={18}/>Sign Out</button></div></aside>{sidebar&&<div className="sidebar-backdrop" onClick={()=>setSidebar(false)}/>}<main className="portal-main"><div className="portal-topbar"><button className="sidebar-toggle" onClick={()=>setSidebar(true)}><Menu size={20}/></button><div className="topbar-title"><h1>{visible.find(n=>n[0]===tab)?.[1]||'Manager'}</h1><span>{todayJobs.length} jobs today · {openEntries.length} clocked in</span></div></div><div className="portal-content">
-  {tab==='overview'&&<div className="tab-content"><div className="manager-hero"><div><span className="eyebrow">DAILY OPERATIONS</span><h2>{todayJobs.length} jobs · {money(todayJobs.reduce((n,a)=>n+Number(a.price||0),0))} scheduled</h2><p>{openEntries.length} employees clocked in · {unassigned.length} unassigned · {qcQueue.length} awaiting QC</p></div><BarChart3 size={38}/></div><div className="manager-kpis"><Metric label="Active Team" value={String(activeEmployees.length)} detail={`${openEntries.length} clocked in`}/><Metric label="Unassigned" value={String(unassigned.length)} detail="Jobs requiring dispatch"/><Metric label="QC Queue" value={String(qcQueue.length)} detail="Awaiting manager review"/><Metric label="Late Today" value={String(late.length)} detail="10+ min after shift"/><Metric label="Follow-Ups" value={String(dueFollowups.length)} detail="D2D follow-ups due"/><Metric label="Overdue Tasks" value={String(overdueTasks.length)} detail="Needs attention"/></div><div className="manager-overview-grid"><section className="manager-panel"><h3>Today's Run</h3>{todayJobs.slice(0,10).map(a=><div className="manager-line" key={a.id}><div><strong>{a.scheduled_at?new Date(a.scheduled_at).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):'—'} · {a.service_name}</strong><span>{a.customer_name||'Customer'} · {employeeName(a.assigned_employee_id)}</span></div><em>{a.field_status||a.status}</em></div>)}{!todayJobs.length&&<p>No jobs scheduled.</p>}</section><section className="manager-panel"><h3>Attention</h3>{unassigned.slice(0,4).map(a=><button key={a.id} onClick={()=>setTab('dispatch')}><Bell/><div><strong>Unassigned job</strong><span>{a.service_name} · {a.scheduled_at?localDateTime(a.scheduled_at):'No time'}</span></div></button>)}{qcQueue.slice(0,3).map(a=><button key={a.id} onClick={()=>setTab('qc')}><ShieldCheck/><div><strong>QC required</strong><span>{a.service_name} · {employeeName(a.assigned_employee_id)}</span></div></button>)}{!unassigned.length&&!qcQueue.length&&<p>Nothing urgent right now.</p>}</section></div></div>}
-  {tab==='dispatch'&&<div className="tab-content"><div className="tab-header"><div><h2>Dispatch Board</h2><p>Drag today's appointments between detailers. Conflicts are flagged before assignment.</p></div></div><div className="dispatch-v2">{[{id:'',name:'Unassigned'},...activeEmployees.filter(e=>['detailer','manager'].includes(e.role)).map(e=>({id:e.id,name:e.name}))].map(col=><div className="dispatch-v2-column" key={col.id||'unassigned'} onDragOver={e=>e.preventDefault()} onDrop={e=>assign(e.dataTransfer.getData('appointment'),col.id||null)}><header><strong>{col.name}</strong><span>{todayJobs.filter(a=>(a.assigned_employee_id||'')===col.id).length}</span></header>{todayJobs.filter(a=>(a.assigned_employee_id||'')===col.id).map(a=><div draggable className="dispatch-v2-job" key={a.id} onDragStart={e=>e.dataTransfer.setData('appointment',a.id)}><span>{a.scheduled_at?new Date(a.scheduled_at).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):'No time'}</span><strong>{a.service_name}</strong><small>{a.customer_name||'Customer'} · {a.vehicle_info||'Vehicle'}</small><em>{money(Number(a.price||0))}</em></div>)}</div>)}</div></div>}
-  {tab==='jobs'&&<div className="tab-content"><div className="manager-job-list">{appointments.filter(a=>!a.archived).map(a=><div className="manager-job-row" key={a.id}><div><strong>{a.service_name}</strong><span>{a.customer_name||'Customer'} · {a.scheduled_at?localDateTime(a.scheduled_at):'Unscheduled'}</span><small>{a.service_address||a.vehicle_info||'Address pending'}</small></div><select value={a.assigned_employee_id||''} onChange={e=>assign(a.id,e.target.value||null)}><option value="">Unassigned</option>{activeEmployees.filter(e=>e.role==='detailer'||e.role==='manager').map(e=><option value={e.id} key={e.id}>{e.name} · L{e.employment_level||1}</option>)}</select><select value={a.status} onChange={e=>updateAppointment(a.id,{status:e.target.value as any})}><option value="pending">Pending</option><option value="confirmed">Confirmed</option><option value="in_progress">In Progress</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select><strong>{money(Number(a.price||0))}</strong></div>)}</div></div>}
-  {tab==='qc'&&<div className="tab-content"><div className="qc-grid">{qcQueue.map(a=><div className="qc-card" key={a.id}><div><span className="eyebrow">AWAITING QC</span><h3>{a.service_name}</h3><p>{a.customer_name||'Customer'} · {a.vehicle_info||'Vehicle'}</p><small>{employeeName(a.assigned_employee_id)} finished {a.finished_at?localDateTime(a.finished_at):'recently'}</small></div><div className="qc-actions"><button className="btn-outline" onClick={()=>qc(a,false)}>Send Back / Rework</button><button className="btn-primary" onClick={()=>qc(a,true)}><ClipboardCheck size={15}/>Pass QC + Complete</button></div></div>)}{!qcQueue.length&&<div className="ns-empty">No jobs are waiting for quality control.</div>}</div></div>}
-  {tab==='team'&&<div className="tab-content"><div className="team-status-grid">{activeEmployees.map(e=>{const open=openEntries.find(t=>t.employee_id===e.id);return <div className="team-status-card" key={e.id}><div className="employee-avatar">{e.name[0]}</div><div><strong>{e.name}</strong><span>{e.role.replaceAll('_',' ')} · Level {e.employment_level||1}</span></div><em className={open?'working':''}>{open?'Clocked In':'Off Clock'}</em>{open&&<small>Since {new Date(open.clock_in).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}</small>}</div>})}</div></div>}
-  {tab==='crew'&&<div className="tab-content v2-page"><div className="v2-page-head"><div><span className="eyebrow">MY CREW</span><h2>Crew Performance</h2><p>Live activity and productivity for employees assigned to your crews.</p></div></div>{crews.filter(c=>!me||c.manager_employee_id===me.id).map(c=>{const members=employees.filter(e=>e.department===`crew:${c.id}`&&e.status==='active');return <section className="v2-card" key={c.id}><div className="v2-card-head"><div><span className="eyebrow">{c.crew_type?.replaceAll('_',' ')}</span><h3>{c.name}</h3></div><strong>{members.length} members</strong></div><div className="manager-crew-grid">{members.map(emp=>{const knocks=doorHistory.filter(h=>h.employee_id===emp.id&&h.created_at?.slice(0,10)===new Date().toISOString().slice(0,10));const last=knocks[0]?.created_at;const jobs=todayJobs.filter(a=>a.assigned_employee_id===emp.id);const open=openEntries.find(t=>t.employee_id===emp.id);return <article key={emp.id}><div className="employee-avatar">{emp.name[0]}</div><div><strong>{emp.name}</strong><span>{emp.role.replaceAll('_',' ')} · {open?'Clocked in':'Off clock'}</span></div>{emp.role==='d2d_agent'?<div className="manager-crew-metrics"><span><b>{knocks.length}</b> doors</span><span><b>{last?new Date(last).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):'—'}</b> last knock</span></div>:<div className="manager-crew-metrics"><span><b>{jobs.length}</b> jobs today</span><span><b>{jobs.filter(j=>j.status==='completed'||j.finished_at).length}</b> finished</span></div>}</article>})}</div></section>})}{!crews.filter(c=>!me||c.manager_employee_id===me.id).length&&<div className="ns-empty">No crew is assigned to your manager profile yet.</div>}</div>}
-  {tab==='messages'&&<div className="tab-content v2-page"><div className="v2-page-head"><div><span className="eyebrow">CREW COMMUNICATION</span><h2>Messages</h2><p>Send updates to crews, D2D, detailers or private groups without leaving operations.</p></div></div><TeamMessaging employee={me} employees={employees} portalKind="manager"/></div>}
-  {tab==='schedule'&&<div className="tab-content"><div className="manager-schedule-list">{shifts.filter(s=>new Date(`${s.shift_date}T23:59:59`)>=new Date(Date.now()-86400000)).slice(0,100).map(s=><div key={s.id}><strong>{s.shift_date}</strong><span>{employeeName(s.employee_id)}</span><em>{s.start_time?.slice(0,5)}–{s.end_time?.slice(0,5)}</em><small>{s.status}</small></div>)}</div></div>}
-  {tab==='timecards'&&<div className="tab-content"><div className="timecard-manager-list">{times.slice(0,100).map(t=><div key={t.id}><div><strong>{employeeName(t.employee_id)}</strong><span>{localDateTime(t.clock_in)} → {t.clock_out?new Date(t.clock_out).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):'Open'}</span></div><em>{t.status}</em>{t.status!=='approved'&&t.clock_out&&<button className="btn-sm btn-primary" onClick={()=>approveTime(t)}>Approve</button>}</div>)}</div></div>}
-  {tab==='recruiting'&&<div className="tab-content"><div className="recruit-manager-grid">{candidates.map(c=><div className="recruit-manager-card" key={c.id}><div><span className="eyebrow">{c.position.replaceAll('_',' ')}</span><h3>{c.full_name}</h3><p>{c.email||'No email'} · {c.phone||'No phone'}</p></div><select value={c.stage} onChange={e=>updateCandidate(c,e.target.value)}>{RECRUITING_STAGES.map(([v,l])=><option value={v} key={v}>{l}</option>)}</select><small>{c.interview_date?`Interview ${localDateTime(c.interview_date)}`:'No interview scheduled'}</small></div>)}</div></div>}
-  {tab==='training'&&<div className="tab-content"><div className="tab-header"><div><h2>Hands-On Training Sign-Offs</h2><p>Approve required field skills after observing the employee.</p></div></div><div className="qc-grid">{training.map(a=><div className="qc-card" key={a.id}><div><span className="eyebrow">TRAINING SIGN-OFF</span><h3>{employeeName(a.employee_id)}</h3><p>Course assignment {a.course_id.slice(0,8)}… · Score {a.score??'—'}%</p></div><div className="qc-actions"><button className="btn-outline" onClick={()=>signoff(a,false)}>Needs More Practice</button><button className="btn-primary" onClick={()=>signoff(a,true)}><Award size={15}/>Approve Skill</button></div></div>)}{!training.length&&<div className="ns-empty">No training sign-offs are waiting.</div>}</div></div>}
-  {tab==='leads'&&<div className="tab-content"><div className="manager-leads-grid">{leads.map(l=><div style={card} key={l.id}><span className="eyebrow">{l.status.replaceAll('_',' ')}</span><h3>{l.customer_name||l.address||'Lead'}</h3><p>{employeeName(l.assigned_employee_id)} · {l.address}</p><strong>{money(Number(l.estimated_value||0))}</strong></div>)}</div></div>}
-  {tab==='tasks'&&<div className="tab-content"><div className="task-grid">{tasks.map(t=><div style={card} key={t.id}><span className="eyebrow">{t.priority}</span><h3>{t.title}</h3><p>{employeeName(t.assigned_employee_id)} · {t.status}</p><small>{t.due_at?localDateTime(t.due_at):'No due date'}</small></div>)}</div></div>}
-  {tab==='inventory'&&<div className="tab-content"><div className="inventory-grid-v2">{inventory.map(i=><div className={Number(i.quantity)<=Number(i.reorder_level)?'inventory-v2 low':'inventory-v2'} key={i.id}><PackageSearch/><div><strong>{i.name}</strong><span>{i.category}</span></div><em>{i.quantity}</em><small>Reorder at {i.reorder_level}</small></div>)}</div></div>}
-  {tab==='finance'&&<div className="tab-content"><div className="manager-kpis"><Metric label="Collected Revenue" value={money(payments.filter(p=>p.status==='completed').reduce((n,p)=>n+Number(p.amount||0),0))}/><Metric label="Expenses" value={money(expenses.reduce((n,e)=>n+Number(e.amount||0),0))}/><Metric label="Transactions" value={String(payments.length)}/><Metric label="Expense Records" value={String(expenses.length)}/></div></div>}
- </div></main></div>;
+function StatusBadge({ status }: { status: string }) {
+  const colors: Record<string, string> = {
+    pending: 'badge-yellow',
+    confirmed: 'badge-blue',
+    in_progress: 'badge-purple',
+    completed: 'badge-green',
+    cancelled: 'badge-red',
+    active: 'badge-green',
+    paused: 'badge-yellow',
+  };
+  return <span className={`status-badge ${colors[status] ?? 'badge-gray'}`}>{status.replace('_', ' ')}</span>;
 }
-function Metric({label,value,detail}:{label:string;value:string;detail?:string}){return <div className="manager-kpi"><span>{label}</span><strong>{value}</strong>{detail&&<small>{detail}</small>}</div>}
+
+function SavingsBar({ spent, savings }: { spent: number; savings: number }) {
+  const total = spent + savings;
+  const spentPct = total > 0 ? (spent / total) * 100 : 50;
+  return (
+    <div className="savings-visual">
+      <div className="savings-bar">
+        <div className="savings-spent" style={{ width: `${spentPct}%` }}>
+          <span>Invested</span>
+        </div>
+        <div className="savings-saved" style={{ width: `${100 - spentPct}%` }}>
+          <span>Saved</span>
+        </div>
+      </div>
+      <div className="savings-labels">
+        <div className="savings-label-item">
+          <div className="swatch swatch-spent" />
+          <div>
+            <strong>{money(spent)}</strong>
+            <span>Lifetime invested in care</span>
+          </div>
+        </div>
+        <div className="savings-label-item">
+          <div className="swatch swatch-saved" />
+          <div>
+            <strong>{money(savings)}</strong>
+            <span>Estimated damage prevented</span>
+          </div>
+        </div>
+      </div>
+      <div className="savings-roi">
+        <ArrowUp size={14} />
+        <span>~{money(savings - spent)} net vehicle value protection</span>
+      </div>
+    </div>
+  );
+}
+
+export default function Portal() {
+  const { user, profile, loading } = useAuth();
+  const navigate = useNavigate();
+  const [tab, setTab] = useState<Tab>('dashboard');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [dataLoading, setDataLoading] = useState(true);
+
+  // Booking form state
+  const [showBook, setShowBook] = useState(false);
+  const [bookPkg, setBookPkg] = useState(1);
+  const [bookVehicle, setBookVehicle] = useState(0);
+  const [bookAddOns, setBookAddOns] = useState<number[]>([]);
+  const [bookNotes, setBookNotes] = useState('');
+  const [bookSubmitting, setBookSubmitting] = useState(false);
+  const [bookDate, setBookDate] = useState('');
+const [bookTime, setBookTime] = useState('');
+const [availableTimes, setAvailableTimes] = useState<string[]>([]);
+const [timesLoading, setTimesLoading] = useState(false);
+  const [bookDone, setBookDone] = useState(false);
+
+  useEffect(() => {
+    if (!loading && !user) navigate('/login');
+  }, [user, loading, navigate]);
+
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const [apts, pays, subs] = await Promise.all([
+        supabase.from('appointments').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
+        supabase.from('payments').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
+        supabase.from('subscriptions').select('*').eq('user_id', user.id).eq('status', 'active').maybeSingle(),
+      ]);
+      setAppointments(apts.data ?? []);
+      setPayments(pays.data ?? []);
+      setSubscription(subs.data ?? null);
+      setDataLoading(false);
+    })();
+  }, [user]);
+
+  const lifetimeSpend = payments.reduce((s, p) => s + p.amount, 0);
+  const lifetimeSavings = calcSavings(lifetimeSpend);
+  const upcomingAppointment = appointments.find(a => a.status !== 'completed' && a.status !== 'cancelled');
+
+  const handleSignOut = async () => {
+    await signOut().catch(() => {});
+    navigate('/');
+  };
+
+  const loadAvailableTimes = async (date: string) => {
+  setBookDate(date);
+  setBookTime('');
+  setAvailableTimes([]);
+
+  if (!date) return;
+
+  setTimesLoading(true);
+
+  try {
+    const { data: dayAvailability, error: availabilityError } =
+      await supabase
+        .from('availability')
+        .select('*')
+        .eq('date', date)
+        .maybeSingle();
+
+    if (availabilityError) throw availabilityError;
+
+    if (!dayAvailability || !dayAvailability.is_available) {
+      setAvailableTimes([]);
+      return;
+    }
+
+    const { data: booked, error: bookedError } = await supabase.rpc(
+      'get_booked_times',
+      {
+        for_date: date,
+      }
+    );
+
+    if (bookedError) throw bookedError;
+
+    const bookedTimes = new Set(
+      (booked ?? []).map((item: any) =>
+        new Date(item.scheduled_at).toLocaleTimeString('en-US', {
+          timeZone: 'America/New_York',
+          hour12: false,
+          hour: '2-digit',
+          minute: '2-digit',
+        })
+      )
+    );
+
+    const slots: string[] = [];
+
+    const [startHour, startMinute] =
+      dayAvailability.start_time.split(':').map(Number);
+
+    const [endHour, endMinute] =
+      dayAvailability.end_time.split(':').map(Number);
+
+    let current = startHour * 60 + startMinute;
+    const end = endHour * 60 + endMinute;
+
+    while (current + dayAvailability.slot_minutes <= end) {
+      const hours = Math.floor(current / 60);
+      const minutes = current % 60;
+
+      const value =
+        `${String(hours).padStart(2, '0')}:` +
+        `${String(minutes).padStart(2, '0')}`;
+
+      if (!bookedTimes.has(value)) {
+        slots.push(value);
+      }
+
+      current += dayAvailability.slot_minutes;
+    }
+
+    setAvailableTimes(slots);
+  } catch (error) {
+    console.error('Availability error:', error);
+    setAvailableTimes([]);
+  } finally {
+    setTimesLoading(false);
+  }
+};
+  
+  const handleBookSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  if (!user) return;
+
+    if (!bookDate || !bookTime) {
+  alert('Please choose an appointment date and time.');
+  return;
+}
+
+  setBookSubmitting(true);
+
+  try {
+    const price =
+      PACKAGES[bookPkg].price +
+      VEHICLE_SIZES[bookVehicle].extra +
+      bookAddOns.reduce((sum, i) => sum + ADD_ONS[i][1], 0);
+
+    const { data: appointment, error: appointmentError } = await supabase
+      .from('appointments')
+      .insert({
+        user_id: user.id,
+        customer_name: profile?.full_name ?? null,
+        customer_email: user.email ?? null,
+        customer_phone: profile?.phone ?? null,
+        service_name: PACKAGES[bookPkg].name,
+        scheduled_at: new Date(
+  `${bookDate}T${bookTime}:00`
+).toISOString(),
+        package_name: PACKAGES[bookPkg].name,
+        add_ons: bookAddOns.map(i => ADD_ONS[i][0]),
+        vehicle_info: profile?.vehicle_info ?? '',
+        price,
+        notes: bookNotes,
+        status: 'pending',
+      })
+      .select()
+      .single();
+
+    if (appointmentError) throw appointmentError;
+
+    const { error: paymentError } = await supabase
+      .from('payments')
+      .insert({
+        user_id: user.id,
+        appointment_id: appointment.id,
+        amount: price,
+        status: 'pending',
+        description: PACKAGES[bookPkg].name,
+      });
+
+    if (paymentError) throw paymentError;
+
+    if (user.email) {
+      sendCommunication('booking_received', {
+        appointment_id: appointment.id,
+        recipient_email: user.email,
+        variables: {
+          customer_name: profile?.full_name || 'Customer',
+          service_name: PACKAGES[bookPkg].name,
+          appointment_date: new Date(appointment.scheduled_at).toLocaleDateString('en-US'),
+          appointment_time: new Date(appointment.scheduled_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+        },
+      }).catch(console.warn);
+    }
+
+    navigate('/checkout', {
+  state: {
+    appointmentId: appointment.id,
+    amount: price,
+    serviceName: PACKAGES[bookPkg].name,
+    servicePrice: PACKAGES[bookPkg].price,
+    vehicleName: VEHICLE_SIZES[bookVehicle].name,
+    vehicleExtra: VEHICLE_SIZES[bookVehicle].extra,
+    addOns: bookAddOns.map(i => ({
+      name: ADD_ONS[i][0],
+      price: ADD_ONS[i][1],
+    })),
+  },
+});
+  } catch (error) {
+    console.error('Booking/payment error:', error);
+
+    alert(
+      error instanceof Error
+        ? error.message
+        : 'Unable to start payment. Please try again.'
+    );
+
+    setBookSubmitting(false);
+  }
+};
+  const handleSubscribe = async (plan: typeof MEMBERSHIPS[0]) => {
+  if (!user) return;
+
+  try {
+    const nextDate = new Date();
+    nextDate.setMonth(nextDate.getMonth() + 1);
+
+    const { data: newSubscription, error } = await supabase
+      .from('subscriptions')
+      .insert({
+        user_id: user.id,
+        plan_name: plan.name,
+        plan_price: plan.price,
+
+        // Don't activate until payment succeeds
+        status: 'pending',
+
+        next_detail_date: nextDate.toISOString().split('T')[0],
+        billing_cycle_start: new Date().toISOString().split('T')[0],
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    navigate('/checkout', {
+      state: {
+        paymentType: 'membership',
+        subscriptionId: newSubscription.id,
+
+        amount: plan.price,
+
+        serviceName: `${plan.name} Membership`,
+        servicePrice: plan.price,
+
+        vehicleName: '',
+        vehicleExtra: 0,
+        addOns: [],
+      },
+    });
+  } catch (error) {
+    console.error('Membership checkout error:', error);
+
+    alert(
+      error instanceof Error
+        ? error.message
+        : 'Unable to start membership payment.'
+    );
+  }
+};
+
+  const navItems: { id: Tab; label: string; Icon: any }[] = [
+    { id: 'dashboard', label: 'Dashboard', Icon: LayoutDashboard },
+    { id: 'appointments', label: 'My Appointments', Icon: Calendar },
+    { id: 'subscription', label: 'Membership', Icon: Star },
+    { id: 'billing', label: 'Billing & Savings', Icon: CreditCard },
+  ];
+
+  return (
+    <div className="portal-layout">
+      {/* Sidebar */}
+      <aside className={`portal-sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
+        <div className="sidebar-header">
+          <Link to="/" className="sidebar-brand">
+            <div className="brand-mark brand-mark-sm">NS</div>
+            <div>
+              <strong>NORTH SPLASH</strong>
+              <small>AUTO LUXE</small>
+            </div>
+          </Link>
+          <button className="sidebar-close" onClick={() => setSidebarOpen(false)}><X size={18} /></button>
+        </div>
+
+        <div className="sidebar-user">
+          <div className="sidebar-avatar">{profile?.full_name?.[0]?.toUpperCase() ?? 'C'}</div>
+          <div>
+            <p>{profile?.full_name ?? 'Customer'}</p>
+            <span>{user?.email}</span>
+          </div>
+        </div>
+
+        <nav className="sidebar-nav">
+          {navItems.map(({ id, label, Icon }) => (
+            <button
+              key={id}
+              className={`sidebar-item ${tab === id ? 'sidebar-active' : ''}`}
+              onClick={() => { setTab(id); setSidebarOpen(false); }}
+            >
+              <Icon size={18} /> {label}
+            </button>
+          ))}
+        </nav>
+
+        <div className="sidebar-footer">
+          <Link to="/" className="sidebar-item"><Car size={18} /> View Site</Link>
+          <button className="sidebar-item sidebar-signout" onClick={handleSignOut}>
+            <LogOut size={18} /> Sign Out
+          </button>
+        </div>
+      </aside>
+
+      {sidebarOpen && <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} />}
+
+      {/* Main */}
+      <main className="portal-main">
+        <div className="portal-topbar">
+          <button className="sidebar-toggle" onClick={() => setSidebarOpen(true)}><Menu size={20} /></button>
+          <div className="topbar-title">
+            <h1>{navItems.find(n => n.id === tab)?.label}</h1>
+          </div>
+          <button className="btn-primary topbar-book" onClick={() => setShowBook(true)}>
+            <Plus size={16} /> Book Service
+          </button>
+        </div>
+
+        <div className="portal-content">
+
+          {/* DASHBOARD */}
+          {tab === 'dashboard' && (
+            <div className="dashboard-grid">
+              <div className="dash-welcome">
+                <div>
+                  <h2>Welcome back, {profile?.full_name?.split(' ')[0] ?? 'there'}.</h2>
+                  <p>Here's an overview of your vehicle's care history.</p>
+                </div>
+                <button className="btn-primary" onClick={() => setShowBook(true)}>
+                  <Plus size={16} /> Schedule a Detail
+                </button>
+              </div>
+
+              <div className="dash-stats">
+                <div className="dash-stat-card">
+                  <div className="dash-stat-icon"><CreditCard size={20} /></div>
+                  <div>
+                    <strong>{money(lifetimeSpend)}</strong>
+                    <span>Lifetime Invested</span>
+                  </div>
+                </div>
+                <div className="dash-stat-card dash-stat-accent">
+                  <div className="dash-stat-icon"><Shield size={20} /></div>
+                  <div>
+                    <strong>{money(lifetimeSavings)}</strong>
+                    <span>Est. Damage Prevented</span>
+                  </div>
+                </div>
+                <div className="dash-stat-card">
+                  <div className="dash-stat-icon"><Calendar size={20} /></div>
+                  <div>
+                    <strong>{appointments.filter(a => a.status === 'completed').length}</strong>
+                    <span>Details Completed</span>
+                  </div>
+                </div>
+                <div className="dash-stat-card">
+                  <div className="dash-stat-icon"><Star size={20} /></div>
+                  <div>
+                    <strong>{subscription ? subscription.plan_name : 'None'}</strong>
+                    <span>Membership Plan</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Savings Visual */}
+              {lifetimeSpend > 0 && (
+                <div className="dash-card dash-savings">
+                  <h3><TrendingUp size={18} /> Your Vehicle Investment vs. Protection</h3>
+                  <p className="dash-card-sub">
+                    Every dollar spent on professional detailing prevents an estimated <strong>$3.80</strong> in long-term paint degradation, interior wear, and resale value loss.
+                  </p>
+                  <SavingsBar spent={lifetimeSpend} savings={lifetimeSavings} />
+                </div>
+              )}
+
+              {/* Upcoming */}
+              <div className="dash-card">
+                <h3><Clock size={18} /> Upcoming Appointment</h3>
+                {upcomingAppointment ? (
+                  <div className="upcoming-apt">
+                    <div className="apt-service">{upcomingAppointment.service_name}</div>
+                    <StatusBadge status={upcomingAppointment.status} />
+                    <div className="apt-price">{money(upcomingAppointment.price)}</div>
+                    <button className="btn-outline" onClick={() => setTab('appointments')}>
+                      View Details <ChevronRight size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="empty-state">
+                    <Sparkles size={32} />
+                    <p>No upcoming appointments.</p>
+                    <button className="btn-primary" onClick={() => setShowBook(true)}>Book Now</button>
+                  </div>
+                )}
+              </div>
+
+              {/* Membership */}
+              <div className="dash-card">
+                <h3><Star size={18} /> Membership Status</h3>
+                {subscription ? (
+                  <div className="member-status">
+                    <div className="member-plan-badge">{subscription.plan_name}</div>
+                    <div className="member-detail">
+                      <span>Next detail</span>
+                      <strong>{subscription.next_detail_date ? new Date(subscription.next_detail_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'TBD'}</strong>
+                    </div>
+                    <div className="member-detail">
+                      <span>Monthly rate</span>
+                      <strong>{money(subscription.plan_price)}/mo</strong>
+                    </div>
+                    <button className="btn-outline" onClick={() => setTab('subscription')}>Manage <ChevronRight size={14} /></button>
+                  </div>
+                ) : (
+                  <div className="empty-state">
+                    <Star size={32} />
+                    <p>No active membership.</p>
+                    <button className="btn-outline" onClick={() => setTab('subscription')}>Explore Plans</button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* APPOINTMENTS */}
+          {tab === 'appointments' && (
+            <div className="tab-content">
+              <div className="tab-header">
+                <div>
+                  <h2>Your Appointments</h2>
+                  <p>{appointments.length} total service{appointments.length !== 1 ? 's' : ''}</p>
+                </div>
+                <button className="btn-primary" onClick={() => setShowBook(true)}>
+                  <Plus size={16} /> New Appointment
+                </button>
+              </div>
+
+              {appointments.length === 0 ? (
+                <div className="empty-page">
+                  <Calendar size={48} />
+                  <h3>No appointments yet</h3>
+                  <p>Book your first Luxe service to get started.</p>
+                  <button className="btn-primary" onClick={() => setShowBook(true)}>Book Now</button>
+                </div>
+              ) : (
+                <div className="apt-list">
+                  {appointments.map(apt => (
+                    <div key={apt.id} className="apt-card">
+                      <div className="apt-card-main">
+                        <div className="apt-icon"><Car size={20} /></div>
+                        <div className="apt-info">
+                          <h4>{apt.service_name}</h4>
+                          {apt.add_ons.length > 0 && (
+                            <p className="apt-addons">+ {apt.add_ons.join(', ')}</p>
+                          )}
+                          {apt.vehicle_info && <p className="apt-vehicle">{apt.vehicle_info}</p>}
+                          {apt.scheduled_at && (
+                            <p className="apt-date">
+                              <Clock size={12} /> {new Date(apt.scheduled_at).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
+                        <div className="apt-right">
+                          <StatusBadge status={apt.status} />
+                          <div className="apt-card-price">{money(apt.price)}</div>
+                        </div>
+                      </div>
+                      {apt.notes && (
+                        <div className="apt-notes">
+                          <span>Notes:</span> {apt.notes}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* SUBSCRIPTION */}
+          {tab === 'subscription' && (
+            <div className="tab-content">
+              <h2>Membership Plans</h2>
+              {subscription && (
+                <div className="current-plan-banner">
+                  <div>
+                    <span>Current plan</span>
+                    <strong>{subscription.plan_name}</strong>
+                    <p>Next detail: {subscription.next_detail_date ? new Date(subscription.next_detail_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'TBD'}</p>
+                  </div>
+                  <StatusBadge status={subscription.status} />
+                </div>
+              )}
+              <div className="plan-grid">
+                {MEMBERSHIPS.map((plan, i) => {
+                  const isCurrent = subscription?.plan_name === plan.name;
+                  return (
+                    <div key={plan.name} className={`plan-card ${i === 1 ? 'plan-featured' : ''} ${isCurrent ? 'plan-current' : ''}`}>
+                      {i === 1 && <div className="plan-badge">Most Popular</div>}
+                      {isCurrent && <div className="plan-badge plan-badge-active">Your Plan</div>}
+                      <h3>{plan.name}</h3>
+                      <div className="plan-price">{money(plan.price)}<small>/month</small></div>
+                      <p>{plan.desc}</p>
+                      <ul>
+                        {plan.features.map(f => <li key={f}><CheckCircle size={13} /> {f}</li>)}
+                      </ul>
+                      <div className="plan-savings-note">
+                        <Shield size={12} /> {plan.savings}
+                      </div>
+                      {!isCurrent && (
+                        <button
+                          className={i === 1 ? 'btn-primary btn-full' : 'btn-outline btn-full'}
+                          onClick={() => handleSubscribe(plan)}
+                        >
+                          {subscription ? 'Switch to this plan' : `Join ${plan.name}`}
+                        </button>
+                      )}
+                      {isCurrent && (
+                        <button
+                          className="btn-outline btn-full btn-cancel"
+                          onClick={async () => {
+                            await supabase.from('subscriptions').update({ status: 'cancelled', cancelled_at: new Date().toISOString() }).eq('id', subscription.id);
+                            setSubscription(null);
+                          }}
+                        >
+                          Cancel Membership
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* BILLING */}
+          {tab === 'billing' && (
+            <div className="tab-content">
+              <h2>Billing & Savings</h2>
+              <p className="tab-sub">Track what you've invested in your vehicle's care — and how much it's protecting your investment.</p>
+
+              {/* Savings Hero */}
+              <div className="billing-savings-card">
+                <div className="billing-savings-header">
+                  <div>
+                    <h3><TrendingUp size={20} /> Lifetime Investment Analysis</h3>
+                    <p>Your vehicle is one of your largest assets. Professional care protects its value.</p>
+                  </div>
+                </div>
+                {lifetimeSpend > 0 ? (
+                  <>
+                    <SavingsBar spent={lifetimeSpend} savings={lifetimeSavings} />
+                    <div className="savings-breakdown">
+                      <h4>How we calculate your savings</h4>
+                      <div className="savings-items">
+                        <div className="savings-item">
+                          <span>Paint fading prevention</span>
+                          <strong>{money(Math.round(lifetimeSpend * 1.5))}</strong>
+                        </div>
+                        <div className="savings-item">
+                          <span>Interior wear protection</span>
+                          <strong>{money(Math.round(lifetimeSpend * 0.8))}</strong>
+                        </div>
+                        <div className="savings-item">
+                          <span>Resale value boost (est.)</span>
+                          <strong>{money(Math.round(lifetimeSpend * 1.0))}</strong>
+                        </div>
+                        <div className="savings-item">
+                          <span>Contaminant damage avoided</span>
+                          <strong>{money(Math.round(lifetimeSpend * 0.5))}</strong>
+                        </div>
+                        <div className="savings-item savings-total">
+                          <span>Total estimated savings</span>
+                          <strong>{money(lifetimeSavings)}</strong>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="empty-state">
+                    <TrendingUp size={36} />
+                    <p>Start your Luxe journey to track your vehicle's protection value.</p>
+                    <button className="btn-primary" onClick={() => setShowBook(true)}>Book Your First Detail</button>
+                  </div>
+                )}
+              </div>
+
+              {/* Payment history */}
+              <div className="payment-history">
+                <h3>Payment History</h3>
+                {payments.length === 0 ? (
+                  <p className="empty-text">No payments on record yet.</p>
+                ) : (
+                  <div className="payment-list">
+                    {payments.map(p => (
+                      <div key={p.id} className="payment-row">
+                        <div className="payment-icon"><CreditCard size={16} /></div>
+                        <div className="payment-info">
+                          <strong>{p.description ?? 'Service Payment'}</strong>
+                          <span>{new Date(p.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+                        </div>
+                        <div className="payment-amount">
+                          <strong>{money(p.amount)}</strong>
+                          <StatusBadge status={p.status} />
+                        </div>
+                      </div>
+                    ))}
+                    <div className="payment-total-row">
+                      <span>Total invested in care</span>
+                      <strong>{money(lifetimeSpend)}</strong>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </main>
+
+      {/* Book Modal */}
+      {showBook && (
+        <div className="modal-overlay" onClick={() => setShowBook(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Book a Service</h3>
+              <button onClick={() => setShowBook(false)}><X size={20} /></button>
+            </div>
+            {bookDone ? (
+              <div className="modal-success">
+                <CheckCircle size={48} />
+                <h4>Appointment Requested!</h4>
+                <p>We'll be in touch to confirm your booking.</p>
+              </div>
+            ) : (
+              <form className="modal-form" onSubmit={handleBookSubmit}>
+                <div className="form-group">
+                  <label>Package</label>
+                  <div className="pkg-choices">
+                    {PACKAGES.map((p, i) => (
+                      <button type="button" key={p.name} className={`pkg-choice ${bookPkg === i ? 'pkg-active' : ''}`} onClick={() => setBookPkg(i)}>
+                        <span>{p.name}</span>
+                        <strong>{money(p.price)}+</strong>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label>Vehicle Size</label>
+                  <select value={bookVehicle} onChange={e => setBookVehicle(Number(e.target.value))}>
+                    {VEHICLE_SIZES.map((v, i) => (
+                      <option key={v.name} value={i}>{v.name}{v.extra ? ` (+$${v.extra})` : ''}</option>
+                    ))}
+                  </select>
+                </div>
+<div className="form-group">
+  <label>Appointment Date</label>
+
+  <input
+    type="date"
+    required
+    min={new Date().toISOString().split('T')[0]}
+    value={bookDate}
+    onChange={e => loadAvailableTimes(e.target.value)}
+  />
+</div>
+
+{bookDate && (
+  <div className="form-group">
+    <label>Available Times</label>
+
+    {timesLoading ? (
+      <p>Checking available times...</p>
+    ) : availableTimes.length === 0 ? (
+      <p style={{ color: '#999' }}>
+        No appointments available on this date.
+      </p>
+    ) : (
+      <div className="mini-addons">
+        {availableTimes.map(time => (
+          <button
+            key={time}
+            type="button"
+            className={`mini-addon ${
+              bookTime === time ? 'mini-active' : ''
+            }`}
+            onClick={() => setBookTime(time)}
+          >
+            {new Date(`2000-01-01T${time}:00`).toLocaleTimeString(
+              'en-US',
+              {
+                hour: 'numeric',
+                minute: '2-digit',
+              }
+            )}
+          </button>
+        ))}
+      </div>
+    )}
+  </div>
+)}
+                
+                <div className="form-group">
+                  <label>Add-Ons</label>
+                  <div className="mini-addons">
+                    {ADD_ONS.map(([name, price], i) => (
+                      <button type="button" key={name} className={`mini-addon ${bookAddOns.includes(i) ? 'mini-active' : ''}`} onClick={() => setBookAddOns(prev => prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i])}>
+                        {name}<span>+${price}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label>Notes</label>
+                  <textarea rows={2} placeholder="Anything about your vehicle we should know..." value={bookNotes} onChange={e => setBookNotes(e.target.value)} />
+                </div>
+                <div className="modal-total">
+                  <span>Estimated total</span>
+                  <strong>{money(PACKAGES[bookPkg].price + VEHICLE_SIZES[bookVehicle].extra + bookAddOns.reduce((s, i) => s + ADD_ONS[i][1], 0))}</strong>
+                </div>
+                <button type="submit" className="btn-primary btn-full" disabled={bookSubmitting}>
+                  {bookSubmitting ? 'Opening Square...' : 'Continue to Payment'}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

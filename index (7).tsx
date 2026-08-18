@@ -1,79 +1,74 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import {
+  Award, Bell, CalendarDays, CheckCircle2, ChevronDown, Clock3, DollarSign,
+  ListChecks, LogOut, MapPin, Menu, Navigation, Pause, Play, UserRound, X, MessageCircle,
+} from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { signOut } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
+import type {
+  Appointment, BusinessNotification, BusinessTask, CommissionLedger, Employee,
+  EmployeeShift, TimeEntry, TimeEntryBreak, TimeOffRequest,
+} from '@/lib/supabase';
+import { money } from '@/lib/data';
+import FieldTerritoryMap from '@/components/FieldTerritoryMap';
+import JobWorkflow from '@/components/JobWorkflow';
+import TrainingPortal from '@/components/TrainingPortal';
+import TeamMessaging from '@/components/TeamMessaging';
+import { buildAppleMapsUrl, localDateTime, sameLocalDay, startOfWeek } from '@/lib/fieldOps';
 
-export default function ResetPassword() {
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const navigate = useNavigate();
+type Tab='home'|'jobs'|'map'|'messages'|'schedule'|'timeclock'|'pay'|'timeoff'|'tasks'|'training';
+type Location={latitude:number;longitude:number;accuracy?:number};
+const surface:React.CSSProperties={background:'#fffdf9',color:'#211811',border:'1px solid #e3d6ca',borderRadius:18,padding:20,boxShadow:'0 12px 34px rgba(48,32,21,.055)'};
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
+export default function EmployeePortal(){
+  const {user,profile,loading}=useAuth();const navigate=useNavigate();const [tab,setTab]=useState<Tab>('home');const [sidebar,setSidebar]=useState(false);const [groups,setGroups]=useState<Record<string,boolean>>({today:true,work:true,account:false});
+  const [employee,setEmployee]=useState<Employee|null>(null);const [jobs,setJobs]=useState<Appointment[]>([]);const [shifts,setShifts]=useState<EmployeeShift[]>([]);const [times,setTimes]=useState<TimeEntry[]>([]);const [breaks,setBreaks]=useState<TimeEntryBreak[]>([]);const [tasks,setTasks]=useState<BusinessTask[]>([]);const [off,setOff]=useState<TimeOffRequest[]>([]);const [notifications,setNotifications]=useState<BusinessNotification[]>([]);const [commissions,setCommissions]=useState<CommissionLedger[]>([]);const [selectedJob,setSelectedJob]=useState<Appointment|null>(null);const [live,setLive]=useState<Location|null>(null);const [busy,setBusy]=useState(true);const [timeOffForm,setTimeOffForm]=useState({start_date:'',end_date:'',request_type:'unpaid',reason:''});
 
-    if (password !== confirmPassword) {
-      setError('Passwords do not match.');
-      return;
-    }
+  useEffect(()=>{if(!loading&&(!user||!['employee','manager','d2d','owner'].includes(profile?.portal_role||'')))navigate('/portal')},[user,profile,loading,navigate]);
+  const load=async()=>{if(!user)return;setBusy(true);const {data:emp}=await supabase.from('employees').select('*').eq('user_id',user.id).maybeSingle();setEmployee(emp);if(!emp){setBusy(false);return}const [j,s,t,b,tk,o,n,c]=await Promise.all([
+    supabase.from('appointments').select('*').or(`assigned_employee_id.eq.${emp.id},assigned_manager_id.eq.${emp.id}`).order('scheduled_at'),
+    supabase.from('employee_shifts').select('*').eq('employee_id',emp.id).order('shift_date'),
+    supabase.from('time_entries').select('*').eq('employee_id',emp.id).order('clock_in',{ascending:false}).limit(100),
+    supabase.from('time_entry_breaks').select('*').eq('employee_id',emp.id).order('started_at',{ascending:false}).limit(100),
+    supabase.from('business_tasks').select('*').eq('assigned_employee_id',emp.id).order('due_at'),
+    supabase.from('time_off_requests').select('*').eq('employee_id',emp.id).order('created_at',{ascending:false}),
+    supabase.from('business_notifications').select('*').or(`target_employee_id.eq.${emp.id},target_user_id.eq.${user.id},target_portal_role.eq.employee`).order('created_at',{ascending:false}).limit(30),
+    supabase.from('commission_ledger').select('*').eq('employee_id',emp.id).order('earned_at',{ascending:false}),
+  ]);setJobs(j.data??[]);setShifts(s.data??[]);setTimes(t.data??[]);setBreaks(b.data??[]);setTasks(tk.data??[]);setOff(o.data??[]);setNotifications(n.data??[]);setCommissions(c.data??[]);setBusy(false)};useEffect(()=>{load()},[user]);
 
-    setLoading(true);
+  const openEntry=times.find(t=>!t.clock_out);const openBreak=breaks.find(b=>!b.ended_at&&openEntry&&b.time_entry_id===openEntry.id);
+  useEffect(()=>{if(!openEntry||!navigator.geolocation)return;const watch=navigator.geolocation.watchPosition(p=>setLive({latitude:p.coords.latitude,longitude:p.coords.longitude,accuracy:p.coords.accuracy}),()=>{}, {enableHighAccuracy:true,maximumAge:30000});return()=>navigator.geolocation.clearWatch(watch)},[openEntry?.id]);
+  const clock=async()=>{if(!employee)return;const loc=await getPosition();if(openEntry){if(openBreak)await endBreak(openBreak);const {data,error}=await supabase.from('time_entries').update({clock_out:new Date().toISOString(),clock_out_latitude:loc?.latitude??null,clock_out_longitude:loc?.longitude??null}).eq('id',openEntry.id).select().single();if(error)return alert(error.message);setTimes(p=>p.map(x=>x.id===openEntry.id?data:x));}
+    else{const shift=shifts.find(s=>s.shift_date===new Date().toISOString().slice(0,10));const scheduledStart=shift?.start_time?new Date(`${shift.shift_date}T${shift.start_time}`).getTime():null;const late=scheduledStart?Date.now()>scheduledStart+10*60000:false;const {data,error}=await supabase.from('time_entries').insert({employee_id:employee.id,clock_in:new Date().toISOString(),clock_in_latitude:loc?.latitude??null,clock_in_longitude:loc?.longitude??null,scheduled_shift_id:shift?.id||null,is_late:late,status:'pending'}).select().single();if(error)return alert(error.message);setTimes(p=>[data,...p]);}};
+  const startBreak=async()=>{if(!employee||!openEntry||openBreak)return;const {data,error}=await supabase.from('time_entry_breaks').insert({time_entry_id:openEntry.id,employee_id:employee.id,started_at:new Date().toISOString()}).select().single();if(error)return alert(error.message);setBreaks(p=>[data,...p])};
+  const endBreak=async(item:TimeEntryBreak)=>{const mins=Math.max(1,Math.round((Date.now()-new Date(item.started_at).getTime())/60000));const {data,error}=await supabase.from('time_entry_breaks').update({ended_at:new Date().toISOString(),minutes:mins}).eq('id',item.id).select().single();if(error)return alert(error.message);setBreaks(p=>p.map(x=>x.id===item.id?data:x));if(openEntry){const total=breaks.filter(b=>b.time_entry_id===openEntry.id&&b.id!==item.id).reduce((n,b)=>n+Number(b.minutes||0),0)+mins;await supabase.from('time_entries').update({break_minutes:total}).eq('id',openEntry.id);setTimes(p=>p.map(x=>x.id===openEntry.id?{...x,break_minutes:total}:x))}};
+  const hours=(t:TimeEntry)=>t.clock_out?Math.max(0,(new Date(t.clock_out).getTime()-new Date(t.clock_in).getTime())/3600000-Number(t.break_minutes||0)/60):0;
+  const weekStart=useMemo(()=>startOfWeek(),[]);const weekEntries=times.filter(t=>new Date(t.clock_in)>=weekStart);const weekHours=weekEntries.reduce((s,t)=>s+hours(t),0);const overtime=Math.max(0,weekHours-40);const regular=Math.min(40,weekHours);const hourly=Number(employee?.hourly_rate||0);const hourlyPay=regular*hourly+overtime*hourly*1.5;const weekCommission=commissions.filter(c=>new Date(c.earned_at)>=weekStart).reduce((n,c)=>n+Number(c.commission_amount||0),0);const estimatedPay=hourlyPay+Number(employee?.weekly_base||0)+weekCommission;
+  const requestOff=async(e:React.FormEvent)=>{e.preventDefault();if(!employee)return;const {data,error}=await supabase.from('time_off_requests').insert({...timeOffForm,employee_id:employee.id,status:'pending'}).select().single();if(error)return alert(error.message);setOff(p=>[data,...p]);setTimeOffForm({start_date:'',end_date:'',request_type:'unpaid',reason:''})};
+  const completeTask=async(task:BusinessTask)=>{const {data,error}=await supabase.from('business_tasks').update({status:'completed',completed_at:new Date().toISOString()}).eq('id',task.id).select().single();if(error)return alert(error.message);setTasks(p=>p.map(x=>x.id===task.id?data:x))};
+  const markNotice=async(n:BusinessNotification)=>{if(n.read_at)return;const read_at=new Date().toISOString();await supabase.from('business_notifications').update({read_at}).eq('id',n.id);setNotifications(p=>p.map(x=>x.id===n.id?{...x,read_at}:x))};
+  const logout=async()=>{await signOut().catch(()=>{});navigate('/')};
+  if(loading||busy)return <div className="portal-loading"><div className="portal-spinner"/><p>Loading employee portal…</p></div>;if(!employee)return <div className="portal-loading"><p>Your login is not linked to an employee record yet. Ask an owner to link your account in Admin → Permissions.</p><Link to="/">Home</Link></div>;
 
-    const { error } = await supabase.auth.updateUser({
-      password,
-    });
+  const today=new Date();const todayJobs=jobs.filter(j=>sameLocalDay(j.scheduled_at,today)&&j.status!=='cancelled').sort((a,b)=>new Date(a.scheduled_at||0).getTime()-new Date(b.scheduled_at||0).getTime());const upcoming=jobs.filter(j=>j.scheduled_at&&new Date(j.scheduled_at)>=today&&j.status!=='cancelled').sort((a,b)=>new Date(a.scheduled_at!).getTime()-new Date(b.scheduled_at!).getTime());const nextJob=upcoming[0];const nav:[Tab,string,any,string][]=[['home','Today',UserRound,'today'],['jobs','My Jobs',ListChecks,'work'],['map','Job Map',MapPin,'work'],['messages','Messages',MessageCircle,'work'],['schedule','Schedule',CalendarDays,'work'],['timeclock','Time Clock',Clock3,'account'],['pay','Pay Estimate',DollarSign,'account'],['timeoff','Time Off',CalendarDays,'account'],['tasks','Tasks',CheckCircle2,'work'],['training','Training',Award,'account']];
 
-    if (error) {
-      setError(error.message);
-      setLoading(false);
-      return;
-    }
-
-    navigate('/login');
-  };
-
-  return (
-    <div className="auth-page">
-      <div className="auth-card">
-        <h2 className="auth-title">Create a new password</h2>
-
-        <form className="auth-form" onSubmit={handleSubmit}>
-          <div className="auth-field">
-            <label>New Password</label>
-
-            <input
-              required
-              type="password"
-              minLength={8}
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-            />
-          </div>
-
-          <div className="auth-field">
-            <label>Confirm Password</label>
-
-            <input
-              required
-              type="password"
-              minLength={8}
-              value={confirmPassword}
-              onChange={e => setConfirmPassword(e.target.value)}
-            />
-          </div>
-
-          {error && <div className="auth-error">{error}</div>}
-
-          <button
-            type="submit"
-            className="btn-primary btn-full btn-lg"
-            disabled={loading}
-          >
-            {loading ? 'Updating...' : 'Update Password'}
-          </button>
-        </form>
-      </div>
-    </div>
-  );
+  return <div className="portal-layout employee-os"><aside className={`portal-sidebar ${sidebar?'sidebar-open':''}`}><div className="sidebar-header"><Link to="/" className="sidebar-brand"><div className="brand-mark brand-mark-sm">NS</div><div><strong>TEAM</strong><small>NORTH SPLASH</small></div></Link><button className="sidebar-close" onClick={()=>setSidebar(false)}><X size={18}/></button></div><div className="sidebar-user"><div className="sidebar-avatar">{employee.name[0]}</div><div><p>{employee.name}</p><span>{employee.role.replaceAll('_',' ')} · Level {employee.employment_level||1}</span></div></div><nav className="sidebar-nav">{[['today','Today'],['work','My Work'],['account','My Account']].map(([id,label])=><div className="nav-group" key={id}><button className="nav-group-title" onClick={()=>setGroups(p=>({...p,[id]:!p[id]}))}>{label}<ChevronDown size={14} className={groups[id]?'nav-chevron-open':''}/></button>{groups[id]&&nav.filter(n=>n[3]===id).map(([tid,l,Icon])=><button key={tid} className={`sidebar-item ${tab===tid?'sidebar-active':''}`} onClick={()=>{setTab(tid);setSidebar(false)}}><Icon size={18}/>{l}{tid==='tasks'&&tasks.filter(t=>t.status!=='completed').length>0&&<span className="nav-count">{tasks.filter(t=>t.status!=='completed').length}</span>}</button>)}</div>)}</nav><div className="sidebar-footer"><button className="sidebar-item sidebar-signout" onClick={logout}><LogOut size={18}/>Sign Out</button></div></aside>{sidebar&&<div className="sidebar-backdrop" onClick={()=>setSidebar(false)}/>}<main className="portal-main"><div className="portal-topbar"><button className="sidebar-toggle" onClick={()=>setSidebar(true)}><Menu size={20}/></button><div className="topbar-title"><h1>{nav.find(n=>n[0]===tab)?.[1]}</h1><span>{openEntry?'Clocked in':'Off the clock'} · {employee.title||employee.role.replaceAll('_',' ')}</span></div><div className="topbar-actions"><button className={`clock-mini ${openEntry?'active':''}`} onClick={clock}><Clock3 size={15}/>{openEntry?'Clock Out':'Clock In'}</button></div></div><div className="portal-content">
+    {notifications.filter(n=>!n.read_at).slice(0,3).map(n=><button key={n.id} className="portal-notice" onClick={()=>markNotice(n)}><Bell size={17}/><div><strong>{n.title}</strong><span>{n.message}</span></div><small>Mark read</small></button>)}
+    {tab==='home'&&<div className="tab-content"><div className="employee-welcome"><div><span className="eyebrow">TODAY</span><h2>{greeting()}, {employee.name.split(' ')[0]}</h2><p>{todayJobs.length?`${todayJobs.length} assigned job${todayJobs.length===1?'':'s'} today.`:'No customer jobs are assigned today.'}</p></div><div className={`employee-clock-badge ${openEntry?'active':''}`}><Clock3/><strong>{openEntry?'Clocked In':'Off Clock'}</strong>{openEntry&&<span>{new Date(openEntry.clock_in).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}</span>}</div></div>{nextJob?<div className="next-job-card"><div className="next-job-time"><span>NEXT JOB</span><strong>{new Date(nextJob.scheduled_at!).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}</strong><small>{new Date(nextJob.scheduled_at!).toLocaleDateString([],{weekday:'short',month:'short',day:'numeric'})}</small></div><div className="next-job-main"><h3>{nextJob.service_name}</h3><p>{nextJob.customer_name||'Customer'} · {nextJob.vehicle_info||'Vehicle not listed'}</p><span><MapPin size={14}/>{nextJob.service_address||'Address pending'}</span></div><div className="next-job-actions"><a className="btn-outline" href={buildAppleMapsUrl(nextJob.latitude,nextJob.longitude,nextJob.service_address)} target="_blank" rel="noreferrer"><Navigation size={15}/>Navigate</a><button className="btn-primary" onClick={()=>{setSelectedJob(nextJob);setTab('jobs')}}>View Job</button></div></div>:<div className="ns-empty">No upcoming assigned jobs.</div>}<div className="employee-home-grid"><div className="employee-home-card"><span>Hours This Week</span><strong>{weekHours.toFixed(1)}</strong><small>{overtime>0?`${overtime.toFixed(1)} overtime hours`:'No overtime'}</small></div><div className="employee-home-card"><span>Estimated Pay</span><strong>{money(Math.round(estimatedPay))}</strong><small>Before deductions</small></div><div className="employee-home-card"><span>Open Tasks</span><strong>{tasks.filter(t=>t.status!=='completed').length}</strong><small>{tasks.filter(t=>t.due_at&&new Date(t.due_at)<new Date()&&t.status!=='completed').length} overdue</small></div><div className="employee-home-card"><span>Training</span><strong>{employee.training_status||'Active'}</strong><small>Open Training Center</small></div></div></div>}
+    {tab==='jobs'&&<div className="tab-content">{selectedJob?<JobWorkflow appointment={selectedJob} employee={employee} onClose={()=>setSelectedJob(null)} onUpdate={updated=>{setSelectedJob(updated);setJobs(p=>p.map(j=>j.id===updated.id?updated:j))}}/>:<><div className="tab-header"><div><h2>Assigned Jobs</h2><p>Open a job to enter field mode.</p></div></div><div className="assigned-job-grid">{jobs.filter(j=>j.status!=='cancelled'&&!j.archived).map(j=><button className="assigned-job-card" key={j.id} onClick={()=>setSelectedJob(j)}><div className="assigned-job-date"><strong>{j.scheduled_at?new Date(j.scheduled_at).toLocaleDateString([],{month:'short',day:'numeric'}):'—'}</strong><span>{j.scheduled_at?new Date(j.scheduled_at).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):'Unscheduled'}</span></div><div><h3>{j.service_name}</h3><p>{j.customer_name||'Customer'} · {j.vehicle_info||'Vehicle'}</p><small>{j.service_address||'Address pending'}</small></div><span className={`field-status ${j.field_status||'scheduled'}`}>{(j.field_status||j.status).replaceAll('_',' ')}</span></button>)}{!jobs.length&&<div className="ns-empty">No jobs assigned.</div>}</div></>}</div>}
+    {tab==='map'&&<div className="tab-content"><div className="field-map-header"><div><h2>My Job Map</h2><p>Tap a stop to open Job Mode or navigate to the customer.</p></div></div><FieldTerritoryMap territories={[]} liveLocation={live} doors={jobs.filter(j=>j.latitude!=null&&j.longitude!=null&&j.status!=='cancelled').map(j=>({id:j.id,latitude:Number(j.latitude),longitude:Number(j.longitude),address:j.service_address||j.customer_name||j.vehicle_info,status:j.field_status||j.status}))} onDoorClick={d=>{const j=jobs.find(x=>x.id===d.id);if(j){setSelectedJob(j);setTab('jobs')}}}/></div>}
+    {tab==='messages'&&<div className="tab-content v2-page"><div className="v2-page-head"><div><span className="eyebrow">TEAM COMMUNICATION</span><h2>Messages</h2><p>Share job progress, supply needs and crew updates with the right group.</p></div></div><TeamMessaging employee={employee} portalKind={employee.role==='detailer'?'detailer':'employee'}/></div>}
+    {tab==='schedule'&&<div className="tab-content"><div className="schedule-week">{groupShifts(shifts).map(([date,list])=><section key={date}><header><strong>{new Date(`${date}T12:00:00`).toLocaleDateString([],{weekday:'long',month:'short',day:'numeric'})}</strong><span>{list.length} shift{list.length===1?'':'s'}</span></header>{list.map(s=><div key={s.id}><Clock3 size={16}/><strong>{s.start_time?.slice(0,5)} – {s.end_time?.slice(0,5)}</strong><span>{s.status}</span><small>{s.notes}</small></div>)}</section>)}</div></div>}
+    {tab==='timeclock'&&<div className="tab-content"><div className="timeclock-hero"><div className={`timeclock-icon ${openEntry?'active':''}`}><Clock3/></div><span className="eyebrow">TIME CLOCK</span><h2>{openEntry?'You are clocked in':'Ready to start your shift?'}</h2>{openEntry&&<p>Started {localDateTime(openEntry.clock_in)} · {Number(openEntry.break_minutes||0)} break minutes</p>}<div className="timeclock-actions"><button className="btn-primary" onClick={clock}>{openEntry?'Clock Out':'Clock In'}</button>{openEntry&&!openBreak&&<button className="btn-outline" onClick={startBreak}><Pause size={15}/>Start Break</button>}{openBreak&&<button className="btn-outline" onClick={()=>endBreak(openBreak)}><Play size={15}/>End Break</button>}</div>{openBreak&&<div className="break-banner">Break started {new Date(openBreak.started_at).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}</div>}</div><div className="timecard-list">{times.slice(0,20).map(t=><div key={t.id}><strong>{new Date(t.clock_in).toLocaleDateString()}</strong><span>{new Date(t.clock_in).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})} → {t.clock_out?new Date(t.clock_out).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):'Open'}</span><em>{t.clock_out?`${hours(t).toFixed(2)} hrs`:'Working'} · {t.status}</em></div>)}</div></div>}
+    {tab==='pay'&&<div className="tab-content"><div className="pay-hero"><span className="eyebrow">ESTIMATED GROSS PAY</span><h2>{money(Math.round(estimatedPay))}</h2><p>This is an estimate before taxes/deductions and is not a payroll statement.</p></div><div className="employee-home-grid"><div className="employee-home-card"><span>Regular Hours</span><strong>{regular.toFixed(2)}</strong><small>{money(hourly)}/hr</small></div><div className="employee-home-card"><span>Overtime</span><strong>{overtime.toFixed(2)}</strong><small>{money(hourly*1.5)}/hr estimate</small></div><div className="employee-home-card"><span>Weekly Base</span><strong>{money(Number(employee.weekly_base||0))}</strong><small>{employee.pay_type==='base_commission'?'Included':'Not applicable'}</small></div><div className="employee-home-card"><span>Commission</span><strong>{money(weekCommission)}</strong><small>Completed/collected sales</small></div></div></div>}
+    {tab==='timeoff'&&<div className="tab-content"><form className="timeoff-form" onSubmit={requestOff}><div><span className="eyebrow">REQUEST TIME OFF</span><h2>New Request</h2></div><label>Start<input required type="date" value={timeOffForm.start_date} onChange={e=>setTimeOffForm(p=>({...p,start_date:e.target.value}))}/></label><label>End<input required type="date" value={timeOffForm.end_date} onChange={e=>setTimeOffForm(p=>({...p,end_date:e.target.value}))}/></label><label>Type<select value={timeOffForm.request_type} onChange={e=>setTimeOffForm(p=>({...p,request_type:e.target.value}))}><option value="unpaid">Unpaid</option><option value="pto">PTO</option><option value="sick">Sick</option></select></label><label className="wide">Reason<textarea value={timeOffForm.reason} onChange={e=>setTimeOffForm(p=>({...p,reason:e.target.value}))}/></label><button className="btn-primary">Submit Request</button></form><div className="request-history">{off.map(r=><div key={r.id}><strong>{r.start_date} → {r.end_date}</strong><span>{r.request_type} · {r.status}</span><p>{r.reason}</p></div>)}</div></div>}
+    {tab==='tasks'&&<div className="tab-content"><div className="task-grid">{tasks.map(t=><div className={`task-card ${t.status==='completed'?'done':''}`} key={t.id}><div><span className="eyebrow">{t.priority}</span><h3>{t.title}</h3><p>{t.description}</p><small>{t.due_at?`Due ${localDateTime(t.due_at)}`:'No due date'}</small></div>{t.status!=='completed'?<button className="btn-primary" onClick={()=>completeTask(t)}>Complete</button>:<CheckCircle2/>}</div>)}{!tasks.length&&<div className="ns-empty">No tasks assigned.</div>}</div></div>}
+    {tab==='training'&&<div className="tab-content"><TrainingPortal employee={employee}/></div>}
+  </div></main></div>;
 }
+
+function groupShifts(shifts:EmployeeShift[]){const map=new Map<string,EmployeeShift[]>();shifts.filter(s=>new Date(`${s.shift_date}T23:59:00`)>=new Date(Date.now()-86400000)).slice(0,40).forEach(s=>map.set(s.shift_date,[...(map.get(s.shift_date)||[]),s]));return[...map.entries()].sort((a,b)=>a[0].localeCompare(b[0]))}
+function greeting(){const h=new Date().getHours();return h<12?'Good morning':h<17?'Good afternoon':'Good evening'}
+function getPosition():Promise<Location|null>{return new Promise(resolve=>{if(!navigator.geolocation)return resolve(null);navigator.geolocation.getCurrentPosition(p=>resolve({latitude:p.coords.latitude,longitude:p.coords.longitude,accuracy:p.coords.accuracy}),()=>resolve(null),{enableHighAccuracy:true,timeout:10000,maximumAge:30000})})}
