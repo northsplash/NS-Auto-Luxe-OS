@@ -74,6 +74,8 @@ export default function FieldTerritoryMap({
   const [ready, setReady] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   const [interactionEnabled, setInteractionEnabled] = useState(false);
+  const [locating, setLocating] = useState(false);
+  const [localLocation, setLocalLocation] = useState<{ latitude:number; longitude:number; accuracy?:number|null } | null>(null);
   const lastFitKey = useRef('');
 
   useEffect(() => { editableRef.current = editable; }, [editable]);
@@ -316,14 +318,18 @@ export default function FieldTerritoryMap({
     if (!map.current || !locationLayer.current || !(window as any).L) return;
     const L = (window as any).L;
     locationLayer.current.clearLayers();
-    if (!liveLocation) return;
-    L.circleMarker([liveLocation.latitude, liveLocation.longitude], {
-      radius: 10, color:'#fff', weight:4, fillColor:'#9d7651', fillOpacity:1,
+    const location = liveLocation || localLocation;
+    if (!location) return;
+    L.circleMarker([location.latitude, location.longitude], {
+      radius: 10, color:'#fff', weight:4, fillColor:'#1677ff', fillOpacity:1,
     }).bindTooltip('Your current location').addTo(locationLayer.current);
-    if (liveLocation.accuracy && liveLocation.accuracy > 10) {
-      L.circle([liveLocation.latitude, liveLocation.longitude], { radius:liveLocation.accuracy, color:'#9d7651', fillOpacity:.04, weight:1 }).addTo(locationLayer.current);
+    L.circleMarker([location.latitude, location.longitude], {
+      radius: 16, color:'rgba(22,119,255,.28)', weight:7, fillOpacity:0,
+    }).addTo(locationLayer.current);
+    if (location.accuracy && location.accuracy > 10) {
+      L.circle([location.latitude, location.longitude], { radius:location.accuracy, color:'#1677ff', fillColor:'#1677ff', fillOpacity:.035, weight:1 }).addTo(locationLayer.current);
     }
-  }, [liveLocation]);
+  }, [liveLocation, localLocation]);
 
   useEffect(() => {
     const onChange = () => {
@@ -351,6 +357,19 @@ export default function FieldTerritoryMap({
   }, []);
 
   useEffect(() => {
+    const onCenter = (event:Event) => {
+      const detail=(event as CustomEvent<{latitude:number;longitude:number;zoom?:number}>).detail;
+      if(!detail||!Number.isFinite(detail.latitude)||!Number.isFinite(detail.longitude)) return;
+      const next={latitude:Number(detail.latitude),longitude:Number(detail.longitude),accuracy:null};
+      setLocalLocation(next);
+      map.current?.flyTo([next.latitude,next.longitude],detail.zoom||19,{animate:true,duration:.8});
+      setInteractionEnabled(true);
+    };
+    window.addEventListener('northsplash:center-map',onCenter as EventListener);
+    return()=>window.removeEventListener('northsplash:center-map',onCenter as EventListener);
+  },[]);
+
+  useEffect(() => {
     if (!map.current || !mobileGestureLock || editable) return;
     const coarse = window.matchMedia?.('(pointer: coarse)').matches;
     if (!coarse) return;
@@ -369,8 +388,25 @@ export default function FieldTerritoryMap({
     onPolygonChange?.([...points.current]);
     redrawDraft();
   };
-  const centerOnMe = () => {
-    if (liveLocation && map.current) map.current.setView([liveLocation.latitude, liveLocation.longitude], 18, { animate:true });
+  const centerOnMe = async () => {
+    if (!map.current) return;
+    const known = liveLocation || localLocation;
+    if (known) {
+      map.current.flyTo([known.latitude, known.longitude], Math.max(18, map.current.getZoom?.() || 18), { animate:true, duration:.7 });
+    }
+    if (!navigator.geolocation) { alert('Location is not available in this browser.'); return; }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(position => {
+      const next={latitude:position.coords.latitude,longitude:position.coords.longitude,accuracy:position.coords.accuracy};
+      setLocalLocation(next);
+      map.current?.flyTo([next.latitude,next.longitude],19,{animate:true,duration:.8});
+      setInteractionEnabled(true);
+      setLocating(false);
+    }, error => {
+      setLocating(false);
+      const message=error.code===1?'Location permission is blocked. Allow location access for this site and try again.':error.code===3?'Location timed out. Move near a window or turn on precise location, then try again.':'Your current location could not be determined.';
+      alert(message);
+    }, {enableHighAccuracy:true,timeout:15000,maximumAge:5000});
   };
   const toggleFullscreen = async () => {
     try {
@@ -387,7 +423,7 @@ export default function FieldTerritoryMap({
     <div ref={wrap} className={`field-map-wrap ${fullscreen ? 'field-map-fullscreen' : ''} ${fieldMode ? 'field-map-field-mode' : ''} ${className}`}>
       <div className="field-map-toolbar">
         <button type="button" className="map-tool-btn" onClick={toggleFullscreen}>{fullscreen ? 'Exit Full Screen' : 'Full Screen'}</button>
-        {liveLocation && <button type="button" className="map-tool-btn" onClick={centerOnMe}>My Location</button>}
+        <button type="button" className="map-tool-btn map-location-btn" onClick={centerOnMe} disabled={locating}>{locating?'Locating…':'Use Current Location'}</button>
         {editable && <><button type="button" className="map-tool-btn" disabled={!points.current.length} onClick={undo}>Undo Point</button><button type="button" className="map-tool-btn" onClick={reset}>Clear</button></>}
       </div>
       <div ref={el} className="field-map-canvas" />

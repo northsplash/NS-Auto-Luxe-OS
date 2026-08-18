@@ -77,29 +77,47 @@ function distanceMeters(aLat:number,aLng:number,bLat:number,bLng:number) {
 
 async function nearestMapillaryImage(house: StreetViewHouse) {
   const lat=Number(house.latitude), lng=Number(house.longitude);
-  // Search farther than a single property frontage so houses with sparse Mapillary coverage can still use the nearest capture.
-  const latPad=0.00225;
-  const lngPad=0.00225/Math.max(0.25,Math.cos(lat*Math.PI/180));
-  const bbox=[lng-lngPad,lat-latPad,lng+lngPad,lat+latPad].join(',');
-  const url=`https://graph.mapillary.com/images?access_token=${encodeURIComponent(MAPILLARY_TOKEN)}&fields=id,geometry,captured_at,compass_angle,thumb_2048_url,sequence,camera_type&bbox=${bbox}&limit=100`;
-  const response=await fetch(url);
-  if(!response.ok) throw new Error(response.status===401||response.status===403?'MAPILLARY_TOKEN_INVALID':'Mapillary imagery lookup failed.');
-  const json=await response.json();
-  const images=(json?.data||[]).filter((x:any)=>x?.id&&Array.isArray(x?.geometry?.coordinates));
-  if(!images.length) return null;
-  const ranked=images.map((image:any)=>({
-    ...image,
-    distance:distanceMeters(lat,lng,Number(image.geometry.coordinates[1]),Number(image.geometry.coordinates[0])),
-    spherical:['spherical','equirectangular'].includes(String(image.camera_type||'').toLowerCase()),
-  }));
-  // Prefer a nearby true panorama. Otherwise use the closest capture so we do not jump far away just to get 360 imagery.
-  ranked.sort((a:any,b:any)=>{
-    const aNearby360=a.spherical&&a.distance<=110;
-    const bNearby360=b.spherical&&b.distance<=110;
-    if(aNearby360!==bNearby360) return aNearby360?-1:1;
-    return a.distance-b.distance;
-  });
-  return ranked[0];
+  const radii=[35,80,160,320,600];
+  let lastApiMessage='';
+  for(const radius of radii){
+    const latPad=radius/111320;
+    const lngPad=radius/(111320*Math.max(0.25,Math.cos(lat*Math.PI/180)));
+    const bbox=[lng-lngPad,lat-latPad,lng+lngPad,lat+latPad].join(',');
+    const params=new URLSearchParams({
+      access_token:MAPILLARY_TOKEN,
+      fields:'id,geometry,captured_at,compass_angle,thumb_2048_url,sequence,camera_type,is_pano',
+      bbox,
+      limit:'100',
+    });
+    const response=await fetch(`https://graph.mapillary.com/images?${params.toString()}`,{headers:{Accept:'application/json'}});
+    const raw=await response.text();
+    let json:any={};
+    try{json=raw?JSON.parse(raw):{}}catch{/* keep raw API message */}
+    if(!response.ok){
+      lastApiMessage=String(json?.error?.message||raw||`HTTP ${response.status}`);
+      if(response.status===401||response.status===403) throw new Error('MAPILLARY_TOKEN_INVALID');
+      if(response.status===400) throw new Error(`MAPILLARY_BAD_REQUEST:${lastApiMessage}`);
+      if(response.status===429) throw new Error('MAPILLARY_RATE_LIMITED');
+      continue;
+    }
+    const images=(json?.data||[]).filter((x:any)=>x?.id&&Array.isArray(x?.geometry?.coordinates));
+    if(!images.length) continue;
+    const ranked=images.map((image:any)=>({
+      ...image,
+      distance:distanceMeters(lat,lng,Number(image.geometry.coordinates[1]),Number(image.geometry.coordinates[0])),
+      spherical:Boolean(image.is_pano)||['spherical','equirectangular'].includes(String(image.camera_type||'').toLowerCase()),
+      searchRadius:radius,
+    }));
+    ranked.sort((a:any,b:any)=>{
+      const aNearby360=a.spherical&&a.distance<=Math.max(120,radius);
+      const bNearby360=b.spherical&&b.distance<=Math.max(120,radius);
+      if(aNearby360!==bNearby360) return aNearby360?-1:1;
+      return a.distance-b.distance;
+    });
+    return ranked[0];
+  }
+  if(lastApiMessage) throw new Error(`MAPILLARY_LOOKUP_FAILED:${lastApiMessage}`);
+  return null;
 }
 
 function externalMapillaryUrl(house?: StreetViewHouse | null, imageId?: string | null) {
@@ -157,25 +175,22 @@ export default function TerritoryStreetView({ houses, activeHouse, onActiveHouse
       setImageId(String(image.id));
       setFallbackImage(String(image.thumb_2048_url||''));
       setCaptureDate(image.captured_at ? new Date(Number(image.captured_at)).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '');
-      setCameraType(String(image.camera_type||'perspective').toLowerCase());
+      setCameraType(image.is_pano?'spherical':String(image.camera_type||'perspective').toLowerCase());
       setCaptureDistance(Number.isFinite(image.distance)?Math.round(image.distance):null);
       if(!mapillaryViewerRef.current){
         mapillaryViewerRef.current=new mly.Viewer({
           accessToken:MAPILLARY_TOKEN,
           container:'north-splash-mapillary-viewer',
-          imageId:String(image.id),
           combinedPanning:true,
-          cameraControls:mly.CameraControls?.Street,
           component:{cover:false,sequence:true,zoom:true,bearing:true,direction:true,pointer:true,keyboard:true},
         });
         mapillaryViewerRef.current?.activateCombinedPanning?.();
-        window.requestAnimationFrame(()=>mapillaryViewerRef.current?.resize?.());
-        window.setTimeout(()=>mapillaryViewerRef.current?.resize?.(),250);
-        window.setTimeout(()=>mapillaryViewerRef.current?.resize?.(),900);
-      }else{
-        await mapillaryViewerRef.current.moveTo(String(image.id));
-        mapillaryViewerRef.current.resize?.();
       }
+      await mapillaryViewerRef.current.moveTo(String(image.id));
+      mapillaryViewerRef.current.resize?.();
+      window.requestAnimationFrame(()=>mapillaryViewerRef.current?.resize?.());
+      window.setTimeout(()=>mapillaryViewerRef.current?.resize?.(),250);
+      window.setTimeout(()=>mapillaryViewerRef.current?.resize?.(),900);
       setAvailable(true);
     } catch (err:any) {
       setAvailable(false);
@@ -185,8 +200,14 @@ export default function TerritoryStreetView({ houses, activeHouse, onActiveHouse
         : code==='MAPILLARY_TOKEN_INVALID'
           ? 'The Mapillary token was rejected. Check the Vercel environment variable and redeploy.'
           : code==='NO_MAPILLARY_IMAGERY'
-            ? 'No Mapillary street imagery was found close to this property. Coverage varies by street.'
-            : 'Street imagery could not be loaded for this property.');
+            ? 'No Mapillary imagery was found within 600 meters of this property.'
+            : code==='MAPILLARY_RATE_LIMITED'
+              ? 'Mapillary is temporarily rate-limiting imagery requests. Try again in a moment.'
+              : code.startsWith('MAPILLARY_BAD_REQUEST:')
+                ? `Mapillary rejected the imagery request: ${code.split(':').slice(1).join(':')}`
+                : code.startsWith('MAPILLARY_LOOKUP_FAILED:')
+                  ? `Mapillary lookup failed: ${code.split(':').slice(1).join(':')}`
+                  : 'Street imagery could not be loaded for this property.');
     } finally { setLoading(false); }
   };
 

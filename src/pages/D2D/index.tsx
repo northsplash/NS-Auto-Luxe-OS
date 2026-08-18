@@ -333,7 +333,7 @@ export default function D2DPortal(){
   };
 
   const manualLead=()=>{setManual(true);setSelectedDoor({territory_id:null,latitude:live?.latitude,longitude:live?.longitude});setHistory([]);setForm(emptyForm())};
-  const useCurrentLocation=()=>navigator.geolocation?.getCurrentPosition(async p=>{const lat=p.coords.latitude,lng=p.coords.longitude;setSelectedDoor(d=>({...d,latitude:lat,longitude:lng}));const geo=await lookupAddress(lat,lng);if(geo?.address)setForm(f=>({...f,address:geo.address}))},()=>alert('Allow location access to pin this lead.'),{enableHighAccuracy:true});
+  const useCurrentLocation=()=>navigator.geolocation?.getCurrentPosition(async p=>{const lat=p.coords.latitude,lng=p.coords.longitude;setSelectedDoor(d=>({...d,latitude:lat,longitude:lng}));window.dispatchEvent(new CustomEvent('northsplash:center-map',{detail:{latitude:lat,longitude:lng,zoom:19}}));const geo=await lookupAddress(lat,lng);if(geo?.address)setForm(f=>({...f,address:geo.address}))},()=>alert('Allow location access to pin this lead.'),{enableHighAccuracy:true,timeout:15000,maximumAge:5000});
 
   const clock=async()=>{if(!employee)return;if(openEntry){const pos=await getPosition();const {data,error}=await supabase.from('time_entries').update({clock_out:new Date().toISOString(),clock_out_latitude:pos?.latitude??null,clock_out_longitude:pos?.longitude??null}).eq('id',openEntry.id).select().single();if(error)return alert(error.message);setTimes(p=>p.map(t=>t.id===openEntry.id?data:t));}
     else{const pos=await getPosition();const {data,error}=await supabase.from('time_entries').insert({employee_id:employee.id,clock_in:new Date().toISOString(),clock_in_latitude:pos?.latitude??null,clock_in_longitude:pos?.longitude??null,status:'pending'}).select().single();if(error)return alert(error.message);setTimes(p=>[data,...p]);}};
@@ -361,6 +361,12 @@ export default function D2DPortal(){
     ['unworked','New'],['contacted','Contacted'],['interested','Interested'],['follow_up','Follow-Up'],['estimate','Estimate'],['appointment_set','Appointment'],['sold','Sold']
   ] as const;
   const dueFollowups=leads.filter(l=>l.status==='follow_up'||(l.follow_up_at&&new Date(l.follow_up_at)<=new Date()));
+  const nextSuggestedDoor=useMemo(()=>{
+    const eligible=territoryDoors.filter(d=>!d.do_not_knock&&['unworked','no_answer','revisit','follow_up'].includes(d.status||'unworked'));
+    if(!eligible.length)return null;
+    if(!live)return eligible[0];
+    return [...eligible].sort((a,b)=>haversineMeters(live,a)-haversineMeters(live,b))[0];
+  },[territoryDoors,live]);
 
   return <div className="portal-layout d2d-os">
     <aside className={`portal-sidebar ${sidebar?'sidebar-open':''}`}>
@@ -374,6 +380,11 @@ export default function D2DPortal(){
       <div className="portal-content">
         {tab==='territory'&&<div className="tab-content d2d-field-page v2-page">
           <div className="v2-page-head"><div><span className="eyebrow">FIELD WORKSPACE</span><h2>Work Your Territory</h2><p>Tap a house, record the outcome, then move directly to the next best door.</p></div><div className="v2-head-actions"><button className="btn-outline" onClick={manualLead}><Plus size={15}/> Outside Territory Lead</button><button className="btn-primary" onClick={nextBest}><Target size={15}/> Next Best House</button></div></div>
+          <div className="d2d-field-commandbar">
+            <div className="d2d-command-territory"><MapPin size={19}/><div><strong>{territories.find(t=>t.id===selectedTerritory)?.name||'Assigned Territory'}</strong><span>{territoryDoors.filter(d=>d.status!=='unworked').length} / {territoryDoors.length} houses completed · {territoryProgress}%</span></div></div>
+            <div className="d2d-command-next"><Target size={18}/><div><small>NEXT BEST HOUSE</small><strong>{nextSuggestedDoor?.address||'Choose next mapped house'}</strong></div><button onClick={nextBest}>Open <Navigation size={14}/></button></div>
+            <button className="d2d-command-route" onClick={startRoute}><Route size={18}/>{route?'Rebuild Route':'Start Route'}</button>
+          </div>
           <div className="d2d-kpi-strip v2-kpis"><Kpi label="Territory" value={`${territoryProgress}%`} detail={`${territoryDoors.filter(d=>d.status!=='unworked').length}/${territoryDoors.length} worked`}/><Kpi label="Doors Today" value={String(workedToday.length)} detail={`Goal ${goals?.door_goal??50}`}/><Kpi label="Contact Rate" value={`${percent(contactsToday,workedToday.length)}%`} detail={`${contactsToday} contacts`}/><Kpi label="Appointments" value={String(appointmentsToday)} detail={`${percent(appointmentsToday,Math.max(contactsToday,1))}% of contacts`}/><Kpi label="Revenue" value={money(revenueToday)} detail={`Goal ${money(Number(goals?.revenue_goal??1500))}`}/></div>
           <div className="d2d-map-shell">
             <div className="d2d-map-topline"><div className="d2d-territory-select"><label>Assigned Territory</label><select value={selectedTerritory} onChange={e=>{setSelectedTerritory(e.target.value);setSelectedDoor(null);setHouseDiscoveryError('')}}>{territories.map(t=><option value={t.id} key={t.id}>{t.name}</option>)}</select></div><div className="d2d-field-actions"><button className="btn-outline" onClick={()=>discoverTerritoryHouses(selectedTerritory,true)} disabled={!selectedTerritory||discoveringHouses}><RefreshCw size={15}/>{discoveringHouses?'Finding Houses…':'Refresh Houses'}</button><button className="btn-outline" onClick={()=>setShowLabels(v=>!v)}>{showLabels?'Hide Labels':'Show Addresses'}</button><button className="btn-outline" onClick={startRoute}><Route size={15}/> Build Route</button></div></div>
