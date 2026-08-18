@@ -1,48 +1,95 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2.57.4';
-const cors={'Access-Control-Allow-Origin':'*','Access-Control-Allow-Methods':'POST,OPTIONS','Access-Control-Allow-Headers':'Content-Type, Authorization, X-Client-Info, Apikey','Content-Type':'application/json'};
 
-function serverKey(){const legacy=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')||'';if(legacy)return legacy;const raw=Deno.env.get('SUPABASE_SECRET_KEYS');if(!raw)return '';try{const p=JSON.parse(raw);return p?.default||p?.service_role||p?.serviceRole||''}catch{return ''}}
+const cors={
+  'Access-Control-Allow-Origin':'*',
+  'Access-Control-Allow-Methods':'POST,OPTIONS',
+  'Access-Control-Allow-Headers':'Content-Type, Authorization, X-Client-Info, Apikey',
+  'Content-Type':'application/json',
+};
+const CUSTOMER_FROM='North Splash Auto Luxe <noreply@northsplash.com>';
+const EMPLOYEE_FROM='North Splash Admin <Admin@northsplash.com>';
+const EMPLOYEE_EVENTS=new Set(['application_received','first_interview','second_interview','background_check','job_offer','offer_accepted','offer_declined','onboarding','start_date','training_assigned','employee_invite','schedule_changed']);
+const CUSTOMER_EVENTS=new Set(['booking_received','booking_confirmed','booking_declined','appointment_reminder','appointment_rescheduled','appointment_cancelled','detailer_assigned','detailer_en_route','detailer_arrived','job_started','job_completed','receipt_ready','review_request','estimate_sent','membership_update']);
 
-Deno.serve(async(req:Request)=>{if(req.method==='OPTIONS')return new Response('ok',{headers:cors});try{
- const url=Deno.env.get('SUPABASE_URL')||'',key=serverKey(),resend=Deno.env.get('RESEND_API_KEY');if(!url||!key)throw new Error('Supabase server credentials are missing.');
- const admin=createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}});const token=(req.headers.get('Authorization')||'').replace('Bearer ','');const {data:{user}}=await admin.auth.getUser(token);if(!user)throw new Error('Unauthorized');const {data:actor}=await admin.from('profiles').select('role,portal_role,permissions').eq('id',user.id).maybeSingle();if(!(actor?.role==='admin'||actor?.portal_role==='owner'||actor?.permissions?.['notifications.manage']))throw new Error('Automation access required.');
- try{await admin.rpc('ns_release_expired_lead_cooldowns')}catch(e){console.warn('[automation-worker] cooldown release skipped',e)}
- await queueDueEvents(admin);
- const limit=Math.max(1,Math.min(250,Number((await safeJson(req))?.limit||100)));
- const {data:events,error}=await admin.from('automation_events').select('*').eq('status','pending').lte('process_after',new Date().toISOString()).order('process_after').limit(limit);if(error)throw error;let processed=0,failed=0;
- for(const event of events||[]){try{await admin.from('automation_events').update({status:'processing',attempts:(event.attempts||0)+1}).eq('id',event.id);const {data:rules}=await admin.from('automation_rules').select('*').eq('trigger_event',event.event_key).eq('is_enabled',true);for(const rule of rules||[])await executeRule(admin,resend,rule,event);await admin.from('automation_events').update({status:'processed',processed_at:new Date().toISOString(),error_message:null}).eq('id',event.id);processed++;}catch(e){failed++;await admin.from('automation_events').update({status:'failed',error_message:e instanceof Error?e.message:String(e)}).eq('id',event.id)}}
- return json({success:true,processed,failed,queued:(events||[]).length});
-}catch(e){console.error('[automation-worker]',e);return json({error:e instanceof Error?e.message:String(e)},400)}});
-
-async function safeJson(req:Request){try{return await req.clone().json()}catch{return {}}}
-async function queueOnce(admin:any,event_key:string,entity_type:string,entity_id:string,payload:any,process_after:string){const {data}=await admin.from('automation_events').select('id,status').eq('event_key',event_key).eq('entity_id',entity_id).maybeSingle();if(!data)await admin.from('automation_events').insert({event_key,entity_type,entity_id,payload,status:'pending',process_after});}
-async function queueDueEvents(admin:any){
- const now=new Date(),in25h=new Date(now.getTime()+25*3600000).toISOString();
- const {data:appointments}=await admin.from('appointments').select('id,user_id,customer_name,customer_email,service_name,service_address,scheduled_at,status,completed_at,assigned_employee_id').gte('scheduled_at',now.toISOString()).lte('scheduled_at',in25h).not('status','in','("cancelled","completed")');
- for(const a of appointments||[])await queueOnce(admin,'appointment.reminder_due','appointment',a.id,{...a,communication_event:'appointment_reminder'},now.toISOString());
- const sevenDaysAgo=new Date(now.getTime()-7*86400000).toISOString();
- const {data:completed}=await admin.from('appointments').select('id,user_id,customer_name,customer_email,service_name,completed_at').eq('status','completed').gte('completed_at',sevenDaysAgo).not('completed_at','is',null);
- for(const a of completed||[]){const after=new Date(Math.max(now.getTime(),new Date(a.completed_at).getTime()+2*3600000)).toISOString();await queueOnce(admin,'job.review_due','appointment',a.id,{...a,communication_event:'review_request'},after);}
- const {data:leads}=await admin.from('leads').select('id,assigned_employee_id,customer_name,address,follow_up_at,phone,email').lte('follow_up_at',now.toISOString()).not('status','in','("sold","lost","not_interested","do_not_knock")').limit(250);
- for(const lead of leads||[])await queueOnce(admin,'lead.follow_up_due','lead',lead.id,{...lead,message:`Follow up with ${lead.customer_name||lead.address||'lead'}`},now.toISOString());
- // Manager-facing inactivity signal: active D2D reps with an open timecard and no door update in 25+ minutes.
- const {data:open}=await admin.from('time_entries').select('employee_id,clock_in').is('clock_out',null);
- for(const t of open||[]){const {data:e}=await admin.from('employees').select('id,name,role,department,manager_employee_id').eq('id',t.employee_id).maybeSingle();if(e?.role!=='d2d_agent')continue;const {data:last}=await admin.from('territory_door_history').select('created_at').eq('employee_id',e.id).order('created_at',{ascending:false}).limit(1).maybeSingle();const stamp=last?.created_at||t.clock_in;if(stamp&&now.getTime()-new Date(stamp).getTime()>25*60000)await queueOnce(admin,'employee.d2d_inactive','employee',e.id,{assigned_employee_id:e.id,employee_name:e.name,manager_employee_id:e.manager_employee_id,message:`${e.name} has had no recorded door activity for more than 25 minutes.`},now.toISOString());}
+function serverKey(){
+  const legacy=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')||'';
+  if(legacy)return legacy;
+  const raw=Deno.env.get('SUPABASE_SECRET_KEYS');
+  if(!raw)return '';
+  try{const parsed=JSON.parse(raw);return parsed?.default||parsed?.service_role||parsed?.serviceRole||''}catch(e){console.error('[send-communication] failed parsing SUPABASE_SECRET_KEYS',e);return ''}
 }
 
-async function executeRule(admin:any,resend:string|undefined,rule:any,event:any){
- if(rule.action_type==='notification'){await admin.from('business_notifications').insert({target_employee_id:event.payload?.manager_employee_id||event.payload?.assigned_employee_id||null,target_portal_role:event.payload?.assigned_employee_id||event.payload?.manager_employee_id?null:'owner',title:rule.name,message:String(event.payload?.message||human(event.event_key)),notification_type:'automation',link:event.payload?.link||null});return;}
- if(rule.action_type==='task'){await admin.from('business_tasks').insert({title:rule.name,description:String(event.payload?.message||human(event.event_key)),assigned_employee_id:event.payload?.manager_employee_id||event.payload?.assigned_employee_id||null,priority:event.payload?.priority||'normal',status:'open',due_at:event.payload?.due_at||null});return;}
- if(rule.action_type==='email'){
-   if(!resend)throw new Error('RESEND_API_KEY is required for email automations.');let eventKey=event.payload?.communication_event||event.event_key;if(event.event_key==='appointment.reminder_due')eventKey='appointment_reminder';if(event.event_key==='job.review_due')eventKey='review_request';
-   const {data:template}=await admin.from('communication_templates').select('*').eq('event_key',eventKey).eq('is_enabled',true).order('created_at',{ascending:false}).limit(1).maybeSingle();if(!template)return;let recipient=event.payload?.recipient_email||event.payload?.customer_email||'';if(!recipient&&event.payload?.user_id){const {data:p}=await admin.from('profiles').select('email').eq('id',event.payload.user_id).maybeSingle();recipient=p?.email||''}if(!recipient)return;
-   const vars={...event.payload,customer_name:event.payload?.customer_name||'Customer',appointment_date:event.payload?.scheduled_at?new Date(event.payload.scheduled_at).toLocaleDateString('en-US'):'',appointment_time:event.payload?.scheduled_at?new Date(event.payload.scheduled_at).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}):''};const subject=render(template.subject||'North Splash Update',vars),text=render(template.body||'',vars);const audience=template.audience||'customer';const from=audience==='employee'?'North Splash Admin <Admin@northsplash.com>':'North Splash Auto Luxe <noreply@northsplash.com>';
-   const r=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${resend}`,'Content-Type':'application/json'},body:JSON.stringify({from,to:[recipient],subject,html:emailHtml(subject,text),text,...(audience==='employee'?{reply_to:'Admin@northsplash.com'}:{})})});const data=await r.json();if(!r.ok)throw new Error(data?.message||'Email automation failed');await admin.from('communication_logs').insert({event_key:eventKey,audience,recipient_email:recipient,from_email:from,subject,status:'sent',provider_id:data?.id||null,sent_at:new Date().toISOString(),related_appointment_id:event.entity_type==='appointment'?event.entity_id:null});
- }
-}
-function emailHtml(subject:string,text:string){return `<div style="background:#f6f1eb;padding:30px;font-family:Arial;color:#211811"><div style="max-width:620px;margin:auto;background:white;border-radius:16px;overflow:hidden"><div style="background:#17110d;color:white;padding:22px 26px"><b style="letter-spacing:3px">NORTH SPLASH</b><div style="color:#c9a96e;font-size:11px;letter-spacing:4px">AUTO LUXE</div></div><div style="padding:28px"><h2>${escapeHtml(subject)}</h2><p style="line-height:1.65">${escapeHtml(text).replace(/\n/g,'<br/>')}</p></div></div></div>`}
-function human(v:string){return v.replaceAll('.',' ').replaceAll('_',' ').replace(/\b\w/g,c=>c.toUpperCase())}
-function render(template:string,vars:any){return template.replace(/{{\s*([\w.]+)\s*}}/g,(_m,k)=>{const v=k.split('.').reduce((o:any,p:string)=>o?.[p],vars);return v==null?'':String(v)})}
-function escapeHtml(v:string){return v.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]||c))}
+Deno.serve(async(req:Request)=>{
+  if(req.method==='OPTIONS')return new Response('ok',{headers:cors});
+  try{
+    const supabaseUrl=Deno.env.get('SUPABASE_URL')||'';
+    const serviceKey=serverKey();
+    const resendKey=Deno.env.get('RESEND_API_KEY')||'';
+    console.log('[send-communication] Environment check',{hasSupabaseUrl:Boolean(supabaseUrl),hasServerKey:Boolean(serviceKey),hasResendKey:Boolean(resendKey)});
+    if(!supabaseUrl||!serviceKey)throw new Error('Supabase server credentials are missing.');
+    if(!resendKey)throw new Error('RESEND_API_KEY is missing from Edge Function secrets.');
+
+    const admin=createClient(supabaseUrl,serviceKey,{auth:{persistSession:false,autoRefreshToken:false}});
+    const authHeader=req.headers.get('Authorization')||'';
+    const token=authHeader.startsWith('Bearer ')?authHeader.slice(7):'';
+    if(!token)throw new Error('Authorization token is missing.');
+    const {data:{user},error:userError}=await admin.auth.getUser(token);
+    if(userError||!user)throw new Error(`Unauthorized${userError?`: ${userError.message}`:''}`);
+    const {data:actor,error:actorError}=await admin.from('profiles').select('id,role,portal_role,permissions,is_active').eq('id',user.id).maybeSingle();
+    if(actorError)throw new Error(`Unable to load user permissions: ${actorError.message}`);
+    if(!actor)throw new Error('User profile could not be found.');
+    if(actor.is_active===false&&actor.role!=='admin')throw new Error('Account is inactive.');
+
+    const body=await req.json();
+    const eventKey=String(body.event_key||'').trim();
+    if(!CUSTOMER_EVENTS.has(eventKey)&&!EMPLOYEE_EVENTS.has(eventKey))throw new Error(`Unsupported communication event: ${eventKey}`);
+    const {data:template,error:templateError}=await admin.from('communication_templates').select('*').eq('event_key',eventKey).eq('is_enabled',true).order('created_at',{ascending:false}).limit(1).maybeSingle();
+    if(templateError)throw new Error(`Unable to load communication template: ${templateError.message}`);
+    if(!template)return json({success:true,skipped:true,reason:'Template disabled or missing.'});
+
+    const audience=EMPLOYEE_EVENTS.has(eventKey)?'employee':'customer';
+    let recipientEmail=String(body.recipient_email||'').trim();
+    let relatedCustomerId=body.customer_id||null,relatedEmployeeId=body.employee_id||null,relatedCandidateId=body.candidate_id||null,relatedAppointmentId=body.appointment_id||null;
+    const directRecipient=Boolean(recipientEmail)&&!relatedAppointmentId&&!relatedCandidateId&&!relatedEmployeeId&&!relatedCustomerId;
+    if(directRecipient){const allowed=actor.role==='admin'||actor.portal_role==='owner'||actor.permissions?.['communications.manage'];if(!allowed)throw new Error('Communication testing access required.');}
+
+    if(relatedAppointmentId){
+      const {data:appt,error}=await admin.from('appointments').select('id,user_id,assigned_employee_id,assigned_manager_id,customer_email').eq('id',relatedAppointmentId).maybeSingle();
+      if(error||!appt)throw new Error(error?.message||'Appointment not found.');
+      const currentEmployee=await employeeId(admin,user.id);
+      const elevated=actor.role==='admin'||actor.portal_role==='owner'||actor.permissions?.['appointments.manage'];
+      if(!elevated&&![appt.assigned_employee_id,appt.assigned_manager_id].includes(currentEmployee))throw new Error('Not allowed to send updates for this appointment.');
+      relatedCustomerId=relatedCustomerId||appt.user_id;
+      recipientEmail=recipientEmail||appt.customer_email||'';
+      if(!recipientEmail&&appt.user_id){const {data:p}=await admin.from('profiles').select('email').eq('id',appt.user_id).maybeSingle();recipientEmail=p?.email||'';}
+    }
+    if(relatedCandidateId){requireHR(actor);const {data:c}=await admin.from('recruiting_candidates').select('email').eq('id',relatedCandidateId).maybeSingle();recipientEmail=c?.email||recipientEmail;}
+    if(relatedEmployeeId&&audience==='employee'){
+      const elevated=actor.role==='admin'||actor.portal_role==='owner'||actor.permissions?.['employees.manage']||actor.permissions?.['recruiting.manage'];
+      if(!elevated)throw new Error('Employee communication access required.');
+      const {data:e}=await admin.from('employees').select('email').eq('id',relatedEmployeeId).maybeSingle();recipientEmail=e?.email||recipientEmail;
+    }
+    if(!recipientEmail)throw new Error('Recipient email is missing.');
+
+    const vars:Record<string,unknown>={...(body.variables||{}),...body};
+    const subject=render(String(template.subject||'North Splash Update'),vars),text=render(String(template.body||''),vars);
+    const from=audience==='employee'?EMPLOYEE_FROM:CUSTOMER_FROM;
+    const replyTo=audience==='employee'?'Admin@northsplash.com':undefined;
+    const {data:log,error:logError}=await admin.from('communication_logs').insert({event_key:eventKey,audience,recipient_email:recipientEmail,from_email:from,subject,status:'sending',related_customer_id:relatedCustomerId,related_employee_id:relatedEmployeeId,related_candidate_id:relatedCandidateId,related_appointment_id:relatedAppointmentId}).select().single();
+    if(logError)throw new Error(`Unable to create communication log: ${logError.message}`);
+
+    const response=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${resendKey}`,'Content-Type':'application/json'},body:JSON.stringify({from,to:[recipientEmail],subject,html:emailHtml(subject,text),text,...(replyTo?{reply_to:replyTo}:{})})});
+    const raw=await response.text();let provider:any={};try{provider=raw?JSON.parse(raw):{}}catch{provider={message:raw}}
+    if(!response.ok){await admin.from('communication_logs').update({status:'failed',error_message:provider?.message||provider?.error||raw||`HTTP ${response.status}`}).eq('id',log.id);throw new Error(provider?.message||provider?.error||`Email provider rejected the message with HTTP ${response.status}.`);}
+    await admin.from('communication_logs').update({status:'sent',provider_id:provider?.id||null,sent_at:new Date().toISOString()}).eq('id',log.id);
+    return json({success:true,id:provider?.id,log_id:log.id});
+  }catch(error){const message=error instanceof Error?error.message:String(error);console.error('[send-communication] REQUEST FAILED:',message);return json({success:false,error:message},400)}
+});
+
+async function employeeId(admin:any,userId:string){const {data}=await admin.from('employees').select('id').eq('user_id',userId).maybeSingle();return data?.id||null}
+function requireHR(actor:any){if(!(actor?.role==='admin'||actor?.portal_role==='owner'||actor?.permissions?.['recruiting.manage']))throw new Error('Recruiting access required.')}
+function render(template:string,variables:Record<string,unknown>){return template.replace(/{{\s*([\w.]+)\s*}}/g,(_m,key)=>{const value=key.split('.').reduce((obj:any,part:string)=>obj?.[part],variables as any);return value==null?'':String(value)})}
+function emailHtml(subject:string,message:string){const body=escapeHtml(message).replace(/\n/g,'<br/>');return `<!doctype html><html><body style="margin:0;background:#f6f1eb;font-family:Arial,sans-serif;color:#211811"><div style="max-width:620px;margin:0 auto;padding:34px 18px"><div style="background:#17110d;color:#fff;padding:22px 26px;border-radius:16px 16px 0 0"><div style="font-size:12px;letter-spacing:3px;font-weight:700">NORTH SPLASH</div><div style="font-size:10px;letter-spacing:4px;color:#c9a96e">AUTO LUXE</div></div><div style="background:#fff;padding:28px 26px;border:1px solid #eadfd3;border-top:0;border-radius:0 0 16px 16px"><h1 style="font-size:24px;margin:0 0 18px">${escapeHtml(subject)}</h1><div style="font-size:15px;line-height:1.65">${body}</div><p style="margin-top:28px;color:#87776a;font-size:12px">North Splash Auto Luxe</p></div></div></body></html>`}
+function escapeHtml(value:string){return value.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]||c))}
 function json(body:unknown,status=200){return new Response(JSON.stringify(body),{status,headers:cors})}
