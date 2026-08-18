@@ -1,51 +1,10 @@
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-};
-
-const endpoints = [
-  'https://overpass.private.coffee/api/interpreter',
-  'https://overpass-api.de/api/interpreter',
-  'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
-];
-
-function inside(point: [number, number], polygon: [number, number][]) {
-  const [y, x] = point; let hit = false;
-  for (let i=0,j=polygon.length-1;i<polygon.length;j=i++) {
-    const [yi,xi]=polygon[i], [yj,xj]=polygon[j];
-    const cross=((xi>x)!=(xj>x)) && (y < (yj-yi)*(x-xi)/((xj-xi)||1e-12)+yi);
-    if(cross) hit=!hit;
-  }
-  return hit;
-}
-
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
-  try {
-    const { south, west, north, east, points=[] } = await req.json();
-    if (![south,west,north,east].every(Number.isFinite)) throw new Error('Invalid territory bounds.');
-    const area=(north-south)*(east-west);
-    if(area<=0 || area>0.08) throw new Error('Territory is too large. Draw a smaller neighborhood area.');
-    const q=`[out:json][timeout:18];(way["building"](${south},${west},${north},${east});node["addr:housenumber"](${south},${west},${north},${east}););out center tags;`;
-    let last='House discovery providers are busy.';
-    for(const url of endpoints){
-      try{
-        const ctl=new AbortController(); const timer=setTimeout(()=>ctl.abort(),22000);
-        const r=await fetch(url,{method:'POST',headers:{'content-type':'text/plain;charset=UTF-8','User-Agent':'NorthSplashOS/1.0 (territory-house-search)'},body:q,signal:ctl.signal}); clearTimeout(timer);
-        if(!r.ok){last=`Provider returned ${r.status}`;continue;}
-        const json=await r.json();
-        const poly=(points as [number,number][]).filter(p=>Array.isArray(p)&&p.length===2);
-        const elements=(json.elements||[]).filter((e:any)=>{
-          const lat=Number(e.lat??e.center?.lat), lon=Number(e.lon??e.center?.lon);
-          if(!Number.isFinite(lat)||!Number.isFinite(lon)) return false;
-          return poly.length<3 || inside([lat,lon],poly);
-        });
-        return new Response(JSON.stringify({success:true,elements,provider:url}),{headers:{...corsHeaders,'content-type':'application/json'}});
-      }catch(e){last=e instanceof Error?e.message:String(e)}
-    }
-    return new Response(JSON.stringify({success:false,error:`House discovery is temporarily unavailable. ${last}`}),{status:503,headers:{...corsHeaders,'content-type':'application/json'}});
-  } catch (e) {
-    return new Response(JSON.stringify({success:false,error:e instanceof Error?e.message:'Invalid request'}),{status:400,headers:{...corsHeaders,'content-type':'application/json'}});
-  }
-});
+import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
+import { createClient } from 'npm:@supabase/supabase-js@2.57.4';
+const cors={'Access-Control-Allow-Origin':'*','Access-Control-Allow-Methods':'POST,OPTIONS','Access-Control-Allow-Headers':'Content-Type, Authorization, X-Client-Info, Apikey','Content-Type':'application/json'};
+Deno.serve(async(req:Request)=>{if(req.method==='OPTIONS')return new Response('ok',{headers:cors});try{
+ const token=(req.headers.get('Authorization')||'').replace('Bearer ','');const admin=createClient(Deno.env.get('SUPABASE_URL')!,Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);const {data:{user}}=await admin.auth.getUser(token);if(!user)throw new Error('Unauthorized');
+ const body=await req.json();const lat=Number(body.latitude),lng=Number(body.longitude);if(!Number.isFinite(lat)||!Number.isFinite(lng))throw new Error('Valid latitude and longitude are required.');
+ const key=`${lat.toFixed(5)},${lng.toFixed(5)}`;const {data:cached}=await admin.from('geocode_cache').select('*').eq('cache_key',key).maybeSingle();if(cached)return json({success:true,cached:true,...cached.payload});
+ const url=`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`;const r=await fetch(url,{headers:{'Accept-Language':'en-US,en','User-Agent':'NorthSplashAutoLuxe/1.0 (admin@northsplash.com)'}});if(!r.ok)throw new Error(`Address lookup failed (${r.status}).`);const d=await r.json();const a=d.address||{};const street=[a.house_number,a.road||a.residential||a.pedestrian].filter(Boolean).join(' ');const city=a.city||a.town||a.village||a.municipality||'';const state=a.state||'';const postal_code=a.postcode||'';const address=[street,[city,state,postal_code].filter(Boolean).join(', ').replace(/, ([0-9]{5})$/,' $1')].filter(Boolean).join(', ')||d.display_name||'';const payload={address,street,house_number:a.house_number||'',city,state,postal_code,display_name:d.display_name||address};await admin.from('geocode_cache').upsert({cache_key:key,latitude:lat,longitude:lng,payload},{onConflict:'cache_key'});return json({success:true,cached:false,...payload});
+}catch(e){return json({error:e instanceof Error?e.message:String(e)},400)}});
+function json(body:unknown,status=200){return new Response(JSON.stringify(body),{status,headers:cors})}
