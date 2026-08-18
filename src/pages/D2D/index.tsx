@@ -361,12 +361,15 @@ export default function D2DPortal(){
     ['unworked','New'],['contacted','Contacted'],['interested','Interested'],['follow_up','Follow-Up'],['estimate','Estimate'],['appointment_set','Appointment'],['sold','Sold']
   ] as const;
   const dueFollowups=leads.filter(l=>l.status==='follow_up'||(l.follow_up_at&&new Date(l.follow_up_at)<=new Date()));
-  const nextSuggestedDoor=useMemo(()=>{
+  // Keep this as a plain calculation instead of a hook. The D2D page has early
+  // loading returns above, so adding a hook here changes the hook count between
+  // the loading render and the loaded render and causes React to blank the route.
+  const nextSuggestedDoor=(()=>{
     const eligible=territoryDoors.filter(d=>!d.do_not_knock&&['unworked','no_answer','revisit','follow_up'].includes(d.status||'unworked'));
     if(!eligible.length)return null;
     if(!live)return eligible[0];
     return [...eligible].sort((a,b)=>haversineMeters(live,a)-haversineMeters(live,b))[0];
-  },[territoryDoors,live]);
+  })();
 
   return <div className="portal-layout d2d-os">
     <aside className={`portal-sidebar ${sidebar?'sidebar-open':''}`}>
