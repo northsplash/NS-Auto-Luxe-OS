@@ -19,6 +19,8 @@ The app serves at `http://127.0.0.1:43127`.
 - With credentials, `/` opens login. Admin, employee, D2D, and customer portals stay on their existing routes.
 - OS demo state is saved in the browser (`localStorage`). Reset it from Settings → Demo data.
 
+Search the header for people, jobs, chats, and workspaces. Book appointments from Calendar. Collect and refund send payment templates. New D2D doors land on the map.
+
 ## What is in this slice
 
 - **Flexible hire / pay** — custom job title, system role, and a mix of hourly, salary, weekly draw, commission, per-job, and extra rules. Admins and other roles are not locked to one pay type. Hiring checklists convert into that same add-employee flow.

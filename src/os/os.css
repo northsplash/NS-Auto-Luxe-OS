@@ -319,3 +319,20 @@
 .nsos.phone-mode .nsos-toast { right: 16px; left: 16px; bottom: 72px; min-width: 0; }
 .nsos.phone-mode .nsos-week { grid-template-columns: 1fr; }
 .nsos-drop { min-height: 120px; }
+button.nsos-kpi { width: 100%; text-align: left; }
+.nsos-top { height: auto; min-height: 64px; padding: 10px 20px; flex-wrap: wrap; }
+.nsos-omni { position: relative; min-width: min(280px, 100%); }
+.nsos-omni-list {
+  position: absolute; top: calc(100% + 6px); right: 0; left: 0; z-index: 30;
+  background: #161512; border: 1px solid var(--os-line); border-radius: 12px; overflow: auto; max-height: 320px;
+}
+.nsos-omni-list button { display: block; width: 100%; text-align: left; padding: 10px 12px; color: var(--os-cream); }
+.nsos-omni-list button:hover { background: rgba(255,255,255,.05); }
+.nsos-omni-list small { display: block; color: var(--os-muted); margin-top: 2px; }
+.nsos-chips { display: flex; gap: 6px; flex-wrap: wrap; padding: 0 16px 8px; }
+.nsos-chips button {
+  font-size: 11px; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--os-line); color: var(--os-muted);
+}
+.nsos-thread-head { padding: 10px 16px 0; }
+.nsos-ghost-title { font-size: 16px; font-weight: 700; color: var(--os-cream); }
+.nsos-inline { background: #12110f; border: 1px solid var(--os-line); border-radius: 10px; padding: 8px 10px; flex: 1; outline: 0; }

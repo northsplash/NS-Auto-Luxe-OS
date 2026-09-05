@@ -380,3 +380,99 @@ export function clockNow() {
 export function initialsOf(name: string) {
   return name.split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase() || 'NS';
 }
+
+export const OS_SERVICES = [
+  { name: 'Luxe Exterior Detail', price: 125 },
+  { name: 'Luxe Interior Detail', price: 150 },
+  { name: 'Luxe Signature Detail', price: 275 },
+  { name: 'Paint Correction', price: 350 },
+  { name: 'Luxe Ceramic Coating', price: 650 },
+];
+
+const FALLBACK_AVAIL: Record<Weekday, boolean> = {
+  Mon: true, Tue: true, Wed: true, Thu: true, Fri: true, Sat: true, Sun: false,
+};
+
+export function defaultDocuments(): OsDocument[] {
+  return [
+    { id: 'd_offer', name: 'Offer letter', status: 'review' },
+    { id: 'd_i9', name: 'I-9', status: 'missing' },
+    { id: 'd_w4', name: 'W-4', status: 'missing' },
+    { id: 'd_handbook', name: 'Handbook', status: 'missing' },
+    { id: 'd_deposit', name: 'Direct deposit', status: 'missing' },
+  ];
+}
+
+export function normalizeEmployee(e: Partial<OsEmployee> & Pick<OsEmployee, 'id' | 'name'>): OsEmployee {
+  return {
+    title: 'Team member',
+    role: 'employee',
+    department: 'Operations',
+    status: 'active',
+    email: '',
+    phone: '',
+    initials: initialsOf(e.name),
+    hue: '#7c6a4a',
+    pay_type: 'hourly',
+    hourly_rate: 0,
+    annual_salary: 0,
+    weekly_base: 0,
+    commission_rate: 0,
+    per_job_rate: 0,
+    pay_schedule: 'weekly',
+    hours_week: 0,
+    onboarding: 0,
+    location: 'Raleigh',
+    ...e,
+    documents: Array.isArray(e.documents) && e.documents.length ? e.documents : defaultDocuments(),
+    availability: { ...FALLBACK_AVAIL, ...(e.availability || {}) },
+  };
+}
+
+export function normalizeJob(j: Partial<OsJob> & Pick<OsJob, 'id'>): OsJob {
+  return {
+    customer: 'Customer',
+    email: '',
+    phone: '',
+    service: 'Luxe Signature Detail',
+    vehicle: 'Vehicle TBD',
+    address: '',
+    time: 'TBD',
+    status: 'scheduled',
+    detailer: 'Unassigned',
+    price: 275,
+    payment: 'due',
+    internal_notes: '',
+    ...j,
+    notes: Array.isArray(j.notes) ? j.notes : [],
+    photos: Array.isArray(j.photos) ? j.photos : [],
+    comms: Array.isArray(j.comms) ? j.comms : [],
+  };
+}
+
+export function normalizeLead(l: Partial<OsLead> & Pick<OsLead, 'id' | 'name'>): OsLead {
+  return {
+    address: '',
+    status: 'new',
+    rep: 'Unassigned',
+    value: 275,
+    temp: 'warm',
+    phone: '',
+    x: 40 + Math.random() * 30,
+    y: 30 + Math.random() * 30,
+    notes: '',
+    ...l,
+    activity: Array.isArray(l.activity) ? l.activity : [],
+  };
+}
+
+export type JobDraft = {
+  customer: string;
+  service: string;
+  vehicle: string;
+  address: string;
+  time: string;
+  price: number;
+  detailer: string;
+  phone?: string;
+};

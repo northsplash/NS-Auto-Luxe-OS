@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { Component, useEffect, useMemo, useState, type ErrorInfo, type ReactNode } from 'react';
 import {
   BarChart3, Briefcase, CalendarDays, Clock3, CreditCard, LayoutDashboard, MapPinned, MessageCircle,
   MoreHorizontal, Plus, Settings, Smartphone, Users, Workflow, UserPlus, Truck, Home,
@@ -7,7 +7,7 @@ import type { EmployeeDraft } from '@/lib/rolePresets';
 import { OsProvider, useOs } from './osStore';
 import {
   Avatar, CalendarView, ChatThread, CommsView, CustomersView, D2DView, DispatchView, HireModal,
-  HireView, JobDetail, JobsHome, MoreGrid, OwnerDashboard, PaymentsView, PeopleHome, PeopleProfile,
+  HireView, JobDetail, JobsHome, MoreGrid, OmniSearch, OwnerDashboard, PaymentsView, PeopleHome, PeopleProfile,
   PipelineView, ReportsView, ScheduleView, SettingsView,
 } from './views';
 import './os.css';
@@ -51,12 +51,32 @@ const TITLES: Record<OsView, [string, string]> = {
   more: ['All workspaces', 'Every North Splash OS surface'],
 };
 
+class OsErrorBoundary extends Component<{ children: ReactNode; onReset?: () => void }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  componentDidCatch(error: Error, info: ErrorInfo) { console.error('North Splash OS view error', error, info); }
+  render() {
+    if (this.state.failed) {
+      return (
+        <div className="nsos-card" style={{ margin: 20 }}>
+          <h2>This workspace hit a snag</h2>
+          <p style={{ color: 'var(--os-muted)', margin: '8px 0 14px' }}>The rest of the OS is still running. Reset this view instead of reloading the whole app.</p>
+          <button className="nsos-btn" onClick={() => { this.setState({ failed: false }); this.props.onReset?.(); }}>Back to dashboard</button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 function OsShell() {
   const os = useOs();
   const [view, setView] = useState<OsView>(() => {
     try { return (sessionStorage.getItem('ns-os-view') as OsView) || 'home'; } catch { return 'home'; }
   });
-  const [phone, setPhone] = useState(false);
+  const [phone, setPhone] = useState(() => {
+    try { return localStorage.getItem('ns-os-phone') === '1'; } catch { return false; }
+  });
   const [chatTab, setChatTab] = useState<'dm' | 'space'>('dm');
   const [activeChat, setActiveChat] = useState(os.chats[0]?.id || '');
   const [peopleId, setPeopleId] = useState<string | null>(null);
@@ -66,6 +86,10 @@ function OsShell() {
   const [search, setSearch] = useState('');
   const [threadOpen, setThreadOpen] = useState(false);
   const [jobList, setJobList] = useState(true);
+
+  useEffect(() => {
+    try { localStorage.setItem('ns-os-phone', phone ? '1' : '0'); } catch { /* ignore */ }
+  }, [phone]);
 
   const chat = os.chats.find((c) => c.id === activeChat) || os.chats[0];
   const person = os.employees.find((e) => e.id === peopleId);
@@ -209,11 +233,20 @@ function OsShell() {
           </div>
           <div className="nsos-actions">
             {view === 'people' && <button className="nsos-btn" onClick={() => { setHirePreset(undefined); setHireOpen(true); }}>Add employee</button>}
+            {!phone && (
+              <OmniSearch
+                onGo={go}
+                onOpenPerson={(id) => { setView('people'); setPeopleId(id); }}
+                onOpenJob={openJob}
+                onOpenChat={(id) => { setActiveChat(id); setView('chat'); setThreadOpen(true); os.markChatRead(id); }}
+              />
+            )}
             <button className="nsos-btn ghost" onClick={() => setPhone((v) => !v)}><Smartphone size={14} />{phone ? 'Desktop' : 'iPhone'}</button>
           </div>
         </header>
         <div className="nsos-body">
-          {view === 'home' && <OwnerDashboard />}
+          <OsErrorBoundary onReset={() => go('home')}>
+          {view === 'home' && <OwnerDashboard onOpenJob={openJob} onOpenPayments={() => go('payments')} onOpenPipeline={() => go('pipeline')} />}
           {view === 'chat' && chat && phone && !threadOpen && (
             <div>
               <div className="nsos-tabs">
@@ -261,6 +294,7 @@ function OsShell() {
           {view === 'comms' && <CommsView />}
           {view === 'settings' && <SettingsView />}
           {view === 'more' && <MoreGrid onPick={go} />}
+          </OsErrorBoundary>
         </div>
         <nav className="nsos-bottom">
           <button className={view === 'home' ? 'active' : ''} onClick={() => go('home')}><Home size={18} />Home</button>

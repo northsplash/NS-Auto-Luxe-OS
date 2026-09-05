@@ -4,14 +4,15 @@ import { fillTemplate } from '@/lib/communicationCatalog';
 import type { EmployeeDraft } from '@/lib/rolePresets';
 import { money } from '@/lib/data';
 import {
-  clockNow, defaultTemplates, initialsOf, seedActivity, seedCandidates, seedChats, seedCustomers,
-  seedEmployees, seedJobs, seedLeads, seedPayments, seedSettings, seedShifts, seedTimeOff, uid,
-  type JobStatus, type LeadStatus, type OsActivity, type OsCandidate, type OsChat, type OsCustomer,
-  type OsEmployee, type OsJob, type OsLead, type OsPayment, type OsSettings, type OsShift,
-  type OsTimeOff, type Weekday,
+  clockNow, defaultTemplates, initialsOf, normalizeEmployee, normalizeJob, normalizeLead,
+  seedActivity, seedCandidates, seedChats, seedCustomers, seedEmployees, seedJobs, seedLeads,
+  seedPayments, seedSettings, seedShifts, seedTimeOff, uid,
+  type JobDraft, type JobStatus, type LeadStatus, type OsActivity, type OsCandidate, type OsChat,
+  type OsCustomer, type OsEmployee, type OsJob, type OsLead, type OsPayment, type OsSettings,
+  type OsShift, type OsTimeOff, type Weekday,
 } from './demoData';
 
-const KEY = 'ns-os-v2';
+const KEY = 'ns-os-v3';
 
 export type Toast = { id: string; title: string; body: string };
 
@@ -47,13 +48,32 @@ function seed(): OsSnapshot {
   };
 }
 
+function migrate(data: Partial<OsSnapshot>): OsSnapshot {
+  const base = seed();
+  return {
+    ...base,
+    ...data,
+    employees: (data.employees?.length ? data.employees : base.employees).map((e) => normalizeEmployee(e)),
+    jobs: (data.jobs?.length ? data.jobs : base.jobs).map((j) => normalizeJob(j)),
+    leads: (data.leads?.length ? data.leads : base.leads).map((l) => normalizeLead(l)),
+    chats: data.chats?.length ? data.chats : base.chats,
+    payments: data.payments?.length ? data.payments : base.payments,
+    candidates: data.candidates?.length ? data.candidates : base.candidates,
+    templates: data.templates?.length ? data.templates : base.templates,
+    shifts: data.shifts?.length ? data.shifts : base.shifts,
+    timeOff: data.timeOff?.length ? data.timeOff : base.timeOff,
+    activity: data.activity?.length ? data.activity : base.activity,
+    customers: data.customers?.length ? data.customers : base.customers,
+    settings: { ...base.settings, ...(data.settings || {}) },
+  };
+}
+
 function load(): OsSnapshot {
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = localStorage.getItem(KEY) || localStorage.getItem('ns-os-v2');
     if (!raw) return seed();
     const parsed = JSON.parse(raw) as { v?: number; data?: Partial<OsSnapshot> };
-    if (parsed?.v !== 2 || !parsed.data) return seed();
-    return { ...seed(), ...parsed.data };
+    return migrate(parsed?.data || (parsed as Partial<OsSnapshot>));
   } catch {
     return seed();
   }
@@ -123,6 +143,12 @@ type OsApi = OsSnapshot & {
   toggleChecklist: (candidateId: string, itemId: string) => void;
   patchTemplate: (id: string, partial: Partial<CommunicationTemplate>) => void;
   saveSettings: (patch: Partial<OsSettings>) => void;
+  renameChat: (id: string, name: string) => void;
+  shareToChat: (chatId: string, body: string) => void;
+  createJob: (draft: JobDraft) => string;
+  addLead: (name: string, address: string) => string;
+  toggleMember: (customerId: string) => void;
+  rescheduleJob: (id: string, time: string) => void;
 };
 
 const OsContext = createContext<OsApi | null>(null);
@@ -132,7 +158,7 @@ export function OsProvider({ children }: { children: ReactNode }) {
   const [toast, setToast] = useState<Toast | null>(null);
 
   useEffect(() => {
-    localStorage.setItem(KEY, JSON.stringify({ v: 2, data: state }));
+    localStorage.setItem(KEY, JSON.stringify({ v: 3, data: state }));
   }, [state]);
 
   const flash = useCallback((title: string, body: string) => {
@@ -180,6 +206,7 @@ export function OsProvider({ children }: { children: ReactNode }) {
     dismissToast: () => setToast(null),
     resetDemo: () => {
       localStorage.removeItem(KEY);
+      localStorage.removeItem('ns-os-v2');
       setState(seed());
       flash('Demo reset', 'North Splash OS restored to seed data.');
     },
@@ -236,7 +263,7 @@ export function OsProvider({ children }: { children: ReactNode }) {
       ...s,
       employees: s.employees.map((e) => {
         if (e.id !== employeeId) return e;
-        const documents = e.documents.map((d) => {
+        const documents = (e.documents || []).map((d) => {
           if (d.id !== docId) return d;
           const status: OsEmployee['documents'][number]['status'] = d.status === 'complete' ? 'missing' : d.status === 'review' ? 'complete' : 'review';
           return { ...d, status };
@@ -343,29 +370,34 @@ export function OsProvider({ children }: { children: ReactNode }) {
         const job = s.jobs.find((j) => j.id === id);
         if (!job || job.payment === 'paid') return s;
         const pay: OsPayment = { id: `pay_${id}`, jobId: id, customer: job.customer, amount: job.price, method: 'Card on file', status: 'succeeded', at: clockNow() };
+        const extra = fireComms({ ...job, payment: 'paid' }, 'completed', s.templates, 'payment_received');
+        const have = new Set((job.comms || []).map((c) => c.id));
+        const fresh = extra.filter((c) => !have.has(c.id));
         return {
           ...s,
-          jobs: s.jobs.map((j) => j.id === id ? { ...j, payment: 'paid' as const } : j),
+          jobs: s.jobs.map((j) => j.id === id ? { ...j, payment: 'paid' as const, comms: [...fresh, ...j.comms] } : j),
           payments: s.payments.map((p) => p.jobId === id && p.status === 'pending' ? { ...p, status: 'succeeded' as const, at: clockNow(), method: 'Card on file' } : p).concat(
             s.payments.some((p) => p.jobId === id) ? [] : [pay],
           ),
-          activity: [{ id: `act_pay_${id}`, at: clockNow(), kind: 'pay', text: `Collected ${money(job.price)} from ${job.customer}.` }, ...s.activity.filter((a) => a.id !== `act_pay_${id}`)],
+          activity: [{ id: `act_pay_${id}`, at: clockNow(), kind: 'pay', text: `Collected ${money(job.price)} from ${job.customer}. Receipt sent.` }, ...s.activity.filter((a) => a.id !== `act_pay_${id}`)],
         };
       });
-      flash('Payment collected', 'Card on file captured.');
+      flash('Payment collected', 'Receipt SMS/email sent if that template is on.');
     },
     refundPayment: (id) => {
       setState((s) => {
         const pay = s.payments.find((p) => p.id === id);
         if (!pay || pay.status === 'refunded') return s;
+        const job = s.jobs.find((j) => j.id === pay.jobId);
+        const extra = job ? fireComms(job, 'completed', s.templates, 'refund_issued') : [];
         return {
           ...s,
           payments: s.payments.map((p) => p.id === id ? { ...p, status: 'refunded' as const } : p),
-          jobs: s.jobs.map((j) => j.id === pay.jobId ? { ...j, payment: 'refunded' as const } : j),
+          jobs: s.jobs.map((j) => j.id === pay.jobId ? { ...j, payment: 'refunded' as const, comms: [...extra.filter((c) => !j.comms.some((x) => x.id === c.id)), ...j.comms] } : j),
           activity: [{ id: `act_ref_${id}`, at: clockNow(), kind: 'pay', text: `Refunded ${money(pay.amount)} to ${pay.customer}.` }, ...s.activity],
         };
       });
-      flash('Refunded', 'The transaction was reversed in the ledger.');
+      flash('Refunded', 'Refund notice sent if that template is on.');
     },
     retryPayment: (id) => setState((s) => ({
       ...s,
@@ -474,6 +506,66 @@ export function OsProvider({ children }: { children: ReactNode }) {
       templates: s.templates.map((t) => t.id === id ? { ...t, ...partial } : t),
     })),
     saveSettings: (patch) => setState((s) => ({ ...s, settings: { ...s.settings, ...patch } })),
+    renameChat: (id, name) => setState((s) => ({
+      ...s,
+      chats: s.chats.map((c) => c.id === id ? { ...c, name, initials: initialsOf(name) } : c),
+    })),
+    shareToChat: (chatId, body) => setState((s) => ({
+      ...s,
+      chats: s.chats.map((c) => c.id !== chatId ? c : {
+        ...c, preview: body, at: clockNow(), unread: 0,
+        messages: [...c.messages, { id: uid(), from: 'You', mine: true, body, at: clockNow() }],
+      }),
+    })),
+    createJob: (draft) => {
+      const id = `j_${Date.now()}`;
+      const job = normalizeJob({
+        id,
+        customer: draft.customer,
+        service: draft.service,
+        vehicle: draft.vehicle,
+        address: draft.address,
+        time: draft.time,
+        price: draft.price,
+        detailer: draft.detailer,
+        phone: draft.phone || '',
+        status: 'scheduled',
+        payment: 'due',
+      });
+      setState((s) => {
+        const customer = s.customers.some((c) => c.name === draft.customer) ? null : {
+          id: uid(), name: draft.customer, email: '', phone: draft.phone || '', vehicle: draft.vehicle,
+          address: draft.address, member: false, notes: [],
+        };
+        const extra = fireComms(job, 'scheduled', s.templates);
+        return {
+          ...s,
+          jobs: [{ ...job, comms: extra }, ...s.jobs],
+          customers: customer ? [customer, ...s.customers] : s.customers,
+          activity: [{ id: uid(), at: clockNow(), kind: 'ops', text: `Booked ${draft.customer} · ${draft.service}.` }, ...s.activity],
+        };
+      });
+      flash('Appointment booked', `${draft.customer} · confirmation queued`);
+      return id;
+    },
+    addLead: (name, address) => {
+      const id = `l_${Date.now()}`;
+      setState((s) => ({
+        ...s,
+        leads: [normalizeLead({ id, name, address, status: 'new', temp: 'warm', rep: 'Sofia Reyes', value: 275 }), ...s.leads],
+        activity: [{ id: uid(), at: clockNow(), kind: 'sales', text: `New door logged: ${name} · ${address}.` }, ...s.activity],
+      }));
+      flash('Door added', `${name} is on the D2D map`);
+      return id;
+    },
+    toggleMember: (customerId) => setState((s) => ({
+      ...s,
+      customers: s.customers.map((c) => c.id === customerId ? { ...c, member: !c.member } : c),
+    })),
+    rescheduleJob: (id, time) => setState((s) => ({
+      ...s,
+      jobs: s.jobs.map((j) => j.id === id ? { ...j, time } : j),
+    })),
   }), [state, toast, fireComms, flash]);
 
   return <OsContext.Provider value={api}>{children}</OsContext.Provider>;
