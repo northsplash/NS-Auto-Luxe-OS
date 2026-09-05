@@ -516,6 +516,411 @@ button.nsos-kpi { width: 100%; text-align: left; }
 .nsos-data-sheet {
   max-width: 520px;
 }
-.nsos-modal {
-  z-index: 90;
+.nsos-admin-preview .nsos-modal {
+  z-index: 13000;
+}
+
+/* ── Phone + tablet OS shell ───────────────────────────────── */
+.os-more-sheet-backdrop { display: none; }
+.nsos-admin-preview .os-mobile-bottom-nav { display: none; }
+
+.nsos-admin-preview .nsos-tabs {
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.nsos-admin-preview .nsos-tabs::-webkit-scrollbar { display: none; }
+.nsos-admin-preview .nsos-tabs button { flex: 0 0 auto; min-height: 36px; }
+
+@media (max-width: 1100px) {
+  .nsos-admin-preview.portal-layout .portal-sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: -320px !important;
+    width: min(86vw, 300px) !important;
+    min-width: min(86vw, 300px) !important;
+    height: 100dvh !important;
+    z-index: 10050 !important;
+    transition: left .22s ease !important;
+    overflow-y: auto !important;
+  }
+  .nsos-admin-preview.portal-layout .portal-sidebar.sidebar-open {
+    left: 0 !important;
+  }
+  .nsos-admin-preview .sidebar-toggle,
+  .nsos-admin-preview .sidebar-close {
+    display: grid !important;
+    place-items: center !important;
+    width: 42px;
+    height: 42px;
+    color: #f5f2eb !important;
+  }
+  .nsos-admin-preview .sidebar-backdrop {
+    display: block !important;
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 10040 !important;
+    background: rgba(0, 0, 0, .62) !important;
+  }
+  .nsos-admin-preview.portal-layout .portal-main {
+    margin-left: 0 !important;
+  }
+  .nsos-admin-preview .portal-sidebar .sidebar-brand div strong { font-size: 11px !important; letter-spacing: .12em; }
+  .nsos-admin-preview .portal-sidebar .sidebar-brand div small { font-size: 9px !important; }
+  .nsos-admin-preview .portal-sidebar .sidebar-user p { font-size: 13px !important; }
+  .nsos-admin-preview .portal-sidebar .sidebar-user span { font-size: 11px !important; color: #8a8378; }
+  .nsos-admin-preview .portal-sidebar .sidebar-item { font-size: 13px !important; }
+  .nsos-admin-preview .portal-sidebar .os-workspace-button > span:not(.os-workspace-icon) { font-size: 13px !important; }
+  .nsos-admin-preview .portal-sidebar .os-workspace-button small { font-size: 10px !important; }
+  .nsos-admin-preview .portal-sidebar .os-sidebar-section-label { font-size: 9px !important; }
+  .nsos-admin-preview .portal-sidebar .os-pinned-link span { font-size: 13px !important; }
+  .nsos-admin-preview .portal-sidebar .sidebar-footer span,
+  .nsos-admin-preview .portal-sidebar .sidebar-footer a,
+  .nsos-admin-preview .portal-sidebar .owner-field-mode-btn strong { font-size: 10px !important; }
+  .nsos-admin-preview .portal-sidebar .owner-field-mode-btn small { font-size: 8px !important; }
+  .nsos-admin-preview .os-workspace-button {
+    grid-template-columns: 36px 1fr auto !important;
+    padding: 8px 10px !important;
+    justify-content: stretch !important;
+  }
+  .nsos-admin-preview .os-workspace-icon { margin: 0 !important; }
+  .nsos-admin-preview .os-pinned-link { justify-content: flex-start !important; }
+  .nsos-admin-preview .sidebar-item { justify-content: flex-start !important; }
+  .nsos-admin-preview .sidebar-user { justify-content: flex-start !important; }
+  .nsos-admin-preview .portal-brand-logo { width: 86px !important; }
+
+  .nsos-admin-preview .v2-page-head h2,
+  .nsos-admin-preview .tab-header h2,
+  .nsos-admin-preview .phase300-header h2 {
+    font-size: 26px !important;
+    line-height: 1.15 !important;
+  }
+  .nsos-admin-preview .v2-page-head p,
+  .nsos-admin-preview .tab-header p {
+    font-size: 13px !important;
+    max-width: 42rem;
+  }
+  .nsos-admin-preview .os-workspace-pulse {
+    width: calc(100% - 8px) !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    margin: 12px auto 0 !important;
+  }
+  .nsos-admin-preview .os-pulse-intro { grid-column: 1 / -1; }
+  .nsos-admin-preview .nsos-kpis,
+  .nsos-admin-preview .nsos-grid-2,
+  .nsos-admin-preview .nsos-grid-3,
+  .nsos-admin-preview .nsos-dispatch,
+  .nsos-admin-preview .nsos-settings {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .nsos-admin-preview .nsos-kanban,
+  .nsos-admin-preview .nsos-week {
+    grid-template-columns: repeat(5, minmax(200px, 1fr)) !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .nsos-admin-preview .message-info-rail { display: none !important; }
+  .nsos-admin-preview .team-messaging.with-info,
+  .nsos-admin-preview .team-messaging.messaging-v6.with-info {
+    grid-template-columns: 240px minmax(0, 1fr) !important;
+  }
+  .nsos-admin-preview .os-command-palette {
+    width: min(560px, calc(100vw - 24px)) !important;
+    margin: 12px auto;
+  }
+  .nsos-admin-preview .nsos-modal {
+    z-index: 12000 !important;
+    padding: 12px !important;
+    align-items: end;
+  }
+  .nsos-admin-preview .nsos-modal .sheet {
+    width: 100% !important;
+    max-height: 92dvh !important;
+    border-radius: 18px !important;
+  }
+}
+
+@media (max-width: 860px) {
+  .nsos-admin-preview .os-mobile-bottom-nav.mobile-app-nav-v25 {
+    display: grid !important;
+    z-index: 9600 !important;
+  }
+  .nsos-admin-preview .portal-main {
+    padding-bottom: calc(78px + env(safe-area-inset-bottom)) !important;
+  }
+  .nsos-admin-preview .portal-content {
+    padding: 12px 12px calc(96px + env(safe-area-inset-bottom)) !important;
+  }
+  .nsos-admin-preview .portal-topbar {
+    height: 58px !important;
+    min-height: 58px !important;
+    padding: 0 10px !important;
+  }
+  .nsos-admin-preview .v2-page-head,
+  .nsos-admin-preview .tab-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 10px !important;
+    padding-bottom: 10px !important;
+  }
+  .nsos-admin-preview .v2-page-head h2,
+  .nsos-admin-preview .tab-header h2 {
+    font-size: 22px !important;
+  }
+  .nsos-admin-preview .v2-page-head p,
+  .nsos-admin-preview .tab-header p,
+  .nsos-admin-preview .eyebrow {
+    display: none !important;
+  }
+  .nsos-admin-preview .v2-page-head .btn-primary,
+  .nsos-admin-preview .v2-page-head .btn-outline {
+    min-height: 44px;
+    width: 100%;
+    justify-content: center;
+  }
+  .nsos-admin-preview .os-workspace-pulse {
+    display: flex !important;
+    overflow-x: auto !important;
+    gap: 8px !important;
+    width: 100% !important;
+    margin: 8px 0 0 !important;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+  .nsos-admin-preview .os-workspace-pulse::-webkit-scrollbar { display: none; }
+  .nsos-admin-preview .os-pulse-intro { display: none !important; }
+  .nsos-admin-preview .os-pulse-metric {
+    min-width: 148px;
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+  }
+  .nsos-admin-preview .nsos-kpis,
+  .nsos-admin-preview .nsos-grid-2,
+  .nsos-admin-preview .nsos-grid-3,
+  .nsos-admin-preview .nsos-dispatch,
+  .nsos-admin-preview .nsos-settings,
+  .nsos-admin-preview .nsos-photos {
+    grid-template-columns: 1fr !important;
+  }
+  .nsos-admin-preview .nsos-kanban,
+  .nsos-admin-preview .nsos-week {
+    grid-template-columns: none !important;
+    display: flex !important;
+    overflow-x: auto !important;
+    gap: 10px !important;
+    padding-bottom: 8px;
+    scroll-snap-type: x mandatory;
+  }
+  .nsos-admin-preview .nsos-col {
+    flex: 0 0 min(82vw, 300px);
+    scroll-snap-align: start;
+  }
+  .nsos-admin-preview .nsos-status {
+    overflow-x: auto;
+    gap: 0;
+  }
+  .nsos-admin-preview .nsos-status span,
+  .nsos-admin-preview .nsos-status button {
+    flex: 0 0 auto;
+    min-width: 72px;
+    font-size: 9px;
+    padding: 16px 8px 4px;
+  }
+  .nsos-admin-preview .nsos-job-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px;
+    border: 1px solid var(--os-line);
+    border-radius: 14px;
+    margin-bottom: 8px;
+  }
+  .nsos-admin-preview .nsos-job-card > div {
+    justify-items: stretch !important;
+    width: 100%;
+  }
+  .nsos-admin-preview .nsos-job-card .nsos-btn {
+    width: 100%;
+    justify-content: center;
+    min-height: 44px;
+  }
+  .nsos-admin-preview .nsos-job {
+    min-height: 52px;
+    align-items: center;
+  }
+  .nsos-admin-preview .nsos-actions { gap: 6px; }
+  .nsos-admin-preview .nsos-actions .nsos-btn { min-height: 40px; }
+  .nsos-admin-preview .nsos-map { height: 46dvh; min-height: 240px; }
+  .nsos-admin-preview .nsos-toast {
+    left: 12px !important;
+    right: 12px !important;
+    bottom: calc(78px + env(safe-area-inset-bottom)) !important;
+    min-width: 0 !important;
+    z-index: 11000 !important;
+  }
+  .nsos-admin-preview .os-command-backdrop {
+    z-index: 11500 !important;
+    padding: 8px;
+    align-items: flex-start;
+  }
+  .nsos-admin-preview .message-search kbd,
+  .nsos-admin-preview .message-workspace-brand svg {
+    display: none !important;
+  }
+  .nsos-admin-preview.os-tab-messages .v2-page-head,
+  .nsos-admin-preview.os-tab-messages .os-workspace-pulse {
+    display: none !important;
+  }
+  .nsos-admin-preview.os-tab-messages .tab-content.v2-page {
+    gap: 0;
+  }
+  .nsos-admin-preview.os-tab-messages .team-messaging.messaging-v6 {
+    height: calc(100dvh - 178px) !important;
+    min-height: 420px !important;
+    max-height: none !important;
+    border-radius: 14px !important;
+    margin-inline: 0 !important;
+  }
+  .nsos-admin-preview .message-mobile-back {
+    display: grid !important;
+    place-items: center !important;
+    width: 40px !important;
+    height: 40px !important;
+  }
+  .nsos-admin-preview .os-more-sheet-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 9500;
+    background: rgba(0, 0, 0, .58);
+  }
+  .nsos-admin-preview .os-more-sheet {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: calc(64px + env(safe-area-inset-bottom));
+    max-height: min(72dvh, 620px);
+    overflow: auto;
+    background: #0c0c0c;
+    border: 1px solid rgba(217, 173, 74, .22);
+    border-radius: 22px 22px 16px 16px;
+    padding: 16px;
+    margin: 0 8px 8px;
+    box-shadow: 0 -24px 60px rgba(0, 0, 0, .45);
+  }
+  .nsos-admin-preview .os-more-sheet-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .nsos-admin-preview .os-more-sheet-head span {
+    display: block;
+    font-size: 10px;
+    letter-spacing: .18em;
+    font-weight: 800;
+    color: #c8a96a;
+  }
+  .nsos-admin-preview .os-more-sheet-head strong {
+    display: block;
+    font-size: 22px;
+    margin-top: 2px;
+  }
+  .nsos-admin-preview .os-more-sheet-head button {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, .1);
+    color: #f5f2eb;
+  }
+  .nsos-admin-preview .os-more-sheet-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .nsos-admin-preview .os-more-sheet-grid button {
+    display: grid;
+    gap: 4px;
+    text-align: left;
+    min-height: 84px;
+    padding: 12px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, .08);
+    background: #12110f;
+    color: #f5f2eb;
+  }
+  .nsos-admin-preview .os-more-sheet-grid button.active,
+  .nsos-admin-preview .os-more-sheet-pins button.active {
+    border-color: rgba(217, 173, 74, .45);
+    background: #17130c;
+    color: #f1d487;
+  }
+  .nsos-admin-preview .os-more-sheet-grid small {
+    color: #8a8378;
+    font-size: 11px;
+  }
+  .nsos-admin-preview .os-more-sheet-label {
+    margin: 16px 0 8px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: #8a8378;
+  }
+  .nsos-admin-preview .os-more-sheet-pins {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .nsos-admin-preview .os-more-sheet-pins button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 0 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, .1);
+    background: #12110f;
+    color: #f5f2eb;
+    font-size: 13px;
+  }
+  .nsos-admin-preview .os-more-sheet-modes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .nsos-admin-preview .os-secondary-nav-scroll button {
+    min-height: 40px !important;
+    padding: 0 12px !important;
+  }
+  .nsos-admin-preview .nsos-kpi strong { font-size: 22px; }
+  .nsos-admin-preview .form-row,
+  .nsos-admin-preview .comp-rule-fields,
+  .nsos-admin-preview .comp-rule-limits {
+    grid-template-columns: 1fr !important;
+  }
+  .nsos-admin-preview button,
+  .nsos-admin-preview .sidebar-item,
+  .nsos-admin-preview .os-command-trigger {
+    touch-action: manipulation;
+  }
+}
+
+@media (min-width: 861px) and (max-width: 1100px) {
+  .nsos-admin-preview .portal-topbar {
+    display: grid !important;
+    grid-template-columns: 44px minmax(0, 1fr) auto !important;
+    gap: 10px !important;
+    align-items: center !important;
+    padding: 0 16px !important;
+  }
+  .nsos-admin-preview .os-topbar-actions { justify-content: flex-end; }
+  .nsos-admin-preview .os-command-trigger span { display: none; }
+  .nsos-admin-preview .os-command-trigger { min-width: 42px !important; width: auto; }
 }

@@ -33,8 +33,8 @@ export default function TeamMessagesView() {
   const [kind, setKind] = useState('message');
   const [search, setSearch] = useState('');
   const [messageSearch, setMessageSearch] = useState('');
-  const [showInfo, setShowInfo] = useState(true);
-  const [mobileThreadOpen, setMobileThreadOpen] = useState(true);
+  const [showInfo, setShowInfo] = useState(() => typeof window !== 'undefined' && window.innerWidth > 1100);
+  const [mobileThreadOpen, setMobileThreadOpen] = useState(() => typeof window !== 'undefined' && window.innerWidth > 760);
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState('');
   const [newMembers, setNewMembers] = useState<string[]>([]);

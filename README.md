@@ -13,7 +13,7 @@ cp env.example .env
 npm run dev
 ```
 
-The app serves at `http://127.0.0.1:43127`. `/` and `/os` open the **North Splash Admin** OS. Owner lands on a Stripe-style dashboard. People, Operations, Sales, Customers, Finance, and Admin map to the product models below. Sign-in stays at `/login`.
+The app serves at `http://127.0.0.1:43127`. `/` and `/os` open the **North Splash Admin** OS. On phones, Home / Chat / Jobs / Leads / More sit in a bottom bar. Tablets use a full labeled drawer instead of a collapsed icon rail. Sign-in stays at `/login`.
 - OS demo state is saved in the browser (`localStorage`). Reset it from **Manage data**.
 
 Search the header for people, jobs, chats, and workspaces. Book appointments from Calendar. Collect and refund send payment templates. New D2D doors land on the map.

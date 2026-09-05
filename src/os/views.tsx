@@ -1222,12 +1222,12 @@ export function JobsHome({ jobs, onOpen }: { jobs: OsJob[]; onOpen: (id: string)
       {rows.length === 0 && <div className="nsos-empty">No jobs in this filter.</div>}
       {rows.map((j) => (
         <div className="nsos-job nsos-job-card" key={j.id}>
-          <button onClick={() => onOpen(j.id)} style={{ flex: 1, textAlign: 'left', background: 'none', border: 0, color: 'inherit' }}>
+          <button type="button" onClick={() => onOpen(j.id)} style={{ flex: 1, textAlign: 'left', background: 'none', border: 0, color: 'inherit', minHeight: 44 }}>
             <strong>{j.customer}</strong>
             <div style={{ color: 'var(--os-muted)', fontSize: 12 }}>{j.service} · {j.vehicle}</div>
             <div style={{ color: 'var(--os-muted)', fontSize: 12 }}>{j.time} · {j.address}</div>
           </button>
-          <div style={{ display: 'grid', gap: 6, justifyItems: 'end' }}>
+          <div className="nsos-job-actions" style={{ display: 'grid', gap: 6, justifyItems: 'end' }}>
             <span className={`nsos-pill ${j.status === 'completed' ? 'green' : 'gold'}`}>{j.status.replaceAll('_', ' ')}</span>
             {j.status === 'confirmed' || j.status === 'scheduled' ? (
               <button className="nsos-btn" onClick={() => os.setJobStatus(j.id, 'en_route')}>En route</button>
