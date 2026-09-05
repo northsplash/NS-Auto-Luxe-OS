@@ -1,8 +1,8 @@
 # North Splash Auto Luxe OS
 
-Field-service operating system for North Splash Auto Luxe: owner dashboard, team, dispatch, D2D, jobs, payments, and customer communications.
+Field-service operating system for North Splash Auto Luxe. One dark, Stripe-like product — not 15 tools stitched together.
 
-The previous GitHub dump included dozens of duplicate `File (12).tsx` uploads. This repo keeps the real app (`src/`, `public/`, `supabase/`) and the Admin OS at `/` and `/os`.
+`/` and `/os` open the Admin OS. D2D canvassing is `/d2d`. The detailer portal is `/employee`. Sign-in stays at `/login`.
 
 ## Run locally
 
@@ -13,32 +13,47 @@ cp env.example .env
 npm run dev
 ```
 
-The app serves at `http://127.0.0.1:43127`. `/` and `/os` open the **North Splash Admin** OS: dark luxury sidebar, warm paper canvas (Stripe / Jobber / Housecall Pro). Phones use Home / Chat / Jobs / Leads / More. Tablets use a labeled drawer. Sign-in stays at `/login`.
-- OS demo state is saved in the browser (`localStorage`). Reset it from **Manage data**.
+The app serves at `http://127.0.0.1:43127`. Demo state lives in this browser (`localStorage`). Reset it from **Manage data**.
 
-Search the header for people, jobs, chats, and workspaces. Book appointments from Calendar. Collect and refund send payment templates. New D2D doors land on the map.
+## How it is modeled
 
-## What is in this slice
+Visual language is **Stripe** everywhere: dark surfaces, tight spacing, strong KPI hierarchy, restrained gold, simple charts.
 
-- **Admin chrome** — owner workspaces, pinned Command Center / Appointments / Leads Tracker, gold **+ New work**, and Team Messages with a white chat canvas.
-- **Product-modeled workspaces**
-  - Owner dashboard → Stripe KPIs, revenue, payouts, live activity
-  - People → Homebase / Rippling directory and profile tabs
-  - Hours → Deputy drag-and-drop shifts, availability, time-off
-  - Appointments → Jobber calendar; jobs attached to customers
-  - Jobs → Housecall Pro mobile-first list with En Route / Arrived / Finish
-  - Dispatch → ServiceTitan crew columns (drag jobs)
-  - D2D → SalesRabbit pins, knock notes, book-the-door
-  - Pipeline → SPOTIO / HubSpot stages (drag cards)
-  - Customers → HubSpot record + timeline
-  - Job detail → Jobber: status bar, notes, photos, collect pay, SMS log, customer portal card
-  - Payments → Square filters, collect, refund, retry
-  - Reports → Stripe KPI hierarchy
-  - Hiring → Gusto checklists
-  - Settings → Stripe-style left nav
-- **Customer email + SMS** — Housecall Pro automation + Jobber email structure + Square confirmations/payments + Uber day-of updates. Appointment → Confirmed → En Route → In Progress → Complete. Admin → Communications has enable/disable, email/SMS, timing, variables, Preview Email, Preview SMS, and Send Test.
-- **Customer email + SMS** — advancing Appointment → Confirmed → En Route → In Progress → Complete sends the matching Housecall / Jobber / Uber-style template (if enabled) and logs it on the job.
+Workflows follow the product that already does that job well:
+
+| Workspace | Modeled after |
+|---|---|
+| Owner Command Center / Dashboard | Stripe Dashboard |
+| Employees / profiles / pay | Rippling + Gusto |
+| Scheduling | Deputy |
+| Appointments / job detail | Jobber |
+| Dispatch board | ServiceTitan |
+| D2D portal, map, territories | SalesRabbit |
+| Lead pipeline | HubSpot + SPOTIO |
+| Customers / CRM | HubSpot |
+| Detailer jobs | Housecall Pro |
+| Live job status | Uber |
+| Team messaging | Microsoft Teams |
+| Payments | Square |
+| Reports | Stripe |
+| Hiring / onboarding | Gusto |
+| Communications | Housecall Pro + Jobber |
+| Settings | Stripe |
+| Phone navigation | Microsoft Teams |
+
+The two cores: **SalesRabbit** for territory maps, pins, knocks, and canvassing; **ServiceTitan** for technicians, job cards, assignment, and live job progression.
+
+## What you can do in this slice
+
+- Owner Command Center with glance KPIs, revenue, today’s schedule, attention, team, and booking flow
+- Rippling-style people directory and profile tabs
+- ServiceTitan dispatch: unassigned rail, tech columns, drag-to-assign
+- SalesRabbit D2D: tall map, West / Central / East areas, knock outcomes, book-the-door
+- HubSpot pipeline and customer records
+- Jobber appointments and job detail with Uber-style live status
+- Square payments, Gusto hiring checklists, Stripe settings
+- Phones: Home / Chat / Jobs / Map / More. Tablets use a labeled drawer.
 
 ## Supabase
 
-SQL lives in `supabase/migrations`. Apply the latest migration for communication template seeds after pulling.
+SQL lives in `supabase/migrations`. Apply the latest migration for communication template seeds after pulling. Without keys, the OS still runs on demo data.

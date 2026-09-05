@@ -12,7 +12,7 @@ import {
   type OsShift, type OsTimeOff, type Weekday,
 } from './demoData';
 
-const KEY = 'ns-os-v4';
+const KEY = 'ns-os-v5';
 
 export type Toast = { id: string; title: string; body: string };
 

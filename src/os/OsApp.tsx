@@ -101,8 +101,8 @@ const PAGE: Record<OsTab, [string, string, string]> = {
   time_off: ['People', 'Time off', 'Approve or deny time-off against the live schedule.'],
   payroll_approval: ['Finance', 'Timesheets', 'Review hours before payroll cutoff.'],
   training: ['People', 'Training', 'Onboarding and field training assigned to the roster.'],
-  command_center: ['Owner', 'Live', 'North Splash operating snapshot — jobs, cash, and the field.'],
-  dashboard: ['Owner', 'Home', 'Stripe-style KPIs, revenue, payouts, and recent activity.'],
+  command_center: ['Owner', 'Command Center', 'Stripe-style operating snapshot — jobs, cash, and the field.'],
+  dashboard: ['Owner', 'Dashboard', 'The same command center, focused on searchable operational KPIs.'],
   owner_growth: ['Owner', 'Growth', 'Pipeline, canvassing, and booking targets.'],
   owner_profits: ['Owner', 'Profit', 'Collected vs open invoices from live jobs.'],
   payment_test: ['Finance', 'Pay test', 'Collect, refund, and retry from the Square-style ledger.'],
@@ -143,7 +143,7 @@ const PAGE: Record<OsTab, [string, string, string]> = {
 };
 
 const TAB_SHORT: Record<OsTab, string> = {
-  dashboard: 'Home', command_center: 'Live', owner_growth: 'Growth', owner_profits: 'Profit', payment_test: 'Pay test',
+  dashboard: 'Dashboard', command_center: 'Command Center', owner_growth: 'Growth Planner', owner_profits: 'Profit Tracker', payment_test: '% Payment Test',
   sales: 'Map', leads: 'Pipeline', territories: 'Streets', marketing: 'Campaigns', retention: 'Follow-up',
   customers: 'Directory', crm: 'Records', appointments: 'Calendar', schedule: 'Windows', availability: 'Slots', archived: 'History', fleet: 'Fleets',
   jobs: 'Jobs', dispatch: 'Board', job_assignments: 'Assign', inventory: 'Stock', equipment: 'Assets', tasks: 'Tasks', documents: 'Files', notifications: 'Alerts', purchasing: 'Buy', incidents: 'Issues', approvals: 'Approvals',
@@ -181,6 +181,7 @@ class OsErrorBoundary extends Component<{ children: ReactNode; onReset?: () => v
 }
 
 function WorkspacePage({ tab, children, action }: { tab: OsTab; children: ReactNode; action?: ReactNode }) {
+  if (tab === 'command_center' || tab === 'dashboard') return <>{children}</>;
   const meta = PAGE[tab];
   if (!meta) return <>{children}</>;
   const [eyebrow, title, sub] = meta;
@@ -204,9 +205,9 @@ function OsShell() {
   const navigate = useNavigate();
   const [tab, setTab] = useState<OsTab>(() => {
     try {
-      const raw = sessionStorage.getItem('ns-os-tab') || sessionStorage.getItem('ns-os-view') || 'dashboard';
-      return (LEGACY[raw] || raw || 'dashboard') as OsTab;
-    } catch { return 'dashboard'; }
+      const raw = sessionStorage.getItem('ns-os-tab') || sessionStorage.getItem('ns-os-view') || 'command_center';
+      return (LEGACY[raw] || raw || 'command_center') as OsTab;
+    } catch { return 'command_center'; }
   });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
@@ -344,7 +345,20 @@ function OsShell() {
     if (tab === 'payments' || tab === 'finance' || tab === 'payment_test') return <PaymentsView />;
     if (tab === 'reports' || tab === 'owner_growth' || tab === 'owner_profits') return <ReportsView />;
     if (tab === 'command_center' || tab === 'dashboard') {
-      return <OwnerDashboard onOpenJob={openJob} onOpenPayments={() => go('payments')} onOpenPipeline={() => go('leads')} />;
+      return (
+        <OwnerDashboard
+          onOpenJob={openJob}
+          onOpenPayments={() => go('payments')}
+          onOpenPipeline={() => go('leads')}
+          onNewAppointment={() => go('appointments')}
+          onNewCustomer={() => go('customers')}
+          onNewLead={() => go('sales')}
+          onNewEmployee={() => { setHirePreset(undefined); setHireOpen(true); }}
+          onOpenTeam={() => go('employees')}
+          onOpenSchedule={() => go('appointments')}
+          onOpenDispatch={() => go('dispatch')}
+        />
+      );
     }
     if (tab === 'communications' || tab === 'automations' || tab === 'notifications') return <CommsView />;
     return <SettingsView />;
@@ -360,7 +374,7 @@ function OsShell() {
     <div className={`portal-layout nsos-admin-preview admin-os os-tab-${tab}${moreOpen ? ' os-more-open' : ''}`}>
       <aside className={`portal-sidebar admin-sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <div className="sidebar-header">
-          <Link to="/" className="sidebar-brand" onClick={() => go('dashboard')}>
+          <Link to="/" className="sidebar-brand" onClick={() => go('command_center')}>
             <img className="portal-brand-logo" src="/ns-auto-luxe-logo.svg" alt="North Splash Auto Luxe" />
             <div><strong>North Splash</strong><small>Auto Luxe OS</small></div>
           </Link>
@@ -368,7 +382,7 @@ function OsShell() {
         </div>
         <div className="sidebar-user">
           <div className="sidebar-avatar admin-avatar">NS</div>
-          <div><p>North Splash Admin</p><span>CEO, Owner</span></div>
+          <div><p>North Splash Admin</p><span>50% Owner</span></div>
         </div>
         <nav className="sidebar-nav os-workspace-nav">
           <div className="os-sidebar-section-label">WORKSPACES</div>
@@ -383,7 +397,7 @@ function OsShell() {
             );
           })}
           <div className="os-sidebar-section-label os-sidebar-section-gap">PINNED</div>
-          {(['dashboard', 'appointments', 'leads'] as OsTab[]).map((id) => {
+          {(['command_center', 'appointments', 'leads'] as OsTab[]).map((id) => {
             const item = nav(id);
             if (!item) return null;
             const { Icon, label } = item;
@@ -420,7 +434,7 @@ function OsShell() {
               <Search size={16} /><span>Search workspace</span><kbd>⌘ K</kbd>
             </button>
             <button className="btn-outline btn-sm os-manage-data desktop-top-action" onClick={() => setDataOpen(true)}><Trash2 size={15} /> <span>Manage data</span></button>
-            <button className="btn-primary btn-sm desktop-top-action" onClick={() => go('appointments')}><Plus size={15} /><span>New work</span></button>
+            <button className="btn-primary btn-sm desktop-top-action" onClick={() => go('appointments')}><Plus size={15} /><span>+ New work</span></button>
             <button className={`os-mobile-actions-trigger ${mobileActionsOpen ? 'active' : ''}`} aria-label="More workspace actions" aria-expanded={mobileActionsOpen} onClick={() => setMobileActionsOpen((v) => !v)}>
               <MoreHorizontal size={20} />
             </button>
@@ -528,10 +542,10 @@ function OsShell() {
       </main>
 
       <nav className="os-mobile-bottom-nav mobile-app-nav-v25" aria-label="Mobile workspace navigation">
-        <button type="button" className={!moreOpen && phoneHome ? 'active' : ''} onClick={() => go('dashboard')}><LayoutDashboard size={19} /><span>Home</span></button>
+        <button type="button" className={!moreOpen && phoneHome ? 'active' : ''} onClick={() => go('command_center')}><LayoutDashboard size={19} /><span>Home</span></button>
         <button type="button" className={!moreOpen && phoneChat ? 'active' : ''} onClick={() => go('messages')}><MessageCircle size={19} /><span>Chat</span></button>
         <button type="button" className={!moreOpen && phoneJobs ? 'active' : ''} onClick={() => go('jobs')}><BriefcaseBusiness size={19} /><span>Jobs</span></button>
-        <button type="button" className={!moreOpen && phoneLeads ? 'active' : ''} onClick={() => go('sales')}><Target size={19} /><span>Leads</span></button>
+        <button type="button" className={!moreOpen && phoneLeads ? 'active' : ''} onClick={() => go('sales')}><Target size={19} /><span>Map</span></button>
         <button type="button" className={phoneMore ? 'active' : ''} onClick={() => { setSidebarOpen(false); setMobileActionsOpen(false); setMoreOpen((v) => !v); }}><MoreHorizontal size={19} /><span>More</span></button>
       </nav>
       {moreOpen && (
@@ -555,7 +569,7 @@ function OsShell() {
             </div>
             <div className="os-more-sheet-label">Pinned</div>
             <div className="os-more-sheet-pins">
-              {(['dashboard', 'appointments', 'leads', 'employees', 'communications'] as OsTab[]).map((id) => {
+              {(['command_center', 'appointments', 'leads', 'employees', 'communications'] as OsTab[]).map((id) => {
                 const item = nav(id);
                 if (!item) return null;
                 const { Icon, label } = item;

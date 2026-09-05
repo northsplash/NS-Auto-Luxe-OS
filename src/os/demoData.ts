@@ -224,6 +224,13 @@ export const seedJobs: OsJob[] = [
     ],
     comms: [{ id: uid(), channel: 'email', name: 'Thank-you', preview: 'Thank you for trusting North Splash', at: 'Yesterday · 4:40 PM' }],
   },
+  {
+    id: 'j6', customer: 'Sam Wright', email: 'sam.wright@email.com', phone: '919-555-1881', service: 'Luxe Interior Detail', vehicle: '2020 Lexus GX', address: 'Cary · MacGregor Downs', time: 'Today · 4:00 PM', status: 'scheduled', detailer: '', price: 175, payment: 'due',
+    internal_notes: 'Needs a tech. Customer prefers after school pickup.',
+    notes: [],
+    photos: [],
+    comms: [],
+  },
 ];
 
 export const seedLeads: OsLead[] = [
