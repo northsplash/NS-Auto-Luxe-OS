@@ -227,8 +227,8 @@ function OsShell() {
     setTab(next);
     setSidebarOpen(false);
     setMobileActionsOpen(false);
-    if (next !== 'employees') setPeopleId(null);
-    if (next !== 'appointments' && next !== 'jobs') setJobId(null);
+    setPeopleId(null);
+    setJobId(null);
   };
 
   const openJob = (id: string) => {
