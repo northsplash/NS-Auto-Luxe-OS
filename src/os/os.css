@@ -366,12 +366,43 @@ button.nsos-kpi { width: 100%; text-align: left; }
   background: transparent;
   color: var(--os-cream);
 }
-.nsos.nsos-embed h1,
-.nsos.nsos-embed h2,
-.nsos.nsos-embed h3,
-.nsos.nsos-embed h4 {
+.nsos.nsos-embed .nsos-kpi strong {
   font-family: Inter, ui-sans-serif, system-ui, sans-serif;
 }
+.nsos-portal {
+  margin: 14px 0;
+  padding: 14px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #f7f1eb, #efe6d6);
+  color: #16120c;
+}
+.nsos-portal .nsos-eyebrow { color: #8a7048; }
+.nsos-portal strong { display: block; font-size: 16px; margin: 4px 0 6px; }
+.nsos-portal p { color: #5c5348; font-size: 13px; }
+.nsos-portal .nsos-status span { color: #7a6d62; }
+.nsos-portal .nsos-status span.done, .nsos-portal .nsos-status span.now { color: #16120c; }
+.nsos-portal .nsos-status span::before { background: #d9cbb8; }
+.nsos-portal .nsos-status span.done::before, .nsos-portal .nsos-status span.now::before { background: #c8a96a; }
+.nsos-portal-sms {
+  margin-top: 10px; padding: 10px 12px; border-radius: 12px; background: #16120c; color: #f6f1e8; font-size: 13px;
+}
+.nsos-email-detailer { display: flex; gap: 10px; align-items: center; margin: 8px 0; }
+.nsos-status-light { padding: 0 16px 12px; }
+.nsos-status-light span { color: #7a6d62; }
+.nsos-status-light span.done, .nsos-status-light span.now { color: #16120c; }
+.nsos-status-light span::before { background: #d9cbb8; }
+.nsos-status-light span.done::before, .nsos-status-light span.now::before { background: #c8a96a; }
+.nsos-comm-lead { color: var(--os-muted); font-size: 13px; line-height: 1.5; margin-bottom: 14px; max-width: 720px; }
+.nsos-comm-row {
+  display: flex; gap: 10px; align-items: flex-start; width: 100%;
+  padding: 8px 10px; border-radius: 10px; margin-bottom: 4px; color: var(--os-cream);
+}
+.nsos-comm-row.active, .nsos-comm-row:hover { background: rgba(255,255,255,.05); }
+.nsos-comm-row input { margin-top: 4px; }
+.nsos-comm-row button { flex: 1; text-align: left; background: none; border: 0; color: inherit; }
+.nsos-comm-row strong { display: block; font-size: 13px; }
+.nsos-comm-row small { color: var(--os-muted); font-size: 11px; }
+.nsos-job-card { align-items: flex-start; }
 
 .nsos-admin-preview {
   min-height: 100dvh;

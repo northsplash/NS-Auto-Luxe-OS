@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { CommunicationTemplate } from '@/lib/communicationCatalog';
-import { fillTemplate } from '@/lib/communicationCatalog';
+import { channelLabel, fillTemplate } from '@/lib/communicationCatalog';
 import type { EmployeeDraft } from '@/lib/rolePresets';
 import { money } from '@/lib/data';
 import {
@@ -59,7 +59,10 @@ function migrate(data: Partial<OsSnapshot>): OsSnapshot {
     chats: data.chats?.length ? data.chats : base.chats,
     payments: data.payments?.length ? data.payments : base.payments,
     candidates: data.candidates?.length ? data.candidates : base.candidates,
-    templates: data.templates?.length ? data.templates : base.templates,
+    templates: defaultTemplates.map((t) => {
+      const saved = (data.templates || []).find((x) => x.id === t.id);
+      return saved ? { ...t, ...saved } : t;
+    }),
     shifts: data.shifts?.length ? data.shifts : base.shifts,
     timeOff: data.timeOff?.length ? data.timeOff : base.timeOff,
     activity: data.activity?.length ? data.activity : base.activity,
@@ -142,6 +145,7 @@ type OsApi = OsSnapshot & {
   requestTimeOff: (employeeId: string, reason: string) => void;
   toggleChecklist: (candidateId: string, itemId: string) => void;
   patchTemplate: (id: string, partial: Partial<CommunicationTemplate>) => void;
+  sendTestComm: (templateId: string, jobId?: string) => void;
   saveSettings: (patch: Partial<OsSettings>) => void;
   renameChat: (id: string, name: string) => void;
   shareToChat: (chatId: string, body: string) => void;
@@ -507,6 +511,29 @@ export function OsProvider({ children }: { children: ReactNode }) {
       ...s,
       templates: s.templates.map((t) => t.id === id ? { ...t, ...partial } : t),
     })),
+    sendTestComm: (templateId, jobId) => {
+      const job = state.jobs.find((j) => j.id === jobId) || state.jobs[0];
+      const template = state.templates.find((t) => t.id === templateId);
+      if (!job || !template) {
+        flash('Nothing to send', 'Add a job first, then send a test.');
+        return;
+      }
+      const extra = fireComms(job, job.status, state.templates, template.id).map((row) => ({
+        ...row,
+        id: `${row.id}_${Date.now()}`,
+        name: `Test · ${row.name}`,
+      }));
+      if (!extra.length) {
+        flash('Template is off', 'Enable email or SMS on this template first.');
+        return;
+      }
+      setState((s) => ({
+        ...s,
+        jobs: s.jobs.map((j) => j.id !== job.id ? j : { ...j, comms: [...extra, ...j.comms] }),
+        activity: [{ id: uid(), at: clockNow(), text: `Test ${channelLabel(template)} sent to ${job.customer}: ${template.name}.`, kind: 'comms' }, ...s.activity],
+      }));
+      flash(`Test ${extra[0].channel.toUpperCase()} sent`, extra[0].preview);
+    },
     saveSettings: (patch) => setState((s) => ({ ...s, settings: { ...s.settings, ...patch } })),
     renameChat: (id, name) => setState((s) => ({
       ...s,

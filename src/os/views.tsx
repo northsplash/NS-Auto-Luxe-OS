@@ -22,6 +22,7 @@ export function OwnerDashboard({ onOpenJob, onOpenPayments, onOpenPipeline }: { 
   const week = revenueDays.reduce((s, d) => s + d.v, 0);
   const collected = payments.filter((p) => p.status === 'succeeded').reduce((s, p) => s + p.amount, 0);
   const open = payments.filter((p) => p.status === 'pending').reduce((s, p) => s + p.amount, 0);
+  const refunded = payments.filter((p) => p.status === 'refunded').reduce((s, p) => s + p.amount, 0);
   const today = jobs.filter((j) => j.time.includes('Today'));
   const field = jobs.filter((j) => j.status === 'en_route' || j.status === 'in_progress' || j.status === 'arrived').length;
   const sold = leads.filter((l) => l.status === 'sold').length;
@@ -29,10 +30,10 @@ export function OwnerDashboard({ onOpenJob, onOpenPayments, onOpenPipeline }: { 
   return (
     <div>
       <div className="nsos-kpis">
-        <button className="nsos-kpi" onClick={onOpenPayments}><span>Week revenue</span><strong>{money(week)}</strong><em>+12% vs last week</em></button>
+        <button className="nsos-kpi" onClick={onOpenPayments}><span>Gross volume</span><strong>{money(week)}</strong><em>+12% vs last week</em></button>
+        <button className="nsos-kpi" onClick={onOpenPayments}><span>Net collected</span><strong>{money(collected)}</strong><em>{money(open)} open</em></button>
         <button className="nsos-kpi" onClick={() => today[0] && onOpenJob?.(today[0].id)}><span>Jobs today</span><strong>{today.length}</strong><em>{field} in field</em></button>
-        <button className="nsos-kpi" onClick={onOpenPayments}><span>Collected</span><strong>{money(collected)}</strong><em>Square + invoices</em></button>
-        <button className="nsos-kpi" onClick={onOpenPipeline}><span>Pipeline closes</span><strong>{sold}</strong><em>{money(open)} open invoices</em></button>
+        <button className="nsos-kpi" onClick={onOpenPipeline}><span>Pipeline closes</span><strong>{sold}</strong><em>{money(refunded)} refunded</em></button>
       </div>
       <div className="nsos-grid-2">
         <section className="nsos-card">
@@ -58,20 +59,32 @@ export function OwnerDashboard({ onOpenJob, onOpenPayments, onOpenPipeline }: { 
           </ul>
         </section>
       </div>
-      <section className="nsos-card" style={{ marginTop: 14 }}>
-        <span className="nsos-eyebrow">Customer inbox</span>
-        <h3>Latest SMS / email</h3>
-        {inbox.length === 0 && <div className="nsos-empty">Advance a job status to send the first message.</div>}
-        {inbox.slice(0, 5).map((c) => (
-          <button key={c.id} className="nsos-job" style={{ width: '100%', textAlign: 'left' }} onClick={() => onOpenJob?.(c.job.id)}>
-            <div>
-              <strong>{c.job.customer} · {c.name}</strong>
-              <div style={{ color: 'var(--os-muted)', fontSize: 12 }}>{c.preview}</div>
-            </div>
-            <span className="nsos-pill blue">{c.channel}</span>
-          </button>
-        ))}
-      </section>
+      <div className="nsos-grid-2" style={{ marginTop: 14 }}>
+        <section className="nsos-card">
+          <span className="nsos-eyebrow">Payouts</span>
+          <h3>Latest transactions</h3>
+          {payments.slice(0, 5).map((p) => (
+            <button key={p.id} className="nsos-job" style={{ width: '100%', textAlign: 'left' }} onClick={onOpenPayments}>
+              <div><strong>{p.customer}</strong><div style={{ color: 'var(--os-muted)', fontSize: 12 }}>{p.method} · {p.at}</div></div>
+              <b>{money(p.amount)}</b>
+            </button>
+          ))}
+        </section>
+        <section className="nsos-card">
+          <span className="nsos-eyebrow">Customer inbox</span>
+          <h3>Latest SMS / email</h3>
+          {inbox.length === 0 && <div className="nsos-empty">Advance a job status to send the first message.</div>}
+          {inbox.slice(0, 5).map((c) => (
+            <button key={c.id} className="nsos-job" style={{ width: '100%', textAlign: 'left' }} onClick={() => onOpenJob?.(c.job.id)}>
+              <div>
+                <strong>{c.job.customer} · {c.name}</strong>
+                <div style={{ color: 'var(--os-muted)', fontSize: 12 }}>{c.preview}</div>
+              </div>
+              <span className="nsos-pill blue">{c.channel}</span>
+            </button>
+          ))}
+        </section>
+      </div>
     </div>
   );
 }
@@ -154,12 +167,13 @@ export function PeopleHome({ employees, onOpen, onHire }: { employees: OsEmploye
             <Avatar initials={e.initials} hue={e.hue} />
             <div>
               <strong>{e.name}</strong>
-              <div style={{ color: 'var(--os-muted)', fontSize: 12 }}>{e.title} · {e.department}</div>
+              <div style={{ color: 'var(--os-muted)', fontSize: 12 }}>{e.title} · {e.department} · {e.hours_week}h</div>
             </div>
           </div>
           <div style={{ textAlign: 'right' }}>
             <span className={`nsos-pill ${e.status === 'active' ? 'green' : e.status === 'leave' ? 'gold' : 'red'}`}>{e.status}</span>
             <div style={{ color: 'var(--os-muted)', fontSize: 12, marginTop: 6 }}>{payLine(e)}</div>
+            <div style={{ color: 'var(--os-muted)', fontSize: 11, marginTop: 4 }}>Onboarding {e.onboarding}%</div>
           </div>
         </button>
       ))}
@@ -657,6 +671,54 @@ function stepIndex(status: JobStatus) {
   return Math.max(0, JOB_STEPS.indexOf(mapped));
 }
 
+export function CustomerPortalCard({ job }: { job: OsJob }) {
+  const idx = stepIndex(job.status);
+  const lastSms = (job.comms || []).find((c) => c.channel === 'sms');
+  return (
+    <div className="nsos-portal">
+      <span className="nsos-eyebrow">Customer portal</span>
+      <strong>Track your appointment</strong>
+      <p>{job.customer.split(' ')[0]}, your {job.service} is {JOB_STEP_LABELS[idx]}.</p>
+      <div className="nsos-status">
+        {JOB_STEP_LABELS.map((label, i) => (
+          <span key={label} className={i < idx ? 'done' : i === idx ? 'now' : ''}>{label}</span>
+        ))}
+      </div>
+      {lastSms && <div className="nsos-portal-sms">{lastSms.preview}</div>}
+    </div>
+  );
+}
+
+export function PremiumEmail({
+  headline, time, service, vehicle, detailer, price, step,
+}: {
+  headline: string; time: string; service: string; vehicle: string; detailer: string; price: string; step: number;
+}) {
+  return (
+    <div className="nsos-email">
+      <header>NORTH SPLASH AUTO LUXE</header>
+      <div className="hero">
+        <h2>{headline}</h2>
+        <div className="meta">
+          <div><b>{time}</b></div>
+          <div>{service}</div>
+          <div>{vehicle}</div>
+          <div className="nsos-email-detailer">
+            <span className="nsos-avatar" style={{ width: 36, height: 36, background: '#c8a96a', fontSize: 11 }}>{detailer.slice(0, 1)}</span>
+            <span>Assigned Detailer<br /><b>{detailer}</b></span>
+          </div>
+          <div><b>{price}</b></div>
+        </div>
+      </div>
+      <div className="cta">VIEW APPOINTMENT</div>
+      <div className="nsos-status nsos-status-light">
+        {JOB_STEP_LABELS.map((s, i) => <span key={s} className={i < step ? 'done' : i === step ? 'now' : ''}>{s}</span>)}
+      </div>
+      <footer>North Splash Auto Luxe · Raleigh · hello@northsplash.com · (919) 555-0100</footer>
+    </div>
+  );
+}
+
 export function JobDetail({ job }: { job: OsJob }) {
   const os = useOs();
   const [note, setNote] = useState('');
@@ -695,6 +757,7 @@ export function JobDetail({ job }: { job: OsJob }) {
           </select>
         </label>
         <p>{money(job.price)} · <span className={`nsos-pill ${job.payment === 'paid' ? 'green' : job.payment === 'refunded' ? 'red' : 'gold'}`}>{job.payment}</span></p>
+        <CustomerPortalCard job={job} />
         <label className="nsos-field">Window
           <input value={job.time} onChange={(e) => os.rescheduleJob(job.id, e.target.value)} />
         </label>
@@ -932,9 +995,10 @@ export function CommsView() {
     eta: liveJob.eta || SAMPLE_VARS.eta,
     portal_link: SAMPLE_VARS.portal_link,
   } : SAMPLE_VARS;
-  const stepNow = liveJob ? stepIndex(liveJob.status) : 2;
+  const stepNow = liveJob ? stepIndex(liveJob.status) : 1;
   return (
     <div>
+      <p className="nsos-comm-lead">Housecall Pro automation + Jobber templates + Square confirmations + Uber-style day-of SMS. Status changes on a job fire these — nobody in the office has to text the customer.</p>
       <div className="nsos-status" style={{ marginBottom: 16 }}>
         {JOB_STEP_LABELS.map((s, i) => <span key={s} className={i < stepNow ? 'done' : i === stepNow ? 'now' : ''}>{s}</span>)}
       </div>
@@ -944,18 +1008,28 @@ export function CommsView() {
             <section key={g.id} style={{ marginBottom: 14 }}>
               <div className="nsos-eyebrow">{g.title}</div>
               {templates.filter((t) => t.category === g.id).map((t) => (
-                <button className={`nsos-row ${selected?.id === t.id ? 'active' : ''}`} key={t.id} onClick={() => setSelectedId(t.id)}>
-                  <span className={`nsos-pill ${t.is_enabled ? 'green' : ''}`}>{t.is_enabled ? 'on' : 'off'}</span>
-                  <span><strong>{t.name}</strong><small>{t.timing_label} · {channelLabel(t)}</small></span>
-                </button>
+                <label key={t.id} className={`nsos-comm-row ${selected?.id === t.id ? 'active' : ''}`}>
+                  <input
+                    type="checkbox"
+                    checked={t.is_enabled}
+                    onChange={(e) => os.patchTemplate(t.id, { is_enabled: e.target.checked })}
+                  />
+                  <button type="button" onClick={() => setSelectedId(t.id)}>
+                    <strong>{t.name}</strong>
+                    <small>{t.timing_label} · {channelLabel(t)}</small>
+                  </button>
+                </label>
               ))}
             </section>
           ))}
         </aside>
         {selected && (
           <div className="nsos-card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-              <h3>{selected.name}</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'flex-start' }}>
+              <div>
+                <span className="nsos-eyebrow">Edit template</span>
+                <h3>{selected.name}</h3>
+              </div>
               <label className="nsos-pill gold"><input type="checkbox" checked={selected.is_enabled} onChange={(e) => os.patchTemplate(selected.id, { is_enabled: e.target.checked })} /> Enabled</label>
             </div>
             <p style={{ color: 'var(--os-muted)', margin: '6px 0 12px' }}>{selected.timing_label}</p>
@@ -963,15 +1037,19 @@ export function CommsView() {
               <label className="nsos-pill"><input type="checkbox" checked={selected.email_enabled} onChange={(e) => os.patchTemplate(selected.id, { email_enabled: e.target.checked })} /> Email</label>
               <label className="nsos-pill"><input type="checkbox" checked={selected.sms_enabled} onChange={(e) => os.patchTemplate(selected.id, { sms_enabled: e.target.checked })} /> SMS</label>
             </div>
+            <label className="nsos-field">Timing offset (minutes)
+              <input type="number" value={selected.send_delay_minutes} onChange={(e) => os.patchTemplate(selected.id, { send_delay_minutes: Number(e.target.value) })} />
+            </label>
             <label className="nsos-field">Email subject<input value={selected.subject} onChange={(e) => os.patchTemplate(selected.id, { subject: e.target.value })} /></label>
             <label className="nsos-field">Email body<textarea rows={5} value={selected.body} onChange={(e) => os.patchTemplate(selected.id, { body: e.target.value })} /></label>
             <label className="nsos-field">SMS<textarea rows={3} value={selected.sms_body} onChange={(e) => os.patchTemplate(selected.id, { sms_body: e.target.value })} /></label>
             <div className="nsos-actions">
-              {COMM_VARIABLES.map((v) => <button key={v} className="nsos-btn ghost" type="button" onClick={() => navigator.clipboard.writeText(v)}>{v}</button>)}
+              {COMM_VARIABLES.map((v) => <button key={v} className="nsos-btn ghost" type="button" onClick={() => os.patchTemplate(selected.id, { body: `${selected.body} ${v}` })}>{v}</button>)}
             </div>
             <div className="nsos-actions" style={{ marginTop: 12 }}>
               <button className="nsos-btn ghost" type="button" onClick={() => setPreview('email')}><Bell size={14} />Preview email</button>
               <button className="nsos-btn ghost" type="button" onClick={() => setPreview('sms')}><Smartphone size={14} />Preview SMS</button>
+              <button className="nsos-btn" type="button" onClick={() => os.sendTestComm(selected.id, liveJob?.id)}>Send test</button>
             </div>
           </div>
         )}
@@ -980,24 +1058,15 @@ export function CommsView() {
         <div className="nsos-modal" onClick={() => setPreview(null)}>
           <div className="sheet" onClick={(e) => e.stopPropagation()}>
             {preview === 'email' ? (
-              <div className="nsos-email">
-                <header>NORTH SPLASH AUTO LUXE</header>
-                <div className="hero">
-                  <h2>{fillTemplate(selected.subject, vars)}</h2>
-                  <div className="meta">
-                    <div>{vars.appointment_time}</div>
-                    <div>{vars.service}</div>
-                    <div>{vars.vehicle}</div>
-                    <div>Assigned · {vars.detailer_name}</div>
-                    <div>{vars.price}</div>
-                  </div>
-                </div>
-                <div className="cta">VIEW APPOINTMENT</div>
-                <div className="nsos-status" style={{ padding: '0 16px 12px' }}>
-                  {JOB_STEP_LABELS.map((s, i) => <span key={s} className={i < stepNow ? 'done' : i === stepNow ? 'now' : ''}>{s}</span>)}
-                </div>
-                <footer>North Splash Auto Luxe · Raleigh · {vars.portal_link}</footer>
-              </div>
+              <PremiumEmail
+                headline={fillTemplate(selected.subject, vars)}
+                time={vars.appointment_time}
+                service={vars.service}
+                vehicle={vars.vehicle}
+                detailer={vars.detailer_name}
+                price={vars.price}
+                step={stepNow}
+              />
             ) : (
               <div className="nsos-sms"><div className="bubble">{fillTemplate(selected.sms_body, vars)}</div></div>
             )}
@@ -1140,24 +1209,37 @@ export function OmniSearch({
 }
 
 export function JobsHome({ jobs, onOpen }: { jobs: OsJob[]; onOpen: (id: string) => void }) {
+  const os = useOs();
   const [filter, setFilter] = useState('open');
   const rows = jobs.filter((j) => filter === 'all' || (filter === 'open' ? j.status !== 'completed' : j.status === filter));
   return (
     <div>
       <div className="nsos-tabs">
-        {['open', 'en_route', 'in_progress', 'completed', 'all'].map((f) => (
+        {['open', 'en_route', 'arrived', 'in_progress', 'completed', 'all'].map((f) => (
           <button key={f} className={filter === f ? 'active' : ''} onClick={() => setFilter(f)}>{f.replaceAll('_', ' ')}</button>
         ))}
       </div>
       {rows.length === 0 && <div className="nsos-empty">No jobs in this filter.</div>}
       {rows.map((j) => (
-        <button className="nsos-job" key={j.id} onClick={() => onOpen(j.id)} style={{ width: '100%', textAlign: 'left' }}>
-          <div>
+        <div className="nsos-job nsos-job-card" key={j.id}>
+          <button onClick={() => onOpen(j.id)} style={{ flex: 1, textAlign: 'left', background: 'none', border: 0, color: 'inherit' }}>
             <strong>{j.customer}</strong>
-            <div style={{ color: 'var(--os-muted)', fontSize: 12 }}>{j.service} · {j.time}</div>
+            <div style={{ color: 'var(--os-muted)', fontSize: 12 }}>{j.service} · {j.vehicle}</div>
+            <div style={{ color: 'var(--os-muted)', fontSize: 12 }}>{j.time} · {j.address}</div>
+          </button>
+          <div style={{ display: 'grid', gap: 6, justifyItems: 'end' }}>
+            <span className={`nsos-pill ${j.status === 'completed' ? 'green' : 'gold'}`}>{j.status.replaceAll('_', ' ')}</span>
+            {j.status === 'confirmed' || j.status === 'scheduled' ? (
+              <button className="nsos-btn" onClick={() => os.setJobStatus(j.id, 'en_route')}>En route</button>
+            ) : j.status === 'en_route' ? (
+              <button className="nsos-btn" onClick={() => os.setJobStatus(j.id, 'arrived')}>Arrived</button>
+            ) : j.status === 'arrived' ? (
+              <button className="nsos-btn" onClick={() => os.setJobStatus(j.id, 'in_progress')}>Start</button>
+            ) : j.status === 'in_progress' ? (
+              <button className="nsos-btn" onClick={() => os.setJobStatus(j.id, 'completed')}>Finish</button>
+            ) : null}
           </div>
-          <span className={`nsos-pill ${j.status === 'completed' ? 'green' : 'gold'}`}>{j.status.replaceAll('_', ' ')}</span>
-        </button>
+        </div>
       ))}
     </div>
   );
