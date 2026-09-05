@@ -499,7 +499,7 @@ function OsShell() {
         )}
 
         <div className="portal-content">
-          {!['messages'].includes(tab) && (
+          {!['messages', 'dashboard', 'command_center', 'sales'].includes(tab) && (
             <section className="os-workspace-pulse" aria-label={`${currentWorkspace.label} snapshot`}>
               {workspacePulse.map(({ label, value, Icon }) => (
                 <div className="os-pulse-metric" key={label}>
