@@ -171,7 +171,9 @@ class OsErrorBoundary extends Component<{ children: ReactNode; onReset?: () => v
 }
 
 function WorkspacePage({ tab, children, action }: { tab: OsTab; children: ReactNode; action?: ReactNode }) {
-  const [eyebrow, title, sub] = PAGE[tab];
+  const meta = PAGE[tab];
+  if (!meta) return <>{children}</>;
+  const [eyebrow, title, sub] = meta;
   return (
     <div className="tab-content v2-page">
       <div className="v2-page-head">

@@ -669,9 +669,22 @@ button.nsos-kpi { width: 100%; text-align: left; }
     font-size: 22px !important;
   }
   .nsos-admin-preview .v2-page-head p,
-  .nsos-admin-preview .tab-header p,
-  .nsos-admin-preview .eyebrow {
+  .nsos-admin-preview .tab-header p {
     display: none !important;
+  }
+  .nsos-admin-preview .v2-page-head .eyebrow,
+  .nsos-admin-preview .tab-header .eyebrow {
+    display: none !important;
+  }
+  .nsos-admin-preview .desktop-top-action {
+    display: none !important;
+  }
+  .nsos-admin-preview .nsos-kpi {
+    padding: 12px 14px;
+  }
+  .nsos-admin-preview .nsos-kpi strong {
+    font-size: 22px;
+    margin-top: 4px;
   }
   .nsos-admin-preview .v2-page-head .btn-primary,
   .nsos-admin-preview .v2-page-head .btn-outline {
@@ -775,12 +788,47 @@ button.nsos-kpi { width: 100%; text-align: left; }
   .nsos-admin-preview.os-tab-messages .tab-content.v2-page {
     gap: 0;
   }
-  .nsos-admin-preview.os-tab-messages .team-messaging.messaging-v6 {
+  .nsos-admin-preview.os-tab-messages .team-messaging.messaging-v6,
+  .nsos-admin-preview.os-tab-messages .team-messaging.messaging-v6.with-info {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: minmax(0, 1fr) !important;
     height: calc(100dvh - 178px) !important;
     min-height: 420px !important;
     max-height: none !important;
     border-radius: 14px !important;
     margin-inline: 0 !important;
+  }
+  .nsos-admin-preview .team-messaging.messaging-v6:not(.thread-open) .message-thread,
+  .nsos-admin-preview .team-messaging.messaging-v6:not(.thread-open) .message-info-rail,
+  .nsos-admin-preview .team-messaging.messaging-v6 .message-info-rail {
+    display: none !important;
+  }
+  .nsos-admin-preview .team-messaging.messaging-v6:not(.thread-open) .message-channel-rail {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 0 !important;
+  }
+  .nsos-admin-preview .team-messaging.messaging-v6.thread-open .message-channel-rail {
+    display: none !important;
+  }
+  .nsos-admin-preview .team-messaging.messaging-v6.thread-open .message-thread {
+    display: grid !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    grid-template-rows: auto auto minmax(0, 1fr) auto !important;
+  }
+  .nsos-admin-preview .message-channel-list {
+    flex-direction: column !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+  }
+  .nsos-admin-preview .message-channel {
+    min-width: 0 !important;
+    width: 100% !important;
   }
   .nsos-admin-preview .message-mobile-back {
     display: grid !important;

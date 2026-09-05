@@ -1,4 +1,4 @@
-import { FormEvent, KeyboardEvent, useMemo, useRef, useState } from 'react';
+import { FormEvent, KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft, AtSign, BellRing, Check, ChevronDown, Hash, Megaphone, MessageCircle, MoreHorizontal,
   Paperclip, Plus, Search, Send, Smile, Sparkles, Star, Users, X, Zap,
@@ -41,6 +41,22 @@ export default function TeamMessagesView() {
   const [favorites, setFavorites] = useState<string[]>(readFavorites);
   const composerRef = useRef<HTMLTextAreaElement | null>(null);
   const endRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const phone = window.matchMedia('(max-width: 760px)');
+    const tablet = window.matchMedia('(max-width: 1100px)');
+    const apply = () => {
+      if (phone.matches) setShowInfo(false);
+      else setShowInfo(!tablet.matches);
+      if (!phone.matches) setMobileThreadOpen(true);
+    };
+    phone.addEventListener('change', apply);
+    tablet.addEventListener('change', apply);
+    return () => {
+      phone.removeEventListener('change', apply);
+      tablet.removeEventListener('change', apply);
+    };
+  }, []);
 
   const filtered = channels.filter((c) => !search || `${c.name} ${c.description || c.topic || ''}`.toLowerCase().includes(search.toLowerCase()));
   const favoriteChannels = filtered.filter((c) => favorites.includes(c.id));
