@@ -54,7 +54,7 @@ export function OwnerDashboard({ onOpenJob, onOpenPayments, onOpenPipeline }: { 
           <ul className="nsos-activity">
             {activity.length === 0 && <li className="nsos-empty">No activity yet.</li>}
             {activity.slice(0, 8).map((a) => (
-              <li key={a.id}><i className="nsos-dot" /><span><b style={{ color: 'var(--os-cream)', fontWeight: 600 }}>{a.at}</b> · {a.text}</span></li>
+              <li key={a.id}><i className="nsos-dot" /><span><b>{a.at}</b> · {a.text}</span></li>
             ))}
           </ul>
         </section>

@@ -92,54 +92,64 @@ const WORKSPACES = [
 ];
 
 const PAGE: Record<OsTab, [string, string, string]> = {
-  messages: ['INTERNAL COMMUNICATION', 'Team Messages', 'Company, role, crew and private group messaging in one workspace.'],
-  employees: ['HOMEBASE + RIPPLING', 'Team', 'Employee directory with status, role, hours, pay mix, and onboarding. Open a profile for Rippling-style tabs.'],
-  crews: ['FIELD CREWS', 'Crew Command', 'Who is on which crew, and which jobs they own today.'],
-  recruiting: ['GUSTO', 'Recruiting', 'Simple hiring checklists and progress states that convert into add-employee.'],
-  staff_schedule: ['DEPUTY', 'Employee Schedule', 'Drag-and-drop shifts, availability, and time-off.'],
-  timeclock: ['DEPUTY', 'Time Clock', 'Who is on the clock and hours for the week.'],
-  time_off: ['DEPUTY', 'Time-Off Requests', 'Approve or deny time-off against the live schedule.'],
-  payroll_approval: ['GUSTO', 'Timesheet Approval', 'Review hours before payroll cutoff.'],
-  training: ['GUSTO', 'Training', 'Onboarding and field training assigned to the roster.'],
-  command_center: ['STRIPE', 'Command Center', 'Live North Splash operating snapshot.'],
-  dashboard: ['STRIPE', 'Owner Dashboard', 'KPI cards, revenue graph, payouts, and recent activity.'],
-  owner_growth: ['STRIPE', 'Growth Planner', 'Pipeline, canvassing, and booking targets.'],
-  owner_profits: ['STRIPE', 'Profit Tracker', 'Collected vs open invoices from live jobs.'],
-  payment_test: ['SQUARE', 'Payments', 'Collect, refund, and retry from the Square-style ledger.'],
-  sales: ['SALESRABBIT', 'D2D Sales', 'Territory map, pins, knocks, and book-the-door.'],
-  leads: ['SPOTIO + HUBSPOT', 'Lead Pipeline', 'Lead cards, stages, activity, and rep ownership.'],
-  territories: ['SALESRABBIT', 'Territories', 'Canvass pins grouped by neighborhood.'],
-  marketing: ['JOBBER', 'Marketing', 'Retention and booking campaigns tied to the same customers.'],
-  retention: ['NORTH SPLASH', 'Retention', '30-day and 90-day “time for your next detail?” follow-up.'],
-  customers: ['HUBSPOT', 'Customers', 'Customer record, vehicle, timeline, notes, and communications.'],
-  crm: ['HUBSPOT', 'Customer CRM', 'Notes and history on every household.'],
-  appointments: ['JOBBER', 'Appointments', 'Field-service calendar. Jobs attached to customers, with assignment.'],
-  schedule: ['JOBBER', 'Customer Schedule', 'Upcoming windows and assigned detailers.'],
-  availability: ['JOBBER', 'Availability', 'Open slots the booking flow can use.'],
-  archived: ['JOBBER', 'Archived Details', 'Completed work kept for history and photos.'],
-  fleet: ['HUBSPOT', 'Fleet Accounts', 'Repeat commercial and household accounts.'],
-  jobs: ['HOUSECALL PRO', 'Jobs', 'Mobile-first job list: customer, address, directions, and field actions.'],
-  dispatch: ['SERVICETITAN', 'Dispatch Board', 'Detailer/crew columns. Drag job cards onto techs.'],
-  job_assignments: ['SERVICETITAN', 'Job Assignment', 'Who owns each live job.'],
-  inventory: ['OPERATIONS', 'Inventory', 'Ceramic kits, compounds, and locker stock.'],
-  equipment: ['OPERATIONS', 'Equipment & Assets', 'Vans, extractors, and assigned kits.'],
-  tasks: ['OPERATIONS', 'Tasks & Operations', 'Internal ops work that is not a customer job.'],
-  documents: ['RIPPLING', 'Document Vault', 'I-9s, W-4s, and field documents from hiring.'],
-  notifications: ['HOUSECALL PRO', 'Notifications', 'Owner and crew alerts from the live board.'],
-  purchasing: ['OPERATIONS', 'Purchasing', 'Restock requests from the field.'],
-  incidents: ['OPERATIONS', 'Incidents', 'Damage, late arrivals, and customer issues.'],
-  approvals: ['OPERATIONS', 'Approvals', 'Time-off, refunds, and payroll holds.'],
-  finance: ['GUSTO', 'Finance & Payroll', 'Pay mix is per person — not locked to a role.'],
-  payments: ['SQUARE', 'Payments', 'Transaction list, status, refunds, and filters.'],
-  reports: ['STRIPE', 'Reports & Analytics', 'Minimal graphs with a strong KPI hierarchy.'],
-  pay_settings: ['STRIPE', 'Pay Structure', 'Hourly, salary, draw, commission, per-job, and custom rules.'],
-  permissions: ['ADMIN', 'Portal Permissions', 'Who can open Owner, People, Finance, and field modes.'],
-  communications: ['HOUSECALL PRO', 'Communications', 'Appointment → Confirmed → En Route → In Progress → Complete. Email + SMS from operational actions.'],
-  automations: ['HOUSECALL PRO', 'Automations', 'The same templates, fired when a job status moves. Edit, preview, send test.'],
-  locations: ['ADMIN', 'Locations', 'Raleigh, Cary, Durham, and locker points.'],
-  continuity: ['ADMIN', 'Backups & Exports', 'Demo data lives in this browser until you reset it.'],
-  audit: ['ADMIN', 'Audit Log', 'Hires, status changes, and payment actions.'],
-  visitors: ['ADMIN', 'Site Visitors', 'Marketing site traffic when Supabase is connected.'],
+  messages: ['People', 'Team Messages', 'Company, crew, and private channels in one place — like Google Chat.'],
+  employees: ['People', 'Team', 'Directory with role, hours, pay mix, and onboarding. Open anyone for a Rippling-style profile.'],
+  crews: ['Operations', 'Crews', 'Who is on which crew, and which jobs they own today.'],
+  recruiting: ['People', 'Hiring', 'Checklists that convert a candidate into an employee with flexible pay.'],
+  staff_schedule: ['People', 'Schedule', 'Deputy-style shifts, availability, and time-off on one board.'],
+  timeclock: ['People', 'Time Clock', 'Who is on the clock and hours for the week.'],
+  time_off: ['People', 'Time off', 'Approve or deny time-off against the live schedule.'],
+  payroll_approval: ['Finance', 'Timesheets', 'Review hours before payroll cutoff.'],
+  training: ['People', 'Training', 'Onboarding and field training assigned to the roster.'],
+  command_center: ['Owner', 'Live', 'North Splash operating snapshot — jobs, cash, and the field.'],
+  dashboard: ['Owner', 'Home', 'Stripe-style KPIs, revenue, payouts, and recent activity.'],
+  owner_growth: ['Owner', 'Growth', 'Pipeline, canvassing, and booking targets.'],
+  owner_profits: ['Owner', 'Profit', 'Collected vs open invoices from live jobs.'],
+  payment_test: ['Finance', 'Pay test', 'Collect, refund, and retry from the Square-style ledger.'],
+  sales: ['Sales', 'Map', 'SalesRabbit pins, knocks, and book-the-door.'],
+  leads: ['Sales', 'Pipeline', 'SPOTIO / HubSpot stages, activity, and rep ownership.'],
+  territories: ['Sales', 'Streets', 'Canvass pins grouped by neighborhood.'],
+  marketing: ['Customers', 'Campaigns', 'Retention and booking campaigns tied to the same households.'],
+  retention: ['Customers', 'Follow-up', '30-day and 90-day “time for your next detail?”.'],
+  customers: ['Customers', 'Directory', 'Household, vehicle, timeline, notes, and communications.'],
+  crm: ['Customers', 'Records', 'Notes and history on every household.'],
+  appointments: ['Customers', 'Calendar', 'Jobber calendar — jobs attached to customers, with assignment.'],
+  schedule: ['Customers', 'Windows', 'Upcoming windows and assigned detailers.'],
+  availability: ['Customers', 'Open slots', 'Open slots the booking flow can use.'],
+  archived: ['Customers', 'History', 'Completed work kept for history and photos.'],
+  fleet: ['Customers', 'Fleets', 'Repeat commercial and household accounts.'],
+  jobs: ['Operations', 'Jobs', 'Housecall Pro job list: customer, address, and field actions.'],
+  dispatch: ['Operations', 'Board', 'ServiceTitan columns. Drag job cards onto detailers.'],
+  job_assignments: ['Operations', 'Assign', 'Who owns each live job.'],
+  inventory: ['Operations', 'Stock', 'Ceramic kits, compounds, and locker stock.'],
+  equipment: ['Operations', 'Assets', 'Vans, extractors, and assigned kits.'],
+  tasks: ['Operations', 'Tasks', 'Internal ops work that is not a customer job.'],
+  documents: ['People', 'Files', 'I-9s, W-4s, and field documents from hiring.'],
+  notifications: ['Operations', 'Alerts', 'Owner and crew alerts from the live board.'],
+  purchasing: ['Operations', 'Purchasing', 'Restock requests from the field.'],
+  incidents: ['Operations', 'Incidents', 'Damage, late arrivals, and customer issues.'],
+  approvals: ['Operations', 'Approvals', 'Time-off, refunds, and payroll holds.'],
+  finance: ['Finance', 'Payroll', 'Pay mix is per person — not locked to a role.'],
+  payments: ['Finance', 'Ledger', 'Square-style transactions, refunds, and filters.'],
+  reports: ['Owner', 'Analytics', 'Minimal graphs with a strong KPI hierarchy.'],
+  pay_settings: ['Finance', 'Pay mix', 'Hourly, salary, draw, commission, per-job, and custom rules.'],
+  permissions: ['Admin', 'Access', 'Who can open Owner, People, Finance, and field modes.'],
+  communications: ['Admin', 'Templates', 'Appointment → Confirmed → En Route → In Progress → Complete.'],
+  automations: ['Admin', 'Rules', 'The same templates, fired when a job status moves.'],
+  locations: ['Admin', 'Locations', 'Raleigh, Cary, Durham, and locker points.'],
+  continuity: ['Admin', 'Backups', 'Demo data lives in this browser until you reset it.'],
+  audit: ['Admin', 'Audit', 'Hires, status changes, and payment actions.'],
+  visitors: ['Admin', 'Traffic', 'Marketing site traffic when Supabase is connected.'],
+};
+
+const TAB_SHORT: Record<OsTab, string> = {
+  dashboard: 'Home', command_center: 'Live', owner_growth: 'Growth', owner_profits: 'Profit', payment_test: 'Pay test',
+  sales: 'Map', leads: 'Pipeline', territories: 'Streets', marketing: 'Campaigns', retention: 'Follow-up',
+  customers: 'Directory', crm: 'Records', appointments: 'Calendar', schedule: 'Windows', availability: 'Slots', archived: 'History', fleet: 'Fleets',
+  jobs: 'Jobs', dispatch: 'Board', job_assignments: 'Assign', inventory: 'Stock', equipment: 'Assets', tasks: 'Tasks', documents: 'Files', notifications: 'Alerts', purchasing: 'Buy', incidents: 'Issues', approvals: 'Approvals',
+  employees: 'Team', staff_schedule: 'Schedule', recruiting: 'Hiring', messages: 'Chat', crews: 'Crews', timeclock: 'Clock', time_off: 'Time off', payroll_approval: 'Timesheets', training: 'Training',
+  payments: 'Ledger', reports: 'Analytics', finance: 'Payroll', pay_settings: 'Pay mix',
+  communications: 'Templates', automations: 'Rules', permissions: 'Access', locations: 'Shops', continuity: 'Backups', audit: 'Audit', visitors: 'Traffic',
 };
 
 const LEGACY: Record<string, OsTab> = {
@@ -175,12 +185,12 @@ function WorkspacePage({ tab, children, action }: { tab: OsTab; children: ReactN
   if (!meta) return <>{children}</>;
   const [eyebrow, title, sub] = meta;
   return (
-    <div className="tab-content v2-page">
-      <div className="v2-page-head">
+    <div className="tab-content v2-page os-page">
+      <div className="v2-page-head os-page-toolbar">
         <div>
-          <span className="eyebrow">{eyebrow}</span>
+          <span className="eyebrow os-page-kicker">{eyebrow}</span>
           <h2>{title}</h2>
-          <p>{sub}</p>
+          <p className="os-page-lead">{sub}</p>
         </div>
         {action}
       </div>
@@ -194,9 +204,9 @@ function OsShell() {
   const navigate = useNavigate();
   const [tab, setTab] = useState<OsTab>(() => {
     try {
-      const raw = sessionStorage.getItem('ns-os-tab') || sessionStorage.getItem('ns-os-view') || 'messages';
-      return (LEGACY[raw] || raw || 'messages') as OsTab;
-    } catch { return 'messages'; }
+      const raw = sessionStorage.getItem('ns-os-tab') || sessionStorage.getItem('ns-os-view') || 'dashboard';
+      return (LEGACY[raw] || raw || 'dashboard') as OsTab;
+    } catch { return 'dashboard'; }
   });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
@@ -352,7 +362,7 @@ function OsShell() {
         <div className="sidebar-header">
           <Link to="/" className="sidebar-brand" onClick={() => go('dashboard')}>
             <img className="portal-brand-logo" src="/ns-auto-luxe-logo.svg" alt="North Splash Auto Luxe" />
-            <div><strong>ADMIN PANEL</strong><small>NORTH SPLASH</small></div>
+            <div><strong>North Splash</strong><small>Auto Luxe OS</small></div>
           </Link>
           <button className="sidebar-close" onClick={() => setSidebarOpen(false)}><X size={18} /></button>
         </div>
@@ -429,7 +439,7 @@ function OsShell() {
             {currentWorkspace.items.map((id) => {
               const item = nav(id);
               if (!item) return null;
-              return <button key={id} className={tab === id ? 'active' : ''} onClick={() => go(id)}>{item.label}</button>;
+              return <button key={id} className={tab === id ? 'active' : ''} onClick={() => go(id)}>{TAB_SHORT[id] || item.label}</button>;
             })}
           </div>
           <div className="os-view-context"><span className="os-live-dot" />Live workspace</div>
@@ -489,13 +499,8 @@ function OsShell() {
         )}
 
         <div className="portal-content">
-          {!['command_center', 'dashboard', 'sales', 'messages'].includes(tab) && (
-            <section className="os-workspace-pulse" aria-label={`${currentWorkspace.label} workspace overview`}>
-              <div className="os-pulse-intro">
-                <span>{currentWorkspace.label.toUpperCase()} WORKSPACE</span>
-                <strong>{currentNav?.label}</strong>
-                <small>Live operational snapshot</small>
-              </div>
+          {!['messages'].includes(tab) && (
+            <section className="os-workspace-pulse" aria-label={`${currentWorkspace.label} snapshot`}>
               {workspacePulse.map(({ label, value, Icon }) => (
                 <div className="os-pulse-metric" key={label}>
                   <i><Icon size={16} /></i>
