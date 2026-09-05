@@ -19,10 +19,27 @@
   display: flex;
   overflow: hidden;
 }
+html.nsos-active, html.nsos-active body, html.nsos-active #root {
+  height: 100%;
+  margin: 0;
+  background: #0b0b0b;
+  color: #f4efe6;
+  overflow: hidden;
+}
 .nsos * { box-sizing: border-box; }
 .nsos button, .nsos input, .nsos select, .nsos textarea { font: inherit; color: inherit; }
 .nsos button { cursor: pointer; background: none; border: none; }
-.nsos h1, .nsos h2, .nsos h3 { font-family: 'Playfair Display', Georgia, serif; font-weight: 600; letter-spacing: -0.02em; }
+.nsos h1, .nsos h2, .nsos h3, .nsos h4 {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin: 0;
+}
+.nsos h1 { font-size: 22px; }
+.nsos h2 { font-size: 24px; }
+.nsos h3 { font-size: 17px; }
+.nsos img { width: auto; max-width: 100%; height: auto; display: block; object-fit: cover; }
 
 .nsos-rail {
   width: 76px;

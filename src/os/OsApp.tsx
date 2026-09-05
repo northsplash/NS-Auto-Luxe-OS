@@ -316,6 +316,14 @@ function OsShell() {
 }
 
 export default function OsApp() {
+  useEffect(() => {
+    document.documentElement.classList.add('nsos-active');
+    document.body.classList.add('nsos-active');
+    return () => {
+      document.documentElement.classList.remove('nsos-active');
+      document.body.classList.remove('nsos-active');
+    };
+  }, []);
   return (
     <OsProvider>
       <OsShell />

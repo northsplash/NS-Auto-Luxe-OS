@@ -13,10 +13,7 @@ cp env.example .env
 npm run dev
 ```
 
-The app serves at `http://127.0.0.1:43127`.
-
-- Without Supabase credentials, `/` opens the **North Splash OS** preview (`/os`) with demo data.
-- With credentials, `/` opens login. Admin, employee, D2D, and customer portals stay on their existing routes.
+The app serves at `http://127.0.0.1:43127`. `/` and `/os` open the **North Splash OS** preview (dark gold Teams/iPhone shell). Sign-in stays at `/login`. Admin, employee, D2D, and customer portals keep their existing routes.
 - OS demo state is saved in the browser (`localStorage`). Reset it from Settings → Demo data.
 
 Search the header for people, jobs, chats, and workspaces. Book appointments from Calendar. Collect and refund send payment templates. New D2D doors land on the map.

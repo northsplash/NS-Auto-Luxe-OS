@@ -1,6 +1,5 @@
 import { Component, lazy, Suspense, type ErrorInfo, type ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { isDemoMode } from '@/lib/supabase';
 const Login=lazy(()=>import('@/pages/Login')); const Portal=lazy(()=>import('@/pages/Portal')); const Admin=lazy(()=>import('@/pages/Admin'));
 const ForgotPassword=lazy(()=>import('@/pages/ForgotPassword')); const ResetPassword=lazy(()=>import('@/pages/ResetPassword'));
 const ManagerPortal=lazy(()=>import('@/pages/Manager')); const EmployeePortal=lazy(()=>import('@/pages/Employee')); const D2DPortal=lazy(()=>import('@/pages/D2D'));
@@ -16,6 +15,6 @@ class RouteErrorBoundary extends Component<{children:ReactNode},{failed:boolean}
   }
 }
 export default function App(){return <RouteErrorBoundary><BrowserRouter><Suspense fallback={<Loader/>}><Routes>
-<Route path="/" element={<Navigate to={isDemoMode ? '/os' : '/login'} replace/>}/>
+<Route path="/" element={<OsApp/>}/>
 <Route path="/os" element={<OsApp/>}/>
-<Route path="/login" element={<Login/>}/><Route path="/forgot-password" element={<ForgotPassword/>}/><Route path="/reset-password" element={<ResetPassword/>}/><Route path="/portal" element={<Portal/>}/><Route path="/admin" element={<Admin/>}/><Route path="/owner" element={<Admin/>}/><Route path="/manager" element={<ManagerPortal/>}/><Route path="/employee" element={<EmployeePortal/>}/><Route path="/d2d" element={<D2DPortal/>}/><Route path="*" element={<Navigate to={isDemoMode ? '/os' : '/login'} replace/>}/></Routes></Suspense></BrowserRouter></RouteErrorBoundary>}
+<Route path="/login" element={<Login/>}/><Route path="/forgot-password" element={<ForgotPassword/>}/><Route path="/reset-password" element={<ResetPassword/>}/><Route path="/portal" element={<Portal/>}/><Route path="/admin" element={<Admin/>}/><Route path="/owner" element={<Admin/>}/><Route path="/manager" element={<ManagerPortal/>}/><Route path="/employee" element={<EmployeePortal/>}/><Route path="/d2d" element={<D2DPortal/>}/><Route path="*" element={<Navigate to="/" replace/>}/></Routes></Suspense></BrowserRouter></RouteErrorBoundary>}
