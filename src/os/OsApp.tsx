@@ -523,10 +523,10 @@ function OsShell() {
       </main>
 
       <nav className="os-mobile-bottom-nav mobile-app-nav-v25" aria-label="Mobile workspace navigation">
-        <button type="button" className={phoneHome ? 'active' : ''} onClick={() => go('dashboard')}><LayoutDashboard size={19} /><span>Home</span></button>
-        <button type="button" className={phoneChat ? 'active' : ''} onClick={() => go('messages')}><MessageCircle size={19} /><span>Chat</span></button>
-        <button type="button" className={phoneJobs ? 'active' : ''} onClick={() => go('jobs')}><BriefcaseBusiness size={19} /><span>Jobs</span></button>
-        <button type="button" className={phoneLeads ? 'active' : ''} onClick={() => go('sales')}><Target size={19} /><span>Leads</span></button>
+        <button type="button" className={!moreOpen && phoneHome ? 'active' : ''} onClick={() => go('dashboard')}><LayoutDashboard size={19} /><span>Home</span></button>
+        <button type="button" className={!moreOpen && phoneChat ? 'active' : ''} onClick={() => go('messages')}><MessageCircle size={19} /><span>Chat</span></button>
+        <button type="button" className={!moreOpen && phoneJobs ? 'active' : ''} onClick={() => go('jobs')}><BriefcaseBusiness size={19} /><span>Jobs</span></button>
+        <button type="button" className={!moreOpen && phoneLeads ? 'active' : ''} onClick={() => go('sales')}><Target size={19} /><span>Leads</span></button>
         <button type="button" className={phoneMore ? 'active' : ''} onClick={() => { setSidebarOpen(false); setMobileActionsOpen(false); setMoreOpen((v) => !v); }}><MoreHorizontal size={19} /><span>More</span></button>
       </nav>
       {moreOpen && (

@@ -782,7 +782,8 @@ button.nsos-kpi { width: 100%; text-align: left; }
     display: none !important;
   }
   .nsos-admin-preview.os-tab-messages .v2-page-head,
-  .nsos-admin-preview.os-tab-messages .os-workspace-pulse {
+  .nsos-admin-preview.os-tab-messages .os-workspace-pulse,
+  .nsos-admin-preview.os-tab-messages .os-secondary-nav {
     display: none !important;
   }
   .nsos-admin-preview.os-tab-messages .tab-content.v2-page {
@@ -793,7 +794,7 @@ button.nsos-kpi { width: 100%; text-align: left; }
     display: grid !important;
     grid-template-columns: 1fr !important;
     grid-template-rows: minmax(0, 1fr) !important;
-    height: calc(100dvh - 178px) !important;
+    height: calc(100dvh - 128px) !important;
     min-height: 420px !important;
     max-height: none !important;
     border-radius: 14px !important;
@@ -971,4 +972,29 @@ button.nsos-kpi { width: 100%; text-align: left; }
   .nsos-admin-preview .os-topbar-actions { justify-content: flex-end; }
   .nsos-admin-preview .os-command-trigger span { display: none; }
   .nsos-admin-preview .os-command-trigger { min-width: 42px !important; width: auto; }
+}
+
+@media (min-width: 721px) {
+  .nsos-admin-preview .os-mobile-bottom-nav.mobile-app-nav-v25 {
+    display: none !important;
+  }
+  .nsos-admin-preview .os-more-sheet-backdrop {
+    display: none !important;
+  }
+}
+
+@media (max-width: 860px) {
+  .nsos-admin-preview.os-tab-messages .portal-content {
+    padding: 0 0 calc(88px + env(safe-area-inset-bottom)) !important;
+  }
+  .nsos-admin-preview.os-tab-messages .team-messaging.messaging-v6,
+  .nsos-admin-preview.os-tab-messages .team-messaging.messaging-v6.with-info {
+    border-radius: 0 !important;
+    border-left: 0 !important;
+    border-right: 0 !important;
+    height: calc(100dvh - 122px) !important;
+  }
+  .nsos-admin-preview .os-topbar-actions .desktop-top-action.btn-primary {
+    display: none !important;
+  }
 }
