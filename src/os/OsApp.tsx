@@ -70,6 +70,7 @@ export default function OsApp() {
   const [templates, setTemplates] = useState<CommunicationTemplate[]>(defaultTemplates);
   const [hireOpen, setHireOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const [threadOpen, setThreadOpen] = useState(false);
 
   const chat = chats.find((c) => c.id === activeChat) || chats[0];
   const person = employees.find((e) => e.id === peopleId);
@@ -77,7 +78,11 @@ export default function OsApp() {
   const filteredChats = chats.filter((c) => c.kind === (chatTab === 'dm' ? 'dm' : 'space') && c.name.toLowerCase().includes(search.toLowerCase()));
   const unread = chats.reduce((n, c) => n + c.unread, 0);
 
-  const go = (id: string) => setView(id as OsView);
+  const go = (id: string) => {
+    setView(id as OsView);
+    if (id === 'chat' && phone) setThreadOpen(false);
+    if (id === 'people' && phone) setPeopleId(null);
+  };
   const sendChat = (body: string) => {
     setChats((prev) => prev.map((c) => c.id === chat.id
       ? { ...c, preview: body, at: 'Now', unread: 0, messages: [...c.messages, { id: `m_${Date.now()}`, from: 'You', mine: true, body, at: 'Now' }] }
@@ -128,7 +133,7 @@ export default function OsApp() {
           </div>
           <div className="nsos-list">
             {filteredChats.map((c) => (
-              <button className={`nsos-row ${c.id === activeChat ? 'active' : ''}`} key={c.id} onClick={() => { setActiveChat(c.id); setChats((p) => p.map((x) => x.id === c.id ? { ...x, unread: 0 } : x)); }}>
+              <button className={`nsos-row ${c.id === activeChat ? 'active' : ''}`} key={c.id} onClick={() => { setActiveChat(c.id); setThreadOpen(true); setChats((p) => p.map((x) => x.id === c.id ? { ...x, unread: 0 } : x)); }}>
                 <Avatar initials={c.initials} hue={c.hue} />
                 <span style={{ minWidth: 0, flex: 1 }}>
                   <strong>{c.name}</strong>
@@ -193,7 +198,7 @@ export default function OsApp() {
         <header className="nsos-top">
           <div>
             <p className="nsos-eyebrow">North Splash Auto Luxe</p>
-            <h1>{person && view === 'people' ? person.name : titles[0]}</h1>
+            <h1>{phone && view === 'chat' && threadOpen ? chat.name : person && view === 'people' ? person.name : titles[0]}</h1>
             <p>{titles[1]}</p>
           </div>
           <div className="nsos-actions">
@@ -203,7 +208,27 @@ export default function OsApp() {
         </header>
         <div className="nsos-body">
           {view === 'home' && <OwnerDashboard jobs={jobs} payments={payments} />}
-          {view === 'chat' && chat && <ChatThread chat={chat} onSend={sendChat} />}
+          {view === 'chat' && chat && phone && !threadOpen && (
+            <div>
+              <div className="nsos-tabs">
+                <button className={chatTab === 'dm' ? 'active' : ''} onClick={() => setChatTab('dm')}>Chats</button>
+                <button className={chatTab === 'space' ? 'active' : ''} onClick={() => setChatTab('space')}>Spaces</button>
+              </div>
+              {filteredChats.map((c) => (
+                <button className="nsos-row" key={c.id} onClick={() => { setActiveChat(c.id); setThreadOpen(true); setChats((p) => p.map((x) => x.id === c.id ? { ...x, unread: 0 } : x)); }}>
+                  <Avatar initials={c.initials} hue={c.hue} />
+                  <span style={{ minWidth: 0, flex: 1 }}><strong>{c.name}</strong><small>{c.preview}</small></span>
+                  {c.unread > 0 && <span className="nsos-unread">{c.unread}</span>}
+                </button>
+              ))}
+            </div>
+          )}
+          {view === 'chat' && chat && (!phone || threadOpen) && (
+            <div>
+              {phone && <button className="nsos-btn ghost" style={{ marginBottom: 10 }} onClick={() => setThreadOpen(false)}>Back to chats</button>}
+              <ChatThread chat={chat} onSend={sendChat} />
+            </div>
+          )}
           {view === 'people' && !person && <PeopleHome employees={employees} onOpen={setPeopleId} onHire={() => setHireOpen(true)} />}
           {view === 'people' && person && <PeopleProfile employee={person} />}
           {view === 'schedule' && <ScheduleView employees={employees} />}
