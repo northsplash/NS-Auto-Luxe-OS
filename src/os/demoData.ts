@@ -84,6 +84,8 @@ export type OsChat = {
   id: string;
   name: string;
   kind: 'dm' | 'space';
+  channel_type?: 'company' | 'crew' | 'role' | 'custom' | 'dm';
+  description?: string;
   preview: string;
   at: string;
   unread: number;
@@ -235,7 +237,37 @@ export const seedLeads: OsLead[] = [
 
 export const seedChats: OsChat[] = [
   {
-    id: 'c1', name: 'Marcus Hale', kind: 'dm', preview: 'On the way to the BMW. ETA 10:42.', at: '10:18 AM', unread: 2, initials: 'MH', hue: '#3d5a4c',
+    id: 'c-company', name: 'Company Updates', kind: 'space', channel_type: 'company',
+    description: 'Company-wide announcements and field updates.',
+    preview: '', at: '', unread: 0, initials: 'CU', hue: '#c8a96a', topic: 'Company', messages: [],
+  },
+  {
+    id: 'c-crew', name: 'Crew V1', kind: 'space', channel_type: 'crew',
+    description: 'Crew channel for field operations.',
+    preview: 'Need two extra ceramic kits for Saturday.', at: '8:55 AM', unread: 1, initials: 'CV', hue: '#c8a96a', topic: 'Field ops',
+    messages: [
+      { id: uid(), from: 'Noah Patel', body: 'Need two extra ceramic kits for Saturday.', at: '8:55 AM' },
+      { id: uid(), from: 'Avery Chen', body: 'Ordered. They’ll be at the Raleigh locker by 4.', at: '8:58 AM' },
+    ],
+  },
+  {
+    id: 'c-d2d', name: 'D2D Sales', kind: 'space', channel_type: 'role',
+    description: 'Door-to-door reps, knocks, and closes.',
+    preview: '44 Birch is a Friday close.', at: '9:42 AM', unread: 0, initials: 'D2', hue: '#5c3d5a', topic: 'Canvass',
+    messages: [
+      { id: uid(), from: 'Sofia Reyes', body: '44 Birch is a Friday close. Sending the ceramic estimate now.', at: '9:42 AM' },
+    ],
+  },
+  {
+    id: 'c-group', name: 'Group V1', kind: 'space', channel_type: 'custom',
+    description: 'Private team group.',
+    preview: 'Payroll cutoff is Thursday 5pm.', at: 'Yesterday', unread: 0, initials: 'G1', hue: '#7c6a4a', topic: 'Ops',
+    messages: [
+      { id: uid(), from: 'Avery Chen', body: 'Payroll cutoff is Thursday 5pm. Submit hours before then.', at: 'Yesterday' },
+    ],
+  },
+  {
+    id: 'c1', name: 'Marcus Hale', kind: 'dm', channel_type: 'dm', preview: 'On the way to the BMW. ETA 10:42.', at: '10:18 AM', unread: 2, initials: 'MH', hue: '#3d5a4c',
     messages: [
       { id: uid(), from: 'Marcus Hale', body: 'Clocked in. First job is the 330i on Oakwood.', at: '9:02 AM' },
       { id: uid(), from: 'You', mine: true, body: 'Copy. Customer was told 10:30. Text when you tap En Route.', at: '9:04 AM' },
@@ -243,37 +275,11 @@ export const seedChats: OsChat[] = [
     ],
   },
   {
-    id: 'c2', name: 'Sofia Reyes', kind: 'dm', preview: 'Just set the Holt appointment for Friday.', at: '9:41 AM', unread: 0, initials: 'SR', hue: '#5c3d5a',
+    id: 'c2', name: 'Sofia Reyes', kind: 'dm', channel_type: 'dm', preview: 'Just set the Holt appointment for Friday.', at: '9:41 AM', unread: 0, initials: 'SR', hue: '#5c3d5a',
     messages: [
       { id: uid(), from: 'Sofia Reyes', body: 'Hot lead at 44 Birch — they want Signature + ceramic quote.', at: '9:12 AM' },
       { id: uid(), from: 'You', mine: true, body: 'Send the estimate from the lead card. I’ll assign Marcus if they book.', at: '9:20 AM' },
       { id: uid(), from: 'Sofia Reyes', body: 'Just set the Holt appointment for Friday.', at: '9:41 AM' },
-    ],
-  },
-  {
-    id: 'c3', name: 'Avery Chen', kind: 'dm', preview: 'Payroll cutoff is Thursday 5pm.', at: 'Yesterday', unread: 0, initials: 'AC', hue: '#7c6a4a',
-    messages: [
-      { id: uid(), from: 'Avery Chen', body: 'Payroll cutoff is Thursday 5pm. Submit hours before then.', at: 'Yesterday' },
-    ],
-  },
-  {
-    id: 'c4', name: 'Detailing Crew', kind: 'space', preview: 'Noah: Need two extra ceramic kits for Saturday.', at: '8:55 AM', unread: 1, initials: 'DC', hue: '#c8a96a', topic: 'Field ops',
-    messages: [
-      { id: uid(), from: 'Noah Patel', body: 'Need two extra ceramic kits for Saturday.', at: '8:55 AM' },
-      { id: uid(), from: 'Avery Chen', body: 'Ordered. They’ll be at the Raleigh locker by 4.', at: '8:58 AM' },
-    ],
-  },
-  {
-    id: 'c5', name: 'North Splash', kind: 'space', preview: 'Avery: Payroll cutoff is Thursday 5pm.', at: 'Yesterday', unread: 0, initials: 'NS', hue: '#111', topic: 'Company',
-    messages: [
-      { id: uid(), from: 'Avery Chen', body: 'Payroll cutoff is Thursday 5pm. Submit hours before then.', at: 'Yesterday' },
-      { id: uid(), from: 'Jordan Miles', body: 'Also: Saturday ceramic is a two-tech job. Noah + Marcus.', at: 'Yesterday' },
-    ],
-  },
-  {
-    id: 'c6', name: 'D2D Raleigh', kind: 'space', preview: 'Sofia: 44 Birch is a Friday close.', at: '9:42 AM', unread: 0, initials: 'D2', hue: '#5c3d5a', topic: 'Canvass',
-    messages: [
-      { id: uid(), from: 'Sofia Reyes', body: '44 Birch is a Friday close. Sending the ceramic estimate now.', at: '9:42 AM' },
     ],
   },
 ];

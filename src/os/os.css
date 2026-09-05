@@ -22,9 +22,13 @@
 html.nsos-active, html.nsos-active body, html.nsos-active #root {
   height: 100%;
   margin: 0;
-  background: #0b0b0b;
-  color: #f4efe6;
-  overflow: hidden;
+  background: #060707;
+  color: #f5f2eb;
+  overflow: auto;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+html.nsos-active h1, html.nsos-active h2, html.nsos-active h3, html.nsos-active h4 {
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
 }
 .nsos * { box-sizing: border-box; }
 .nsos button, .nsos input, .nsos select, .nsos textarea { font: inherit; color: inherit; }
@@ -353,3 +357,134 @@ button.nsos-kpi { width: 100%; text-align: left; }
 .nsos-thread-head { padding: 10px 16px 0; }
 .nsos-ghost-title { font-size: 16px; font-weight: 700; color: var(--os-cream); }
 .nsos-inline { background: #12110f; border: 1px solid var(--os-line); border-radius: 10px; padding: 8px 10px; flex: 1; outline: 0; }
+
+.nsos.nsos-embed {
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+  display: block;
+  background: transparent;
+  color: var(--os-cream);
+}
+.nsos.nsos-embed h1,
+.nsos.nsos-embed h2,
+.nsos.nsos-embed h3,
+.nsos.nsos-embed h4 {
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+.nsos-admin-preview {
+  min-height: 100dvh;
+  background: #060707;
+  color: #f5f2eb;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+.nsos-admin-preview .topbar-title h1 {
+  font-size: 20px !important;
+  line-height: 1.15 !important;
+  letter-spacing: -0.03em !important;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-weight: 800 !important;
+}
+.nsos-admin-preview .portal-brand-logo {
+  width: 86px;
+  height: auto;
+  object-fit: contain;
+}
+.nsos-admin-preview .v2-page-head h2,
+.nsos-admin-preview .tab-content h2 {
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-weight: 800 !important;
+}
+
+/* Screenshot match: white chat canvas on dark Admin chrome */
+.nsos-admin-preview .team-messaging.messaging-v6 .message-thread {
+  background: #fff !important;
+  color: #1a140c !important;
+}
+.nsos-admin-preview .messaging-v6 .message-thread-head,
+.nsos-admin-preview .messaging-v6 .message-quick-row,
+.nsos-admin-preview .messaging-v6 .message-composer,
+.nsos-admin-preview .messaging-v6 .message-scroll {
+  background: #fff !important;
+  border-color: #eadfd3 !important;
+  color: #1a140c !important;
+}
+.nsos-admin-preview .messaging-v6 .message-thread-head h3,
+.nsos-admin-preview .messaging-v6 .message-thread-title h3 {
+  color: #16120c !important;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-weight: 800 !important;
+}
+.nsos-admin-preview .messaging-v6 .message-thread-head p,
+.nsos-admin-preview .messaging-v6 .message-composer-bottom small,
+.nsos-admin-preview .messaging-v6 .message-quick-row > span {
+  color: #7a6d62 !important;
+}
+.nsos-admin-preview .messaging-v6 .message-thread-symbol,
+.nsos-admin-preview .messaging-v6 .message-thread-tools > button,
+.nsos-admin-preview .messaging-v6 .message-thread-search {
+  background: #fff !important;
+  border: 1px solid #e1d7ce !important;
+  color: #74665c !important;
+}
+.nsos-admin-preview .messaging-v6 .message-thread-search input {
+  color: #1a140c !important;
+  background: transparent !important;
+}
+.nsos-admin-preview .messaging-v6 .message-quick-row button {
+  background: #fff !important;
+  color: #3a2c12 !important;
+  border: 1px solid #ddcec0 !important;
+}
+.nsos-admin-preview .messaging-v6 .message-composer-box {
+  background: #f7f1eb !important;
+  border: 1px solid #e1d7ce !important;
+}
+.nsos-admin-preview .messaging-v6 .message-composer textarea {
+  color: #1a140c !important;
+  background: transparent !important;
+}
+.nsos-admin-preview .messaging-v6 .message-thread-empty {
+  color: #7a6d62 !important;
+}
+.nsos-admin-preview .messaging-v6 .message-thread-empty strong {
+  color: #1a140c !important;
+}
+.nsos-admin-preview .messaging-v6 .message-empty-orbit,
+.nsos-admin-preview .messaging-v6 .message-empty-orbit svg {
+  color: #c8a96a !important;
+}
+.nsos-admin-preview .messaging-v6 .message-bubble .message-body {
+  background: #f7f1eb !important;
+  border: 1px solid #e9e1da !important;
+  color: #1a140c !important;
+}
+.nsos-admin-preview .messaging-v6 .message-bubble.mine .message-body {
+  background: linear-gradient(135deg, #f7ead0, #fff) !important;
+  border-color: rgba(217, 173, 74, .35) !important;
+}
+.nsos-admin-preview .messaging-v6 .message-body strong,
+.nsos-admin-preview .messaging-v6 .message-body p {
+  color: #1a140c !important;
+}
+.nsos-admin-preview .message-info-rail .message-workflow {
+  background: #fff !important;
+  color: #1a140c !important;
+  border: 1px solid rgba(255, 255, 255, .08);
+}
+.nsos-admin-preview .message-info-rail .message-workflow strong {
+  color: #16120c !important;
+}
+.nsos-admin-preview .message-info-rail .message-workflow small {
+  color: #7a6d62 !important;
+}
+.nsos-admin-preview .nsos-toast {
+  z-index: 80;
+}
+.nsos-data-sheet {
+  max-width: 520px;
+}
+.nsos-modal {
+  z-index: 90;
+}

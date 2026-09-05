@@ -12,7 +12,7 @@ import {
   type OsShift, type OsTimeOff, type Weekday,
 } from './demoData';
 
-const KEY = 'ns-os-v3';
+const KEY = 'ns-os-v4';
 
 export type Toast = { id: string; title: string; body: string };
 
@@ -286,9 +286,11 @@ export function OsProvider({ children }: { children: ReactNode }) {
     createChat: (name, kind) => {
       const id = `c_${Date.now()}`;
       const chat: OsChat = {
-        id, name, kind, preview: kind === 'space' ? 'Space created' : 'New chat', at: clockNow(), unread: 0,
+        id, name, kind, channel_type: kind === 'space' ? 'custom' : 'dm',
+        description: kind === 'space' ? 'Private team group' : undefined,
+        preview: kind === 'space' ? 'Space created' : 'New chat', at: clockNow(), unread: 0,
         initials: initialsOf(name), hue: HUES[0], topic: kind === 'space' ? 'New space' : undefined,
-        messages: [{ id: uid(), from: 'You', mine: true, body: kind === 'space' ? `${name} is open.` : 'Started a chat.', at: clockNow() }],
+        messages: [],
       };
       setState((s) => ({ ...s, chats: [chat, ...s.chats] }));
       return id;
@@ -308,7 +310,7 @@ export function OsProvider({ children }: { children: ReactNode }) {
           eta: status === 'en_route' ? job.eta || '15 min' : job.eta,
           comms: [...fresh, ...job.comms],
         };
-        const crew = s.chats.find((c) => c.kind === 'space' && c.name.includes('Crew'));
+        const crew = s.chats.find((c) => c.channel_type === 'crew' || (c.kind === 'space' && c.name.toLowerCase().includes('crew')));
         const actId = `act_${job.id}_${status}`;
         const activity = s.activity.some((a) => a.id === actId)
           ? s.activity

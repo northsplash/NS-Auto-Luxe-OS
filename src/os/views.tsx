@@ -708,7 +708,7 @@ export function JobDetail({ job }: { job: OsJob }) {
           {job.status === 'in_progress' && <button className="nsos-btn" onClick={() => os.setJobStatus(job.id, 'completed')}>Complete</button>}
           {job.payment === 'due' && <button className="nsos-btn" onClick={() => os.collectJob(job.id)}><CreditCard size={14} />Collect {money(job.price)}</button>}
           <button className="nsos-btn ghost" onClick={() => {
-            const crew = os.chats.find((c) => c.kind === 'space' && c.name.includes('Crew'));
+            const crew = os.chats.find((c) => c.channel_type === 'crew' || (c.kind === 'space' && c.name.toLowerCase().includes('crew')));
             if (crew) os.shareToChat(crew.id, `${job.customer} · ${job.service} is ${job.status.replaceAll('_', ' ')} at ${job.address}`);
           }}>Share to crew</button>
         </div>

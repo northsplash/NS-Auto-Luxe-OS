@@ -1,55 +1,154 @@
-import { Component, useEffect, useMemo, useState, type ErrorInfo, type ReactNode } from 'react';
+import { Component, useEffect, useState, type ErrorInfo, type ReactNode } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import {
-  BarChart3, Briefcase, CalendarDays, Clock3, CreditCard, LayoutDashboard, MapPinned, MessageCircle,
-  MoreHorizontal, Plus, Settings, Smartphone, Users, Workflow, UserPlus, Truck, Home,
+  Archive, Bell, BriefcaseBusiness, Calendar, CalendarClock, Car, CheckCircle2, ClipboardCheck,
+  Clock3, CreditCard, DollarSign, FileText, Gauge, Globe, LayoutDashboard, ListChecks, LogOut, Mail,
+  Menu, MessageCircle, MoreHorizontal, PackageSearch, Plus, ScrollText, Search, Settings2, ShieldCheck,
+  Target, Trash2, TrendingUp, UserCheck, Users, Wrench, X,
 } from 'lucide-react';
 import type { EmployeeDraft } from '@/lib/rolePresets';
+import { money } from '@/lib/data';
 import { OsProvider, useOs } from './osStore';
 import {
-  Avatar, CalendarView, ChatThread, CommsView, CustomersView, D2DView, DispatchView, HireModal,
-  HireView, JobDetail, JobsHome, MoreGrid, OmniSearch, OwnerDashboard, PaymentsView, PeopleHome, PeopleProfile,
-  PipelineView, ReportsView, ScheduleView, SettingsView,
+  CalendarView, CommsView, CustomersView, D2DView, DispatchView, HireModal, HireView, JobDetail,
+  OwnerDashboard, PaymentsView, PeopleHome, PeopleProfile, PipelineView, ReportsView, ScheduleView,
+  SettingsView,
 } from './views';
+import TeamMessagesView from './TeamMessagesView';
 import './os.css';
 
-export type OsView =
-  | 'home' | 'chat' | 'people' | 'schedule' | 'calendar' | 'dispatch' | 'd2d' | 'pipeline'
-  | 'customers' | 'jobs' | 'payments' | 'reports' | 'hire' | 'comms' | 'settings' | 'more';
+export type OsTab =
+  | 'dashboard' | 'command_center' | 'owner_growth' | 'owner_profits' | 'payment_test'
+  | 'sales' | 'leads' | 'territories' | 'marketing' | 'retention'
+  | 'customers' | 'crm' | 'appointments' | 'schedule' | 'availability' | 'archived' | 'fleet'
+  | 'dispatch' | 'job_assignments' | 'inventory' | 'equipment' | 'tasks' | 'documents' | 'notifications'
+  | 'purchasing' | 'incidents' | 'approvals'
+  | 'employees' | 'crews' | 'recruiting' | 'messages' | 'staff_schedule' | 'timeclock' | 'time_off'
+  | 'payroll_approval' | 'training'
+  | 'finance' | 'payments' | 'reports' | 'pay_settings'
+  | 'permissions' | 'communications' | 'automations' | 'locations' | 'continuity' | 'audit' | 'visitors';
 
-const RAIL: { id: OsView; label: string; icon: typeof Home }[] = [
-  { id: 'home', label: 'Home', icon: LayoutDashboard },
-  { id: 'chat', label: 'Chat', icon: MessageCircle },
-  { id: 'calendar', label: 'Calendar', icon: CalendarDays },
-  { id: 'schedule', label: 'Hours', icon: Clock3 },
-  { id: 'dispatch', label: 'Dispatch', icon: Truck },
-  { id: 'd2d', label: 'Leads', icon: MapPinned },
-  { id: 'people', label: 'People', icon: Users },
-  { id: 'jobs', label: 'Jobs', icon: Briefcase },
-  { id: 'payments', label: 'Pay', icon: CreditCard },
-  { id: 'reports', label: 'Reports', icon: BarChart3 },
-  { id: 'hire', label: 'Hire', icon: UserPlus },
-  { id: 'comms', label: 'Comms', icon: Workflow },
-  { id: 'settings', label: 'Settings', icon: Settings },
+type NavItem = { id: OsTab; label: string; Icon: typeof LayoutDashboard };
+
+const NAV: NavItem[] = [
+  { id: 'dashboard', label: 'Dashboard', Icon: LayoutDashboard },
+  { id: 'command_center', label: 'Command Center', Icon: Gauge },
+  { id: 'owner_growth', label: 'Growth Planner', Icon: Target },
+  { id: 'owner_profits', label: 'Profit Tracker', Icon: TrendingUp },
+  { id: 'payment_test', label: '1¢ Payment Test', Icon: CreditCard },
+  { id: 'customers', label: 'Customers', Icon: Users },
+  { id: 'appointments', label: 'Appointments', Icon: Calendar },
+  { id: 'schedule', label: 'Customer Schedule', Icon: CalendarClock },
+  { id: 'availability', label: 'Availability', Icon: Calendar },
+  { id: 'archived', label: 'Archived Details', Icon: Archive },
+  { id: 'recruiting', label: 'Recruiting', Icon: BriefcaseBusiness },
+  { id: 'employees', label: 'Team', Icon: UserCheck },
+  { id: 'staff_schedule', label: 'Employee Schedule', Icon: CalendarClock },
+  { id: 'timeclock', label: 'Time Clock', Icon: Clock3 },
+  { id: 'payroll_approval', label: 'Timesheet Approval', Icon: ClipboardCheck },
+  { id: 'job_assignments', label: 'Job Assignment', Icon: ListChecks },
+  { id: 'sales', label: 'D2D Sales', Icon: TrendingUp },
+  { id: 'leads', label: 'Leads Tracker', Icon: Target },
+  { id: 'territories', label: 'Territories', Icon: Target },
+  { id: 'finance', label: 'Finance & Payroll', Icon: DollarSign },
+  { id: 'reports', label: 'Reports & Analytics', Icon: Gauge },
+  { id: 'inventory', label: 'Inventory', Icon: PackageSearch },
+  { id: 'equipment', label: 'Equipment & Assets', Icon: Wrench },
+  { id: 'tasks', label: 'Tasks & Operations', Icon: ListChecks },
+  { id: 'time_off', label: 'Time-Off Requests', Icon: CalendarClock },
+  { id: 'documents', label: 'Document Vault', Icon: FileText },
+  { id: 'notifications', label: 'Notifications', Icon: Bell },
+  { id: 'pay_settings', label: 'Pay Structure', Icon: Settings2 },
+  { id: 'permissions', label: 'Portal Permissions', Icon: ShieldCheck },
+  { id: 'audit', label: 'Audit Log', Icon: ScrollText },
+  { id: 'crm', label: 'Customer CRM', Icon: Users },
+  { id: 'dispatch', label: 'Dispatch Board', Icon: CalendarClock },
+  { id: 'crews', label: 'Crew Command', Icon: Users },
+  { id: 'fleet', label: 'Fleet Accounts', Icon: Car },
+  { id: 'locations', label: 'Locations', Icon: Globe },
+  { id: 'marketing', label: 'Marketing', Icon: TrendingUp },
+  { id: 'automations', label: 'Automations', Icon: Settings2 },
+  { id: 'approvals', label: 'Approvals', Icon: ClipboardCheck },
+  { id: 'incidents', label: 'Incidents', Icon: ShieldCheck },
+  { id: 'training', label: 'Training', Icon: FileText },
+  { id: 'purchasing', label: 'Purchasing', Icon: PackageSearch },
+  { id: 'communications', label: 'Communications', Icon: Bell },
+  { id: 'messages', label: 'Team Messages', Icon: MessageCircle },
+  { id: 'retention', label: 'Retention', Icon: Target },
+  { id: 'continuity', label: 'Backups & Exports', Icon: Archive },
+  { id: 'payments', label: 'Payments', Icon: CreditCard },
+  { id: 'visitors', label: 'Site Visitors', Icon: Globe },
 ];
 
-const TITLES: Record<OsView, [string, string]> = {
-  home: ['Owner dashboard', 'KPI cards, revenue, recent activity'],
-  chat: ['Chat', 'Google Chat / Teams layout'],
-  people: ['Employees', 'Directory, status, role, hours, onboarding'],
-  schedule: ['Scheduling', 'Drag shifts, availability, time-off'],
-  calendar: ['Appointments', 'Jobs attached to customers'],
-  dispatch: ['Dispatch board', 'Drag jobs onto crew columns'],
-  d2d: ['D2D portal', 'Territory pins and canvassing'],
-  pipeline: ['Lead pipeline', 'Stages, ownership, activity'],
-  customers: ['Customers', 'Record, timeline, notes'],
-  jobs: ['Detailer portal', 'Service, photos, notes, payment, SMS'],
-  payments: ['Payments', 'Transactions, refunds, filters'],
-  reports: ['Reports', 'KPI hierarchy from live jobs'],
-  hire: ['Hiring', 'Gusto-style onboarding checklist'],
-  comms: ['Communications', 'Email + SMS automations'],
-  settings: ['Settings', 'Categorized configuration'],
-  more: ['All workspaces', 'Every North Splash OS surface'],
+const WORKSPACES = [
+  { id: 'owner', label: 'Owner', Icon: ShieldCheck, items: ['command_center', 'dashboard', 'owner_growth', 'owner_profits', 'payment_test'] as OsTab[] },
+  { id: 'sales', label: 'Sales', Icon: Target, items: ['sales', 'leads', 'territories', 'marketing', 'retention'] as OsTab[] },
+  { id: 'customers', label: 'Customers', Icon: Users, items: ['customers', 'crm', 'appointments', 'schedule', 'availability', 'archived', 'fleet'] as OsTab[] },
+  { id: 'operations', label: 'Operations', Icon: ListChecks, items: ['dispatch', 'job_assignments', 'inventory', 'equipment', 'tasks', 'documents', 'notifications', 'purchasing', 'incidents', 'approvals'] as OsTab[] },
+  { id: 'people', label: 'People', Icon: UserCheck, items: ['employees', 'crews', 'recruiting', 'messages', 'staff_schedule', 'timeclock', 'time_off', 'payroll_approval', 'training'] as OsTab[] },
+  { id: 'finance', label: 'Finance', Icon: DollarSign, items: ['finance', 'payments', 'reports', 'pay_settings'] as OsTab[] },
+  { id: 'admin', label: 'Admin', Icon: Settings2, items: ['permissions', 'communications', 'automations', 'locations', 'continuity', 'audit', 'visitors'] as OsTab[] },
+];
+
+const PAGE: Record<OsTab, [string, string, string]> = {
+  messages: ['INTERNAL COMMUNICATION', 'Team Messages', 'Company, role, crew and private group messaging in one workspace.'],
+  employees: ['DIRECTORY', 'Team', 'Homebase-style directory with role, pay mix, hours, and onboarding.'],
+  crews: ['FIELD CREWS', 'Crew Command', 'Who is on which crew, and which jobs they own today.'],
+  recruiting: ['HIRING', 'Recruiting', 'Gusto-style hiring checklists that convert into add-employee.'],
+  staff_schedule: ['PEOPLE OPS', 'Employee Schedule', 'Deputy-style shifts, availability, and time-off.'],
+  timeclock: ['PEOPLE OPS', 'Time Clock', 'Who is on the clock and hours for the week.'],
+  time_off: ['PEOPLE OPS', 'Time-Off Requests', 'Approve or deny time-off against the live schedule.'],
+  payroll_approval: ['PAYROLL', 'Timesheet Approval', 'Review hours before payroll cutoff.'],
+  training: ['PEOPLE OPS', 'Training', 'Onboarding and field training assigned to the roster.'],
+  command_center: ['OWNER', 'Command Center', 'Live North Splash operating snapshot.'],
+  dashboard: ['OWNER', 'Dashboard', 'Revenue, jobs, and recent activity.'],
+  owner_growth: ['OWNER', 'Growth Planner', 'Pipeline, canvassing, and booking targets.'],
+  owner_profits: ['OWNER', 'Profit Tracker', 'Collected vs open invoices from live jobs.'],
+  payment_test: ['OWNER', 'Payments', 'Collect, refund, and retry from the Square-style ledger.'],
+  sales: ['FIELD SALES', 'D2D Sales', 'SalesRabbit map, knocks, and book-the-door.'],
+  leads: ['PIPELINE', 'Leads Tracker', 'SPOTIO / HubSpot stages with ownership and notes.'],
+  territories: ['FIELD SALES', 'Territories', 'Canvass pins grouped by neighborhood.'],
+  marketing: ['GROWTH', 'Marketing', 'Retention and booking campaigns tied to the same customers.'],
+  retention: ['GROWTH', 'Retention', 'Follow-up after completed details.'],
+  customers: ['CRM', 'Customers', 'Customer record, vehicle, timeline, and jobs.'],
+  crm: ['CRM', 'Customer CRM', 'Notes and history on every household.'],
+  appointments: ['SCHEDULING', 'Appointments', 'Jobber-style jobs attached to customers.'],
+  schedule: ['SCHEDULING', 'Customer Schedule', 'Upcoming windows and assigned detailers.'],
+  availability: ['SCHEDULING', 'Availability', 'Open slots the booking flow can use.'],
+  archived: ['SCHEDULING', 'Archived Details', 'Completed work kept for history and photos.'],
+  fleet: ['CRM', 'Fleet Accounts', 'Repeat commercial and household accounts.'],
+  dispatch: ['OPERATIONS', 'Dispatch Board', 'ServiceTitan-style crew columns. Drag jobs onto techs.'],
+  job_assignments: ['OPERATIONS', 'Job Assignment', 'Who owns each live job.'],
+  inventory: ['OPERATIONS', 'Inventory', 'Ceramic kits, compounds, and locker stock.'],
+  equipment: ['OPERATIONS', 'Equipment & Assets', 'Vans, extractors, and assigned kits.'],
+  tasks: ['OPERATIONS', 'Tasks & Operations', 'Internal ops work that is not a customer job.'],
+  documents: ['OPERATIONS', 'Document Vault', 'I-9s, W-4s, and field documents from hiring.'],
+  notifications: ['OPERATIONS', 'Notifications', 'Owner and crew alerts from the live board.'],
+  purchasing: ['OPERATIONS', 'Purchasing', 'Restock requests from the field.'],
+  incidents: ['OPERATIONS', 'Incidents', 'Damage, late arrivals, and customer issues.'],
+  approvals: ['OPERATIONS', 'Approvals', 'Time-off, refunds, and payroll holds.'],
+  finance: ['FINANCE', 'Finance & Payroll', 'Pay mix is per person — not locked to a role.'],
+  payments: ['FINANCE', 'Payments', 'Square-style ledger with collect, refund, and retry.'],
+  reports: ['FINANCE', 'Reports & Analytics', 'KPI hierarchy from live jobs and leads.'],
+  pay_settings: ['FINANCE', 'Pay Structure', 'Hourly, salary, draw, commission, per-job, and custom rules.'],
+  permissions: ['ADMIN', 'Portal Permissions', 'Who can open Owner, People, Finance, and field modes.'],
+  communications: ['ADMIN', 'Communications', 'Customer email + SMS from Appointment through Complete.'],
+  automations: ['ADMIN', 'Automations', 'The same templates, fired when a job status moves.'],
+  locations: ['ADMIN', 'Locations', 'Raleigh, Cary, Durham, and locker points.'],
+  continuity: ['ADMIN', 'Backups & Exports', 'Demo data lives in this browser until you reset it.'],
+  audit: ['ADMIN', 'Audit Log', 'Hires, status changes, and payment actions.'],
+  visitors: ['ADMIN', 'Site Visitors', 'Marketing site traffic when Supabase is connected.'],
 };
+
+const LEGACY: Record<string, OsTab> = {
+  home: 'command_center', chat: 'messages', people: 'employees', schedule: 'staff_schedule',
+  calendar: 'appointments', d2d: 'sales', pipeline: 'leads', jobs: 'appointments', hire: 'recruiting',
+  comms: 'communications', settings: 'pay_settings', more: 'command_center',
+};
+
+function nav(id: OsTab) {
+  return NAV.find((n) => n.id === id);
+}
 
 class OsErrorBoundary extends Component<{ children: ReactNode; onReset?: () => void }, { failed: boolean }> {
   state = { failed: false };
@@ -61,7 +160,7 @@ class OsErrorBoundary extends Component<{ children: ReactNode; onReset?: () => v
         <div className="nsos-card" style={{ margin: 20 }}>
           <h2>This workspace hit a snag</h2>
           <p style={{ color: 'var(--os-muted)', margin: '8px 0 14px' }}>The rest of the OS is still running. Reset this view instead of reloading the whole app.</p>
-          <button className="nsos-btn" onClick={() => { this.setState({ failed: false }); this.props.onReset?.(); }}>Back to dashboard</button>
+          <button className="nsos-btn" onClick={() => { this.setState({ failed: false }); this.props.onReset?.(); }}>Back to Team Messages</button>
         </div>
       );
     }
@@ -69,241 +168,336 @@ class OsErrorBoundary extends Component<{ children: ReactNode; onReset?: () => v
   }
 }
 
+function WorkspacePage({ tab, children, action }: { tab: OsTab; children: ReactNode; action?: ReactNode }) {
+  const [eyebrow, title, sub] = PAGE[tab];
+  return (
+    <div className="tab-content v2-page">
+      <div className="v2-page-head">
+        <div>
+          <span className="eyebrow">{eyebrow}</span>
+          <h2>{title}</h2>
+          <p>{sub}</p>
+        </div>
+        {action}
+      </div>
+      {children}
+    </div>
+  );
+}
+
 function OsShell() {
   const os = useOs();
-  const [view, setView] = useState<OsView>(() => {
-    try { return (sessionStorage.getItem('ns-os-view') as OsView) || 'home'; } catch { return 'home'; }
+  const navigate = useNavigate();
+  const [tab, setTab] = useState<OsTab>(() => {
+    try {
+      const raw = sessionStorage.getItem('ns-os-tab') || sessionStorage.getItem('ns-os-view') || 'messages';
+      return (LEGACY[raw] || raw || 'messages') as OsTab;
+    } catch { return 'messages'; }
   });
-  const [phone, setPhone] = useState(() => {
-    try { return localStorage.getItem('ns-os-phone') === '1'; } catch { return false; }
-  });
-  const [chatTab, setChatTab] = useState<'dm' | 'space'>('dm');
-  const [activeChat, setActiveChat] = useState(os.chats[0]?.id || '');
-  const [peopleId, setPeopleId] = useState<string | null>(null);
-  const [jobId, setJobId] = useState<string | null>(os.jobs[0]?.id || null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [commandOpen, setCommandOpen] = useState(false);
+  const [commandQuery, setCommandQuery] = useState('');
+  const [dataOpen, setDataOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [mobileActionsOpen, setMobileActionsOpen] = useState(false);
   const [hireOpen, setHireOpen] = useState(false);
   const [hirePreset, setHirePreset] = useState<Partial<EmployeeDraft> | undefined>();
-  const [search, setSearch] = useState('');
-  const [threadOpen, setThreadOpen] = useState(false);
-  const [jobList, setJobList] = useState(true);
+  const [peopleId, setPeopleId] = useState<string | null>(null);
+  const [jobId, setJobId] = useState<string | null>(null);
 
   useEffect(() => {
-    try { localStorage.setItem('ns-os-phone', phone ? '1' : '0'); } catch { /* ignore */ }
-  }, [phone]);
+    try { sessionStorage.setItem('ns-os-tab', tab); } catch { /* ignore */ }
+  }, [tab]);
 
-  const chat = os.chats.find((c) => c.id === activeChat) || os.chats[0];
-  const person = os.employees.find((e) => e.id === peopleId);
-  const job = os.jobs.find((j) => j.id === jobId) || os.jobs[0];
-  const filteredChats = os.chats.filter((c) => c.kind === (chatTab === 'dm' ? 'dm' : 'space') && c.name.toLowerCase().includes(search.toLowerCase()));
-  const unread = os.chats.reduce((n, c) => n + c.unread, 0);
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setCommandOpen(true);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   const go = (id: string) => {
-    const next = id as OsView;
-    setView(next);
-    try { sessionStorage.setItem('ns-os-view', next); } catch { /* ignore */ }
-    if (id === 'chat' && phone) setThreadOpen(false);
-    if (id === 'people' && phone) setPeopleId(null);
-    if (id === 'jobs' && phone) setJobList(true);
+    const next = (LEGACY[id] || id) as OsTab;
+    setTab(next);
+    setSidebarOpen(false);
+    setMobileActionsOpen(false);
+    if (next !== 'employees') setPeopleId(null);
+    if (next !== 'appointments') setJobId(null);
   };
 
   const openJob = (id: string) => {
     setJobId(id);
-    setJobList(false);
-    setView('jobs');
-    try { sessionStorage.setItem('ns-os-view', 'jobs'); } catch { /* ignore */ }
+    setTab('appointments');
   };
 
   const saveHire = (draft: EmployeeDraft) => {
     const emp = os.hireEmployee(draft);
     setHireOpen(false);
     setHirePreset(undefined);
-    setView('people');
+    setTab('employees');
     setPeopleId(emp.id);
   };
 
-  const titles = TITLES[view];
-  const pane = useMemo(() => {
-    if (view === 'chat') {
-      return (
-        <>
-          <div className="nsos-pane-head">
-            <span className="nsos-eyebrow">North Splash</span>
-            <h2>Chat</h2>
-            <div className="nsos-tabs">
-              <button className={chatTab === 'dm' ? 'active' : ''} onClick={() => setChatTab('dm')}>Chats</button>
-              <button className={chatTab === 'space' ? 'active' : ''} onClick={() => setChatTab('space')}>Spaces</button>
-            </div>
-            <div className="nsos-search"><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search" /></div>
-          </div>
-          <div className="nsos-list">
-            {filteredChats.map((c) => (
-              <button className={`nsos-row ${c.id === activeChat ? 'active' : ''}`} key={c.id} onClick={() => { setActiveChat(c.id); setThreadOpen(true); os.markChatRead(c.id); }}>
-                <Avatar initials={c.initials} hue={c.hue} />
-                <span style={{ minWidth: 0, flex: 1 }}>
-                  <strong>{c.name}</strong>
-                  <small style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.preview}</small>
-                </span>
-                {c.unread > 0 && <span className="nsos-unread">{c.unread}</span>}
-              </button>
-            ))}
-            <button className="nsos-row" onClick={() => { const id = os.createChat(chatTab === 'space' ? 'New space' : 'New chat', chatTab === 'space' ? 'space' : 'dm'); setActiveChat(id); }}>
-              <Plus size={16} />
-              <span><strong>New {chatTab === 'space' ? 'space' : 'chat'}</strong><small>Start a thread</small></span>
-            </button>
-          </div>
-        </>
-      );
-    }
-    if (view === 'people') {
-      return (
-        <>
-          <div className="nsos-pane-head"><span className="nsos-eyebrow">Directory</span><h2>People</h2></div>
-          <div className="nsos-list">
-            {os.employees.map((e) => (
-              <button className={`nsos-row ${peopleId === e.id ? 'active' : ''}`} key={e.id} onClick={() => setPeopleId(e.id)}>
-                <Avatar initials={e.initials} hue={e.hue} />
-                <span><strong>{e.name}</strong><small>{e.title}</small></span>
-              </button>
-            ))}
-          </div>
-        </>
-      );
-    }
-    if (view === 'jobs' || view === 'calendar') {
-      return (
-        <>
-          <div className="nsos-pane-head"><span className="nsos-eyebrow">Today</span><h2>Jobs</h2></div>
-          <div className="nsos-list">
-            {os.jobs.map((j) => (
-              <button className={`nsos-row ${jobId === j.id ? 'active' : ''}`} key={j.id} onClick={() => openJob(j.id)}>
-                <span><strong>{j.customer}</strong><small>{j.service} · {j.status.replaceAll('_', ' ')}</small></span>
-              </button>
-            ))}
-          </div>
-        </>
-      );
-    }
-    return (
-      <>
-        <div className="nsos-pane-head">
-          <span className="nsos-eyebrow">Workspace</span>
-          <h2>OS</h2>
-        </div>
-        <div className="nsos-list">
-          {RAIL.map((item) => (
-            <button className={`nsos-row ${view === item.id ? 'active' : ''}`} key={item.id} onClick={() => go(item.id)}>
-              <item.icon size={16} />
-              <span><strong>{item.label}</strong><small>{TITLES[item.id][1]}</small></span>
-            </button>
-          ))}
-        </div>
-      </>
-    );
-  }, [view, chatTab, search, filteredChats, activeChat, os.employees, os.jobs, peopleId, jobId]);
+  const currentWorkspace = WORKSPACES.find((w) => w.items.includes(tab)) ?? WORKSPACES[4];
+  const currentNav = nav(tab);
+  const person = os.employees.find((e) => e.id === peopleId);
+  const job = os.jobs.find((j) => j.id === jobId);
+  const activeEmployees = os.employees.filter((e) => e.status === 'active');
+  const detailers = os.employees.filter((e) => e.role === 'detailer');
+  const d2dAgents = os.employees.filter((e) => e.role === 'd2d_agent');
+  const upcoming = os.jobs.filter((j) => j.status !== 'completed').length;
+  const collected = os.payments.filter((p) => p.status === 'succeeded').reduce((s, p) => s + p.amount, 0);
 
-  const headline = phone && view === 'chat' && threadOpen && chat
-    ? chat.name
-    : person && view === 'people'
-      ? person.name
-      : job && view === 'jobs' && !jobList
-        ? job.customer
-        : titles[0];
+  const workspacePulse = currentWorkspace.id === 'sales' ? [
+    { label: 'D2D Reps', value: String(d2dAgents.length), Icon: Target },
+    { label: 'Open Appointments', value: String(upcoming), Icon: CalendarClock },
+    { label: 'Customers', value: String(os.customers.length), Icon: Users },
+    { label: 'Collected', value: money(collected), Icon: DollarSign },
+  ] : currentWorkspace.id === 'customers' ? [
+    { label: 'Customers', value: String(os.customers.length), Icon: Users },
+    { label: 'Upcoming', value: String(upcoming), Icon: CalendarClock },
+    { label: 'Completed Jobs', value: String(os.jobs.filter((j) => j.status === 'completed').length), Icon: CheckCircle2 },
+    { label: 'Open Jobs', value: String(upcoming), Icon: CreditCard },
+  ] : currentWorkspace.id === 'operations' ? [
+    { label: 'Open Jobs', value: String(upcoming), Icon: BriefcaseBusiness },
+    { label: 'Unassigned', value: String(os.jobs.filter((j) => !j.detailer).length), Icon: ShieldCheck },
+    { label: 'Active Detailers', value: String(detailers.filter((e) => e.status === 'active').length), Icon: Car },
+    { label: 'In Field', value: String(os.jobs.filter((j) => j.status === 'en_route' || j.status === 'in_progress').length), Icon: Clock3 },
+  ] : currentWorkspace.id === 'people' ? [
+    { label: 'Team Members', value: String(os.employees.length), Icon: Users },
+    { label: 'Active', value: String(activeEmployees.length), Icon: CheckCircle2 },
+    { label: 'Detailers', value: String(detailers.length), Icon: Car },
+    { label: 'D2D Reps', value: String(d2dAgents.length), Icon: Target },
+  ] : currentWorkspace.id === 'finance' ? [
+    { label: 'Collected', value: money(collected), Icon: DollarSign },
+    { label: 'Payments', value: String(os.payments.length), Icon: CreditCard },
+    { label: 'Open Jobs', value: String(upcoming), Icon: BriefcaseBusiness },
+    { label: 'Team', value: String(activeEmployees.length), Icon: Users },
+  ] : [
+    { label: 'Active Team', value: String(activeEmployees.length), Icon: Users },
+    { label: 'Customers', value: String(os.customers.length), Icon: UserCheck },
+    { label: 'Appointments', value: String(os.jobs.length), Icon: Calendar },
+    { label: 'Leads', value: String(os.leads.length), Icon: Target },
+  ];
+
+  const q = commandQuery.trim().toLowerCase();
+  const commandPages = NAV.filter((n) => n.label.toLowerCase().includes(q)).slice(0, 8);
+  const commandPeople = os.employees.filter((e) => `${e.name} ${e.title}`.toLowerCase().includes(q)).slice(0, 5);
+  const commandJobs = os.jobs.filter((j) => `${j.customer} ${j.service}`.toLowerCase().includes(q)).slice(0, 5);
+
+  const inner = (() => {
+    if (tab === 'messages') return null;
+    if (tab === 'employees') {
+      if (person) return <PeopleProfile employee={person} />;
+      return <PeopleHome employees={os.employees} onOpen={setPeopleId} onHire={() => { setHirePreset(undefined); setHireOpen(true); }} />;
+    }
+    if (tab === 'recruiting' || tab === 'training') {
+      return <HireView onHire={(name, title) => { setHirePreset({ name: name || '', title: title || '' }); setHireOpen(true); }} />;
+    }
+    if (tab === 'staff_schedule' || tab === 'timeclock' || tab === 'time_off' || tab === 'payroll_approval') return <ScheduleView />;
+    if (tab === 'crews' || tab === 'dispatch' || tab === 'job_assignments') return <DispatchView onOpen={openJob} />;
+    if (tab === 'sales' || tab === 'territories' || tab === 'marketing' || tab === 'retention') return <D2DView onBook={openJob} />;
+    if (tab === 'leads') return <PipelineView onBook={openJob} />;
+    if (tab === 'customers' || tab === 'crm' || tab === 'fleet') return <CustomersView onOpenJob={openJob} />;
+    if (tab === 'appointments' || tab === 'schedule' || tab === 'availability' || tab === 'archived') {
+      if (job && tab === 'appointments') return <JobDetail job={job} />;
+      return <CalendarView onOpen={openJob} />;
+    }
+    if (tab === 'payments' || tab === 'finance' || tab === 'payment_test') return <PaymentsView />;
+    if (tab === 'reports' || tab === 'owner_growth' || tab === 'owner_profits') return <ReportsView />;
+    if (tab === 'command_center' || tab === 'dashboard') {
+      return <OwnerDashboard onOpenJob={openJob} onOpenPayments={() => go('payments')} onOpenPipeline={() => go('leads')} />;
+    }
+    if (tab === 'communications' || tab === 'automations' || tab === 'notifications') return <CommsView />;
+    return <SettingsView />;
+  })();
+
+  const pageAction = tab === 'employees' ? (
+    <button className="btn-primary btn-sm" onClick={() => { setHirePreset(undefined); setHireOpen(true); }}><Plus size={15} />Add employee</button>
+  ) : tab === 'appointments' && job ? (
+    <button className="btn-outline btn-sm" onClick={() => setJobId(null)}>Back to appointments</button>
+  ) : undefined;
 
   return (
-    <div className={`nsos ${phone ? 'phone-mode' : ''}`}>
-      <aside className="nsos-rail" aria-label="North Splash OS">
-        <div className="nsos-mark">NS</div>
-        {RAIL.map((item) => (
-          <button key={item.id} className={view === item.id ? 'active' : ''} title={item.label} onClick={() => go(item.id)}>
-            <item.icon size={18} />
-            {item.id === 'chat' && unread > 0 && <span className="nsos-unread" style={{ position: 'absolute', top: 6, right: 6 }}>{unread}</span>}
-          </button>
-        ))}
-        <div className="nsos-rail-spacer" />
-        <button className="phone-toggle" title="iPhone layout" onClick={() => setPhone((v) => !v)}><Smartphone size={18} /></button>
+    <div className="portal-layout nsos-admin-preview admin-os">
+      <aside className={`portal-sidebar admin-sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
+        <div className="sidebar-header">
+          <Link to="/" className="sidebar-brand" onClick={() => go('messages')}>
+            <img className="portal-brand-logo" src="/ns-auto-luxe-logo.svg" alt="North Splash Auto Luxe" />
+            <div><strong>ADMIN PANEL</strong><small>NORTH SPLASH</small></div>
+          </Link>
+          <button className="sidebar-close" onClick={() => setSidebarOpen(false)}><X size={18} /></button>
+        </div>
+        <div className="sidebar-user">
+          <div className="sidebar-avatar admin-avatar">NS</div>
+          <div><p>North Splash Admin</p><span>CEO, Owner</span></div>
+        </div>
+        <nav className="sidebar-nav os-workspace-nav">
+          <div className="os-sidebar-section-label">WORKSPACES</div>
+          {WORKSPACES.map((w) => {
+            const active = currentWorkspace.id === w.id;
+            return (
+              <button key={w.id} className={`os-workspace-button ${active ? 'active' : ''}`} onClick={() => go(w.id === 'people' ? 'messages' : w.items[0])}>
+                <span className="os-workspace-icon"><w.Icon size={18} /></span>
+                <span>{w.label}</span>
+                <small>{w.items.length}</small>
+              </button>
+            );
+          })}
+          <div className="os-sidebar-section-label os-sidebar-section-gap">PINNED</div>
+          {(['command_center', 'appointments', 'leads'] as OsTab[]).map((id) => {
+            const item = nav(id);
+            if (!item) return null;
+            const { Icon, label } = item;
+            return (
+              <button key={id} className={`os-pinned-link ${tab === id ? 'active' : ''}`} onClick={() => go(id)}>
+                <Icon size={16} /><span>{label}</span>
+              </button>
+            );
+          })}
+        </nav>
+        <div className="sidebar-footer">
+          <div className="owner-field-switch-v26">
+            <span>WORK MODE</span>
+            <div>
+              <Link to="/d2d" className="owner-field-mode-btn"><Target size={16} /><strong>D2D</strong><small>Sell / canvass</small></Link>
+              <Link to="/employee" className="owner-field-mode-btn"><Car size={16} /><strong>Detail</strong><small>Run jobs</small></Link>
+            </div>
+          </div>
+          <Link to="/portal" className="sidebar-item"><UserCheck size={18} /> Customer View</Link>
+          <button className="sidebar-item" onClick={() => setHelpOpen(true)}><Mail size={18} /> Help</button>
+          <a href="https://www.northsplash.com" className="sidebar-item" target="_blank" rel="noreferrer"><Globe size={18} /> View Site</a>
+          <button className="sidebar-item sidebar-signout" onClick={() => navigate('/login')}><LogOut size={18} /> Sign Out</button>
+        </div>
       </aside>
-      <aside className="nsos-pane">{pane}</aside>
-      <main className="nsos-main">
-        <div className="nsos-demo-banner">North Splash OS preview · demo data until Supabase is connected · saved in this browser</div>
-        <header className="nsos-top">
-          <div>
-            <p className="nsos-eyebrow">{os.settings.company}</p>
-            <h1>{headline}</h1>
-            <p>{titles[1]}</p>
-          </div>
-          <div className="nsos-actions">
-            {view === 'people' && <button className="nsos-btn" onClick={() => { setHirePreset(undefined); setHireOpen(true); }}>Add employee</button>}
-            {!phone && (
-              <OmniSearch
-                onGo={go}
-                onOpenPerson={(id) => { setView('people'); setPeopleId(id); }}
-                onOpenJob={openJob}
-                onOpenChat={(id) => { setActiveChat(id); setView('chat'); setThreadOpen(true); os.markChatRead(id); }}
-              />
-            )}
-            <button className="nsos-btn ghost" onClick={() => setPhone((v) => !v)}><Smartphone size={14} />{phone ? 'Desktop' : 'iPhone'}</button>
-          </div>
-        </header>
-        <div className="nsos-body">
-          <OsErrorBoundary onReset={() => go('home')}>
-          {view === 'home' && <OwnerDashboard onOpenJob={openJob} onOpenPayments={() => go('payments')} onOpenPipeline={() => go('pipeline')} />}
-          {view === 'chat' && chat && phone && !threadOpen && (
-            <div>
-              <div className="nsos-tabs">
-                <button className={chatTab === 'dm' ? 'active' : ''} onClick={() => setChatTab('dm')}>Chats</button>
-                <button className={chatTab === 'space' ? 'active' : ''} onClick={() => setChatTab('space')}>Spaces</button>
+
+      {sidebarOpen && <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} />}
+
+      <main className="portal-main">
+        <div className="portal-topbar">
+          <button className="sidebar-toggle" onClick={() => setSidebarOpen(true)}><Menu size={20} /></button>
+          <div className="topbar-title"><span>{currentWorkspace.label}</span><h1>{currentNav?.label}</h1></div>
+          <div className="os-topbar-actions">
+            <button className="os-command-trigger" aria-label="Search workspace" onClick={() => { setMobileActionsOpen(false); setCommandOpen(true); }}>
+              <Search size={16} /><span>Search workspace</span><kbd>⌘ K</kbd>
+            </button>
+            <button className="btn-outline btn-sm os-manage-data desktop-top-action" onClick={() => setDataOpen(true)}><Trash2 size={15} /> <span>Manage data</span></button>
+            <button className="btn-primary btn-sm desktop-top-action" onClick={() => go('appointments')}><Plus size={15} /><span>New work</span></button>
+            <button className={`os-mobile-actions-trigger ${mobileActionsOpen ? 'active' : ''}`} aria-label="More workspace actions" aria-expanded={mobileActionsOpen} onClick={() => setMobileActionsOpen((v) => !v)}>
+              <MoreHorizontal size={20} />
+            </button>
+            {mobileActionsOpen && (
+              <div className="os-mobile-actions-menu">
+                <button onClick={() => navigate('/d2d')}><Target size={16} /><span>Switch to D2D mode</span></button>
+                <button onClick={() => navigate('/employee')}><Car size={16} /><span>Switch to Detailer mode</span></button>
+                <button onClick={() => { setDataOpen(true); setMobileActionsOpen(false); }}><Trash2 size={16} /><span>Manage data</span></button>
+                <button onClick={() => go('appointments')}><Plus size={16} /><span>New work</span></button>
               </div>
-              {filteredChats.map((c) => (
-                <button className="nsos-row" key={c.id} onClick={() => { setActiveChat(c.id); setThreadOpen(true); os.markChatRead(c.id); }}>
-                  <Avatar initials={c.initials} hue={c.hue} />
-                  <span style={{ minWidth: 0, flex: 1 }}><strong>{c.name}</strong><small>{c.preview}</small></span>
-                  {c.unread > 0 && <span className="nsos-unread">{c.unread}</span>}
-                </button>
+            )}
+          </div>
+        </div>
+        <div className="os-secondary-nav">
+          <div className="os-secondary-nav-scroll">
+            {currentWorkspace.items.map((id) => {
+              const item = nav(id);
+              if (!item) return null;
+              return <button key={id} className={tab === id ? 'active' : ''} onClick={() => go(id)}>{item.label}</button>;
+            })}
+          </div>
+          <div className="os-view-context"><span className="os-live-dot" />Live workspace</div>
+        </div>
+
+        {commandOpen && (
+          <div className="os-command-backdrop" onClick={() => setCommandOpen(false)}>
+            <div className="os-command-palette" onClick={(e) => e.stopPropagation()}>
+              <div className="os-command-input">
+                <Search size={18} />
+                <input autoFocus placeholder="Search pages, customers, appointments or employees…" value={commandQuery} onChange={(e) => setCommandQuery(e.target.value)} />
+                <button onClick={() => setCommandOpen(false)}>ESC</button>
+              </div>
+              <div className="os-command-results">
+                {commandPages.map((n) => (
+                  <button key={n.id} onClick={() => { go(n.id); setCommandOpen(false); setCommandQuery(''); }}>
+                    <n.Icon size={16} /><span>{n.label}</span><small>Open workspace</small>
+                  </button>
+                ))}
+                {commandPeople.map((e) => (
+                  <button key={e.id} onClick={() => { setTab('employees'); setPeopleId(e.id); setCommandOpen(false); }}>
+                    <UserCheck size={16} /><span>{e.name}</span><small>{e.title}</small>
+                  </button>
+                ))}
+                {commandJobs.map((j) => (
+                  <button key={j.id} onClick={() => { openJob(j.id); setCommandOpen(false); }}>
+                    <Calendar size={16} /><span>{j.customer}</span><small>{j.service}</small>
+                  </button>
+                ))}
+                {q && !commandPages.length && !commandPeople.length && !commandJobs.length && <p className="empty-text">Nothing matches.</p>}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {dataOpen && (
+          <div className="os-command-backdrop" onClick={() => setDataOpen(false)}>
+            <div className="os-command-palette nsos-data-sheet" onClick={(e) => e.stopPropagation()}>
+              <div className="os-command-input"><Trash2 size={18} /><strong>Manage demo data</strong><button onClick={() => setDataOpen(false)}>ESC</button></div>
+              <div className="os-command-results" style={{ padding: 16 }}>
+                <p className="empty-text" style={{ textAlign: 'left', padding: '0 0 12px' }}>This preview stores employees, jobs, chats, and payments in this browser. Resetting restores the North Splash sample workspace.</p>
+                <button className="btn-primary" onClick={() => { os.resetDemo(); setDataOpen(false); go('messages'); }}>Reset demo workspace</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {helpOpen && (
+          <div className="os-command-backdrop" onClick={() => setHelpOpen(false)}>
+            <div className="os-command-palette nsos-data-sheet" onClick={(e) => e.stopPropagation()}>
+              <div className="os-command-input"><Mail size={18} /><strong>Help</strong><button onClick={() => setHelpOpen(false)}>ESC</button></div>
+              <div className="os-command-results" style={{ padding: 16 }}>
+                <p className="empty-text" style={{ textAlign: 'left' }}>You are in the North Splash OS preview. Team Messages, hiring, dispatch, D2D, and payments run on demo data until Supabase is connected. Sign in at /login for the live Admin portal.</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="portal-content">
+          {!['command_center', 'dashboard', 'sales'].includes(tab) && (
+            <section className="os-workspace-pulse" aria-label={`${currentWorkspace.label} workspace overview`}>
+              <div className="os-pulse-intro">
+                <span>{currentWorkspace.label.toUpperCase()} WORKSPACE</span>
+                <strong>{currentNav?.label}</strong>
+                <small>Live operational snapshot</small>
+              </div>
+              {workspacePulse.map(({ label, value, Icon }) => (
+                <div className="os-pulse-metric" key={label}>
+                  <i><Icon size={16} /></i>
+                  <span><strong>{value}</strong><small>{label}</small></span>
+                </div>
               ))}
-            </div>
+            </section>
           )}
-          {view === 'chat' && chat && (!phone || threadOpen) && (
-            <div className="nsos-chat-wrap">
-              {phone && <button className="nsos-btn ghost" style={{ marginBottom: 10 }} onClick={() => setThreadOpen(false)}>Back to chats</button>}
-              <ChatThread chat={chat} onSend={(body) => os.sendChat(chat.id, body)} />
-            </div>
-          )}
-          {view === 'people' && !person && <PeopleHome employees={os.employees} onOpen={setPeopleId} onHire={() => { setHirePreset(undefined); setHireOpen(true); }} />}
-          {view === 'people' && person && (
-            <div>
-              {phone && <button className="nsos-btn ghost" style={{ marginBottom: 10 }} onClick={() => setPeopleId(null)}>Back to directory</button>}
-              <PeopleProfile employee={person} />
-            </div>
-          )}
-          {view === 'schedule' && <ScheduleView />}
-          {view === 'calendar' && <CalendarView onOpen={openJob} />}
-          {view === 'dispatch' && <DispatchView onOpen={openJob} />}
-          {view === 'd2d' && <D2DView onBook={openJob} />}
-          {view === 'pipeline' && <PipelineView onBook={openJob} />}
-          {view === 'customers' && <CustomersView onOpenJob={openJob} />}
-          {view === 'jobs' && phone && jobList && <JobsHome jobs={os.jobs} onOpen={openJob} />}
-          {view === 'jobs' && job && (!phone || !jobList) && (
-            <div>
-              {phone && <button className="nsos-btn ghost" style={{ marginBottom: 10 }} onClick={() => setJobList(true)}>Back to jobs</button>}
-              <JobDetail job={job} />
-            </div>
-          )}
-          {view === 'payments' && <PaymentsView />}
-          {view === 'reports' && <ReportsView />}
-          {view === 'hire' && <HireView onHire={(name, title) => { setHirePreset({ name: name || '', title: title || '' }); setHireOpen(true); }} />}
-          {view === 'comms' && <CommsView />}
-          {view === 'settings' && <SettingsView />}
-          {view === 'more' && <MoreGrid onPick={go} />}
+
+          <OsErrorBoundary onReset={() => go('messages')}>
+            {tab === 'messages' ? (
+              <WorkspacePage tab="messages">
+                <TeamMessagesView />
+              </WorkspacePage>
+            ) : (
+              <WorkspacePage tab={tab} action={pageAction}>
+                {tab === 'employees' && person && (
+                  <button className="btn-outline btn-sm" style={{ marginBottom: 12, width: 'fit-content' }} onClick={() => setPeopleId(null)}>Back to directory</button>
+                )}
+                <div className="nsos nsos-embed">{inner}</div>
+              </WorkspacePage>
+            )}
           </OsErrorBoundary>
         </div>
-        <nav className="nsos-bottom">
-          <button className={view === 'home' ? 'active' : ''} onClick={() => go('home')}><Home size={18} />Home</button>
-          <button className={view === 'chat' ? 'active' : ''} onClick={() => go('chat')}><MessageCircle size={18} />Chat</button>
-          <button className={view === 'd2d' ? 'active' : ''} onClick={() => go('d2d')}><MapPinned size={18} />Leads</button>
-          <button className={view === 'jobs' ? 'active' : ''} onClick={() => go('jobs')}><Briefcase size={18} />Jobs</button>
-          <button className={view === 'more' ? 'active' : ''} onClick={() => go('more')}><MoreHorizontal size={18} />More</button>
-        </nav>
       </main>
+
       <HireModal open={hireOpen} onClose={() => setHireOpen(false)} onSave={saveHire} preset={hirePreset} />
       {os.toast && (
         <button className="nsos-toast" onClick={os.dismissToast}>

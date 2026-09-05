@@ -13,19 +13,18 @@ cp env.example .env
 npm run dev
 ```
 
-The app serves at `http://127.0.0.1:43127`. `/` and `/os` open the **North Splash OS** preview (dark gold Teams/iPhone shell). Sign-in stays at `/login`. Admin, employee, D2D, and customer portals keep their existing routes.
-- OS demo state is saved in the browser (`localStorage`). Reset it from Settings → Demo data.
+The app serves at `http://127.0.0.1:43127`. `/` and `/os` open the **North Splash Admin** workspace (People → Team Messages by default), using the same dark-gold chrome as the live Admin portal. Sign-in stays at `/login`. Admin, employee, D2D, and customer portals keep their existing routes.
+- OS demo state is saved in the browser (`localStorage`). Reset it from **Manage data** or Settings.
 
 Search the header for people, jobs, chats, and workspaces. Book appointments from Calendar. Collect and refund send payment templates. New D2D doors land on the map.
 
 ## What is in this slice
 
+- **Admin chrome** — owner workspaces, pinned Command Center / Appointments / Leads Tracker, gold **+ New work**, and Team Messages with a white chat canvas.
 - **Flexible hire / pay** — custom job title, system role, and a mix of hourly, salary, weekly draw, commission, per-job, and extra rules. Admins and other roles are not locked to one pay type. Hiring checklists convert into that same add-employee flow.
-- **iPhone + desktop OS** — left rail like Teams, chat like Google Chat (Chats / Spaces, Enter to send, new thread), bottom tabs on phone: Home, Chat, Leads, Jobs, More.
 - **Product-modeled workspaces**
-  - Owner dashboard → Stripe KPIs, revenue, live activity
-  - People → Homebase / Rippling directory, documents, availability
-  - Hours → Deputy drag-and-drop shifts, availability, time-off
+  - Owner → Stripe KPIs, revenue, live activity
+  - People → Team Messages, Homebase / Rippling directory, Deputy hours
   - Appointments → Jobber job list
   - Dispatch → ServiceTitan crew columns (drag jobs)
   - D2D → SalesRabbit pins, knock notes, book-the-door
