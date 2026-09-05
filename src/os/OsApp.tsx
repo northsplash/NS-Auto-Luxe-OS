@@ -1,17 +1,13 @@
 import { useMemo, useState } from 'react';
 import {
-  BarChart3, Briefcase, CalendarDays, CreditCard, LayoutDashboard, MapPinned, MessageCircle,
-  MoreHorizontal, Settings, Smartphone, Users, Workflow, UserPlus, Truck, Home,
+  BarChart3, Briefcase, CalendarDays, Clock3, CreditCard, LayoutDashboard, MapPinned, MessageCircle,
+  MoreHorizontal, Plus, Settings, Smartphone, Users, Workflow, UserPlus, Truck, Home,
 } from 'lucide-react';
-import type { CommunicationTemplate } from '@/lib/communicationCatalog';
 import type { EmployeeDraft } from '@/lib/rolePresets';
-import {
-  defaultTemplates, seedCandidates, seedChats, seedEmployees, seedJobs, seedLeads, seedPayments,
-  type OsEmployee,
-} from './demoData';
+import { OsProvider, useOs } from './osStore';
 import {
   Avatar, CalendarView, ChatThread, CommsView, CustomersView, D2DView, DispatchView, HireModal,
-  HireView, JobDetail, MoreGrid, OwnerDashboard, PaymentsView, PeopleHome, PeopleProfile,
+  HireView, JobDetail, JobsHome, MoreGrid, OwnerDashboard, PaymentsView, PeopleHome, PeopleProfile,
   PipelineView, ReportsView, ScheduleView, SettingsView,
 } from './views';
 import './os.css';
@@ -24,6 +20,7 @@ const RAIL: { id: OsView; label: string; icon: typeof Home }[] = [
   { id: 'home', label: 'Home', icon: LayoutDashboard },
   { id: 'chat', label: 'Chat', icon: MessageCircle },
   { id: 'calendar', label: 'Calendar', icon: CalendarDays },
+  { id: 'schedule', label: 'Hours', icon: Clock3 },
   { id: 'dispatch', label: 'Dispatch', icon: Truck },
   { id: 'd2d', label: 'Leads', icon: MapPinned },
   { id: 'people', label: 'People', icon: Users },
@@ -39,80 +36,63 @@ const TITLES: Record<OsView, [string, string]> = {
   home: ['Owner dashboard', 'KPI cards, revenue, recent activity'],
   chat: ['Chat', 'Google Chat / Teams layout'],
   people: ['Employees', 'Directory, status, role, hours, onboarding'],
-  schedule: ['Scheduling', 'Availability, shifts, time-off'],
+  schedule: ['Scheduling', 'Drag shifts, availability, time-off'],
   calendar: ['Appointments', 'Jobs attached to customers'],
-  dispatch: ['Dispatch board', 'Crew columns and job cards'],
+  dispatch: ['Dispatch board', 'Drag jobs onto crew columns'],
   d2d: ['D2D portal', 'Territory pins and canvassing'],
   pipeline: ['Lead pipeline', 'Stages, ownership, activity'],
   customers: ['Customers', 'Record, timeline, notes'],
-  jobs: ['Detailer portal', 'Mobile jobs, directions, actions'],
+  jobs: ['Detailer portal', 'Service, photos, notes, payment, SMS'],
   payments: ['Payments', 'Transactions, refunds, filters'],
-  reports: ['Reports', 'KPI hierarchy'],
-  hire: ['Hiring', 'Onboarding checklist'],
+  reports: ['Reports', 'KPI hierarchy from live jobs'],
+  hire: ['Hiring', 'Gusto-style onboarding checklist'],
   comms: ['Communications', 'Email + SMS automations'],
   settings: ['Settings', 'Categorized configuration'],
   more: ['All workspaces', 'Every North Splash OS surface'],
 };
 
-export default function OsApp() {
-  const [view, setView] = useState<OsView>('home');
+function OsShell() {
+  const os = useOs();
+  const [view, setView] = useState<OsView>(() => {
+    try { return (sessionStorage.getItem('ns-os-view') as OsView) || 'home'; } catch { return 'home'; }
+  });
   const [phone, setPhone] = useState(false);
   const [chatTab, setChatTab] = useState<'dm' | 'space'>('dm');
-  const [chats, setChats] = useState(seedChats);
-  const [activeChat, setActiveChat] = useState(seedChats[0].id);
-  const [employees, setEmployees] = useState(seedEmployees);
+  const [activeChat, setActiveChat] = useState(os.chats[0]?.id || '');
   const [peopleId, setPeopleId] = useState<string | null>(null);
-  const [jobs, setJobs] = useState(seedJobs);
-  const [jobId, setJobId] = useState(seedJobs[0].id);
-  const [leads] = useState(seedLeads);
-  const [payments] = useState(seedPayments);
-  const [candidates] = useState(seedCandidates);
-  const [templates, setTemplates] = useState<CommunicationTemplate[]>(defaultTemplates);
+  const [jobId, setJobId] = useState<string | null>(os.jobs[0]?.id || null);
   const [hireOpen, setHireOpen] = useState(false);
+  const [hirePreset, setHirePreset] = useState<Partial<EmployeeDraft> | undefined>();
   const [search, setSearch] = useState('');
   const [threadOpen, setThreadOpen] = useState(false);
+  const [jobList, setJobList] = useState(true);
 
-  const chat = chats.find((c) => c.id === activeChat) || chats[0];
-  const person = employees.find((e) => e.id === peopleId);
-  const job = jobs.find((j) => j.id === jobId) || jobs[0];
-  const filteredChats = chats.filter((c) => c.kind === (chatTab === 'dm' ? 'dm' : 'space') && c.name.toLowerCase().includes(search.toLowerCase()));
-  const unread = chats.reduce((n, c) => n + c.unread, 0);
+  const chat = os.chats.find((c) => c.id === activeChat) || os.chats[0];
+  const person = os.employees.find((e) => e.id === peopleId);
+  const job = os.jobs.find((j) => j.id === jobId) || os.jobs[0];
+  const filteredChats = os.chats.filter((c) => c.kind === (chatTab === 'dm' ? 'dm' : 'space') && c.name.toLowerCase().includes(search.toLowerCase()));
+  const unread = os.chats.reduce((n, c) => n + c.unread, 0);
 
   const go = (id: string) => {
-    setView(id as OsView);
+    const next = id as OsView;
+    setView(next);
+    try { sessionStorage.setItem('ns-os-view', next); } catch { /* ignore */ }
     if (id === 'chat' && phone) setThreadOpen(false);
     if (id === 'people' && phone) setPeopleId(null);
+    if (id === 'jobs' && phone) setJobList(true);
   };
-  const sendChat = (body: string) => {
-    setChats((prev) => prev.map((c) => c.id === chat.id
-      ? { ...c, preview: body, at: 'Now', unread: 0, messages: [...c.messages, { id: `m_${Date.now()}`, from: 'You', mine: true, body, at: 'Now' }] }
-      : c));
+
+  const openJob = (id: string) => {
+    setJobId(id);
+    setJobList(false);
+    setView('jobs');
+    try { sessionStorage.setItem('ns-os-view', 'jobs'); } catch { /* ignore */ }
   };
+
   const saveHire = (draft: EmployeeDraft) => {
-    const emp: OsEmployee = {
-      id: `e_${Date.now()}`,
-      name: draft.name,
-      title: draft.title,
-      role: draft.role,
-      department: draft.department,
-      status: 'active',
-      email: draft.email,
-      phone: draft.phone,
-      initials: draft.name.split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase() || 'NS',
-      hue: '#7c6a4a',
-      pay_type: draft.pay_type,
-      hourly_rate: draft.hourly_rate,
-      annual_salary: draft.annual_salary,
-      weekly_base: draft.weekly_base,
-      commission_rate: draft.commission_rate,
-      per_job_rate: draft.per_job_rate,
-      pay_schedule: draft.pay_schedule,
-      hours_week: 0,
-      onboarding: 20,
-      location: draft.work_location,
-    };
-    setEmployees((p) => [emp, ...p]);
+    const emp = os.hireEmployee(draft);
     setHireOpen(false);
+    setHirePreset(undefined);
     setView('people');
     setPeopleId(emp.id);
   };
@@ -133,7 +113,7 @@ export default function OsApp() {
           </div>
           <div className="nsos-list">
             {filteredChats.map((c) => (
-              <button className={`nsos-row ${c.id === activeChat ? 'active' : ''}`} key={c.id} onClick={() => { setActiveChat(c.id); setThreadOpen(true); setChats((p) => p.map((x) => x.id === c.id ? { ...x, unread: 0 } : x)); }}>
+              <button className={`nsos-row ${c.id === activeChat ? 'active' : ''}`} key={c.id} onClick={() => { setActiveChat(c.id); setThreadOpen(true); os.markChatRead(c.id); }}>
                 <Avatar initials={c.initials} hue={c.hue} />
                 <span style={{ minWidth: 0, flex: 1 }}>
                   <strong>{c.name}</strong>
@@ -142,6 +122,10 @@ export default function OsApp() {
                 {c.unread > 0 && <span className="nsos-unread">{c.unread}</span>}
               </button>
             ))}
+            <button className="nsos-row" onClick={() => { const id = os.createChat(chatTab === 'space' ? 'New space' : 'New chat', chatTab === 'space' ? 'space' : 'dm'); setActiveChat(id); }}>
+              <Plus size={16} />
+              <span><strong>New {chatTab === 'space' ? 'space' : 'chat'}</strong><small>Start a thread</small></span>
+            </button>
           </div>
         </>
       );
@@ -151,10 +135,24 @@ export default function OsApp() {
         <>
           <div className="nsos-pane-head"><span className="nsos-eyebrow">Directory</span><h2>People</h2></div>
           <div className="nsos-list">
-            {employees.map((e) => (
+            {os.employees.map((e) => (
               <button className={`nsos-row ${peopleId === e.id ? 'active' : ''}`} key={e.id} onClick={() => setPeopleId(e.id)}>
                 <Avatar initials={e.initials} hue={e.hue} />
                 <span><strong>{e.name}</strong><small>{e.title}</small></span>
+              </button>
+            ))}
+          </div>
+        </>
+      );
+    }
+    if (view === 'jobs' || view === 'calendar') {
+      return (
+        <>
+          <div className="nsos-pane-head"><span className="nsos-eyebrow">Today</span><h2>Jobs</h2></div>
+          <div className="nsos-list">
+            {os.jobs.map((j) => (
+              <button className={`nsos-row ${jobId === j.id ? 'active' : ''}`} key={j.id} onClick={() => openJob(j.id)}>
+                <span><strong>{j.customer}</strong><small>{j.service} · {j.status.replaceAll('_', ' ')}</small></span>
               </button>
             ))}
           </div>
@@ -177,7 +175,15 @@ export default function OsApp() {
         </div>
       </>
     );
-  }, [view, chatTab, search, filteredChats, activeChat, employees, peopleId]);
+  }, [view, chatTab, search, filteredChats, activeChat, os.employees, os.jobs, peopleId, jobId]);
+
+  const headline = phone && view === 'chat' && threadOpen && chat
+    ? chat.name
+    : person && view === 'people'
+      ? person.name
+      : job && view === 'jobs' && !jobList
+        ? job.customer
+        : titles[0];
 
   return (
     <div className={`nsos ${phone ? 'phone-mode' : ''}`}>
@@ -194,20 +200,20 @@ export default function OsApp() {
       </aside>
       <aside className="nsos-pane">{pane}</aside>
       <main className="nsos-main">
-        <div className="nsos-demo-banner">North Splash OS preview · demo data until Supabase is connected</div>
+        <div className="nsos-demo-banner">North Splash OS preview · demo data until Supabase is connected · saved in this browser</div>
         <header className="nsos-top">
           <div>
-            <p className="nsos-eyebrow">North Splash Auto Luxe</p>
-            <h1>{phone && view === 'chat' && threadOpen ? chat.name : person && view === 'people' ? person.name : titles[0]}</h1>
+            <p className="nsos-eyebrow">{os.settings.company}</p>
+            <h1>{headline}</h1>
             <p>{titles[1]}</p>
           </div>
           <div className="nsos-actions">
-            {view === 'people' && <button className="nsos-btn" onClick={() => setHireOpen(true)}>Add employee</button>}
+            {view === 'people' && <button className="nsos-btn" onClick={() => { setHirePreset(undefined); setHireOpen(true); }}>Add employee</button>}
             <button className="nsos-btn ghost" onClick={() => setPhone((v) => !v)}><Smartphone size={14} />{phone ? 'Desktop' : 'iPhone'}</button>
           </div>
         </header>
         <div className="nsos-body">
-          {view === 'home' && <OwnerDashboard jobs={jobs} payments={payments} />}
+          {view === 'home' && <OwnerDashboard />}
           {view === 'chat' && chat && phone && !threadOpen && (
             <div>
               <div className="nsos-tabs">
@@ -215,7 +221,7 @@ export default function OsApp() {
                 <button className={chatTab === 'space' ? 'active' : ''} onClick={() => setChatTab('space')}>Spaces</button>
               </div>
               {filteredChats.map((c) => (
-                <button className="nsos-row" key={c.id} onClick={() => { setActiveChat(c.id); setThreadOpen(true); setChats((p) => p.map((x) => x.id === c.id ? { ...x, unread: 0 } : x)); }}>
+                <button className="nsos-row" key={c.id} onClick={() => { setActiveChat(c.id); setThreadOpen(true); os.markChatRead(c.id); }}>
                   <Avatar initials={c.initials} hue={c.hue} />
                   <span style={{ minWidth: 0, flex: 1 }}><strong>{c.name}</strong><small>{c.preview}</small></span>
                   {c.unread > 0 && <span className="nsos-unread">{c.unread}</span>}
@@ -224,29 +230,35 @@ export default function OsApp() {
             </div>
           )}
           {view === 'chat' && chat && (!phone || threadOpen) && (
-            <div>
+            <div className="nsos-chat-wrap">
               {phone && <button className="nsos-btn ghost" style={{ marginBottom: 10 }} onClick={() => setThreadOpen(false)}>Back to chats</button>}
-              <ChatThread chat={chat} onSend={sendChat} />
+              <ChatThread chat={chat} onSend={(body) => os.sendChat(chat.id, body)} />
             </div>
           )}
-          {view === 'people' && !person && <PeopleHome employees={employees} onOpen={setPeopleId} onHire={() => setHireOpen(true)} />}
-          {view === 'people' && person && <PeopleProfile employee={person} />}
-          {view === 'schedule' && <ScheduleView employees={employees} />}
-          {view === 'calendar' && <CalendarView jobs={jobs} onOpen={(id) => { setJobId(id); setView('jobs'); }} />}
-          {view === 'dispatch' && <DispatchView jobs={jobs} employees={employees} />}
-          {view === 'd2d' && <D2DView leads={leads} />}
-          {view === 'pipeline' && <PipelineView leads={leads} />}
-          {view === 'customers' && <CustomersView jobs={jobs} />}
-          {view === 'jobs' && (
-            <JobDetail
-              job={job}
-              onStatus={(status) => setJobs((p) => p.map((j) => j.id === job.id ? { ...j, status } : j))}
-            />
+          {view === 'people' && !person && <PeopleHome employees={os.employees} onOpen={setPeopleId} onHire={() => { setHirePreset(undefined); setHireOpen(true); }} />}
+          {view === 'people' && person && (
+            <div>
+              {phone && <button className="nsos-btn ghost" style={{ marginBottom: 10 }} onClick={() => setPeopleId(null)}>Back to directory</button>}
+              <PeopleProfile employee={person} />
+            </div>
           )}
-          {view === 'payments' && <PaymentsView payments={payments} />}
+          {view === 'schedule' && <ScheduleView />}
+          {view === 'calendar' && <CalendarView onOpen={openJob} />}
+          {view === 'dispatch' && <DispatchView onOpen={openJob} />}
+          {view === 'd2d' && <D2DView onBook={openJob} />}
+          {view === 'pipeline' && <PipelineView onBook={openJob} />}
+          {view === 'customers' && <CustomersView onOpenJob={openJob} />}
+          {view === 'jobs' && phone && jobList && <JobsHome jobs={os.jobs} onOpen={openJob} />}
+          {view === 'jobs' && job && (!phone || !jobList) && (
+            <div>
+              {phone && <button className="nsos-btn ghost" style={{ marginBottom: 10 }} onClick={() => setJobList(true)}>Back to jobs</button>}
+              <JobDetail job={job} />
+            </div>
+          )}
+          {view === 'payments' && <PaymentsView />}
           {view === 'reports' && <ReportsView />}
-          {view === 'hire' && <HireView candidates={candidates} />}
-          {view === 'comms' && <CommsView templates={templates} onChange={setTemplates} />}
+          {view === 'hire' && <HireView onHire={(name, title) => { setHirePreset({ name: name || '', title: title || '' }); setHireOpen(true); }} />}
+          {view === 'comms' && <CommsView />}
           {view === 'settings' && <SettingsView />}
           {view === 'more' && <MoreGrid onPick={go} />}
         </div>
@@ -258,7 +270,21 @@ export default function OsApp() {
           <button className={view === 'more' ? 'active' : ''} onClick={() => go('more')}><MoreHorizontal size={18} />More</button>
         </nav>
       </main>
-      <HireModal open={hireOpen} onClose={() => setHireOpen(false)} onSave={saveHire} />
+      <HireModal open={hireOpen} onClose={() => setHireOpen(false)} onSave={saveHire} preset={hirePreset} />
+      {os.toast && (
+        <button className="nsos-toast" onClick={os.dismissToast}>
+          <strong>{os.toast.title}</strong>
+          <span>{os.toast.body}</span>
+        </button>
+      )}
     </div>
+  );
+}
+
+export default function OsApp() {
+  return (
+    <OsProvider>
+      <OsShell />
+    </OsProvider>
   );
 }

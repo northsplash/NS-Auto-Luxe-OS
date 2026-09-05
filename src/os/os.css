@@ -144,17 +144,17 @@
 .nsos-tabs button.active { background: rgba(200,169,106,.16); color: var(--os-gold-2); }
 
 .nsos-status { display: flex; gap: 0; margin: 12px 0 4px; }
-.nsos-status span {
+.nsos-status span, .nsos-status button {
   flex: 1; text-align: center; font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase;
   color: var(--os-muted); position: relative; padding-top: 14px;
 }
-.nsos-status span::before {
+.nsos-status span::before, .nsos-status button::before {
   content: ''; position: absolute; top: 4px; left: 0; right: 0; height: 3px; background: #2a2620;
 }
-.nsos-status span.done { color: var(--os-gold-2); }
-.nsos-status span.done::before { background: var(--os-gold); }
-.nsos-status span.now { color: var(--os-cream); }
-.nsos-status span.now::before { background: var(--os-gold-2); }
+.nsos-status span.done, .nsos-status button.done { color: var(--os-gold-2); }
+.nsos-status span.done::before, .nsos-status button.done::before { background: var(--os-gold); }
+.nsos-status span.now, .nsos-status button.now { color: var(--os-cream); }
+.nsos-status span.now::before, .nsos-status button.now::before { background: var(--os-gold-2); }
 
 .nsos-job { display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--os-line); }
 .nsos-pill { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 8px; border-radius: 999px; background: #2a2620; }
@@ -279,3 +279,43 @@
 .nsos-demo-banner {
   font-size: 11px; color: #1a140c; background: var(--os-gold); padding: 6px 12px; text-align: center; font-weight: 700;
 }
+.nsos-select {
+  background: #12110f; border: 1px solid var(--os-line); border-radius: 999px; padding: 8px 12px; outline: 0;
+}
+.nsos-week { grid-template-columns: repeat(6, minmax(130px, 1fr)); }
+.nsos-shift { position: relative; cursor: grab; }
+.nsos-shift strong { display: flex; align-items: center; gap: 4px; }
+.nsos-icon-btn { position: absolute; top: 6px; right: 6px; color: var(--os-muted); padding: 4px; }
+.nsos-ghost-add { width: 100%; text-align: left; color: var(--os-muted); font-size: 12px; padding: 8px 4px; }
+.nsos-avail { display: flex; gap: 4px; flex-wrap: wrap; margin: 8px 0; }
+.nsos-avail button {
+  width: 34px; height: 28px; border-radius: 8px; border: 1px solid var(--os-line); color: var(--os-muted); font-size: 10px; font-weight: 700;
+}
+.nsos-avail button.on { background: rgba(200,169,106,.2); color: var(--os-gold-2); border-color: var(--os-gold); }
+.nsos-avail-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--os-line); }
+.nsos-photos { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.nsos-photos figure { margin: 0; }
+.nsos-photos img { width: 100%; height: 110px; object-fit: cover; border-radius: 10px; }
+.nsos-photos figcaption { font-size: 11px; color: var(--os-muted); margin-top: 4px; }
+.nsos-pin.selected { outline: 2px solid #fff; transform: rotate(-45deg) scale(1.25); }
+.nsos-job.active-row { background: rgba(200,169,106,.08); border-radius: 10px; padding-left: 8px; padding-right: 8px; }
+.nsos-check {
+  width: 100%; display: flex; align-items: center; gap: 8px; text-align: left; padding: 6px 0; font-size: 13px; color: var(--os-cream);
+}
+.nsos-check span {
+  width: 18px; height: 18px; border-radius: 5px; border: 1px solid var(--os-line); display: grid; place-items: center; color: transparent;
+}
+.nsos-check span.on { background: var(--os-gold); color: #1a140c; border-color: var(--os-gold); }
+.nsos-topic { font-size: 11px; color: var(--os-gold); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 8px; }
+.nsos-chat-wrap { height: 100%; display: flex; flex-direction: column; }
+.nsos-body:has(.nsos-chat), .nsos-body:has(.nsos-chat-wrap) { padding: 0; display: flex; flex-direction: column; }
+.nsos-toast {
+  position: fixed; right: 18px; bottom: 18px; z-index: 50; text-align: left;
+  background: #221c14; border: 1px solid var(--os-gold); border-radius: 14px; padding: 12px 14px; min-width: 240px;
+  display: flex; flex-direction: column; gap: 4px; color: var(--os-cream);
+}
+.nsos-toast strong { color: var(--os-gold-2); font-size: 12px; }
+.nsos-toast span { font-size: 12px; color: var(--os-muted); }
+.nsos.phone-mode .nsos-toast { right: 16px; left: 16px; bottom: 72px; min-width: 0; }
+.nsos.phone-mode .nsos-week { grid-template-columns: 1fr; }
+.nsos-drop { min-height: 120px; }

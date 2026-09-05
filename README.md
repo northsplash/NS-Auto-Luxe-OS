@@ -17,13 +17,27 @@ The app serves at `http://127.0.0.1:43127`.
 
 - Without Supabase credentials, `/` opens the **North Splash OS** preview (`/os`) with demo data.
 - With credentials, `/` opens login. Admin, employee, D2D, and customer portals stay on their existing routes.
+- OS demo state is saved in the browser (`localStorage`). Reset it from Settings → Demo data.
 
 ## What is in this slice
 
-- **Flexible hire / pay** — custom job title, system role, and a mix of hourly, salary, weekly draw, commission, per-job, and extra rules. Admins and other roles are not locked to one pay type.
-- **iPhone + desktop OS** — left rail like Teams, chat like Google Chat (Chats / Spaces), bottom tabs on phone: Home, Chat, Leads, Jobs, More.
-- **Product-modeled workspaces** — Stripe owner dashboard, Homebase/Rippling people, Deputy hours, Jobber calendar, ServiceTitan dispatch, SalesRabbit D2D, SPOTIO/HubSpot pipeline, HubSpot CRM, Housecall Pro jobs, Square payments, Gusto hiring, Stripe settings.
-- **Customer email + SMS** — Housecall Pro lifecycle, Jobber templates, Square payment messages, Uber-style day-of updates, with a shared Appointment → Confirmed → En Route → In Progress → Complete status bar.
+- **Flexible hire / pay** — custom job title, system role, and a mix of hourly, salary, weekly draw, commission, per-job, and extra rules. Admins and other roles are not locked to one pay type. Hiring checklists convert into that same add-employee flow.
+- **iPhone + desktop OS** — left rail like Teams, chat like Google Chat (Chats / Spaces, Enter to send, new thread), bottom tabs on phone: Home, Chat, Leads, Jobs, More.
+- **Product-modeled workspaces**
+  - Owner dashboard → Stripe KPIs, revenue, live activity
+  - People → Homebase / Rippling directory, documents, availability
+  - Hours → Deputy drag-and-drop shifts, availability, time-off
+  - Appointments → Jobber job list
+  - Dispatch → ServiceTitan crew columns (drag jobs)
+  - D2D → SalesRabbit pins, knock notes, book-the-door
+  - Pipeline → SPOTIO / HubSpot stages (drag cards)
+  - Customers → HubSpot record + timeline
+  - Jobs → Housecall / Jobber detail: status bar, notes, photos, collect pay, SMS log
+  - Payments → Square filters, collect, refund, retry
+  - Reports → live job / lead KPIs
+  - Hiring → Gusto checklists
+  - Settings → Stripe-style left nav
+- **Customer email + SMS** — advancing Appointment → Confirmed → En Route → In Progress → Complete sends the matching Housecall / Jobber / Uber-style template (if enabled) and logs it on the job.
 
 ## Supabase
 
