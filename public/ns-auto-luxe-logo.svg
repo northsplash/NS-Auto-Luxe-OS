@@ -1,11 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="North Splash">
   <defs>
-    <linearGradient id="g" x1="20%" y1="0%" x2="80%" y2="100%">
+    <linearGradient id="g" x1="18%" y1="8%" x2="86%" y2="92%">
       <stop offset="0%" stop-color="#f5d67e"/>
-      <stop offset="55%" stop-color="#d9ad4a"/>
-      <stop offset="100%" stop-color="#a98131"/>
+      <stop offset="52%" stop-color="#d9ad4a"/>
+      <stop offset="100%" stop-color="#8d6a28"/>
     </linearGradient>
   </defs>
-  <circle cx="64" cy="64" r="62" fill="#11110e" stroke="url(#g)" stroke-width="4"/>
-  <path d="M28 86V42h16l12 28 12-28h16v44H72V62L64 80h-8l-8-18v24H28z" fill="url(#g)"/>
+  <circle cx="64" cy="64" r="62" fill="#12110c"/>
+  <circle cx="64" cy="64" r="58" fill="none" stroke="url(#g)" stroke-width="5"/>
+  <text x="64" y="76" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="800" fill="url(#g)" letter-spacing="-2">NS</text>
 </svg>
