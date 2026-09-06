@@ -788,12 +788,14 @@ export function CalendarView({ onOpen }: { onOpen: (id: string) => void }) {
           <button className="nsos-btn" type="submit">Book and confirm</button>
         </form>
       )}
+      {showLeads && leadsToday.length > 0 && <div className="nsos-eyebrow">Lead follow-ups</div>}
       {showLeads && leadsToday.map((l) => (
         <div className="nsos-job" key={l.id}>
           <div><strong>{l.name}</strong><div style={{ color: 'var(--os-muted)', fontSize: 12 }}>{l.address} · {l.status.replaceAll('_', ' ')}</div></div>
           <span className="nsos-pill gold">{l.rep}</span>
         </div>
       ))}
+      {showShifts && shiftsToday.length > 0 && <div className="nsos-eyebrow">Shifts</div>}
       {showShifts && shiftsToday.map((s) => {
         const person = os.employees.find((e) => e.id === s.employeeId);
         return (
