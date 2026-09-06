@@ -3741,6 +3741,82 @@
   -webkit-text-fill-color: #6f675e !important;
   background: transparent !important;
 }
+.portal-layout.nsos-cream .owner-leads-head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+}
+.portal-layout.nsos-cream .owner-lead-compose,
+.portal-layout.nsos-cream .owner-lead-book {
+  background: #fffdf8 !important;
+  border: 1px solid #e4d9cc !important;
+}
+.portal-layout.nsos-cream .owner-lead-compose-grid,
+.portal-layout.nsos-cream .owner-lead-edit {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 8px 0 12px;
+}
+.portal-layout.nsos-cream .owner-lead-compose-grid .wide,
+.portal-layout.nsos-cream .owner-lead-edit .wide {
+  grid-column: 1 / -1;
+}
+.portal-layout.nsos-cream .owner-lead-compose label,
+.portal-layout.nsos-cream .owner-lead-edit label,
+.portal-layout.nsos-cream .owner-lead-book label {
+  display: grid;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+}
+.portal-layout.nsos-cream .owner-lead-exceptions .nsos-alert.selected {
+  border-color: #1c1814 !important;
+  box-shadow: 0 0 0 1px #1c1814;
+}
+.portal-layout.nsos-cream .admin-lead-kanban > section.drop-ready,
+.portal-layout.nsos-cream .nsos-col.drop-ready {
+  outline: 2px solid #b8893a;
+  background: #f6ead4 !important;
+}
+.portal-layout.nsos-cream .lead-column-empty {
+  padding: 18px 8px;
+  text-align: center;
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+  font-size: 12px;
+}
+.portal-layout.nsos-cream .nsos-lead-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 12px;
+}
+.portal-layout.nsos-cream .nsos-lead-meta select {
+  min-height: 32px !important;
+  font-size: 11px;
+}
+.portal-layout.nsos-cream .nsos-temp {
+  text-transform: uppercase;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  color: #b8893a !important;
+  -webkit-text-fill-color: #b8893a !important;
+}
+.portal-layout.nsos-cream .nsos-temp.hot { color: #b45444 !important; -webkit-text-fill-color: #b45444 !important; }
+@media (max-width: 720px) {
+  .portal-layout.nsos-cream .owner-lead-compose-grid,
+  .portal-layout.nsos-cream .owner-lead-edit {
+    grid-template-columns: 1fr;
+  }
+}
 @media (max-width: 1180px) {
   .portal-layout.nsos-cream .portal-main::after {
     background-size: min(72vw, 320px) auto !important;

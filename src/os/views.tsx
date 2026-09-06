@@ -1096,44 +1096,111 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
 export function PipelineView({ onBook }: { onBook?: (jobId: string) => void }) {
   const os = useOs();
   const [q, setQ] = useState('');
-  const rows = os.leads.filter((l) => `${l.name || ''} ${l.address || ''} ${l.rep || ''}`.toLowerCase().includes(q.toLowerCase()));
-  const total = rows.filter((l) => l.status !== 'dnk').reduce((s, l) => s + l.value, 0);
+  const [focus, setFocus] = useState<'all' | 'hot' | 'unassigned'>('all');
+  const [draft, setDraft] = useState({ name: '', address: '', phone: '', value: '275' });
+  const [dropStage, setDropStage] = useState('');
+  const needle = q.trim().toLowerCase();
+  const match = (l: { name?: string; address?: string; rep?: string; phone?: string }) =>
+    `${l.name || ''} ${l.address || ''} ${l.rep || ''} ${l.phone || ''}`.toLowerCase().includes(needle);
+  const live = os.leads.filter((l) => l.status !== 'dnk');
+  const rows = live.filter((l) => {
+    if (!match(l)) return false;
+    if (focus === 'hot' && l.temp !== 'hot') return false;
+    if (focus === 'unassigned' && l.rep && l.rep !== 'Unassigned') return false;
+    return true;
+  });
+  const total = rows.reduce((s, l) => s + Number(l.value || 0), 0);
+  const hot = live.filter((l) => l.temp === 'hot' && l.status !== 'sold');
+  const unassigned = live.filter((l) => !l.rep || l.rep === 'Unassigned');
+  const sold = os.leads.filter((l) => l.status === 'sold').length;
+  const reps = os.employees.filter((e) => e.role === 'd2d_agent' || e.role === 'owner');
   return (
-    <div>
+    <div className="owner-demo-pipeline">
+      <form
+        className="nsos-card owner-lead-compose"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (!draft.name.trim() && !draft.address.trim()) return;
+          os.addLead(draft.name.trim() || 'New household', draft.address.trim() || 'Address pending', {
+            phone: draft.phone.trim(),
+            value: Number(draft.value || 0),
+          });
+          setDraft({ name: '', address: '', phone: '', value: '275' });
+        }}
+      >
+        <span className="nsos-eyebrow">NEW LEAD</span>
+        <h3>Log a household</h3>
+        <div className="owner-lead-compose-grid">
+          <label className="nsos-field">Name<input value={draft.name} onChange={(e) => setDraft((p) => ({ ...p, name: e.target.value }))} placeholder="Resident" /></label>
+          <label className="nsos-field">Phone<input value={draft.phone} onChange={(e) => setDraft((p) => ({ ...p, phone: e.target.value }))} placeholder="919-555-0100" /></label>
+          <label className="nsos-field wide">Address<input value={draft.address} onChange={(e) => setDraft((p) => ({ ...p, address: e.target.value }))} placeholder="Street" /></label>
+          <label className="nsos-field">Value<input type="number" min="0" value={draft.value} onChange={(e) => setDraft((p) => ({ ...p, value: e.target.value }))} /></label>
+        </div>
+        <button className="nsos-btn" type="submit"><Plus size={15} />Add to pipeline</button>
+      </form>
+      <div className="nsos-alerts owner-lead-exceptions">
+        {hot.length > 0 && (
+          <button type="button" className={`nsos-alert hot ${focus === 'hot' ? 'selected' : ''}`} onClick={() => setFocus((v) => v === 'hot' ? 'all' : 'hot')}>
+            <em>{hot.length}</em><span><b>Hot leads</b><small>Ready to quote or book</small></span>
+          </button>
+        )}
+        {unassigned.length > 0 && (
+          <button type="button" className={`nsos-alert hot ${focus === 'unassigned' ? 'selected' : ''}`} onClick={() => setFocus((v) => v === 'unassigned' ? 'all' : 'unassigned')}>
+            <em>{unassigned.length}</em><span><b>Unassigned</b><small>Need a rep on the door</small></span>
+          </button>
+        )}
+        {!hot.length && !unassigned.length && <div className="ns-empty">Nothing needs you. Drag a card or log a new door.</div>}
+      </div>
       <div className="nsos-actions" style={{ marginBottom: 12 }}>
         <div className="nsos-search" style={{ flex: 1 }}><Search size={14} /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search deals, streets, or reps" /></div>
       </div>
       <div className="nsos-kpis" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
         <div className="nsos-kpi"><span>Open pipeline</span><strong>{money(total)}</strong></div>
-        <div className="nsos-kpi"><span>Close rate</span><strong>{Math.round((os.leads.filter((l) => l.status === 'sold').length / Math.max(1, os.leads.length)) * 100)}%</strong></div>
-        <div className="nsos-kpi"><span>Owned by Sofia</span><strong>{os.leads.filter((l) => String(l.rep || '').includes('Sofia')).length}</strong></div>
+        <div className="nsos-kpi"><span>Close rate</span><strong>{Math.round((sold / Math.max(1, os.leads.length)) * 100)}%</strong></div>
+        <div className="nsos-kpi"><span>Unassigned</span><strong>{unassigned.length}</strong></div>
       </div>
+      {!rows.length && <div className="ns-empty">No leads match these filters.</div>}
       <div className="nsos-kanban">
-        {LEAD_STAGES.map((s) => (
-          <div
-            className="nsos-col nsos-drop"
-            key={s}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={(e) => {
-              const id = e.dataTransfer.getData('lead');
-              if (id) os.setLeadStatus(id, s);
-            }}
-          >
-            <h3>{s}<span>{os.leads.filter((l) => l.status === s && `${l.name || ''} ${l.address || ''} ${l.rep || ''}`.toLowerCase().includes(q.toLowerCase())).length}</span></h3>
-            {os.leads.filter((l) => l.status === s && `${l.name || ''} ${l.address || ''} ${l.rep || ''}`.toLowerCase().includes(q.toLowerCase())).map((l) => (
-              <div className="nsos-lead" key={l.id} draggable onDragStart={(e) => e.dataTransfer.setData('lead', l.id)}>
-                <strong className="nsos-lead-name">{l.name || 'Untitled lead'}</strong>
-                <small className="nsos-lead-addr">{l.address || 'No address'}</small>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 12 }}>
-                  <span>{l.rep}</span><b>{money(l.value)}</b>
+        {LEAD_STAGES.map((s) => {
+          const col = rows.filter((l) => l.status === s);
+          return (
+            <div
+              className={`nsos-col nsos-drop ${dropStage === s ? 'drop-ready' : ''}`}
+              key={s}
+              onDragOver={(e) => { e.preventDefault(); setDropStage(s); }}
+              onDragLeave={() => setDropStage((v) => v === s ? '' : v)}
+              onDrop={(e) => {
+                const id = e.dataTransfer.getData('lead');
+                setDropStage('');
+                if (id) os.setLeadStatus(id, s);
+              }}
+            >
+              <h3>{s}<span>{col.length}</span></h3>
+              {col.map((l) => (
+                <div className="nsos-lead" key={l.id} draggable onDragStart={(e) => e.dataTransfer.setData('lead', l.id)}>
+                  <strong className="nsos-lead-name">{l.name || 'Untitled lead'}</strong>
+                  <small className="nsos-lead-addr">{l.address || 'No address'}</small>
+                  <div className="nsos-lead-meta">
+                    <span className={`nsos-temp ${l.temp}`}>{l.temp}</span>
+                    <select
+                      value={l.rep || 'Unassigned'}
+                      onChange={(e) => os.assignLead(l.id, e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <option>Unassigned</option>
+                      {reps.map((r) => <option key={r.id}>{r.name}</option>)}
+                    </select>
+                    <b>{money(l.value)}</b>
+                  </div>
+                  {(s === 'appointment' || s === 'sold' || s === 'interested') && (
+                    <button className="nsos-btn ghost" style={{ marginTop: 8, width: '100%', justifyContent: 'center' }} onClick={() => { const id = os.convertLead(l.id); if (id) onBook?.(id); }}>Book job</button>
+                  )}
                 </div>
-                {(s === 'appointment' || s === 'sold') && (
-                  <button className="nsos-btn ghost" style={{ marginTop: 8, width: '100%', justifyContent: 'center' }} onClick={() => { const id = os.convertLead(l.id); if (id) onBook?.(id); }}>Book job</button>
-                )}
-              </div>
-            ))}
-          </div>
-        ))}
+              ))}
+              {!col.length && <div className="lead-column-empty">Drop a card here.</div>}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

@@ -182,7 +182,7 @@ type OsApi = OsSnapshot & {
   renameChat: (id: string, name: string) => void;
   shareToChat: (chatId: string, body: string) => void;
   createJob: (draft: JobDraft) => string;
-  addLead: (name: string, address: string) => string;
+  addLead: (name: string, address: string, extra?: { phone?: string; value?: number; rep?: string }) => string;
   toggleMember: (customerId: string) => void;
   rescheduleJob: (id: string, time: string) => void;
 };
@@ -633,14 +633,14 @@ export function OsProvider({ children }: { children: ReactNode }) {
       flash('Appointment booked', `${draft.customer} · confirmation queued`);
       return id;
     },
-    addLead: (name, address) => {
+    addLead: (name, address, extra) => {
       const id = `l_${Date.now()}`;
       setState((s) => ({
         ...s,
-        leads: [normalizeLead({ id, name, address, status: 'new', temp: 'warm', rep: 'Sofia Reyes', value: 275 }), ...s.leads],
+        leads: [normalizeLead({ id, name, address, status: 'new', temp: 'warm', rep: extra?.rep || 'Unassigned', value: extra?.value ?? 275, phone: extra?.phone || '' }), ...s.leads],
         activity: [{ id: uid(), at: clockNow(), kind: 'sales', text: `New door logged: ${name} · ${address}.` }, ...s.activity],
       }));
-      flash('Door added', `${name} is on the D2D map`);
+      flash('Door added', `${name} is on the pipeline`);
       return id;
     },
     toggleMember: (customerId) => setState((s) => ({

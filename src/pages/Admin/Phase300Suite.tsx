@@ -3,12 +3,13 @@ import {
   Activity, ArrowRight, BarChart3, Bell, BookOpen, CalendarClock, CheckCircle2, ChevronRight, Clock3, Copy, DollarSign,
   GraduationCap, MapPinned, Mail, MapPin, Pause, Pencil, Play, Plus, Route,
   Save, Search, ShieldAlert, Target, Trash2, UserCheck, Users, XCircle,
-  Archive, ArchiveRestore, ExternalLink, Eye, Smartphone, Send, Receipt, RefreshCw, MessageSquare, UserRound
+  Eye, Smartphone, Send, Receipt, RefreshCw, MessageSquare, UserRound
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { firstWord, isSettledPayment, money, prettyLabel, trendLabel } from '@/lib/data';
-import { DOOR_STATUSES, doorStatus, localDateKey, percent, sameLocalDay } from '@/lib/fieldOps';
-import type { Appointment, Employee, Lead, LeadTerritory, Profile, TerritoryDoor } from '@/lib/supabase';
+import { localDateKey, percent, sameLocalDay } from '@/lib/fieldOps';
+import type { Appointment, Employee, LeadTerritory, Profile, TerritoryDoor } from '@/lib/supabase';
+import OwnerLeadPipeline from '@/components/OwnerLeadPipeline';
 import WorkspaceHero from '@/components/WorkspaceHero';
 import EmployeeAvatar from '@/components/EmployeeAvatar';
 import { applyNewHireAcademy, ACADEMY_COURSES } from '@/lib/trainingAcademy';
@@ -49,7 +50,7 @@ function KPI({label,value,detail}:{label:string;value:string;detail?:string}){
 
 export default function Phase300Suite({section,employees,appointments,setAppointments,customers,payments,onNavigate,ownerName}:Props){
   if(section==='territories') return <Suspense fallback={<PanelLoader label="Opening territories…" />}><TerritoryCenter employees={employees}/></Suspense>;
-  if(section==='leads') return <Suspense fallback={<PanelLoader label="Opening leads…" />}><LeadCenter employees={employees}/></Suspense>;
+  if(section==='leads') return <Suspense fallback={<PanelLoader label="Opening leads…" />}><OwnerLeadPipeline employees={employees} setAppointments={setAppointments} onNavigate={onNavigate}/></Suspense>;
   if(section==='training') return <TrainingCenter employees={employees}/>;
   if(section==='communications') return <CommunicationsCenter/>;
   if(section==='automations') return <AutomationCenter/>;
@@ -260,62 +261,6 @@ function TerritoryCenter({employees}:{employees:Employee[]}){
   </div>;
 }
 
-function LeadCenter({employees}:{employees:Employee[]}){
-  const reps=employees.filter(e=>e.role==='d2d_agent');
-  const [leads,setLeads]=useState<Lead[]>([]),[territories,setTerritories]=useState<LeadTerritory[]>([]),[doors,setDoors]=useState<TerritoryDoor[]>([]);
-  const [status,setStatus]=useState('all'),[query,setQuery]=useState(''),[repFilter,setRepFilter]=useState('all'),[selected,setSelected]=useState<Lead|null>(null),[view,setView]=useState<'pipeline'|'map'|'list'|'archive'>(()=>window.matchMedia?.('(max-width: 620px)').matches?'list':'pipeline');
-  const now=new Date();
-  const load=async()=>{const [l,t,d]=await Promise.all([supabase.from('leads').select('*').order('updated_at',{ascending:false}).limit(2000),supabase.from('lead_territories').select('*'),supabase.from('territory_doors').select('*').limit(15000)]);setLeads((l.data??[]) as Lead[]);setTerritories((t.data??[]) as LeadTerritory[]);setDoors((d.data??[]) as TerritoryDoor[])};useEffect(()=>{load()},[]);
-  const score=(l:Lead)=>Math.min(100,20+(l.phone?15:0)+(l.email?10:0)+(l.service_interest?10:0)+(Number(l.estimated_value||0)>=300?15:0)+(['interested','estimate','estimate_sent','appointment_set'].includes(l.status)?25:0)+(l.follow_up_at&&new Date(l.follow_up_at)<=new Date()?10:0));
-  const archivedLeads=leads.filter(l=>(l as any).archived_at||((l as any).cooldown_until&&new Date((l as any).cooldown_until)>now)||l.status==='do_not_knock');
-  const activeLeads=leads.filter(l=>!archivedLeads.some(a=>a.id===l.id));
-  const baseLeads=view==='archive'?archivedLeads:activeLeads;
-  const filtered=baseLeads.filter(l=>(status==='all'||l.status===status)&&(repFilter==='all'||l.assigned_employee_id===repFilter)&&(!query||[l.customer_name,l.address,l.phone,l.service_interest].filter(Boolean).join(' ').toLowerCase().includes(query.toLowerCase())));
-  const sold=leads.filter(l=>['sold','existing_customer'].includes(l.status)),revenue=sold.reduce((s,l)=>s+Number(l.actual_sale_amount||l.estimated_value||0),0),contacted=leads.filter(l=>!['new','unworked'].includes(l.status)).length,followups=leads.filter(l=>l.follow_up_at&&new Date(l.follow_up_at)<=new Date()&&!['sold','lost','not_interested'].includes(l.status)).length,pipelineValue=leads.filter(l=>!['sold','lost','not_interested','do_not_knock'].includes(l.status)).reduce((n,l)=>n+Number(l.estimated_value||0),0);
-  const duplicateCount=leads.filter((l,i)=>leads.findIndex(x=>(l.phone&&x.phone===l.phone)||(l.address&&x.address===l.address))!==i).length;
-  const updateStatus=async(l:Lead,newStatus:string)=>{const {data,error}=await supabase.from('leads').update({status:newStatus,last_contacted_at:new Date().toISOString()}).eq('id',l.id).select().single();if(error)return alert(error.message);await supabase.from('lead_activities').insert({lead_id:l.id,employee_id:l.assigned_employee_id,activity_type:'status_change',previous_status:l.status,new_status:newStatus});setLeads(p=>p.map(x=>x.id===l.id?data:x));setSelected(data)};
-  const archiveLead=async(l:Lead,reason='manager_archive')=>{
-    if(!confirm(`Archive ${l.customer_name||l.address||'this lead'} for 6 months?`))return;
-    const cooldown=new Date();cooldown.setMonth(cooldown.getMonth()+6);
-    const {data,error}=await supabase.from('leads').update({archived_at:new Date().toISOString(),archive_reason:reason,cooldown_until:cooldown.toISOString(),reactivation_status:'cooldown'}).eq('id',l.id).select().single();
-    if(error)return alert(error.message);
-    await supabase.from('lead_activities').insert({lead_id:l.id,employee_id:l.assigned_employee_id,activity_type:'archived',previous_status:l.status,new_status:l.status,notes:`Archived until ${cooldown.toLocaleDateString()}`});
-    setLeads(p=>p.map(x=>x.id===l.id?data:x));setSelected(data);
-  };
-  const restoreLead=async(l:Lead)=>{
-    if(l.status==='do_not_knock'&&!confirm('This lead is permanently Do Not Knock. Admin override and reactivate anyway?'))return;
-    const {data,error}=await supabase.from('leads').update({archived_at:null,archive_reason:null,cooldown_until:null,reactivation_status:'reactivated',reactivated_at:new Date().toISOString()}).eq('id',l.id).select().single();
-    if(error)return alert(error.message);
-    await supabase.from('lead_activities').insert({lead_id:l.id,employee_id:l.assigned_employee_id,activity_type:'reactivated',previous_status:l.status,new_status:l.status,notes:'Lead manually reactivated by admin'});
-    setLeads(p=>p.map(x=>x.id===l.id?data:x));setSelected(data);
-  };
-  const stages=[['unworked','New'],['contacted','Contacted'],['interested','Interested'],['follow_up','Follow-Up'],['estimate','Estimate'],['appointment_set','Appointment'],['sold','Sold']] as const;
-  return <div className="tab-content phase300 v2-page"><Header tab="leads" action={<div className="segmented-control"><button className={view==='pipeline'?'active':''} onClick={()=>setView('pipeline')}>Pipeline</button><button className={view==='map'?'active':''} onClick={()=>setView('map')}>Map</button><button className={view==='list'?'active':''} onClick={()=>setView('list')}>List</button><button className={view==='archive'?'active':''} onClick={()=>setView('archive')}>Archive</button></div>}/>
-    <div className="phase-kpi-row"><KPI label="Open Leads" value={String(leads.filter(l=>!['sold','lost','not_interested','do_not_knock'].includes(l.status)).length)}/><KPI label="Hot Leads" value={String(leads.filter(l=>score(l)>=70&&!['sold','lost'].includes(l.status)).length)}/><KPI label="Pipeline Value" value={money(pipelineValue)}/><KPI label="Revenue Won" value={money(revenue)}/><KPI label="Follow-Ups Due" value={String(followups)}/></div>
-    <div className="lead-knock-legend-v29">{DOOR_STATUSES.slice(0,10).map(s=><span key={s.key}><i style={{background:s.color}}/>{s.short}</span>)}</div>
-    <div className="lead-command-bar"><div className="search-control search-box"><Search size={16}/><input placeholder="Search name, address, phone or service" value={query} onChange={e=>setQuery(e.target.value)}/></div><select value={repFilter} onChange={e=>setRepFilter(e.target.value)}><option value="all">All reps</option>{reps.map(r=><option key={r.id} value={r.id}>{r.name}</option>)}</select><select value={status} onChange={e=>setStatus(e.target.value)}><option value="all">All statuses</option>{DOOR_STATUSES.map(s=><option value={s.key} key={s.key}>{s.label}</option>)}</select><span className="duplicate-pill">{duplicateCount} possible duplicates</span></div>
-    {view==='map'&&<div className="lead-command-layout v2-lead-map-layout"><div className="lead-map-card"><FieldTerritoryMap territories={[]} leads={filtered} doors={doors} onDoorClick={d=>{const l=leads.find(x=>x.id===d.lead_id);if(l)setSelected(l)}} className="lead-command-map"/><div className="lead-map-legend">{DOOR_STATUSES.slice(0,10).map(s=><span key={s.key}><i style={{background:s.color}}/>{s.label}</span>)}</div></div><LeadInspector selected={selected} reps={reps} score={score} updateStatus={updateStatus} archiveLead={archiveLead} restoreLead={restoreLead} clear={()=>setSelected(null)}/></div>}
-    {view==='pipeline'&&<div className="admin-lead-kanban">{stages.map(([stage,label])=>{const rows=filtered.filter(l=>l.status===stage||(stage==='contacted'&&['no_answer','revisit'].includes(l.status)));return <section key={stage}><header><span>{label}</span><strong>{rows.length}</strong></header><div>{rows.sort((a,b)=>score(b)-score(a)).slice(0,40).map(l=><button key={l.id} onClick={()=>setSelected(l)} className={selected?.id===l.id?'selected':''}><div><i style={{background:doorStatus(l.status).color}}/><span className={score(l)>=70?'lead-score hot':'lead-score'}>{score(l)}</span></div><strong>{l.customer_name||l.address||'Unnamed lead'}</strong><small>{l.address||'No address'}</small><p>{reps.find(r=>r.id===l.assigned_employee_id)?.name||'Unassigned'}</p><footer><span>{l.service_interest||'Service TBD'}</span><b>{money(Number(l.estimated_value||0))}</b></footer></button>)}</div></section>})}</div>}
-    {view==='list'&&<div className="lead-command-table v2-admin-lead-list"><div className="lead-command-head"><span>Lead</span><span>Rep</span><span>Score</span><span>Status</span><span>Value</span><span>Follow-up</span></div>{filtered.sort((a,b)=>score(b)-score(a)).map(l=><button className="lead-command-row" key={l.id} onClick={()=>setSelected(l)}><span><strong>{l.customer_name||'Unnamed lead'}</strong><small>{l.address||'No address'} · {l.service_interest||'No service selected'}</small></span><span>{reps.find(r=>r.id===l.assigned_employee_id)?.name||'Unassigned'}</span><span><b className={score(l)>=70?'lead-score hot':'lead-score'}>{score(l)}</b></span><span><b className="status-lozenge">{humanStatus(l.status)}</b></span><span>{money(Number(l.actual_sale_amount||l.estimated_value||0))}</span><span>{when(l.follow_up_at)}</span></button>)}</div>}
-    {view==='archive'&&<div className="lead-archive-grid">{filtered.map(l=><button className="archive-lead-card" key={l.id} onClick={()=>setSelected(l)}><div><Archive size={17}/><strong>{l.customer_name||l.address||'Archived lead'}</strong></div><small>{l.address||'No address'}</small><div className="archive-meta"><span>{humanStatus(l.status)}</span><span>{(l as any).cooldown_until?`Eligible ${new Date((l as any).cooldown_until).toLocaleDateString()}`:l.status==='do_not_knock'?'Permanent DNK':'Archived'}</span></div></button>)}</div>}
-    {view!=='map'&&selected&&<div className="admin-lead-drawer"><LeadInspector selected={selected} reps={reps} score={score} updateStatus={updateStatus} archiveLead={archiveLead} restoreLead={restoreLead} clear={()=>setSelected(null)}/></div>}
-  </div>;
-}
-function LeadInspector({selected,reps,score,updateStatus,archiveLead,restoreLead,clear}:{selected:Lead|null;reps:Employee[];score:(l:Lead)=>number;updateStatus:(l:Lead,s:string)=>void;archiveLead:(l:Lead,reason?:string)=>void;restoreLead:(l:Lead)=>void;clear:()=>void}){
-  const archived=Boolean(selected&&((selected as any).archived_at||(selected as any).cooldown_until||selected.status==='do_not_knock'));
-  const lat=selected?.latitude,lng=selected?.longitude;
-  const streetViewUrl=lat!=null&&lng!=null?`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`:selected?.address?`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selected.address)}`:'';
-  return <aside className="lead-inspector phase-panel caramel">{selected?<><div className="phase-panel-head"><div><span className="eyebrow">LEAD DETAILS</span><h3>{selected.address||selected.customer_name||'Lead'}</h3></div><button className="icon-btn" onClick={clear}><XCircle size={18}/></button></div>
-    <div className="lead-inspector-status"><span>{humanStatus(selected.status)}</span><strong>{money(Number(selected.actual_sale_amount||selected.estimated_value||0))}</strong></div>
-    <div className="lead-health-row"><span className={score(selected)>=70?'lead-score hot':'lead-score'}>Lead Score {score(selected)}</span>{selected.follow_up_at&&new Date(selected.follow_up_at)<=new Date()&&<span className="overdue-pill">Follow-up overdue</span>}{archived&&<span className="archive-pill">Archived / protected</span>}</div>
-    {streetViewUrl&&<div className="property-preview-card"><div><Eye size={17}/><div><strong>Property Preview</strong><small>Open Street View to confirm the property before contact.</small></div></div><a href={streetViewUrl} target="_blank" rel="noreferrer">Street View <ExternalLink size={14}/></a></div>}
-    <dl className="detail-list"><div><dt>Name</dt><dd>{selected.customer_name||'—'}</dd></div><div><dt>Phone</dt><dd>{selected.phone||'—'}</dd></div><div><dt>Email</dt><dd>{selected.email||'—'}</dd></div><div><dt>Vehicle</dt><dd>{selected.vehicle_info||'—'}</dd></div><div><dt>Service</dt><dd>{selected.service_interest||'—'}</dd></div><div><dt>Rep</dt><dd>{reps.find(r=>r.id===selected.assigned_employee_id)?.name||'Unassigned'}</dd></div><div><dt>Follow-up</dt><dd>{when(selected.follow_up_at)}</dd></div><div><dt>Archive reason</dt><dd>{(selected as any).archive_reason||'—'}</dd></div><div><dt>Cooldown until</dt><dd>{(selected as any).cooldown_until?new Date((selected as any).cooldown_until).toLocaleDateString():'—'}</dd></div></dl>
-    <div className="lead-direct-actions">{selected.phone&&<><a href={`tel:${selected.phone}`}>Call</a><a href={`sms:${selected.phone}`}>Text</a></>}{selected.address&&<a target="_blank" rel="noreferrer" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selected.address)}`}>Map</a>}</div>
-    {!archived&&<div className="lead-status-actions">{['interested','follow_up','estimate','appointment_set','sold','not_interested','do_not_knock','lost'].map(s=><button type="button" key={s} className={selected.status===s?'active':''} onClick={()=>updateStatus(selected,s)}>{humanStatus(s)}</button>)}</div>}
-    <div className="lead-archive-actions">{archived?<button className="btn-primary" onClick={()=>restoreLead(selected)}><ArchiveRestore size={15}/>Reactivate Lead</button>:<button className="btn-outline" onClick={()=>archiveLead(selected)}><Archive size={15}/>Archive 6 Months</button>}</div>
-    {selected.notes&&<p className="lead-note">{selected.notes}</p>}
-  </>:<div className="empty-inspector"><Target size={32}/><h3>Select a lead or house</h3><p>Inspect customer details, update outcomes, and follow the lead into an estimate or appointment.</p></div>}</aside>
-}
 function DispatchCenter({employees,appointments,setAppointments}:{employees:Employee[];appointments:Appointment[];setAppointments:React.Dispatch<React.SetStateAction<Appointment[]>>}){
  return <DispatchCommandCenter employees={employees} appointments={appointments} setAppointments={setAppointments}/>;
 }
@@ -439,7 +384,7 @@ function CommandCenter({employees,appointments,customers,payments,onNavigate,own
        <p>Exceptions first. Then the numbers. Then the run.</p>
      </div>
      <div className="nsos-quick">
-       <button type="button" onClick={()=>go('leads')}><Target size={16}/>New Lead</button>
+       <button type="button" onClick={()=>{try{sessionStorage.setItem('ns-compose-lead','1')}catch{} go('leads')}}><Target size={16}/>New Lead</button>
        <button type="button" onClick={()=>go('appointments')}><Plus size={16}/>Book</button>
        <button type="button" onClick={()=>go('dispatch')}><CalendarClock size={16}/>Assign</button>
        <button type="button" onClick={()=>go('messages')}><MessageSquare size={16}/>Message</button>
