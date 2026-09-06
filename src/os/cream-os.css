@@ -531,7 +531,136 @@ html.nsos-active #root {
   color: #1c1814 !important;
   border-color: #e4d9cc !important;
 }
-.nsos-cream .portal-main .nsos-dir-row .dt-cell { display: grid; gap: 2px; }
+.nsos-cream .nsos-stripe-dash { gap: 14px !important; }
+.nsos-cream .nsos-stripe-dash .admin-stats-row {
+  display: grid !important;
+  grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+.nsos-cream .nsos-stripe-dash .admin-stat {
+  background: #fffdf8 !important;
+  border: 1px solid #e4d9cc !important;
+  color: #1c1814 !important;
+  border-radius: 14px !important;
+  padding: 14px !important;
+  box-shadow: 0 8px 24px rgba(48, 38, 28, .05) !important;
+  min-height: 96px;
+}
+.nsos-cream .nsos-stripe-dash .admin-stat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.nsos-cream .nsos-stripe-dash .admin-stat-header span {
+  color: #6f675e !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  letter-spacing: .08em !important;
+  text-transform: uppercase !important;
+}
+.nsos-cream .nsos-stripe-dash .admin-stat-icon {
+  width: 28px; height: 28px; border-radius: 8px;
+  display: grid; place-items: center;
+  background: #f6ead4 !important;
+  color: #b8893a !important;
+}
+.nsos-cream .nsos-stripe-dash .admin-stat strong {
+  color: #1c1814 !important;
+  font-size: 22px !important;
+}
+.nsos-cream .cashflow-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  height: 220px;
+  padding-top: 8px;
+}
+.nsos-cream .cashflow-bar-wrap {
+  flex: 1;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  height: 100%;
+  grid-template-rows: auto 1fr auto;
+}
+.nsos-cream .cashflow-bar-bg {
+  width: 100%;
+  max-width: 42px;
+  background: #efe8dc !important;
+  border: 1px solid #e4d9cc !important;
+  border-radius: 8px 8px 3px 3px;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  height: 100%;
+}
+.nsos-cream .cashflow-bar-fill {
+  width: 100%;
+  background: linear-gradient(180deg, #d4af37, #b8893a) !important;
+  min-height: 8px;
+}
+.nsos-cream .cashflow-amount, .nsos-cream .cashflow-label { color: #6f675e !important; font-size: 11px; }
+.nsos-cream .nsos-team-overview {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e4d9cc;
+  background: transparent !important;
+}
+.nsos-cream .team-stat {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  color: #1c1814;
+}
+.nsos-cream .team-stat svg { color: #b8893a; }
+.nsos-cream .nsos-stripe-dash .admin-row,
+.nsos-cream .nsos-team-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #e4d9cc;
+  color: #1c1814 !important;
+  background: transparent !important;
+}
+.nsos-cream .nsos-stripe-dash .admin-row:hover,
+.nsos-cream .nsos-team-row:hover {
+  background: #f7f1e8 !important;
+}
+.nsos-cream .nsos-stripe-dash .admin-row strong,
+.nsos-cream .nsos-team-row strong {
+  color: #1c1814 !important;
+}
+.nsos-cream .nsos-stripe-dash .admin-row span,
+.nsos-cream .nsos-stripe-dash .admin-row small,
+.nsos-cream .nsos-team-row span,
+.nsos-cream .nsos-team-row small {
+  color: #6f675e !important;
+}
+.nsos-cream .nsos-team-row .status-badge,
+.nsos-cream .nsos-stripe-dash .status-badge {
+  color: #3d5a4c !important;
+}
+.nsos-cream .nsos-team-row .admin-row-main { display: flex; gap: 10px; align-items: center; }
+.nsos-cream .nsos-team-row .admin-row-right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.nsos-cream .nsos-stripe-dash .team-overview {
+  background: transparent !important;
+  border: 0 !important;
+}
+.nsos-cream .admin-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 1100px) {
+  .nsos-cream .nsos-stripe-dash .admin-stats-row { grid-template-columns: repeat(3, 1fr) !important; }
+}
+@media (max-width: 860px) {
+  .nsos-cream .nsos-stripe-dash .admin-stats-row { grid-template-columns: 1fr 1fr !important; }
+  .nsos-cream .admin-two-col { grid-template-columns: 1fr !important; }
+  .nsos-cream .nsos-team-overview { grid-template-columns: 1fr 1fr 1fr; }
+}
 
 .nsos-seg {
   display: grid;

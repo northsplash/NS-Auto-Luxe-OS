@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
-  Bell, CalendarClock, CalendarDays, Check, ChevronRight, Clock3, CreditCard, DollarSign, GripVertical, MapPin, MessageCircle, Navigation, Plus, Search, Send, Smartphone, Target, Trash2, Users,
+  Activity, BarChart2, Bell, Calendar, CalendarClock, CalendarDays, Car, Check, ChevronRight, Clock3, CreditCard, DollarSign, GripVertical, MapPin, MessageCircle, Navigation, Plus, Search, Send, Smartphone, Target, Trash2, TrendingUp, UserCheck, Users,
 } from 'lucide-react';
 import AddEmployeeForm from '@/components/AddEmployeeForm';
 import { channelLabel, COMM_GROUPS, COMM_VARIABLES, fillTemplate, SAMPLE_VARS } from '@/lib/communicationCatalog';
@@ -243,6 +243,139 @@ export function OwnerDashboard({
             <button className="nsos-btn ghost" onClick={onNewEmployee}>Hire</button>
             <button className="nsos-btn ghost" onClick={onOpenPayments}>Collect</button>
           </div>
+        </section>
+      </div>
+    </div>
+  );
+}
+
+function employeeLevel(e: OsEmployee) {
+  if (e.role === 'owner') return 5;
+  if (e.role === 'manager' || e.role === 'admin') return 4;
+  if (e.role === 'detailer') return 3;
+  return 2;
+}
+
+export function OwnerStripeDashboard({
+  onOpenJob, onOpenSchedule, onOpenTeam,
+}: {
+  onOpenJob?: (id: string) => void;
+  onOpenSchedule?: () => void;
+  onOpenTeam?: () => void;
+}) {
+  const { jobs, payments, employees, customers } = useOs();
+  const collected = payments.filter((p) => p.status === 'succeeded').reduce((s, p) => s + p.amount, 0);
+  const monthRevenue = jobs.filter((j) => j.time.includes('Today') || j.time.includes('Tomorrow') || j.status === 'completed').reduce((s, j) => s + j.price, 0);
+  const detailers = employees.filter((e) => e.role === 'detailer');
+  const d2dAgents = employees.filter((e) => e.role === 'd2d_agent');
+  const managers = employees.filter((e) => e.role === 'manager');
+  const months = [
+    { label: 'Apr', revenue: Math.round(collected * .55) },
+    { label: 'May', revenue: Math.round(collected * .68) },
+    { label: 'Jun', revenue: Math.round(collected * .74) },
+    { label: 'Jul', revenue: Math.round(collected * .81) },
+    { label: 'Aug', revenue: Math.round(collected * .9) },
+    { label: 'Sep', revenue: Math.max(collected, monthRevenue) },
+  ];
+  const maxRevenue = Math.max(1, ...months.map((m) => m.revenue));
+  const recent = [...jobs].slice(0, 5);
+  const roster = [...employees]
+    .map((e) => ({ e, jobs: jobs.filter((j) => j.detailer === e.name).length }))
+    .sort((a, b) => {
+      if (a.e.role === 'owner') return -1;
+      if (b.e.role === 'owner') return 1;
+      return b.jobs - a.jobs || a.e.name.localeCompare(b.e.name);
+    })
+    .slice(0, 4);
+
+  return (
+    <div className="tab-content admin-dashboard nsos-stripe-dash">
+      <div className="admin-stats-row">
+        <div className="admin-stat stat-gold">
+          <div className="admin-stat-header"><span>Total Revenue</span><div className="admin-stat-icon"><DollarSign size={16} /></div></div>
+          <strong>{money(collected)}</strong>
+        </div>
+        <div className="admin-stat">
+          <div className="admin-stat-header"><span>This Month</span><div className="admin-stat-icon"><TrendingUp size={16} /></div></div>
+          <strong>{money(monthRevenue)}</strong>
+        </div>
+        <div className="admin-stat">
+          <div className="admin-stat-header"><span>Customers</span><div className="admin-stat-icon"><Users size={16} /></div></div>
+          <strong>{customers.length}</strong>
+        </div>
+        <div className="admin-stat">
+          <div className="admin-stat-header"><span>Appointments</span><div className="admin-stat-icon"><Calendar size={16} /></div></div>
+          <strong>{jobs.length}</strong>
+        </div>
+        <div className="admin-stat">
+          <div className="admin-stat-header"><span>Team Members</span><div className="admin-stat-icon"><UserCheck size={16} /></div></div>
+          <strong>{employees.length}</strong>
+        </div>
+        <div className="admin-stat">
+          <div className="admin-stat-header"><span>Site Visits (30d)</span><div className="admin-stat-icon"><Activity size={16} /></div></div>
+          <strong>141</strong>
+        </div>
+      </div>
+
+      <section className="phase-panel nsos-cashflow">
+        <div className="phase-panel-head"><div><span className="eyebrow">STRIPE</span><h3><BarChart2 size={16} /> Monthly Cash Flow</h3></div></div>
+        <div className="cashflow-chart">
+          {months.map((m) => (
+            <div className="cashflow-bar-wrap" key={m.label}>
+              <div className="cashflow-amount">{money(m.revenue)}</div>
+              <div className="cashflow-bar-bg">
+                <div className="cashflow-bar-fill" style={{ height: `${Math.max(8, (m.revenue / maxRevenue) * 100)}%` }} />
+              </div>
+              <div className="cashflow-label">{m.label}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <div className="admin-two-col">
+        <section className="phase-panel">
+          <div className="phase-panel-head">
+            <div><span className="eyebrow">JOBBER</span><h3><Calendar size={16} /> Recent Appointments</h3></div>
+            <button className="btn-outline btn-sm" onClick={onOpenSchedule}>View all</button>
+          </div>
+          {recent.map((j) => (
+            <button className="nsos-job" key={j.id} onClick={() => onOpenJob?.(j.id)} style={{ width: '100%', textAlign: 'left' }}>
+              <div>
+                <strong>{j.service}</strong>
+                <div style={{ color: 'var(--os-muted)', fontSize: 12 }}>{j.customer} · {j.time}</div>
+              </div>
+              <span className={statusClass(j.status)}>{j.status.replaceAll('_', ' ')}</span>
+            </button>
+          ))}
+          {recent.length === 0 && <div className="ns-empty">No appointments yet.</div>}
+        </section>
+
+        <section className="phase-panel">
+          <div className="phase-panel-head">
+            <div><span className="eyebrow">RIPPLING</span><h3><UserCheck size={16} /> Team Overview</h3></div>
+            <button className="btn-outline btn-sm" onClick={onOpenTeam}>View all</button>
+          </div>
+          <div className="team-overview nsos-team-overview">
+            <div className="team-stat"><Car size={18} /><div><strong>{detailers.length}</strong><span>Detailers</span></div></div>
+            <div className="team-stat"><Users size={18} /><div><strong>{d2dAgents.length}</strong><span>D2D Agents</span></div></div>
+            <div className="team-stat"><UserCheck size={18} /><div><strong>{managers.length}</strong><span>Managers</span></div></div>
+          </div>
+          {roster.map(({ e, jobs: jobCount }) => (
+            <div className="admin-row nsos-team-row" key={e.id}>
+              <div className="admin-row-main">
+                <Avatar initials={e.initials} hue={e.hue} photo={e.photo} size={32} />
+                <span>
+                  <strong>{e.name}</strong>
+                  <small>{e.title}</small>
+                </span>
+              </div>
+              <div className="admin-row-right">
+                <span className="status-badge st-confirmed">{e.role.replaceAll('_', ' ')}</span>
+                <span className="nsos-pill">Level {employeeLevel(e)}</span>
+                <small>{jobCount} {jobCount === 1 ? 'job' : 'jobs'}</small>
+              </div>
+            </div>
+          ))}
         </section>
       </div>
     </div>

@@ -45,7 +45,8 @@ The two cores: **SalesRabbit** for territory maps, pins, knocks, and canvassing;
 
 ## What you can do in this slice
 
-- Owner Command Center with glance KPIs, revenue, today’s schedule, attention, team, and booking flow
+- Owner Dashboard: six KPIs, monthly cash flow, recent appointments, and team overview (Stripe layout)
+- Owner Command Center with glance KPIs, exceptions, today’s schedule, and booking flow
 - Rippling-style people directory and profile tabs
 - ServiceTitan dispatch: unassigned rail, tech columns, drag-to-assign
 - SalesRabbit D2D: tall map, West / Central / East areas, knock outcomes, book-the-door

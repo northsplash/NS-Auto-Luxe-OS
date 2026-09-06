@@ -11,7 +11,7 @@ import { money } from '@/lib/data';
 import { OsProvider, useOs } from './osStore';
 import {
   CalendarView, CommsView, CustomersView, D2DView, DispatchView, HireModal, HireView, JobDetail,
-  JobsHome, OwnerDashboard, PaymentsView, PeopleHome, PeopleProfile, PipelineView, ReportsView, ScheduleView,
+  JobsHome, OwnerDashboard, OwnerStripeDashboard, PaymentsView, PeopleHome, PeopleProfile, PipelineView, ReportsView, ScheduleView,
   SettingsView,
 } from './views';
 import TeamMessagesView from './TeamMessagesView';
@@ -101,7 +101,7 @@ const PAGE: Record<OsTab, [string, string, string]> = {
   payroll_approval: ['Finance', 'Timesheets', 'Review hours before payroll cutoff.'],
   training: ['People', 'Training', 'Onboarding and field training assigned to the roster.'],
   command_center: ['Owner', 'Command Center', 'Stripe-style operating snapshot — jobs, cash, and the field.'],
-  dashboard: ['Owner', 'Dashboard', 'The same command center, focused on searchable operational KPIs.'],
+  dashboard: ['Owner', 'Dashboard', 'Stripe layout: six KPIs, monthly cash flow, appointments, and team.'],
   owner_growth: ['Owner', 'Growth', 'Pipeline, canvassing, and booking targets.'],
   owner_profits: ['Owner', 'Profit', 'Collected vs open invoices from live jobs.'],
   payment_test: ['Finance', 'Pay test', 'Collect, refund, and retry from the Square-style ledger.'],
@@ -142,7 +142,7 @@ const PAGE: Record<OsTab, [string, string, string]> = {
 };
 
 const TAB_SHORT: Record<OsTab, string> = {
-  dashboard: 'Dashboard', command_center: 'Command Center', owner_growth: 'Growth Planner', owner_profits: 'Profit Tracker', payment_test: '% Payment Test',
+  dashboard: 'Dashboard', command_center: 'Command Center', owner_growth: 'Growth Planner', owner_profits: 'Profit Tracker', payment_test: '1¢ Payment Test',
   sales: 'Map', leads: 'Pipeline', territories: 'Streets', marketing: 'Campaigns', retention: 'Follow-up',
   customers: 'Directory', crm: 'Records', appointments: 'Calendar', schedule: 'Windows', availability: 'Slots', archived: 'History', fleet: 'Fleets',
   jobs: 'Jobs', dispatch: 'Board', job_assignments: 'Assign', inventory: 'Stock', equipment: 'Assets', tasks: 'Tasks', documents: 'Files', notifications: 'Alerts', purchasing: 'Buy', incidents: 'Issues', approvals: 'Approvals',
@@ -208,9 +208,9 @@ function OsShell() {
     try {
       const fromUrl = new URLSearchParams(window.location.search).get('tab');
       if (fromUrl) return (LEGACY[fromUrl] || fromUrl) as OsTab;
-      const raw = sessionStorage.getItem('ns-os-tab') || sessionStorage.getItem('ns-os-view') || 'command_center';
-      return (LEGACY[raw] || raw || 'command_center') as OsTab;
-    } catch { return 'command_center'; }
+      const raw = sessionStorage.getItem('ns-os-tab') || sessionStorage.getItem('ns-os-view') || 'dashboard';
+      return (LEGACY[raw] || raw || 'dashboard') as OsTab;
+    } catch { return 'dashboard'; }
   });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
@@ -279,7 +279,7 @@ function OsShell() {
     setPeopleId(emp.id);
   };
 
-  const homeTab: OsTab = mode === 'd2d' ? 'sales' : mode === 'detailer' ? 'jobs' : mode === 'admin' ? 'communications' : 'command_center';
+  const homeTab: OsTab = mode === 'd2d' ? 'sales' : mode === 'detailer' ? 'jobs' : mode === 'admin' ? 'communications' : 'dashboard';
   const currentWorkspace = WORKSPACES.find((w) => w.items.includes(tab)) ?? WORKSPACES[4];
   const currentNav = nav(tab);
   const phoneHome = mode === 'd2d'
@@ -364,7 +364,16 @@ function OsShell() {
     }
     if (tab === 'payments' || tab === 'finance' || tab === 'payment_test') return <PaymentsView />;
     if (tab === 'reports' || tab === 'owner_growth' || tab === 'owner_profits') return <ReportsView />;
-    if (tab === 'command_center' || tab === 'dashboard') {
+    if (tab === 'dashboard') {
+      return (
+        <OwnerStripeDashboard
+          onOpenJob={openJob}
+          onOpenSchedule={() => go('appointments')}
+          onOpenTeam={() => go('employees')}
+        />
+      );
+    }
+    if (tab === 'command_center') {
       return (
         <OwnerDashboard
           onOpenJob={openJob}
@@ -393,7 +402,7 @@ function OsShell() {
     <div className={`portal-layout nsos-admin-preview admin-os nsos-cream os-tab-${tab}${moreOpen ? ' os-more-open' : ''} os-mode-${mode}`}>
       <aside className={`portal-sidebar admin-sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <div className="sidebar-header">
-          <Link to="/" className="sidebar-brand" onClick={() => go('command_center')}>
+          <Link to="/" className="sidebar-brand" onClick={() => go('dashboard')}>
             <img className="portal-brand-logo" src="/ns-auto-luxe-logo.svg" alt="North Splash Auto Luxe" />
             <div><strong>North Splash</strong><small>Auto Luxe OS</small></div>
           </Link>
@@ -600,7 +609,7 @@ function OsShell() {
             </div>
             <div className="os-more-sheet-label">Switch mode</div>
             <div className="os-mode-row">
-              <button className={mode === 'owner' ? 'active' : ''} onClick={() => { setMode('owner'); go('command_center'); }}><strong>Owner</strong><small>Command</small></button>
+              <button className={mode === 'owner' ? 'active' : ''} onClick={() => { setMode('owner'); go('dashboard'); }}><strong>Owner</strong><small>Dashboard</small></button>
               <button className={mode === 'd2d' ? 'active' : ''} onClick={() => { setMode('d2d'); go('sales'); }}><strong>D2D</strong><small>Canvass</small></button>
               <button className={mode === 'detailer' ? 'active' : ''} onClick={() => { setMode('detailer'); go('jobs'); }}><strong>Detailer</strong><small>Run jobs</small></button>
               <button className={mode === 'admin' ? 'active' : ''} onClick={() => { setMode('admin'); go('communications'); }}><strong>Admin</strong><small>Templates</small></button>
