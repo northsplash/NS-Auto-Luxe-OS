@@ -136,7 +136,7 @@ export default function EmployeeOnboardingTab({ employee, onUpdated }: Props) {
     <div className="nsos-onboard-flow live-onboard-v29">
       <div className="nsos-onboard-hero">
         <div>
-          <span className="nsos-eyebrow eyebrow">Gusto-style packet</span>
+          <span className="nsos-eyebrow eyebrow">Onboarding packet</span>
           <h3>Finish hiring {firstWord(employee.name)}</h3>
           <p>The hire fills this in. North Splash stores last-four identifiers only — never a full Social or full account number.</p>
         </div>

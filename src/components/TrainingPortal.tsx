@@ -183,7 +183,7 @@ export default function TrainingPortal({ employee }: { employee: Employee }) {
         <button className="btn-outline" onClick={() => { setActive(null); setResult(''); }}>← Training</button>
         <div className="training-course-hero">
           <div>
-            <span className="eyebrow">{academy ? `NEW HIRE · ${academy.modeled.toUpperCase()}` : 'TRAINING MODULE'}</span>
+            <span className="eyebrow">{academy ? 'NEW HIRE ACADEMY' : 'TRAINING MODULE'}</span>
             <h2>{course?.title || academy?.title || 'Course'}</h2>
             <p>{course?.description || academy?.description}</p>
           </div>
@@ -285,7 +285,7 @@ export default function TrainingPortal({ employee }: { employee: Employee }) {
             <button className="training-card" key={a.id} onClick={() => openCourse(a)}>
               <div className="training-card-icon">{complete ? <CheckCircle2 /> : failed ? <XCircle /> : <BookOpen />}</div>
               <div>
-                <small>{academy?.modeled || c?.category || 'Training'}</small>
+                <small>{academy?.track === 'd2d' ? 'Door to door' : academy?.track === 'detail' ? 'Detailing' : c?.category || 'Training'}</small>
                 <h3>{c?.title || academy?.title || 'Assigned course'}</h3>
                 <p>{c?.description || academy?.description}</p>
                 <div className="training-meta">

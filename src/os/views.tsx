@@ -607,7 +607,7 @@ export function ScheduleView() {
         <span style={{ color: 'var(--os-muted)', fontSize: 12 }}>Drag a shift between days, or add from the bench onto a column.</span>
       </div>
       <div className="nsos-card">
-        <span className="nsos-eyebrow">Deputy-style board</span>
+        <span className="nsos-eyebrow">Staff board</span>
         <h3>This week</h3>
         <div className="nsos-kanban nsos-week" style={{ marginTop: 12 }}>
           {SHIFT_DAYS.map((d) => (
@@ -734,7 +734,7 @@ export function CalendarView({ onOpen }: { onOpen: (id: string) => void }) {
     <div className="nsos-cal">
       <div className="nsos-cal-toolbar">
         <div>
-          <span className="nsos-eyebrow">Jobber calendar</span>
+          <span className="nsos-eyebrow">Appointment calendar</span>
           <h3>{label}</h3>
         </div>
         <button className="nsos-btn" onClick={() => setOpen((v) => !v)}><Plus size={14} />New appointment</button>
@@ -983,7 +983,7 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
         <div className="nsos-sr-doors nsos-sr-doors-board">
           <div className="nsos-sr-doors-head">
             <div>
-              <span className="nsos-eyebrow">SalesRabbit doors</span>
+              <span className="nsos-eyebrow">Neighborhood doors</span>
               <h3>{pins.length} households in {zone === 'all' ? 'all areas' : zone}</h3>
             </div>
             <div className="nsos-tabs">
@@ -1161,7 +1161,7 @@ export function CustomersView({ onOpenJob }: { onOpenJob?: (id: string) => void 
         ))}
       </div>
       <div className="nsos-card">
-        <span className="nsos-eyebrow">HubSpot-style record</span>
+        <span className="nsos-eyebrow">Customer record</span>
         <h3>{customer.name}</h3>
         <p style={{ color: 'var(--os-muted)' }}>{customer.email} · {customer.phone}</p>
         <p style={{ color: 'var(--os-muted)', marginBottom: 12 }}>{customer.address} · {customer.vehicle}</p>
@@ -1353,7 +1353,7 @@ export function JobDetail({ job }: { job: OsJob }) {
       <section className="nsos-card" style={{ marginTop: 14 }}>
         <span className="nsos-eyebrow">Customer messages</span>
         <h3>Email + SMS on this job</h3>
-        {(job.comms || []).length === 0 && <p className="nsos-empty">Advance the status bar to send the matching Housecall / Uber-style templates.</p>}
+        {(job.comms || []).length === 0 && <p className="nsos-empty">Advance the status bar to send the matching customer templates.</p>}
         {(job.comms || []).map((c) => (
           <div className="nsos-job" key={c.id}>
             <div>
@@ -1463,7 +1463,7 @@ export function HireView({ onHire, onOpen }: { onHire: (name?: string, title?: s
     <div className="nsos-hire">
       <div className="nsos-hire-head">
         <div>
-          <span className="nsos-eyebrow">Gusto / ADP</span>
+          <span className="nsos-eyebrow">Hiring packet</span>
           <h3>Hiring pipeline</h3>
           <p>Move a candidate through screen → offer, then convert. The hire lands in an onboarding packet: headshot, legal name, tax, and deposit.</p>
         </div>
@@ -1548,9 +1548,9 @@ export function SettingsView() {
             <input type="number" value={s.depositPercent} onChange={(e) => os.saveSettings({ depositPercent: Number(e.target.value) })} />
           </label>
         )}
-        {page === 'payments' && <p>Square-style transactions live in Payments. Collect on the job, refund from the ledger, retry failed memberships.</p>}
+        {page === 'payments' && <p>Transactions live in Payments. Collect on the job, refund from the ledger, retry failed memberships.</p>}
         {page === 'notifications' && (
-          <p>Job status changes fire enabled templates. Collect and refund now send Square-style payment messages too. Edit copy in Communications.</p>
+          <p>Job status changes fire enabled templates. Collect and refund send payment messages too. Edit copy in Communications.</p>
         )}
         {page === 'team' && <p>Owner, admin, manager, detailer, D2D, office, finance, recruiter — plus custom titles. Pay is never locked to a role.</p>}
         {page === 'data' && (
@@ -1584,7 +1584,7 @@ export function CommsView() {
   const stepNow = liveJob ? stepIndex(liveJob.status) : 1;
   return (
     <div>
-      <p className="nsos-comm-lead">Housecall Pro automation + Jobber templates + Square confirmations + Uber-style day-of SMS. Status changes on a job fire these — nobody in the office has to text the customer.</p>
+      <p className="nsos-comm-lead">Status changes on a job fire these templates — nobody in the office has to text the customer.</p>
       <div className="nsos-status" style={{ marginBottom: 16 }}>
         {JOB_STEP_LABELS.map((s, i) => <span key={s} className={i < stepNow ? 'done' : i === stepNow ? 'now' : ''}>{s}</span>)}
       </div>
@@ -1701,20 +1701,20 @@ export function HireModal({
 
 export function MoreGrid({ onPick }: { onPick: (id: string) => void }) {
   const items = [
-    ['home', 'Owner dashboard', 'Stripe-style KPIs'],
-    ['people', 'Employees', 'Homebase + Rippling directory'],
-    ['schedule', 'Hours', 'Deputy scheduling'],
-    ['calendar', 'Appointments', 'Jobber calendar'],
-    ['dispatch', 'Dispatch', 'ServiceTitan board'],
-    ['d2d', 'D2D portal', 'SalesRabbit map'],
-    ['pipeline', 'Lead pipeline', 'SPOTIO + HubSpot'],
-    ['customers', 'Customers', 'HubSpot CRM'],
-    ['jobs', 'Detailer jobs', 'Housecall Pro'],
-    ['payments', 'Payments', 'Square'],
-    ['reports', 'Reports', 'Stripe analytics'],
-    ['hire', 'Hiring', 'Gusto onboarding'],
-    ['comms', 'Communications', 'Housecall Pro automations'],
-    ['settings', 'Settings', 'Stripe settings nav'],
+    ['home', 'Owner dashboard', 'Jobs, cash, and exceptions'],
+    ['people', 'Employees', 'Directory and pay mix'],
+    ['schedule', 'Hours', 'Shifts and availability'],
+    ['calendar', 'Appointments', 'Customer calendar'],
+    ['dispatch', 'Dispatch', 'Technician columns'],
+    ['d2d', 'D2D portal', 'Neighborhood map'],
+    ['pipeline', 'Lead pipeline', 'Stages and ownership'],
+    ['customers', 'Customers', 'Household records'],
+    ['jobs', 'Detailer jobs', 'Live job packets'],
+    ['payments', 'Payments', 'Ledger and refunds'],
+    ['reports', 'Reports', 'KPI snapshot'],
+    ['hire', 'Hiring', 'Onboarding packets'],
+    ['comms', 'Communications', 'Status templates'],
+    ['settings', 'Settings', 'Company and locations'],
     ['chat', 'Chat', 'Google Chat / Teams'],
   ] as const;
   return (
