@@ -1088,6 +1088,7 @@
 .auth-page .auth-card {
   background: #fffdf8 !important;
   color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
   border: 0 !important;
   border-left: 1px solid #eadfd3 !important;
   border-radius: 0 !important;
