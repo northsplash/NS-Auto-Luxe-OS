@@ -61,6 +61,7 @@ The two cores: **SalesRabbit** for territory maps, pins, knocks, and canvassing;
 - ServiceTitan dispatch: unassigned rail, tech columns, drag-to-assign
 - SalesRabbit D2D: tall map, West / Central / East areas, knock outcomes, door list, book-the-door
 - HubSpot pipeline: exceptions first, New Lead, drag between stages, assign a rep, and book a job from the inspector
+- Every Owner/Admin workspace item is on `/os`: Sales (map, pipeline, streets, campaigns, follow-up), Customers (directory, records, photos, calendar, windows, slots, history, fleets), Operations (jobs through approvals), People (team through training), Finance (payroll, ledger, analytics, pay mix), and Admin (access through traffic)
 - Client photos: import before/after and portfolio shots onto a customer. Open **Customers → Client photos**, or import from a CRM record. Attach to a visit when the job already exists.
 - Jobber appointments (stage filters, customer, address) and job detail with Uber-style live status stepper
 - Square payments, Gusto hiring pipeline, Stripe settings

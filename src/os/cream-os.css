@@ -1466,3 +1466,62 @@ html.nsos-active #root {
   font-size: 13px !important;
   letter-spacing: .02em;
 }
+
+.nsos-cream .nsos-board-sub {
+  color: var(--os-muted, #6f675e);
+  font-size: 12px;
+  margin-top: 2px;
+}
+.nsos-cream .nsos-board-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.nsos-cream .nsos-board-empty { text-align: left; }
+.nsos-cream .nsos-photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+.nsos-cream .nsos-photo-tile {
+  margin: 0;
+  background: var(--ns-paper, #fffdf8);
+  border: 1px solid var(--ns-line, #e4d9cc);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.nsos-cream .nsos-photo-tile img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  display: block;
+}
+.nsos-cream .nsos-photo-tile figcaption {
+  padding: 10px 12px 12px;
+}
+.nsos-cream .nsos-photo-tile strong { display: block; font-size: 13px; }
+.nsos-cream .nsos-photo-tile small { color: var(--os-muted, #6f675e); }
+.nsos-cream .nsos-perm-table .nsos-perm-head,
+.nsos-cream .nsos-perm-table .nsos-perm-row {
+  display: grid;
+  grid-template-columns: minmax(110px, 1.5fr) repeat(5, minmax(48px, 1fr));
+  align-items: center;
+  gap: 8px;
+}
+.nsos-cream .nsos-perm-table .nsos-perm-head {
+  font-size: 11px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--os-muted, #6f675e);
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--ns-line, #e4d9cc);
+}
+@media (max-width: 720px) {
+  .nsos-cream .nsos-perm-table .nsos-perm-head { display: none; }
+  .nsos-cream .nsos-perm-table .nsos-perm-row {
+    grid-template-columns: 1fr 1fr;
+    padding: 12px 0;
+  }
+}

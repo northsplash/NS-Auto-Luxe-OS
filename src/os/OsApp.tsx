@@ -1,7 +1,7 @@
 import { Component, useEffect, useState, type ErrorInfo, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Archive, Bell, BriefcaseBusiness, Calendar, CalendarClock, Car, CheckCircle2, ClipboardCheck,
+  Archive, Bell, BriefcaseBusiness, Calendar, CalendarClock, Camera, Car, CheckCircle2, ClipboardCheck,
   Clock3, CreditCard, DollarSign, FileText, Gauge, Globe, LayoutDashboard, ListChecks, LogOut, Mail,
   Menu, MessageCircle, MoreHorizontal, PackageSearch, Plus, ScrollText, Search, Settings2, ShieldCheck,
   Target, Trash2, TrendingUp, UserCheck, Users, Wrench, X,
@@ -15,11 +15,12 @@ import {
   SettingsView,
 } from './views';
 import TeamMessagesView from './TeamMessagesView';
+import { DEMO_BOARD_TABS, DemoWorkspacePage, type DemoBoardTab } from './WorkspacePages';
 
 export type OsTab =
   | 'dashboard' | 'command_center' | 'owner_growth' | 'owner_profits' | 'payment_test'
   | 'sales' | 'leads' | 'territories' | 'marketing' | 'retention'
-  | 'customers' | 'crm' | 'appointments' | 'schedule' | 'availability' | 'archived' | 'fleet'
+  | 'customers' | 'crm' | 'client_photos' | 'appointments' | 'schedule' | 'availability' | 'archived' | 'fleet'
   | 'dispatch' | 'jobs' | 'job_assignments' | 'inventory' | 'equipment' | 'tasks' | 'documents' | 'notifications'
   | 'purchasing' | 'incidents' | 'approvals'
   | 'employees' | 'crews' | 'recruiting' | 'messages' | 'staff_schedule' | 'timeclock' | 'time_off'
@@ -61,6 +62,7 @@ const NAV: NavItem[] = [
   { id: 'permissions', label: 'Portal Permissions', Icon: ShieldCheck },
   { id: 'audit', label: 'Audit Log', Icon: ScrollText },
   { id: 'crm', label: 'Customer CRM', Icon: Users },
+  { id: 'client_photos', label: 'Client photos', Icon: Camera },
   { id: 'dispatch', label: 'Dispatch Board', Icon: CalendarClock },
   { id: 'jobs', label: 'Jobs', Icon: BriefcaseBusiness },
   { id: 'crews', label: 'Crew Command', Icon: Users },
@@ -82,12 +84,12 @@ const NAV: NavItem[] = [
 
 const WORKSPACES = [
   { id: 'owner', label: 'Owner', Icon: ShieldCheck, items: ['command_center', 'owner_growth', 'owner_profits', 'payment_test'] as OsTab[] },
-  { id: 'sales', label: 'Sales', Icon: Target, items: ['sales', 'leads', 'territories'] as OsTab[] },
-  { id: 'customers', label: 'Customers', Icon: Users, items: ['customers', 'appointments', 'availability', 'fleet'] as OsTab[] },
-  { id: 'operations', label: 'Operations', Icon: ListChecks, items: ['jobs', 'dispatch', 'job_assignments'] as OsTab[] },
-  { id: 'people', label: 'People', Icon: UserCheck, items: ['employees', 'messages', 'staff_schedule', 'recruiting'] as OsTab[] },
-  { id: 'finance', label: 'Finance', Icon: DollarSign, items: ['payments', 'reports', 'finance'] as OsTab[] },
-  { id: 'admin', label: 'Admin', Icon: Settings2, items: ['communications', 'permissions', 'locations'] as OsTab[] },
+  { id: 'sales', label: 'Sales', Icon: Target, items: ['sales', 'leads', 'territories', 'marketing', 'retention'] as OsTab[] },
+  { id: 'customers', label: 'Customers', Icon: Users, items: ['customers', 'crm', 'client_photos', 'appointments', 'schedule', 'availability', 'archived', 'fleet'] as OsTab[] },
+  { id: 'operations', label: 'Operations', Icon: ListChecks, items: ['jobs', 'dispatch', 'job_assignments', 'inventory', 'equipment', 'tasks', 'documents', 'notifications', 'purchasing', 'incidents', 'approvals'] as OsTab[] },
+  { id: 'people', label: 'People', Icon: UserCheck, items: ['employees', 'crews', 'recruiting', 'messages', 'staff_schedule', 'timeclock', 'time_off', 'payroll_approval', 'training'] as OsTab[] },
+  { id: 'finance', label: 'Finance', Icon: DollarSign, items: ['finance', 'payments', 'reports', 'pay_settings'] as OsTab[] },
+  { id: 'admin', label: 'Admin', Icon: Settings2, items: ['permissions', 'communications', 'automations', 'locations', 'continuity', 'audit', 'visitors'] as OsTab[] },
 ];
 
 const PAGE: Record<OsTab, [string, string, string]> = {
@@ -112,6 +114,7 @@ const PAGE: Record<OsTab, [string, string, string]> = {
   retention: ['Customers', 'Follow-up', '30-day and 90-day “time for your next detail?”.'],
   customers: ['Customers', 'Directory', 'Household, vehicle, timeline, notes, and communications.'],
   crm: ['Customers', 'Records', 'Notes and history on every household.'],
+  client_photos: ['Customers', 'Photos', 'Before/after and portfolio shots on the household.'],
   appointments: ['Customers', 'Calendar', 'Jobs attached to customers, with assignment.'],
   schedule: ['Customers', 'Windows', 'Upcoming windows and assigned detailers.'],
   availability: ['Customers', 'Open slots', 'Open slots the booking flow can use.'],
@@ -144,7 +147,7 @@ const PAGE: Record<OsTab, [string, string, string]> = {
 const TAB_SHORT: Record<OsTab, string> = {
   dashboard: 'Command Center', command_center: 'Command Center', owner_growth: 'Growth', owner_profits: 'Profits', payment_test: 'Payment Test',
   sales: 'Map', leads: 'Pipeline', territories: 'Streets', marketing: 'Campaigns', retention: 'Follow-up',
-  customers: 'Directory', crm: 'Records', appointments: 'Calendar', schedule: 'Windows', availability: 'Slots', archived: 'History', fleet: 'Fleets',
+  customers: 'Directory', crm: 'Records', client_photos: 'Photos', appointments: 'Calendar', schedule: 'Windows', availability: 'Slots', archived: 'History', fleet: 'Fleets',
   jobs: 'Jobs', dispatch: 'Board', job_assignments: 'Assign', inventory: 'Stock', equipment: 'Assets', tasks: 'Tasks', documents: 'Files', notifications: 'Alerts', purchasing: 'Buy', incidents: 'Issues', approvals: 'Approvals',
   employees: 'Team', staff_schedule: 'Schedule', recruiting: 'Hiring', messages: 'Chat', crews: 'Crews', timeclock: 'Clock', time_off: 'Time off', payroll_approval: 'Timesheets', training: 'Training',
   payments: 'Ledger', reports: 'Analytics', finance: 'Payroll', pay_settings: 'Pay mix',
@@ -306,7 +309,7 @@ function OsShell() {
         ? ['communications', 'automations', 'permissions', 'locations', 'continuity', 'audit', 'visitors'].includes(tab)
         : ['dashboard', 'command_center', 'owner_growth', 'owner_profits', 'payment_test'].includes(tab);
   const phoneChat = tab === 'messages';
-  const phoneCal = ['appointments', 'schedule', 'availability', 'staff_schedule'].includes(tab);
+  const phoneCal = ['appointments', 'schedule', 'availability', 'archived', 'staff_schedule'].includes(tab);
   const phoneTeam = tab === 'employees';
   const phoneMore = moreOpen || !(phoneHome || phoneChat || phoneCal || phoneTeam);
   const person = os.employees.find((e) => e.id === peopleId);
@@ -367,7 +370,7 @@ function OsShell() {
       if (person) return <PeopleProfile employee={person} />;
       return <PeopleHome employees={os.employees} onOpen={setPeopleId} onHire={() => { setHirePreset(undefined); setHireOpen(true); }} />;
     }
-    if (tab === 'recruiting' || tab === 'training') {
+    if (tab === 'recruiting') {
       return (
         <HireView
           onHire={(name, title) => { setHirePreset({ name: name || '', title: title || '' }); setHireOpen(true); }}
@@ -375,14 +378,17 @@ function OsShell() {
         />
       );
     }
-    if (tab === 'staff_schedule' || tab === 'timeclock' || tab === 'time_off' || tab === 'payroll_approval') return <ScheduleView />;
-    if (tab === 'crews' || tab === 'dispatch' || tab === 'job_assignments') return <DispatchView onOpen={openJob} />;
-    if (tab === 'sales' || tab === 'territories' || tab === 'marketing' || tab === 'retention') return <D2DView onBook={openJob} onPipeline={() => go('leads')} />;
+    if (tab === 'staff_schedule') return <ScheduleView />;
+    if (tab === 'dispatch' || tab === 'job_assignments') return <DispatchView onOpen={openJob} />;
+    if (tab === 'sales' || tab === 'territories') return <D2DView onBook={openJob} onPipeline={() => go('leads')} />;
     if (tab === 'leads') return <PipelineView onBook={openJob} />;
-    if (tab === 'customers' || tab === 'crm' || tab === 'fleet') return <CustomersView onOpenJob={openJob} />;
-    if (tab === 'appointments' || tab === 'schedule' || tab === 'availability' || tab === 'archived') {
+    if (tab === 'customers' || tab === 'crm') return <CustomersView onOpenJob={openJob} />;
+    if (tab === 'appointments' || tab === 'schedule') {
       if (job && tab === 'appointments') return <JobDetail job={job} />;
       return <CalendarView onOpen={openJob} />;
+    }
+    if ((DEMO_BOARD_TABS as readonly string[]).includes(tab)) {
+      return <DemoWorkspacePage tab={tab as DemoBoardTab} onOpenJob={openJob} />;
     }
     if (tab === 'jobs') {
       if (job) return <JobDetail job={job} />;
@@ -407,7 +413,7 @@ function OsShell() {
         />
       );
     }
-    if (tab === 'communications' || tab === 'automations' || tab === 'notifications') return <CommsView />;
+    if (tab === 'communications' || tab === 'automations') return <CommsView />;
     return <SettingsView />;
   })();
 
