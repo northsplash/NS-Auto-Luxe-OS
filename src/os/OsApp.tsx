@@ -11,7 +11,7 @@ import { money } from '@/lib/data';
 import { OsProvider, useOs } from './osStore';
 import {
   CalendarView, CommsView, CustomersView, D2DView, DispatchView, HireModal, HireView, JobDetail,
-  JobsHome, OwnerDashboard, OwnerStripeDashboard, PaymentsView, PeopleHome, PeopleProfile, PipelineView, ReportsView, ScheduleView,
+  JobsHome, OwnerDashboard, PaymentsView, PeopleHome, PeopleProfile, PipelineView, ReportsView, ScheduleView,
   SettingsView,
 } from './views';
 import TeamMessagesView from './TeamMessagesView';
@@ -32,9 +32,9 @@ type NavItem = { id: OsTab; label: string; Icon: typeof LayoutDashboard };
 const NAV: NavItem[] = [
   { id: 'dashboard', label: 'Owner Dashboard', Icon: LayoutDashboard },
   { id: 'command_center', label: 'Command Center', Icon: Gauge },
-  { id: 'owner_growth', label: 'Growth Planner', Icon: Target },
-  { id: 'owner_profits', label: 'Profit Tracker', Icon: TrendingUp },
-  { id: 'payment_test', label: '1¢ Payment Test', Icon: CreditCard },
+  { id: 'owner_growth', label: 'Growth', Icon: Target },
+  { id: 'owner_profits', label: 'Profits', Icon: TrendingUp },
+  { id: 'payment_test', label: 'Payment Test', Icon: CreditCard },
   { id: 'customers', label: 'Customers', Icon: Users },
   { id: 'appointments', label: 'Appointments', Icon: Calendar },
   { id: 'schedule', label: 'Customer Schedule', Icon: CalendarClock },
@@ -81,7 +81,7 @@ const NAV: NavItem[] = [
 ];
 
 const WORKSPACES = [
-  { id: 'owner', label: 'Owner', Icon: ShieldCheck, items: ['dashboard', 'command_center', 'owner_growth', 'owner_profits'] as OsTab[] },
+  { id: 'owner', label: 'Owner', Icon: ShieldCheck, items: ['command_center', 'owner_growth', 'owner_profits', 'payment_test'] as OsTab[] },
   { id: 'sales', label: 'Sales', Icon: Target, items: ['sales', 'leads', 'territories'] as OsTab[] },
   { id: 'customers', label: 'Customers', Icon: Users, items: ['customers', 'appointments', 'availability', 'fleet'] as OsTab[] },
   { id: 'operations', label: 'Operations', Icon: ListChecks, items: ['jobs', 'dispatch', 'job_assignments'] as OsTab[] },
@@ -142,7 +142,7 @@ const PAGE: Record<OsTab, [string, string, string]> = {
 };
 
 const TAB_SHORT: Record<OsTab, string> = {
-  dashboard: 'Dashboard', command_center: 'Command Center', owner_growth: 'Growth Planner', owner_profits: 'Profit Tracker', payment_test: '1¢ Payment Test',
+  dashboard: 'Command Center', command_center: 'Command Center', owner_growth: 'Growth', owner_profits: 'Profits', payment_test: 'Payment Test',
   sales: 'Map', leads: 'Pipeline', territories: 'Streets', marketing: 'Campaigns', retention: 'Follow-up',
   customers: 'Directory', crm: 'Records', appointments: 'Calendar', schedule: 'Windows', availability: 'Slots', archived: 'History', fleet: 'Fleets',
   jobs: 'Jobs', dispatch: 'Board', job_assignments: 'Assign', inventory: 'Stock', equipment: 'Assets', tasks: 'Tasks', documents: 'Files', notifications: 'Alerts', purchasing: 'Buy', incidents: 'Issues', approvals: 'Approvals',
@@ -152,7 +152,7 @@ const TAB_SHORT: Record<OsTab, string> = {
 };
 
 const LEGACY: Record<string, OsTab> = {
-  home: 'command_center', chat: 'messages', people: 'employees', schedule: 'staff_schedule',
+  home: 'command_center', dashboard: 'command_center', chat: 'messages', people: 'employees', schedule: 'staff_schedule',
   calendar: 'appointments', d2d: 'sales', pipeline: 'leads', jobs: 'appointments', hire: 'recruiting',
   comms: 'communications', settings: 'pay_settings', more: 'command_center',
 };
@@ -208,9 +208,9 @@ function OsShell() {
     try {
       const fromUrl = new URLSearchParams(window.location.search).get('tab');
       if (fromUrl) return (LEGACY[fromUrl] || fromUrl) as OsTab;
-      const raw = sessionStorage.getItem('ns-os-tab') || sessionStorage.getItem('ns-os-view') || 'dashboard';
-      return (LEGACY[raw] || raw || 'dashboard') as OsTab;
-    } catch { return 'dashboard'; }
+      const raw = sessionStorage.getItem('ns-os-tab') || sessionStorage.getItem('ns-os-view') || 'command_center';
+      return (LEGACY[raw] || raw || 'command_center') as OsTab;
+    } catch { return 'command_center'; }
   });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
@@ -277,7 +277,7 @@ function OsShell() {
 
   const switchMode = (next: WorkMode) => {
     setMode(next);
-    const home: OsTab = next === 'd2d' ? 'sales' : next === 'detailer' ? 'jobs' : next === 'admin' ? 'communications' : 'dashboard';
+    const home: OsTab = next === 'd2d' ? 'sales' : next === 'detailer' ? 'jobs' : next === 'admin' ? 'communications' : 'command_center';
     go(home);
   };
 
@@ -295,7 +295,7 @@ function OsShell() {
     setPeopleId(emp.id);
   };
 
-  const homeTab: OsTab = mode === 'd2d' ? 'sales' : mode === 'detailer' ? 'jobs' : mode === 'admin' ? 'communications' : 'dashboard';
+  const homeTab: OsTab = mode === 'd2d' ? 'sales' : mode === 'detailer' ? 'jobs' : mode === 'admin' ? 'communications' : 'command_center';
   const currentWorkspace = WORKSPACES.find((w) => w.items.includes(tab)) ?? WORKSPACES[4];
   const currentNav = nav(tab);
   const phoneHome = mode === 'd2d'
@@ -342,6 +342,11 @@ function OsShell() {
     { label: 'Payments', value: String(os.payments.length), Icon: CreditCard },
     { label: 'Open Jobs', value: String(upcoming), Icon: BriefcaseBusiness },
     { label: 'Team', value: String(activeEmployees.length), Icon: Users },
+  ] : currentWorkspace.id === 'owner' ? [
+    { label: 'Jobs today', value: String(os.jobs.filter((j) => String(j.time || '').includes('Today')).length), Icon: CalendarClock },
+    { label: 'Unassigned', value: String(os.jobs.filter((j) => !j.detailer && j.status !== 'completed').length), Icon: ShieldCheck },
+    { label: 'Open packets', value: String(os.employees.filter((e) => Number(e.onboarding || 0) < 100).length), Icon: UserCheck },
+    { label: 'Collected', value: money(collected), Icon: DollarSign },
   ] : [
     { label: 'Active Team', value: String(activeEmployees.length), Icon: Users },
     { label: 'Customers', value: String(os.customers.length), Icon: UserCheck },
@@ -385,16 +390,7 @@ function OsShell() {
     }
     if (tab === 'payments' || tab === 'finance' || tab === 'payment_test') return <PaymentsView />;
     if (tab === 'reports' || tab === 'owner_growth' || tab === 'owner_profits') return <ReportsView />;
-    if (tab === 'dashboard') {
-      return (
-        <OwnerStripeDashboard
-          onOpenJob={openJob}
-          onOpenSchedule={() => go('appointments')}
-          onOpenTeam={() => go('employees')}
-        />
-      );
-    }
-    if (tab === 'command_center') {
+    if (tab === 'dashboard' || tab === 'command_center') {
       return (
         <OwnerDashboard
           onOpenJob={openJob}
@@ -476,15 +472,15 @@ function OsShell() {
           <div className="owner-field-switch-v26 os-mode-switch">
             <span>PORTAL MODE</span>
             <div className="os-mode-grid">
-              <button type="button" className={mode === 'owner' ? 'active' : ''} onClick={() => switchMode('owner')}><ShieldCheck size={16} /><strong>Owner</strong><small>Dashboard</small></button>
+              <button type="button" className={mode === 'owner' ? 'active' : ''} onClick={() => switchMode('owner')}><ShieldCheck size={16} /><strong>Owner</strong><small>Command</small></button>
               <button type="button" className={mode === 'd2d' ? 'active' : ''} onClick={() => switchMode('d2d')}><Target size={16} /><strong>D2D</strong><small>Canvass</small></button>
               <button type="button" className={mode === 'detailer' ? 'active' : ''} onClick={() => switchMode('detailer')}><Car size={16} /><strong>Detail</strong><small>Run jobs</small></button>
               <button type="button" className={mode === 'admin' ? 'active' : ''} onClick={() => switchMode('admin')}><Settings2 size={16} /><strong>Admin</strong><small>Templates</small></button>
             </div>
           </div>
           <button className="sidebar-item" onClick={() => setHelpOpen(true)}><Mail size={18} /> Help</button>
-          <a href="https://northsplash.github.io/NS-Auto-Luxe-OS/?tab=dashboard" className="sidebar-item" target="_blank" rel="noreferrer"><Globe size={18} /> Live demo</a>
-          <button className="sidebar-item sidebar-signout" onClick={() => { setMode('owner'); go('dashboard'); }}><LogOut size={18} /> Back to Owner</button>
+          <a href="https://northsplash.github.io/NS-Auto-Luxe-OS/?tab=command_center" className="sidebar-item" target="_blank" rel="noreferrer"><Globe size={18} /> Live demo</a>
+          <button className="sidebar-item sidebar-signout" onClick={() => { setMode('owner'); go('command_center'); }}><LogOut size={18} /> Back to Owner</button>
         </div>
       </aside>
 
@@ -662,7 +658,7 @@ function OsShell() {
             </div>
             <div className="os-more-sheet-label">Switch portal</div>
             <div className="os-mode-row">
-              <button className={mode === 'owner' ? 'active' : ''} onClick={() => switchMode('owner')}><strong>Owner</strong><small>Dashboard</small></button>
+              <button className={mode === 'owner' ? 'active' : ''} onClick={() => switchMode('owner')}><strong>Owner</strong><small>Command</small></button>
               <button className={mode === 'd2d' ? 'active' : ''} onClick={() => switchMode('d2d')}><strong>D2D</strong><small>Canvass</small></button>
               <button className={mode === 'detailer' ? 'active' : ''} onClick={() => switchMode('detailer')}><strong>Detailer</strong><small>Run jobs</small></button>
               <button className={mode === 'admin' ? 'active' : ''} onClick={() => switchMode('admin')}><strong>Admin</strong><small>Templates</small></button>
