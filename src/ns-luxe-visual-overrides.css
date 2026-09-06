@@ -939,14 +939,21 @@ body {
 }
 
 .route-loader {
-  background: var(--lux-bg) !important;
-  color: var(--lux-text) !important;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  padding: 32px 20px;
+  text-align: center;
+  background: #efe8dc !important;
+  color: #1c1814 !important;
 }
 
 .route-loader-mark {
-  background: linear-gradient(145deg, #2b2313, #0e1010) !important;
-  color: var(--lux-gold-hi) !important;
-  border: 1px solid rgba(217, 173, 74, .38);
+  background: #1c1814 !important;
+  color: #e8c96a !important;
+  border: 1px solid rgba(184, 137, 58, .4);
 }
 
 /* Scrollbars are part of the frame on the dense desktop workspace. */

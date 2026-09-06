@@ -14,12 +14,11 @@ const D2DPortal = lazy(() => import('@/pages/D2D'));
 
 function Loader() {
   return (
-    <div className="route-loader">
-      <div className="route-loader-mark">NS</div>
-      <div>
-        <strong>North Splash OS</strong>
-        <span>Opening workspace…</span>
-      </div>
+    <div className="route-loader nsos-cream">
+      <span className="eyebrow">North Splash Auto Luxe</span>
+      <img className="auth-brand-logo" src={BRAND_LOGO} alt="" />
+      <strong>Opening workspace</strong>
+      <span>Loading this screen…</span>
     </div>
   );
 }

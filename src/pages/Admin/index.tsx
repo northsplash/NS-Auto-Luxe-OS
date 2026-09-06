@@ -466,7 +466,16 @@ const handleDeleteAvailability = async (id: string) => {
   }
 
   if (!user) {
-    return <WorkspaceGate title="Sign in to continue" body="Owner and Admin live behind your North Splash login." homeHref="/login" homeLabel="Sign in" />;
+    return (
+      <WorkspaceGate
+        title="Sign in to continue"
+        body="Owner and Admin live behind your North Splash login."
+        homeHref="/login"
+        homeLabel="Sign in"
+        secondaryHref="/os"
+        secondaryLabel="Open demo OS"
+      />
+    );
   }
 
   if (!hasWorkspaceAccess) {

@@ -2001,7 +2001,7 @@ export function HireModal({
 
 export function MoreGrid({ onPick }: { onPick: (id: string) => void }) {
   const items = [
-    ['home', 'Owner dashboard', 'Jobs, cash, and exceptions'],
+    ['command_center', 'Command Center', 'Jobs, cash, and exceptions'],
     ['people', 'Employees', 'Directory and pay mix'],
     ['schedule', 'Hours', 'Shifts and availability'],
     ['calendar', 'Appointments', 'Customer calendar'],
@@ -2030,7 +2030,7 @@ export function MoreGrid({ onPick }: { onPick: (id: string) => void }) {
 }
 
 const TITLES_SAFE: Record<string, string> = {
-  home: 'dashboard', schedule: 'hours', dispatch: 'dispatch', payments: 'payments',
+  home: 'command_center', schedule: 'hours', dispatch: 'dispatch', payments: 'payments',
   hire: 'hiring', comms: 'communications', settings: 'settings',
 };
 

@@ -7,12 +7,16 @@ export default function WorkspaceGate({
   busy,
   homeHref = '/login',
   homeLabel = 'Sign in',
+  secondaryHref,
+  secondaryLabel,
 }: {
   title: string;
   body: string;
   busy?: boolean;
   homeHref?: string;
   homeLabel?: string;
+  secondaryHref?: string;
+  secondaryLabel?: string;
 }) {
   return (
     <div className="workspace-gate nsos-cream">
@@ -21,7 +25,14 @@ export default function WorkspaceGate({
       {busy && <div className="portal-spinner" aria-hidden />}
       <strong>{title}</strong>
       <p>{body}</p>
-      {!busy && <Link className="btn-outline" to={homeHref}>{homeLabel}</Link>}
+      {!busy && (
+        <div className="workspace-gate-actions">
+          <Link className="btn-primary" to={homeHref}>{homeLabel}</Link>
+          {secondaryHref && secondaryLabel && (
+            <Link className="btn-outline" to={secondaryHref}>{secondaryLabel}</Link>
+          )}
+        </div>
+      )}
     </div>
   );
 }

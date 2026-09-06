@@ -1241,6 +1241,30 @@
   margin: 0 auto;
   line-height: 1.55;
 }
+.workspace-gate-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 4px;
+}
+.workspace-gate .btn-primary {
+  min-height: 44px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #1c1814 !important;
+  color: #f6f1e8 !important;
+  -webkit-text-fill-color: #f6f1e8 !important;
+  border: 0 !important;
+  border-radius: 12px;
+  text-decoration: none;
+  font-weight: 650;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  box-shadow: none !important;
+}
 .workspace-gate .btn-outline {
   min-height: 44px;
   padding: 0 16px;
@@ -1249,10 +1273,70 @@
   justify-content: center;
   background: #fff !important;
   color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
   border: 1px solid #e4d9cc !important;
   border-radius: 12px;
   text-decoration: none;
   font-weight: 650;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  box-shadow: none !important;
+}
+.route-loader.nsos-cream {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 100dvh !important;
+  display: grid !important;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  padding: 32px 20px;
+  text-align: center;
+  background: #efe8dc !important;
+  color: #1c1814 !important;
+}
+.route-loader.nsos-cream::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: var(--ns-brand-watermark);
+  background-repeat: no-repeat;
+  background-position: center 38%;
+  background-size: min(54vw, 380px) auto;
+  opacity: .16;
+  pointer-events: none;
+  z-index: 0;
+}
+.route-loader.nsos-cream > * {
+  position: relative;
+  z-index: 1;
+}
+.route-loader .eyebrow {
+  display: block;
+  color: #b8893a !important;
+  -webkit-text-fill-color: #b8893a !important;
+  letter-spacing: .16em;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.route-loader .auth-brand-logo {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  margin: 0 auto;
+  display: block;
+}
+.route-loader strong {
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  font-size: 24px;
+  letter-spacing: -.03em;
+}
+.route-loader span:not(.eyebrow) {
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
 }
 .portal-spinner {
   border-color: #eadfd3 !important;
