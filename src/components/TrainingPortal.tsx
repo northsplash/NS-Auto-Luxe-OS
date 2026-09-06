@@ -248,10 +248,7 @@ export default function TrainingPortal({ employee }: { employee: Employee }) {
     <div className="training-dashboard academy-dashboard-v30">
       <header className="ws-hero">
         <div className="ws-hero-copy">
-          <p className="ws-hero-kicker">
-            Academy
-            <span className="ws-hero-modeled">Modeled after Gusto onboarding + SalesRabbit playbooks</span>
-          </p>
+          <p className="ws-hero-kicker">Academy</p>
           <h1 className="ws-hero-title">New-hire training</h1>
           <p className="ws-hero-lead">
             {employeeCanD2D(employee) && employeeCanDetail(employee)

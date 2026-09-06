@@ -75,7 +75,7 @@ export default function DispatchCommandCenter({employees,appointments,setAppoint
   </article>;
 
   return <div className="tab-content dispatch-v16-page">
-    <header className="dispatch-v16-header"><div><span className="eyebrow">OPS · MODELED AFTER SERVICETITAN</span><h2>Dispatch</h2><p>Techs as columns, jobs as cards, live status on every board cell.</p></div><div className="dispatch-v16-header-tools"><input type="date" value={date} onChange={e=>setDate(e.target.value)}/><div className="dispatch-v16-switch">{(['people','status','timeline'] as BoardMode[]).map(x=><button className={mode===x?'active':''} onClick={()=>setMode(x)} key={x}>{x==='people'?'Team':x==='status'?'Status':'Timeline'}</button>)}</div></div></header>
+    <header className="dispatch-v16-header"><div><span className="eyebrow">Operations</span><h2>Dispatch</h2><p>Technicians as columns, jobs as cards, live status on every cell.</p></div><div className="dispatch-v16-header-tools"><input type="date" value={date} onChange={e=>setDate(e.target.value)}/><div className="dispatch-v16-switch">{(['people','status','timeline'] as BoardMode[]).map(x=><button className={mode===x?'active':''} onClick={()=>setMode(x)} key={x}>{x==='people'?'Team':x==='status'?'Status':'Timeline'}</button>)}</div></div></header>
 
     <div className="dispatch-v16-kpis">
       <div><CalendarDays/><span>Jobs</span><strong>{jobs.length}</strong><small>{completed} completed</small></div>

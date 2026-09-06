@@ -552,3 +552,246 @@
   .client-photo-url button { grid-column: 1 / -1; }
   .client-photo-grid { grid-template-columns: 1fr 1fr; }
 }
+
+/* —— v32 professional operator chrome —— */
+.portal-layout.nsos-cream {
+  --ns-canvas: #efe8dc;
+  --ns-paper: #fffdf8;
+  --ns-ink: #1c1814;
+  --ns-muted: #6f675e;
+  --ns-line: #e4d9cc;
+  --ns-gold: #b8893a;
+  font-feature-settings: "ss01" on, "cv11" on;
+}
+.portal-layout.nsos-cream .portal-main,
+.portal-layout.nsos-cream .portal-content,
+.portal-layout.nsos-cream .tab-content,
+.portal-layout.nsos-cream .phase300,
+.portal-layout.nsos-cream .operations-expansion,
+.portal-layout.nsos-cream .enterprise-suite,
+.portal-layout.nsos-cream .business-suite,
+.portal-layout.nsos-cream .permissions-v3,
+.portal-layout.nsos-cream .customer-os {
+  color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .eyebrow {
+  color: #b8893a !important;
+  -webkit-text-fill-color: #b8893a !important;
+}
+
+.portal-layout.nsos-cream .portal-content h1,
+.portal-layout.nsos-cream .portal-content h2,
+.portal-layout.nsos-cream .portal-content h3,
+.portal-layout.nsos-cream .portal-content h4,
+.portal-layout.nsos-cream .tab-header h2,
+.portal-layout.nsos-cream .v2-page-head h2,
+.portal-layout.nsos-cream .v2-page-head h3,
+.portal-layout.nsos-cream .owner-command-head h2 {
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  letter-spacing: -.025em;
+}
+.portal-layout.nsos-cream .portal-content p,
+.portal-layout.nsos-cream .tab-header p,
+.portal-layout.nsos-cream .v2-page-head p,
+.portal-layout.nsos-cream .empty-text,
+.portal-layout.nsos-cream .ns-empty {
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+}
+
+.portal-layout.nsos-cream .training-card,
+.portal-layout.nsos-cream .training-summary > div,
+.portal-layout.nsos-cream .permission-invite-card,
+.portal-layout.nsos-cream .permission-accounts,
+.portal-layout.nsos-cream .permission-editor,
+.portal-layout.nsos-cream .permission-group-v3,
+.portal-layout.nsos-cream .comm-template-list,
+.portal-layout.nsos-cream .automation-rules,
+.portal-layout.nsos-cream .automation-rule,
+.portal-layout.nsos-cream .location-card,
+.portal-layout.nsos-cream .continuity-card,
+.portal-layout.nsos-cream .training-dashboard,
+.portal-layout.nsos-cream .v2-card,
+.portal-layout.nsos-cream .manager-panel,
+.portal-layout.nsos-cream .qc-card,
+.portal-layout.nsos-cream .admin-card,
+.portal-layout.nsos-cream .crew-card,
+.portal-layout.nsos-cream .crew-member-card {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  border-color: #e4d9cc !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .training-card h3,
+.portal-layout.nsos-cream .training-card strong,
+.portal-layout.nsos-cream .v2-card h3,
+.portal-layout.nsos-cream .qc-card h3,
+.portal-layout.nsos-cream .crew-card,
+.portal-layout.nsos-cream .crew-card strong {
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .training-card p,
+.portal-layout.nsos-cream .training-card small,
+.portal-layout.nsos-cream .qc-card p {
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+}
+
+.portal-layout.nsos-cream .phase-panel.caramel,
+.portal-layout.nsos-cream .phase-panel.caramele,
+.portal-layout.nsos-cream .enterprise-brown-card,
+.portal-layout.nsos-cream .d2d-kpi,
+.portal-layout.nsos-cream .manager-kpi,
+.portal-layout.nsos-cream .employee-home-card,
+.portal-layout.nsos-cream .manager-hero {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  border: 1px solid #e4d9cc !important;
+  box-shadow: 0 10px 28px rgba(48, 38, 28, .06) !important;
+}
+.portal-layout.nsos-cream .phase-panel.caramel h3,
+.portal-layout.nsos-cream .phase-panel.caramel label,
+.portal-layout.nsos-cream .phase-panel.caramel strong,
+.portal-layout.nsos-cream .d2d-kpi strong,
+.portal-layout.nsos-cream .manager-kpi strong,
+.portal-layout.nsos-cream .employee-home-card strong,
+.portal-layout.nsos-cream .manager-hero h2 {
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .d2d-kpi span,
+.portal-layout.nsos-cream .d2d-kpi small,
+.portal-layout.nsos-cream .manager-kpi span,
+.portal-layout.nsos-cream .manager-kpi small,
+.portal-layout.nsos-cream .employee-home-card span,
+.portal-layout.nsos-cream .employee-home-card small,
+.portal-layout.nsos-cream .manager-hero p {
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+}
+
+/* Ink stays cream only on true espresso surfaces */
+.portal-layout.nsos-cream .portal-sidebar,
+.portal-layout.nsos-cream .portal-sidebar *,
+.portal-layout.nsos-cream .job-mode-head,
+.portal-layout.nsos-cream .job-mode-head *,
+.portal-layout.nsos-cream .training-admin-hero,
+.portal-layout.nsos-cream .training-admin-hero * {
+  -webkit-text-fill-color: unset;
+}
+.portal-layout.nsos-cream .portal-sidebar { color: #f6f1e8; }
+.portal-layout.nsos-cream .os-workspace-button { color: #d9d0c4 !important; -webkit-text-fill-color: #d9d0c4 !important; }
+.portal-layout.nsos-cream .os-workspace-button.active { color: #fff !important; -webkit-text-fill-color: #fff !important; }
+.portal-layout.nsos-cream .os-pinned-link { color: #c9bfb2 !important; -webkit-text-fill-color: #c9bfb2 !important; }
+.portal-layout.nsos-cream .sidebar-user p,
+.portal-layout.nsos-cream .sidebar-brand strong { color: #f6f1e8 !important; -webkit-text-fill-color: #f6f1e8 !important; }
+.portal-layout.nsos-cream .sidebar-user span,
+.portal-layout.nsos-cream .sidebar-brand small { color: #c4b6a4 !important; -webkit-text-fill-color: #c4b6a4 !important; }
+.portal-layout.nsos-cream .job-mode-head,
+.portal-layout.nsos-cream .training-admin-hero {
+  background: #1c1814 !important;
+  color: #f6f1e8 !important;
+}
+.portal-layout.nsos-cream .job-mode-head h2,
+.portal-layout.nsos-cream .training-admin-hero h2 { color: #f6f1e8 !important; -webkit-text-fill-color: #f6f1e8 !important; }
+.portal-layout.nsos-cream .job-mode-head p,
+.portal-layout.nsos-cream .training-admin-hero p { color: #d4c4b0 !important; -webkit-text-fill-color: #d4c4b0 !important; }
+
+.portal-layout.nsos-cream .ws-hero {
+  width: min(100%, 1320px);
+  margin: 8px auto 18px;
+  padding: 4px 0 16px;
+  border-bottom: 1px solid #eadfd3;
+  gap: 12px;
+}
+.portal-layout.nsos-cream .ws-hero-kicker {
+  color: #b8893a;
+  letter-spacing: .16em;
+  font-size: 10px;
+  font-weight: 800;
+}
+.portal-layout.nsos-cream .ws-hero-title {
+  font-size: clamp(24px, 2.4vw, 30px);
+  font-weight: 720;
+}
+.portal-layout.nsos-cream .ws-hero-metrics div {
+  background: transparent;
+  border: 0;
+  border-left: 1px solid #eadfd3;
+  border-radius: 0;
+  padding: 2px 0 2px 14px;
+}
+.portal-layout.nsos-cream .ws-hero-metrics dt { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+.portal-layout.nsos-cream .stripe-balances article {
+  box-shadow: 0 10px 28px rgba(48, 38, 28, .05);
+}
+.portal-layout.nsos-cream .v2-page-head {
+  margin: 0 0 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #eadfd3;
+}
+.portal-layout.nsos-cream .v2-page-head h2 { margin: 4px 0 6px; font-size: 26px; }
+.portal-layout.nsos-cream .data-table-head {
+  background: #f4efe8 !important;
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+  font-size: 10px !important;
+  letter-spacing: .12em;
+}
+.portal-layout.nsos-cream .data-table-row {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .status-badge {
+  color: inherit;
+}
+
+.portal-layout.nsos-cream .dispatch-command-job,
+.portal-layout.nsos-cream .dispatch-job,
+.portal-layout.nsos-cream .lead-card,
+.portal-layout.nsos-cream .next-job-card {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  border: 1px solid #e4d9cc !important;
+}
+.portal-layout.nsos-cream .dispatch-command-job small,
+.portal-layout.nsos-cream .dispatch-job span,
+.portal-layout.nsos-cream .dispatch-job small {
+  color: #6f675e !important;
+}
+.portal-layout.nsos-cream .btn-primary {
+  background: #1c1814 !important;
+  color: #f6f1e8 !important;
+  -webkit-text-fill-color: #f6f1e8 !important;
+  font-weight: 650;
+}
+.portal-layout.nsos-cream .btn-primary:hover { background: #2a241e !important; }
+.portal-layout.nsos-cream .os-secondary-nav-scroll button.active {
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  border-bottom-color: #1c1814 !important;
+}
+
+.auth-page .auth-card {
+  background: #fffdf8;
+  color: #1c1814;
+  border: 1px solid #eadfd3;
+  box-shadow: 0 24px 60px rgba(28, 24, 20, .28);
+}
+.auth-page .auth-card h1,
+.auth-page .auth-card strong { color: #1c1814; }
+.auth-page .auth-card p,
+.auth-page .auth-card small { color: #6f675e; }
+
+@media (max-width: 900px) {
+  .portal-layout.nsos-cream .ws-hero-metrics { grid-template-columns: 1fr 1fr; }
+  .portal-layout.nsos-cream .ws-hero-metrics div { border-left: 0; border-top: 1px solid #eadfd3; padding: 10px 0 0; }
+  .portal-layout.nsos-cream .v2-page-head h2 { font-size: 22px; }
+}
+@media (max-width: 620px) {
+  .portal-layout.nsos-cream .stripe-balances { grid-template-columns: 1fr; }
+  .portal-layout.nsos-cream .portal-content { padding-bottom: 88px; }
+}

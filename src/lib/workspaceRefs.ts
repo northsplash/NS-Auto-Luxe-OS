@@ -6,7 +6,7 @@ export const WORKSPACE_REFS: Record<
     kicker: 'Owner',
     title: 'Home',
     modeled: 'Stripe Dashboard',
-    lead: 'Balances, today’s work, and the one next action — the same overview Stripe uses for operators.',
+    lead: 'Balances, today’s work, and the next action.',
   },
   dashboard: {
     kicker: 'Owner',
@@ -18,7 +18,7 @@ export const WORKSPACE_REFS: Record<
     kicker: 'Field sales',
     title: 'Leads',
     modeled: 'SalesRabbit + HubSpot + SPOTIO',
-    lead: 'Pins and knocks from SalesRabbit, pipeline from HubSpot, next-door queue from SPOTIO.',
+    lead: 'Pins, knocks, pipeline, and the next door — without leaving the board.',
   },
   crm: {
     kicker: 'CRM',
@@ -30,13 +30,13 @@ export const WORKSPACE_REFS: Record<
     kicker: 'People',
     title: 'Team',
     modeled: 'Rippling + Gusto',
-    lead: 'Directory, pay, and onboarding in one profile — Rippling for people ops, Gusto for hire-to-paid.',
+    lead: 'Directory, pay, and onboarding in one profile.',
   },
   team: {
     kicker: 'People',
     title: 'Team',
     modeled: 'Rippling + Gusto',
-    lead: 'Directory, pay, and onboarding in one profile — Rippling for people ops, Gusto for hire-to-paid.',
+    lead: 'Directory, pay, and onboarding in one profile.',
   },
   customers: {
     kicker: 'CRM',
@@ -66,19 +66,19 @@ export const WORKSPACE_REFS: Record<
     kicker: 'Schedule',
     title: 'Availability',
     modeled: 'Jobber',
-    lead: 'Open hours the calendar can book into. Block days the same way Jobber does.',
+    lead: 'Open hours the calendar can book into. Block days when you are closed.',
   },
   staff_schedule: {
     kicker: 'Labor',
     title: 'Staff schedule',
     modeled: 'Deputy',
-    lead: 'Who is on, where, and when. Publish the week like Deputy.',
+    lead: 'Who is on, where, and when. Publish the week.',
   },
   appointments: {
     kicker: 'Jobs',
     title: 'Appointments',
     modeled: 'Jobber',
-    lead: 'Upcoming visits with customer, address, and stage — Jobber’s job list.',
+    lead: 'Upcoming visits with customer, address, and stage.',
   },
   archived: {
     kicker: 'Jobs',
@@ -102,7 +102,7 @@ export const WORKSPACE_REFS: Record<
     kicker: 'Detailing',
     title: 'Job workflow',
     modeled: 'Housecall Pro + Uber',
-    lead: 'Housecall Pro job packet. Live status steps like Uber: booked → en route → on site → done.',
+    lead: 'Inspection, photos, checklist, and live status: booked → en route → on site → done.',
   },
   d2d: {
     kicker: 'Field',
@@ -114,7 +114,7 @@ export const WORKSPACE_REFS: Record<
     kicker: 'Field',
     title: 'Door to door',
     modeled: 'SalesRabbit',
-    lead: 'Doors, conversion, and revenue by rep — SalesRabbit’s field scoreboard.',
+    lead: 'Doors, conversion, and revenue by rep.',
   },
   territories: {
     kicker: 'Field',
@@ -132,7 +132,7 @@ export const WORKSPACE_REFS: Record<
     kicker: 'Money',
     title: 'Payments',
     modeled: 'Square',
-    lead: 'Invoices, deposits, and payouts in Square’s language — not a generic ledger.',
+    lead: 'Invoices, deposits, and payouts — not a generic ledger.',
   },
   finance: {
     kicker: 'Money',
@@ -162,7 +162,7 @@ export const WORKSPACE_REFS: Record<
     kicker: 'Customer',
     title: 'Communications',
     modeled: 'Housecall Pro + Jobber',
-    lead: 'Job updates, reminders, and follow-ups the way those apps send them.',
+    lead: 'Job updates, reminders, and follow-ups the customer actually reads.',
   },
   settings: {
     kicker: 'Admin',
@@ -186,7 +186,7 @@ export const WORKSPACE_REFS: Record<
     kicker: 'Labor',
     title: 'Time clock',
     modeled: 'Deputy',
-    lead: 'Clock in, breaks, and timesheets the same way Deputy tracks a shift.',
+    lead: 'Clock in, breaks, and timesheets for every shift.',
   },
   time_off: {
     kicker: 'Labor',
@@ -312,7 +312,7 @@ export const WORKSPACE_REFS: Record<
     kicker: 'Owner',
     title: 'Profit tracker',
     modeled: 'Stripe',
-    lead: 'Collected vs. labor vs. expenses. Same language as Stripe reports.',
+    lead: 'Collected vs. labor vs. expenses.',
   },
   payment_test: {
     kicker: 'Money',

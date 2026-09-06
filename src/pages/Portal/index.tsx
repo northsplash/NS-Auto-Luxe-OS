@@ -356,7 +356,7 @@ const [timesLoading, setTimesLoading] = useState(false);
   ];
 
   return (
-    <div className="portal-layout">
+    <div className="portal-layout nsos-cream customer-os">
       {/* Sidebar */}
       <aside className={`portal-sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <div className="sidebar-header">

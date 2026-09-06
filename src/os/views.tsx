@@ -353,7 +353,7 @@ export function OwnerStripeDashboard({
       <div className="admin-two-col">
         <section className="phase-panel" id="ns-appointments">
           <div className="phase-panel-head">
-            <div><span className="eyebrow">JOBBER</span><h3><Calendar size={16} /> Recent Appointments</h3></div>
+            <div><span className="eyebrow">Schedule</span><h3><Calendar size={16} /> Recent Appointments</h3></div>
             <button className="btn-outline btn-sm" onClick={onOpenSchedule}>View all</button>
           </div>
           {recent.map((j) => (
@@ -370,7 +370,7 @@ export function OwnerStripeDashboard({
 
         <section className="phase-panel" id="ns-team">
           <div className="phase-panel-head">
-            <div><span className="eyebrow">RIPPLING</span><h3><UserCheck size={16} /> Team Overview</h3></div>
+            <div><span className="eyebrow">Team</span><h3><UserCheck size={16} /> Team Overview</h3></div>
             <button className="btn-outline btn-sm" onClick={onOpenTeam}>View all</button>
           </div>
           <div className="team-overview nsos-team-overview">

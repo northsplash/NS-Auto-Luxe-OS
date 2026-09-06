@@ -564,7 +564,7 @@ const handleDeleteAvailability = async (id: string) => {
 
         <div className="sidebar-user">
           <EmployeeAvatar profileId={profile?.id} name={profile?.full_name|| (ownerMode?'Owner':'Admin')} avatarUrl={profile?.avatar_url} size="md" editable className="sidebar-avatar admin-avatar"/>
-          <div><p>{profile?.full_name ?? (ownerMode ? 'Owner' : 'Admin')}</p><span>{ownerMode ? '50% Owner' : 'Administrator'}</span></div>
+          <div><p>{profile?.full_name ?? (ownerMode ? 'Owner' : 'Admin')}</p><span>{ownerMode ? 'Owner' : 'Administrator'}</span></div>
         </div>
 
         <nav className="sidebar-nav os-workspace-nav">

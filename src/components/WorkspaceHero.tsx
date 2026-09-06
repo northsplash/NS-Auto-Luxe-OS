@@ -13,10 +13,7 @@ export default function WorkspaceHero({
   return (
     <header className="ws-hero">
       <div className="ws-hero-copy">
-        <p className="ws-hero-kicker">
-          {ref.kicker}
-          <span className="ws-hero-modeled">Modeled after {ref.modeled}</span>
-        </p>
+        <p className="ws-hero-kicker">{ref.kicker}</p>
         <h1 className="ws-hero-title">{ref.title}</h1>
         <p className="ws-hero-lead">{ref.lead}</p>
       </div>
