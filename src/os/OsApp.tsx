@@ -181,7 +181,7 @@ class OsErrorBoundary extends Component<{ children: ReactNode; onReset?: () => v
   }
 }
 
-type WorkMode = 'owner' | 'd2d' | 'detailer';
+type WorkMode = 'owner' | 'd2d' | 'detailer' | 'admin';
 
 function WorkspacePage({ tab, children, action }: { tab: OsTab; children: ReactNode; action?: ReactNode }) {
   if (tab === 'command_center' || tab === 'dashboard') return <>{children}</>;
@@ -286,14 +286,16 @@ function OsShell() {
     setPeopleId(emp.id);
   };
 
-  const homeTab: OsTab = mode === 'd2d' ? 'sales' : mode === 'detailer' ? 'jobs' : 'command_center';
+  const homeTab: OsTab = mode === 'd2d' ? 'sales' : mode === 'detailer' ? 'jobs' : mode === 'admin' ? 'communications' : 'command_center';
   const currentWorkspace = WORKSPACES.find((w) => w.items.includes(tab)) ?? WORKSPACES[4];
   const currentNav = nav(tab);
   const phoneHome = mode === 'd2d'
     ? ['sales', 'leads', 'territories'].includes(tab)
     : mode === 'detailer'
       ? ['jobs', 'dispatch', 'job_assignments'].includes(tab)
-      : ['dashboard', 'command_center', 'owner_growth', 'owner_profits', 'payment_test'].includes(tab);
+      : mode === 'admin'
+        ? ['communications', 'automations', 'permissions', 'locations', 'continuity', 'audit', 'visitors'].includes(tab)
+        : ['dashboard', 'command_center', 'owner_growth', 'owner_profits', 'payment_test'].includes(tab);
   const phoneChat = tab === 'messages';
   const phoneCal = ['appointments', 'schedule', 'availability', 'staff_schedule'].includes(tab);
   const phoneTeam = tab === 'employees';
@@ -628,6 +630,7 @@ function OsShell() {
               <button className={mode === 'owner' ? 'active' : ''} onClick={() => { setMode('owner'); go('command_center'); }}><strong>Owner</strong><small>Command</small></button>
               <button className={mode === 'd2d' ? 'active' : ''} onClick={() => { setMode('d2d'); go('sales'); }}><strong>D2D</strong><small>Canvass</small></button>
               <button className={mode === 'detailer' ? 'active' : ''} onClick={() => { setMode('detailer'); go('jobs'); }}><strong>Detailer</strong><small>Run jobs</small></button>
+              <button className={mode === 'admin' ? 'active' : ''} onClick={() => { setMode('admin'); go('communications'); }}><strong>Admin</strong><small>Templates</small></button>
             </div>
             <div className="os-more-sheet-modes">
               <Link to="/d2d" className="owner-field-mode-btn" onClick={() => setMoreOpen(false)}><Target size={16} /><strong>D2D portal</strong><small>Field canvas</small></Link>

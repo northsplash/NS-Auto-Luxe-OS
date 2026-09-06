@@ -531,18 +531,54 @@ export function CalendarView({ onOpen }: { onOpen: (id: string) => void }) {
   const os = useOs();
   const [q, setQ] = useState('');
   const [open, setOpen] = useState(false);
+  const today = new Date();
+  const calDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const [picked, setPicked] = useState(today.getDay());
+  const [filter, setFilter] = useState<'all' | 'jobs' | 'leads' | 'shifts'>('all');
+  const weekStart = new Date(today);
+  weekStart.setDate(today.getDate() - today.getDay());
+  const week = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(weekStart);
+    d.setDate(weekStart.getDate() + i);
+    return d;
+  });
+  const dayLabel = (offset: number) => {
+    if (offset === today.getDay()) return 'Today';
+    if (offset === (today.getDay() + 1) % 7) return 'Tomorrow';
+    return calDays[offset];
+  };
   const [draft, setDraft] = useState({
     customer: '', service: OS_SERVICES[2].name, vehicle: '', address: '', time: 'Tomorrow · 10:00 AM',
     price: OS_SERVICES[2].price, detailer: os.employees.find((e) => e.role === 'detailer')?.name || 'Marcus Hale',
   });
-  const rows = os.jobs.filter((j) => `${j.customer} ${j.service} ${j.vehicle}`.toLowerCase().includes(q.toLowerCase()));
+  const query = q.toLowerCase();
+  const rows = os.jobs.filter((j) => {
+    const hit = `${j.customer} ${j.service} ${j.vehicle}`.toLowerCase().includes(query);
+    if (!hit) return false;
+    if (filter === 'leads' || filter === 'shifts') return false;
+    const head = j.time.split('·')[0].trim();
+    return head === dayLabel(picked);
+  });
   const groups = rows.reduce((m, j) => {
     const day = j.time.split('·')[0].trim() || 'Upcoming';
     m.set(day, [...(m.get(day) || []), j]);
     return m;
   }, new Map<string, OsJob[]>());
   return (
-    <div>
+    <div className="nsos-cal">
+      <div className="nsos-week" role="tablist" aria-label="This week">
+        {week.map((d, i) => (
+          <button key={d.toISOString()} type="button" className={picked === i ? 'active' : ''} onClick={() => setPicked(i)}>
+            <small>{calDays[i]}</small>
+            <b>{d.getDate()}</b>
+          </button>
+        ))}
+      </div>
+      <div className="nsos-tabs" style={{ marginBottom: 12 }}>
+        {([['all', 'All'], ['jobs', 'Jobs'], ['leads', 'Leads'], ['shifts', 'Shifts']] as const).map(([id, label]) => (
+          <button key={id} className={filter === id ? 'active' : ''} onClick={() => setFilter(id)}>{label}</button>
+        ))}
+      </div>
       <div className="nsos-actions" style={{ marginBottom: 12 }}>
         <div className="nsos-search" style={{ flex: 1 }}><Search size={14} /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search appointments" /></div>
         <button className="nsos-btn" onClick={() => setOpen((v) => !v)}><Plus size={14} />New appointment</button>
@@ -582,7 +618,11 @@ export function CalendarView({ onOpen }: { onOpen: (id: string) => void }) {
           <button className="nsos-btn" type="submit">Book and confirm</button>
         </form>
       )}
-      {rows.length === 0 && <div className="nsos-empty">No appointments match.</div>}
+      {rows.length === 0 && (
+        <div className="nsos-empty">
+          {filter === 'leads' ? 'Lead follow-ups for this day appear here.' : filter === 'shifts' ? 'Team shifts for this day appear here.' : `Nothing ${dayLabel(picked).toLowerCase()}. Book a job to fill the board.`}
+        </div>
+      )}
       {[...groups.entries()].map(([day, list]) => (
         <section key={day} style={{ marginBottom: 16 }}>
           <div className="nsos-eyebrow">{day}</div>
@@ -593,7 +633,7 @@ export function CalendarView({ onOpen }: { onOpen: (id: string) => void }) {
                 <div style={{ color: 'var(--os-muted)', fontSize: 12 }}>{j.customer} · {j.vehicle}</div>
                 <div style={{ color: 'var(--os-muted)', fontSize: 12 }}><CalendarDays size={12} /> {j.time} · {j.address}</div>
               </div>
-              <span className={`nsos-pill ${j.status === 'completed' ? 'green' : j.status === 'en_route' || j.status === 'in_progress' ? 'gold' : 'blue'}`}>{j.status.replaceAll('_', ' ')}</span>
+              <span className={statusClass(j.status)}>{j.status.replaceAll('_', ' ')}</span>
             </button>
           ))}
         </section>

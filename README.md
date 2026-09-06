@@ -17,7 +17,7 @@ The app serves at `http://127.0.0.1:43127`. Demo state lives in this browser (`l
 
 ## How it is modeled
 
-Visual language is **cream luxury**: ivory cards, espresso sidebar, tight type, 14px radius, gold only for primary actions, KPIs, and active states. Home is role-based (Owner / D2D / Detailer). Command Center leads with exceptions. Phones use a 5-button bar: Home / Chat / Calendar / Team / More, with bottom sheets instead of desktop popups.
+Visual language is **cream luxury**: ivory cards, espresso sidebar, tight type, 14px radius, gold only for primary actions, KPIs, and active states. Home is role-based (Owner / D2D / Detailer / Admin). Command Center leads with exceptions. Phones use a 5-button bar: Home / Chat / Calendar / Team / More, with bottom sheets instead of desktop popups.
 
 Workflows follow the product that already does that job well:
 
@@ -52,7 +52,7 @@ The two cores: **SalesRabbit** for territory maps, pins, knocks, and canvassing;
 - HubSpot pipeline and customer records
 - Jobber appointments and job detail with Uber-style live status
 - Square payments, Gusto hiring checklists, Stripe settings
-- Phones: Home / Chat / Jobs / Map / More. Tablets use a labeled drawer.
+- Phones: Home / Chat / Calendar / Team / More. Tablets use split map/list, chat, and dispatch.
 
 ## Supabase
 

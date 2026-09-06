@@ -291,7 +291,23 @@ html.nsos-active #root {
   display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 14px;
   border-radius: 14px; border: 1px solid #e4d9cc; background: #fff; text-align: left; font-weight: 650;
 }
-.os-mode-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin: 8px 0 14px; }
+.os-mode-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0 14px; }
+.nsos-week {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 12px;
+}
+.nsos-week button {
+  display: grid; gap: 2px; place-items: center; min-height: 56px; padding: 8px 0;
+  border-radius: 14px; border: 1px solid #e4d9cc; background: #fff; color: #1c1814;
+}
+.nsos-week button small { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #6f675e; }
+.nsos-week button b { font-size: 16px; }
+.nsos-week button.active { background: #1c1814; color: #f6f1e8; border-color: #1c1814; }
+.nsos-week button.active small { color: #e8c96a; }
+.nsos-cream .dispatch-column { background: #f6f1e8 !important; }
+.nsos-cream .dispatch-column h3,
+.nsos-cream .nsos-st-col h3 { color: #1c1814 !important; }
+.nsos-cream .dispatch-job span,
+.nsos-cream .dispatch-job small { color: #6f675e !important; }
 .os-mode-row button {
   border-radius: 14px; padding: 12px 8px; border: 1px solid #e4d9cc; background: #fff; text-align: center;
 }
