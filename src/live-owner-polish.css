@@ -5261,6 +5261,7 @@
   flex: 0 0 auto;
 }
 
+.auth-page .auth-bg-copy { max-width: 540px; }
 .auth-page .auth-title {
   font-family: 'Playfair Display', Georgia, serif !important;
   font-weight: 600 !important;
@@ -5306,6 +5307,6 @@
   }
   .auth-page.nsos-cream .auth-card::before {
     opacity: .04 !important;
-    background-position: right -10% top 0 !important;
+    background-position: right -12% bottom -18% !important;
   }
 }
