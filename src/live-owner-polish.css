@@ -3824,3 +3824,281 @@
     opacity: .1 !important;
   }
 }
+
+/* —— v41 visual quality: paper, type, quieter chrome (does not remap --ns-white) —— */
+.portal-layout.nsos-cream .portal-main {
+  background-image:
+    radial-gradient(900px 420px at 8% -8%, rgba(184, 137, 58, .09), transparent 58%),
+    radial-gradient(720px 380px at 100% 0%, rgba(255, 253, 248, .55), transparent 46%) !important;
+  background-color: #efe8dc !important;
+}
+.portal-layout.nsos-cream .portal-content {
+  padding-top: 22px !important;
+  padding-bottom: 36px !important;
+}
+.portal-layout.nsos-cream .owner-command-head h2,
+.portal-layout.nsos-cream .os-page-toolbar h2,
+.portal-layout.nsos-cream .v2-page-head h2,
+.portal-layout.nsos-cream .tab-header h2,
+.portal-layout.nsos-cream .phase300-header h2,
+.portal-layout.nsos-cream .enterprise-page-header h2,
+.portal-layout.nsos-cream .ws-hero-title,
+.portal-layout.nsos-cream .portal-content .ws-hero h1 {
+  font-family: 'Playfair Display', Georgia, serif !important;
+  font-weight: 600 !important;
+  letter-spacing: -.03em !important;
+  line-height: 1.12 !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .owner-command-head h2 {
+  font-size: clamp(30px, 3.4vw, 42px) !important;
+}
+.portal-layout.nsos-cream .os-page-toolbar h2,
+.portal-layout.nsos-cream .v2-page-head h2 {
+  display: block !important;
+  font-size: clamp(26px, 2.8vw, 36px) !important;
+  margin: 4px 0 6px !important;
+}
+.portal-layout.nsos-cream .os-page-lead,
+.portal-layout.nsos-cream .v2-page-head p {
+  display: block !important;
+  max-width: 42rem;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+}
+.portal-layout.nsos-cream .os-page-toolbar,
+.portal-layout.nsos-cream .v2-page-head {
+  margin-bottom: 18px !important;
+  padding-bottom: 4px !important;
+  align-items: flex-end;
+}
+.portal-layout.nsos-cream .eyebrow,
+.portal-layout.nsos-cream .os-page-kicker,
+.portal-layout.nsos-cream .ws-hero-kicker {
+  color: #b8893a !important;
+  -webkit-text-fill-color: #b8893a !important;
+  letter-spacing: .16em !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+}
+
+.portal-layout.nsos-cream .portal-main .nsos-kpi,
+.portal-layout.nsos-cream .portal-main .owner-kpis-v17 .phase-kpi,
+.portal-layout.nsos-cream .portal-main .admin-stat {
+  padding: 16px 18px 18px !important;
+  border-radius: 16px !important;
+  box-shadow: inset 0 2px 0 #b8893a, 0 12px 28px rgba(48, 38, 28, .06) !important;
+}
+.portal-layout.nsos-cream .portal-main .nsos-kpi strong,
+.portal-layout.nsos-cream .portal-main .owner-kpis-v17 .phase-kpi strong,
+.portal-layout.nsos-cream .portal-main .admin-stat strong,
+.portal-layout.nsos-cream .portal-main .phase-kpi strong,
+.portal-layout.nsos-cream .ws-hero-metrics dd {
+  font-family: 'Playfair Display', Georgia, serif !important;
+  font-weight: 600 !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  letter-spacing: -.02em;
+}
+.portal-layout.nsos-cream .portal-main .nsos-kpi span,
+.portal-layout.nsos-cream .portal-main .phase-kpi span {
+  letter-spacing: .12em !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+}
+.portal-layout.nsos-cream .nsos-kpis,
+.portal-layout.nsos-cream .owner-kpis-v17 {
+  gap: 12px !important;
+  margin-bottom: 18px !important;
+}
+
+.portal-layout.nsos-cream .os-workspace-pulse.os-pulse-ribbon,
+.portal-layout.nsos-cream .os-workspace-pulse {
+  display: flex !important;
+  align-items: stretch;
+  gap: 0 !important;
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 0 18px !important;
+  padding: 0 0 14px !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-bottom: 1px solid #e4d9cc !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  overflow: hidden;
+}
+.portal-layout.nsos-cream .os-pulse-metric {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0 !important;
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  padding: 2px 18px 0 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+.portal-layout.nsos-cream .os-pulse-metric i {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px !important;
+  background: rgba(184, 137, 58, .12) !important;
+  border: 1px solid rgba(184, 137, 58, .28) !important;
+  color: #b8893a !important;
+}
+.portal-layout.nsos-cream .os-pulse-metric strong {
+  font-family: 'Playfair Display', Georgia, serif !important;
+  font-size: 22px !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .os-pulse-metric small {
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+  letter-spacing: .1em;
+}
+
+.portal-layout.nsos-cream .portal-main .nsos-card,
+.portal-layout.nsos-cream .portal-main .phase-panel,
+.portal-layout.nsos-cream .portal-main .admin-card {
+  border-radius: 16px !important;
+  box-shadow: 0 14px 32px rgba(48, 38, 28, .06) !important;
+}
+.portal-layout.nsos-cream .portal-main .nsos-col,
+.portal-layout.nsos-cream .portal-main .dispatch-column {
+  background: #f6f1e8 !important;
+  box-shadow: none !important;
+}
+.portal-layout.nsos-cream .portal-main .nsos-lead,
+.portal-layout.nsos-cream .portal-main .dispatch-job {
+  background: #fffdf8 !important;
+  border-radius: 12px !important;
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.portal-layout.nsos-cream .portal-main .nsos-lead:hover,
+.portal-layout.nsos-cream .portal-main .dispatch-job:hover,
+.portal-layout.nsos-cream .portal-main .nsos-photo-tile:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(48, 38, 28, .1) !important;
+}
+.portal-layout.nsos-cream .portal-main .nsos-job:hover {
+  background: #f7f1ea;
+}
+
+.portal-layout.nsos-cream .portal-main .nsos-quick button {
+  min-width: 84px;
+  padding: 12px 10px 10px !important;
+  border-radius: 14px !important;
+  background: #fffdf8 !important;
+  box-shadow: 0 8px 18px rgba(48, 38, 28, .04);
+}
+.portal-layout.nsos-cream .portal-main .nsos-quick button:hover {
+  border-color: #d4b36a !important;
+  background: #fbf6ec !important;
+}
+.portal-layout.nsos-cream .portal-main .nsos-alert {
+  border-radius: 14px !important;
+  box-shadow: 0 10px 22px rgba(48, 38, 28, .04);
+}
+.portal-layout.nsos-cream .portal-main .nsos-alert.hot {
+  box-shadow: inset 3px 0 0 #b45444, 0 10px 22px rgba(48, 38, 28, .04);
+}
+.portal-layout.nsos-cream .portal-main .nsos-alert em {
+  font-family: 'Playfair Display', Georgia, serif !important;
+  font-size: 22px;
+}
+.portal-layout.nsos-cream .portal-main .owner-glance-v17 {
+  border-radius: 16px !important;
+  overflow: hidden;
+}
+.portal-layout.nsos-cream .portal-main .owner-glance-v17 svg {
+  background: rgba(184, 137, 58, .14) !important;
+  color: #b8893a !important;
+  border-radius: 12px;
+  padding: 8px;
+  width: 40px;
+  height: 40px;
+}
+.portal-layout.nsos-cream .portal-main .nsos-owner-jump a,
+.portal-layout.nsos-cream .portal-main .nsos-owner-jump button {
+  border-radius: 999px !important;
+  padding: 8px 13px !important;
+  font-size: 12px !important;
+}
+.portal-layout.nsos-cream .portal-main .nsos-owner-jump a:hover,
+.portal-layout.nsos-cream .portal-main .nsos-owner-jump button:hover {
+  border-color: #d4b36a !important;
+  background: #f6ead4 !important;
+}
+
+.portal-layout.nsos-cream .os-secondary-nav-scroll button {
+  letter-spacing: .01em;
+}
+.portal-layout.nsos-cream .portal-main .btn-primary,
+.portal-layout.nsos-cream .nsos-btn:not(.ghost) {
+  transition: transform .16s ease, background .16s ease;
+}
+.portal-layout.nsos-cream .portal-main .btn-primary:hover,
+.portal-layout.nsos-cream .nsos-btn:not(.ghost):hover {
+  background: #2a241e !important;
+}
+
+.portal-layout.nsos-cream .owner-revenue-v17,
+.portal-layout.nsos-cream .v20-pipeline-panel,
+.portal-layout.nsos-cream .v20-health-panel {
+  display: block !important;
+}
+.portal-layout.nsos-cream .owner-command-grid-v17 .owner-revenue-v17,
+.portal-layout.nsos-cream .owner-bottom-v17 .v20-pipeline-panel,
+.portal-layout.nsos-cream .owner-bottom-v17 .v20-health-panel {
+  display: flex !important;
+  flex-direction: column;
+}
+
+@media (max-width: 860px) {
+  .portal-layout.nsos-cream .os-page-toolbar h2,
+  .portal-layout.nsos-cream .v2-page-head h2 {
+    font-size: 26px !important;
+  }
+  .portal-layout.nsos-cream .nsos-kpis,
+  .portal-layout.nsos-cream .owner-kpis-v17 {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .portal-layout.nsos-cream .os-workspace-pulse,
+  .portal-layout.nsos-cream .os-workspace-pulse.os-pulse-ribbon {
+    overflow-x: auto !important;
+    border-bottom: 1px solid #e4d9cc !important;
+  }
+  .portal-layout.nsos-cream .os-pulse-metric { min-width: 148px; padding-right: 16px !important; }
+  .portal-layout.nsos-cream .os-phone-subnav button {
+    border-radius: 999px !important;
+    padding: 8px 14px !important;
+  }
+  .portal-layout.nsos-cream .os-phone-subnav button.active {
+    background: #1c1814 !important;
+    color: #f6f1e8 !important;
+    -webkit-text-fill-color: #f6f1e8 !important;
+    border-color: #1c1814 !important;
+  }
+  .portal-layout.nsos-cream .owner-revenue-v17,
+  .portal-layout.nsos-cream .v20-pipeline-panel,
+  .portal-layout.nsos-cream .v20-health-panel {
+    display: flex !important;
+  }
+}
+
+.portal-layout.nsos-cream .nsos-photo-tile figcaption,
+.portal-layout.nsos-cream .nsos-photo-tile figcaption strong {
+  color: #fffdf8 !important;
+  -webkit-text-fill-color: #fffdf8 !important;
+}
+.portal-layout.nsos-cream .nsos-photo-tile figcaption small {
+  color: #ead9b8 !important;
+  -webkit-text-fill-color: #ead9b8 !important;
+}
