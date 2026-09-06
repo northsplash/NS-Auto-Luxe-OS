@@ -4290,3 +4290,118 @@
   .auth-page .auth-portals span { min-width: 72px; padding: 8px 10px; }
   .auth-page .auth-portals { justify-content: flex-start; }
 }
+
+/* V48 — brand mark restored in chrome and applied as the workspace background. */
+.portal-layout.nsos-cream .portal-brand-logo,
+.portal-layout.nsos-cream .sidebar-header .portal-brand-logo {
+  width: 88px !important;
+  height: 88px !important;
+  max-height: 88px !important;
+  padding: 0 !important;
+  object-fit: contain !important;
+  background: transparent !important;
+  filter: none !important;
+}
+.portal-layout.nsos-cream .portal-content {
+  background: transparent !important;
+}
+.portal-layout.nsos-cream .portal-main {
+  background-color: #efe8dc !important;
+  background-image:
+    var(--ns-brand-watermark),
+    radial-gradient(900px 420px at 8% -8%, rgba(184, 137, 58, .09), transparent 58%),
+    radial-gradient(720px 380px at 100% 0%, rgba(255, 253, 248, .55), transparent 46%) !important;
+  background-repeat: no-repeat !important;
+  background-position: center 42%, 8% -8%, 100% 0% !important;
+  background-size: min(58vw, 640px) auto, 900px 420px, 720px 380px !important;
+  background-attachment: scroll !important;
+}
+.portal-layout.nsos-cream .portal-main::before {
+  content: none !important;
+  background-image: none !important;
+  opacity: 0 !important;
+}
+.portal-layout.nsos-cream .portal-main::after {
+  content: "" !important;
+  display: block !important;
+  position: absolute !important;
+  inset: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  width: auto !important;
+  height: auto !important;
+  max-width: none !important;
+  background-image: var(--ns-brand-watermark) !important;
+  background-repeat: no-repeat !important;
+  background-position: center 42% !important;
+  background-size: min(62vw, 680px) auto !important;
+  opacity: .22 !important;
+  filter: none !important;
+  mask-image: none !important;
+  -webkit-mask-image: none !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+}
+.auth-page.nsos-cream .auth-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background-color: #fffdf8 !important;
+}
+.auth-page.nsos-cream .auth-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: var(--ns-brand-watermark);
+  background-repeat: no-repeat;
+  background-position: center 22%;
+  background-size: min(78%, 340px) auto;
+  opacity: .18;
+  pointer-events: none;
+  z-index: 0;
+}
+.auth-page.nsos-cream .auth-card > * {
+  position: relative;
+  z-index: 1;
+}
+.workspace-gate.nsos-cream {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background-color: #efe8dc !important;
+}
+.workspace-gate.nsos-cream::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: var(--ns-brand-watermark);
+  background-repeat: no-repeat;
+  background-position: center 38%;
+  background-size: min(54vw, 380px) auto;
+  opacity: .16;
+  pointer-events: none;
+  z-index: 0;
+}
+.workspace-gate.nsos-cream > * {
+  position: relative;
+  z-index: 1;
+}
+@media (max-width: 1180px) {
+  .portal-layout.nsos-cream .portal-main {
+    background-size: min(72vw, 420px) auto, 900px 420px, 720px 380px !important;
+    background-position: center 36%, 8% -8%, 100% 0% !important;
+  }
+  .portal-layout.nsos-cream .portal-main::after {
+    background-size: min(72vw, 420px) auto !important;
+    background-position: center 36% !important;
+    opacity: .2 !important;
+  }
+  .portal-layout.nsos-cream .portal-brand-logo,
+  .portal-layout.nsos-cream .sidebar-header .portal-brand-logo {
+    width: 72px !important;
+    height: 72px !important;
+    max-height: 72px !important;
+  }
+}

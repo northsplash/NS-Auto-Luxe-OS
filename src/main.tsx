@@ -10,6 +10,7 @@ import App from './App';
 
 const assetBase = import.meta.env.BASE_URL;
 document.documentElement.style.setProperty('--ns-brand-mark', `url("${assetBase}ns-auto-luxe-logo.svg")`);
+document.documentElement.style.setProperty('--ns-brand-watermark', `url("${assetBase}ns-auto-luxe-watermark.svg")`);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

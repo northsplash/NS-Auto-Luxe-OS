@@ -1,5 +1,5 @@
-const CACHE='north-splash-os-v47-portals';
-const SHELL=['./','./index.html','./manifest.webmanifest','./ns-auto-luxe-logo.svg'];
+const CACHE='north-splash-os-v48-logo-bg';
+const SHELL=['./','./index.html','./manifest.webmanifest','./ns-auto-luxe-logo.svg','./ns-auto-luxe-watermark.svg'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
 self.addEventListener('fetch',event=>{
