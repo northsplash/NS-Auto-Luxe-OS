@@ -2253,8 +2253,7 @@
   border-color: #e4d9cc !important;
 }
 .portal-layout.nsos-cream .d2d-map-topline h2,
-.portal-layout.nsos-cream .d2d-command-territory strong,
-.portal-layout.nsos-cream .d2d-command-next strong {
+.portal-layout.nsos-cream .d2d-command-territory strong {
   color: #1c1814 !important;
   -webkit-text-fill-color: #1c1814 !important;
 }
