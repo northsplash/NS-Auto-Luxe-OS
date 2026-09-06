@@ -623,7 +623,7 @@ const handleDeleteAvailability = async (id: string) => {
       <aside className={`portal-sidebar admin-sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <div className="sidebar-header">
           <Link to={ownerMode ? "/owner" : "/admin"} className="sidebar-brand">
-            <img className="portal-brand-logo" src={`${import.meta.env.BASE_URL}ns-auto-luxe-logo.svg`} alt="North Splash Auto Luxe"/>
+            <img className="portal-brand-logo" src={`${import.meta.env.BASE_URL}ns-auto-luxe-mark.png`} alt="North Splash Auto Luxe"/>
             <div><strong>{ownerMode ? "OWNER PORTAL" : "ADMIN PANEL"}</strong><small>NORTH SPLASH</small></div>
           </Link>
           <button className="sidebar-close" onClick={() => setSidebarOpen(false)}><X size={18} /></button>

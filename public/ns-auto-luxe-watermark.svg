@@ -6,6 +6,8 @@
       <stop offset="100%" stop-color="#8d6a28"/>
     </linearGradient>
   </defs>
-  <circle cx="64" cy="64" r="58" fill="none" stroke="url(#wm)" stroke-width="5"/>
-  <text x="64" y="76" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="800" fill="url(#wm)" letter-spacing="-2">NS</text>
+  <path fill="none" stroke="url(#wm)" stroke-width="5" stroke-linejoin="round"
+    d="M64 10c-16 0-36 3-40 8v36c0 28 18 48 40 62 22-14 40-34 40-62V18c-4-5-24-8-40-8z"/>
+  <text x="52" y="78" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="44" font-weight="700" fill="url(#wm)">N</text>
+  <text x="78" y="78" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="44" font-weight="700" fill="url(#wm)" opacity=".85">S</text>
 </svg>

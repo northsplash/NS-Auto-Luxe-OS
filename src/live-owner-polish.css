@@ -1123,6 +1123,14 @@
   color: #f6f1e8 !important;
   -webkit-text-fill-color: #f6f1e8 !important;
 }
+.auth-hero-lockup {
+  display: block;
+  width: min(210px, 42vw);
+  height: auto;
+  margin: 0 0 16px;
+  object-fit: contain;
+  filter: drop-shadow(0 12px 28px rgba(0,0,0,.45));
+}
 .auth-page .auth-card {
   background: #fffdf8 !important;
   color: #1c1814 !important;
@@ -1150,12 +1158,12 @@
   -webkit-text-fill-color: #6f675e !important;
 }
 .auth-page .auth-brand-logo {
-  width: 56px;
-  height: 56px;
+  width: 64px;
+  height: 64px;
   object-fit: contain;
   background: #1c1814;
-  border-radius: 14px;
-  padding: 6px;
+  border-radius: 16px;
+  padding: 8px;
 }
 .auth-page .auth-tabs {
   background: transparent !important;
@@ -1458,12 +1466,15 @@
   content: none !important;
 }
 .portal-layout.nsos-cream .portal-brand-logo {
-  width: 44px !important;
-  height: 44px !important;
-  max-height: 44px !important;
+  width: 42px !important;
+  height: 42px !important;
+  max-height: 42px !important;
   object-fit: contain !important;
   background: transparent !important;
   padding: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  filter: none !important;
 }
 .auth-page .auth-switch a,
 .auth-page .auth-switch button,
@@ -1495,10 +1506,11 @@
 }
 @media (max-width: 720px) {
   .auth-page .auth-bg {
-    min-height: 160px !important;
-    max-height: 22vh;
+    min-height: 200px !important;
+    max-height: 28vh;
   }
   .auth-page .auth-bg-copy span { display: none; }
+  .auth-hero-lockup { width: min(128px, 40vw); margin-bottom: 8px; }
   .auth-page .auth-title { font-size: 26px !important; }
   .auth-page .auth-field input,
   .auth-page .btn-primary { min-height: 48px !important; }
@@ -4477,14 +4489,19 @@
 
 /* V48 — brand mark restored in chrome and applied as the workspace background. */
 .portal-layout.nsos-cream .portal-brand-logo,
-.portal-layout.nsos-cream .sidebar-header .portal-brand-logo {
-  width: 88px !important;
-  height: 88px !important;
-  max-height: 88px !important;
+.portal-layout.nsos-cream .sidebar-header .portal-brand-logo,
+.portal-layout.nsos-cream .sidebar-brand .portal-brand-logo {
+  width: 42px !important;
+  height: 42px !important;
+  max-width: 42px !important;
+  max-height: 42px !important;
   padding: 0 !important;
+  margin: 0 !important;
   object-fit: contain !important;
   background: transparent !important;
   filter: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
 }
 .portal-layout.nsos-cream .portal-content {
   background: transparent !important;
@@ -4584,8 +4601,8 @@
   }
   .portal-layout.nsos-cream .portal-brand-logo,
   .portal-layout.nsos-cream .sidebar-header .portal-brand-logo {
-    width: 72px !important;
-    height: 72px !important;
-    max-height: 72px !important;
+    width: 42px !important;
+    height: 42px !important;
+    max-height: 42px !important;
   }
 }

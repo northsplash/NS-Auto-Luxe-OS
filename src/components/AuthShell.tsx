@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { BRAND_LOCKUP } from '@/lib/brand';
 
 const HERO = 'https://images.pexels.com/photos/27968215/pexels-photo-27968215.jpeg?auto=compress&cs=tinysrgb&h=650&w=940';
 
@@ -26,6 +27,7 @@ export default function AuthShell({
         <img src={HERO} alt="" />
         <div className="auth-bg-overlay" />
         <div className="auth-bg-copy">
+          <img className="auth-hero-lockup" src={BRAND_LOCKUP} alt="NS Auto Luxe Premium Detailing" />
           <span>NORTH SPLASH AUTO LUXE</span>
           <p>{headline}</p>
           <div className="auth-portals" aria-label="Portals in this OS">

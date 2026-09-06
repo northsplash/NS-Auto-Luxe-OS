@@ -459,7 +459,7 @@ function OsShell() {
       <aside className={`portal-sidebar admin-sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <div className="sidebar-header">
           <Link to="/" className="sidebar-brand" onClick={() => go(homeTab)}>
-            <img className="portal-brand-logo" src={`${import.meta.env.BASE_URL}ns-auto-luxe-logo.svg`} alt="North Splash Auto Luxe" />
+            <img className="portal-brand-logo" src={BRAND_LOGO} alt="North Splash Auto Luxe" />
             <div><strong>North Splash</strong><small>Auto Luxe OS</small></div>
           </Link>
           <button className="sidebar-close" onClick={() => setSidebarOpen(false)}><X size={18} /></button>

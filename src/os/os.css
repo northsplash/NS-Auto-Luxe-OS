@@ -427,8 +427,8 @@ button.nsos-kpi { width: 100%; text-align: left; }
   font-weight: 800 !important;
 }
 .nsos-admin-preview .portal-brand-logo {
-  width: 86px;
-  height: auto;
+  width: 42px;
+  height: 42px;
   object-fit: contain;
 }
 .nsos-admin-preview .v2-page-head h2,
@@ -596,7 +596,7 @@ button.nsos-kpi { width: 100%; text-align: left; }
   .nsos-admin-preview .os-pinned-link { justify-content: flex-start !important; }
   .nsos-admin-preview .sidebar-item { justify-content: flex-start !important; }
   .nsos-admin-preview .sidebar-user { justify-content: flex-start !important; }
-  .nsos-admin-preview .portal-brand-logo { width: 86px !important; }
+  .nsos-admin-preview .portal-brand-logo { width: 42px !important; height: 42px !important; }
 
   .nsos-admin-preview .v2-page-head h2,
   .nsos-admin-preview .tab-header h2,

@@ -1,12 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="North Splash">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="NS Auto Luxe">
   <defs>
-    <linearGradient id="g" x1="18%" y1="8%" x2="86%" y2="92%">
+    <linearGradient id="gold" x1="18%" y1="8%" x2="86%" y2="92%">
       <stop offset="0%" stop-color="#f5d67e"/>
-      <stop offset="52%" stop-color="#d9ad4a"/>
+      <stop offset="52%" stop-color="#d4af37"/>
       <stop offset="100%" stop-color="#8d6a28"/>
     </linearGradient>
+    <linearGradient id="silver" x1="20%" y1="10%" x2="80%" y2="90%">
+      <stop offset="0%" stop-color="#f4f4f2"/>
+      <stop offset="55%" stop-color="#c8c8c4"/>
+      <stop offset="100%" stop-color="#8a8a86"/>
+    </linearGradient>
   </defs>
-  <circle cx="64" cy="64" r="62" fill="#12110c"/>
-  <circle cx="64" cy="64" r="58" fill="none" stroke="url(#g)" stroke-width="5"/>
-  <text x="64" y="76" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="800" fill="url(#g)" letter-spacing="-2">NS</text>
+  <path fill="none" stroke="url(#gold)" stroke-width="5" stroke-linejoin="round"
+    d="M64 10c-16 0-36 3-40 8v36c0 28 18 48 40 62 22-14 40-34 40-62V18c-4-5-24-8-40-8z"/>
+  <text x="52" y="78" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="44" font-weight="700" fill="url(#gold)">N</text>
+  <text x="78" y="78" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="44" font-weight="700" fill="url(#silver)">S</text>
 </svg>
