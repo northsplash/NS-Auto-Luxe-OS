@@ -3345,7 +3345,8 @@
   .portal-layout.nsos-cream .team-messaging.messaging-v6 {
     display: flex !important;
     flex-direction: column !important;
-    grid-template-columns: 1fr !important;
+    align-items: stretch !important;
+    grid-template-columns: minmax(0, 1fr) !important;
     width: 100% !important;
     max-width: none !important;
     min-height: calc(100dvh - 168px) !important;
@@ -3353,6 +3354,14 @@
     border: 0 !important;
     border-radius: 0 !important;
     background: #fffdf8 !important;
+  }
+  .portal-layout.nsos-cream .message-channel-rail,
+  .portal-layout.nsos-cream.nsos-admin-preview .team-messaging.messaging-v6 .message-channel-rail {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+    align-self: stretch !important;
   }
   .portal-layout.nsos-cream .message-channel-list {
     display: flex !important;
@@ -3364,7 +3373,12 @@
   .portal-layout.nsos-cream .message-channel {
     min-width: 0 !important;
     width: 100% !important;
+    max-width: none !important;
     flex: 0 0 auto !important;
+  }
+  .portal-layout.nsos-cream .message-channel-copy {
+    min-width: 0 !important;
+    overflow: hidden !important;
   }
   .portal-layout.nsos-cream .message-workspace-brand,
   .portal-layout.nsos-cream .message-rail-footer,
@@ -3382,7 +3396,9 @@
   .portal-layout.nsos-cream .owner-kpis-v17,
   .portal-layout.nsos-cream .stripe-balances,
   .portal-layout.nsos-cream .owner-glance-v17,
-  .portal-layout.nsos-cream .dashboard-grid { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+  .portal-layout.nsos-cream .dashboard-grid { grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
+  .portal-layout.nsos-cream .owner-kpis-v17 .phase-kpi,
+  .portal-layout.nsos-cream .dashboard-grid > div { padding: 12px 14px !important; }
   .auth-page .auth-bg {
     min-height: 120px !important;
     max-height: 18vh !important;
