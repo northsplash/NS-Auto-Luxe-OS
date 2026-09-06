@@ -36,6 +36,7 @@ export default function TeamMessagesView() {
   const [messageSearch, setMessageSearch] = useState('');
   const [showInfo, setShowInfo] = useState(() => typeof window !== 'undefined' && window.innerWidth > 1100);
   const [mobileThreadOpen, setMobileThreadOpen] = useState(() => typeof window !== 'undefined' && window.innerWidth > 760);
+  const [railFilter, setRailFilter] = useState<'all' | 'unread' | 'teams'>('all');
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState('');
   const [newMembers, setNewMembers] = useState<string[]>([]);
@@ -59,7 +60,12 @@ export default function TeamMessagesView() {
     };
   }, []);
 
-  const filtered = channels.filter((c) => !search || `${c.name} ${c.description || c.topic || ''}`.toLowerCase().includes(search.toLowerCase()));
+  const filtered = channels.filter((c) => {
+    if (search && !`${c.name} ${c.description || c.topic || ''}`.toLowerCase().includes(search.toLowerCase())) return false;
+    if (railFilter === 'unread') return c.unread > 0;
+    if (railFilter === 'teams') return c.kind === 'space' && c.channel_type !== 'company';
+    return true;
+  });
   const favoriteChannels = filtered.filter((c) => favorites.includes(c.id));
   const regularChannels = filtered.filter((c) => !favorites.includes(c.id));
   const active = channels.find((c) => c.id === activeId) || channels[0] || null;
@@ -133,6 +139,11 @@ export default function TeamMessagesView() {
           <span className="message-workspace-mark">NS</span>
           <div><strong>North Splash</strong><small>Field Communications</small></div>
           <ChevronDown size={15} />
+        </div>
+        <div className="nsos-seg message-rail-seg" role="tablist" aria-label="Chat filters">
+          {([['all', 'All'], ['unread', 'Unread'], ['teams', 'Teams']] as const).map(([id, label]) => (
+            <button key={id} type="button" className={railFilter === id ? 'active' : ''} onClick={() => setRailFilter(id)}>{label}</button>
+          ))}
         </div>
         <div className="message-search">
           <Search size={15} />

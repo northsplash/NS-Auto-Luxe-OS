@@ -218,7 +218,6 @@ function OsShell() {
   const [commandQuery, setCommandQuery] = useState('');
   const [dataOpen, setDataOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
-  const [mobileActionsOpen, setMobileActionsOpen] = useState(false);
   const [hireOpen, setHireOpen] = useState(false);
   const [hirePreset, setHirePreset] = useState<Partial<EmployeeDraft> | undefined>();
   const [peopleId, setPeopleId] = useState<string | null>(null);
@@ -261,7 +260,6 @@ function OsShell() {
     setTab(next);
     setSidebarOpen(false);
     setMoreOpen(false);
-    setMobileActionsOpen(false);
     setNewWorkOpen(false);
     setPeopleId(null);
     setJobId(null);
@@ -353,7 +351,7 @@ function OsShell() {
     }
     if (tab === 'staff_schedule' || tab === 'timeclock' || tab === 'time_off' || tab === 'payroll_approval') return <ScheduleView />;
     if (tab === 'crews' || tab === 'dispatch' || tab === 'job_assignments') return <DispatchView onOpen={openJob} />;
-    if (tab === 'sales' || tab === 'territories' || tab === 'marketing' || tab === 'retention') return <D2DView onBook={openJob} />;
+    if (tab === 'sales' || tab === 'territories' || tab === 'marketing' || tab === 'retention') return <D2DView onBook={openJob} onPipeline={() => go('leads')} />;
     if (tab === 'leads') return <PipelineView onBook={openJob} />;
     if (tab === 'customers' || tab === 'crm' || tab === 'fleet') return <CustomersView onOpenJob={openJob} />;
     if (tab === 'appointments' || tab === 'schedule' || tab === 'availability' || tab === 'archived') {
@@ -451,25 +449,14 @@ function OsShell() {
           <button className="sidebar-toggle" onClick={() => setSidebarOpen(true)}><Menu size={20} /></button>
           <div className="topbar-title"><span>{currentWorkspace.label}</span><h1>{currentNav?.label}</h1></div>
           <div className="os-topbar-actions">
-            <button className="os-command-trigger" aria-label="Search workspace" onClick={() => { setMobileActionsOpen(false); setMoreOpen(false); setCommandOpen(true); }}>
+            <button className="os-command-trigger" aria-label="Search workspace" onClick={() => { setMoreOpen(false); setCommandOpen(true); }}>
               <Search size={16} /><span>Search workspace</span><kbd>⌘ K</kbd>
             </button>
             <button className="btn-outline btn-sm os-manage-data desktop-top-action" onClick={() => setDataOpen(true)}><Trash2 size={15} /> <span>Manage data</span></button>
             <button className="btn-primary btn-sm desktop-top-action" onClick={() => setNewWorkOpen(true)}><Plus size={15} /><span>+ New work</span></button>
-            <button className={`os-mobile-actions-trigger ${mobileActionsOpen ? 'active' : ''}`} aria-label="More workspace actions" aria-expanded={mobileActionsOpen} onClick={() => setMobileActionsOpen((v) => !v)}>
-              <MoreHorizontal size={20} />
-            </button>
-            {mobileActionsOpen && (
-              <div className="os-mobile-actions-menu">
-                <button onClick={() => navigate('/d2d')}><Target size={16} /><span>Switch to D2D mode</span></button>
-                <button onClick={() => navigate('/employee')}><Car size={16} /><span>Switch to Detailer mode</span></button>
-                <button onClick={() => { setDataOpen(true); setMobileActionsOpen(false); }}><Trash2 size={16} /><span>Manage data</span></button>
-                <button onClick={() => { setNewWorkOpen(true); setMobileActionsOpen(false); }}><Plus size={16} /><span>New work</span></button>
-              </div>
-            )}
           </div>
         </div>
-        <div className="os-secondary-nav">
+        <div className="os-secondary-nav os-desktop-subnav">
           <div className="os-secondary-nav-scroll">
             {currentWorkspace.items.map((id) => {
               const item = nav(id);
@@ -577,7 +564,7 @@ function OsShell() {
         <button type="button" className={!moreOpen && phoneChat ? 'active' : ''} onClick={() => go('messages')}><MessageCircle size={19} /><span>Chat</span></button>
         <button type="button" className={!moreOpen && phoneCal ? 'active' : ''} onClick={() => go('appointments')}><Calendar size={19} /><span>Calendar</span></button>
         <button type="button" className={!moreOpen && phoneTeam ? 'active' : ''} onClick={() => go('employees')}><Users size={19} /><span>Team</span></button>
-        <button type="button" className={phoneMore ? 'active' : ''} onClick={() => { setSidebarOpen(false); setMobileActionsOpen(false); setMoreOpen((v) => !v); }}><MoreHorizontal size={19} /><span>More</span></button>
+        <button type="button" className={phoneMore ? 'active' : ''} onClick={() => { setSidebarOpen(false); setMoreOpen((v) => !v); }}><MoreHorizontal size={19} /><span>More</span></button>
       </nav>
       {moreOpen && (
         <div className="os-more-sheet-backdrop" onClick={() => setMoreOpen(false)}>

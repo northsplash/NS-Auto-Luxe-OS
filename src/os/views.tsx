@@ -30,8 +30,8 @@ function jobClock(time: string) {
   return time.includes('·') ? time.split('·')[1].trim() : time;
 }
 
-function StripeKpi({ label, value }: { label: string; value: string }) {
-  return <div className="phase-kpi"><span>{label}</span><strong>{value}</strong></div>;
+function StripeKpi({ label, value, delta }: { label: string; value: string; delta?: string }) {
+  return <div className="phase-kpi"><span>{label}</span><strong>{value}</strong>{delta ? <small className="nsos-delta">{delta}</small> : null}</div>;
 }
 
 function OwnerRevenueChart({ days }: { days: { label: string; rev: number }[] }) {
@@ -145,10 +145,10 @@ export function OwnerDashboard({
       </div>
 
       <div className="owner-kpis-v17">
-        <StripeKpi label="Revenue" value={money(week)} />
-        <StripeKpi label="Jobs completed" value={String(completed.length)} />
-        <StripeKpi label="New leads" value={String(leads.filter((l) => l.status !== 'dnk').length)} />
-        <StripeKpi label="Avg job value" value={money(avgTicket)} />
+        <StripeKpi label="Revenue" value={money(week)} delta="+12.4%" />
+        <StripeKpi label="Jobs completed" value={String(completed.length)} delta="+20%" />
+        <StripeKpi label="New leads" value={String(leads.filter((l) => l.status !== 'dnk').length)} delta="+16%" />
+        <StripeKpi label="Avg job value" value={money(avgTicket)} delta="+9%" />
       </div>
 
       <section className="owner-glance-v17">
@@ -718,12 +718,13 @@ export function DispatchView({ onOpen }: { onOpen?: (id: string) => void }) {
   );
 }
 
-export function D2DView({ onBook }: { onBook?: (jobId: string) => void }) {
+export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => void; onPipeline?: () => void }) {
   const os = useOs();
   const [active, setActive] = useState<string | null>(os.leads[0]?.id || null);
   const [note, setNote] = useState('');
   const [door, setDoor] = useState({ name: '', address: '' });
   const [zone, setZone] = useState<'all' | 'west' | 'central' | 'east'>('all');
+  const [pane, setPane] = useState<'map' | 'pipeline' | 'list'>('map');
   const lead = os.leads.find((l) => l.id === active) || os.leads[0];
   const territory = (x: number) => (x < 33 ? 'west' : x < 66 ? 'central' : 'east');
   const pins = os.leads.filter((l) => zone === 'all' || territory(l.x) === zone);
@@ -742,12 +743,30 @@ export function D2DView({ onBook }: { onBook?: (jobId: string) => void }) {
   };
   return (
     <div className="nsos-sr">
+      <div className="nsos-seg" role="tablist" aria-label="Leads view">
+        {([['map', 'Map'], ['pipeline', 'Pipeline'], ['list', 'List']] as const).map(([id, label]) => (
+          <button key={id} type="button" role="tab" aria-selected={pane === id} className={pane === id ? 'active' : ''} onClick={() => {
+            if (id === 'pipeline' && onPipeline) onPipeline();
+            else setPane(id);
+          }}>{label}</button>
+        ))}
+      </div>
       <div className="nsos-sr-kpis">
         <div className="nsos-kpi"><span>Doors</span><strong>{os.leads.length}</strong></div>
         <div className="nsos-kpi"><span>Touched</span><strong>{os.leads.filter((l) => l.status !== 'new').length}</strong></div>
         <div className="nsos-kpi"><span>Appointments</span><strong>{os.leads.filter((l) => l.status === 'appointment').length}</strong></div>
         <div className="nsos-kpi"><span>Sold</span><strong>{os.leads.filter((l) => l.status === 'sold').length}</strong></div>
       </div>
+      {pane === 'list' ? (
+        <div className="nsos-sr-doors">
+          {pins.map((l) => (
+            <button className={`nsos-job ${l.id === lead?.id ? 'active-row' : ''}`} key={l.id} onClick={() => setActive(l.id)}>
+              <div><strong>{l.name}</strong><div style={{ color: 'var(--os-muted)', fontSize: 12 }}>{l.address} · {l.rep}</div></div>
+              <span className={`nsos-pill ${l.status === 'sold' || l.status === 'appointment' ? 'green' : l.status === 'dnk' ? 'red' : l.status === 'interested' ? 'gold' : 'blue'}`}>{l.status === 'knocked' ? 'not home' : l.status}</span>
+            </button>
+          ))}
+        </div>
+      ) : (
       <div className="nsos-sr-layout">
         <div className="nsos-sr-map-wrap">
           <div className="nsos-sr-legend">
@@ -825,6 +844,7 @@ export function D2DView({ onBook }: { onBook?: (jobId: string) => void }) {
           </div>
         </aside>
       </div>
+      )}
     </div>
   );
 }
