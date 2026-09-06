@@ -877,7 +877,6 @@
 .portal-layout.nsos-cream .portal-main .owner-mini-metrics b,
 .portal-layout.nsos-cream .portal-main .owner-summary-cells b,
 .portal-layout.nsos-cream .portal-main .big-money,
-.portal-layout.nsos-cream .portal-main .crm-value,
 .portal-layout.nsos-cream .portal-main .crm-card h3,
 .portal-layout.nsos-cream .portal-main .phase-panel-head h3,
 .portal-layout.nsos-cream .portal-main .ops-form-title,
@@ -2236,5 +2235,180 @@
   }
   .portal-layout.nsos-cream .employee-calendar-banner {
     grid-template-columns: 1fr !important;
+  }
+}
+
+/* D2D field chrome, calendar editor, espresso heroes */
+.portal-layout.nsos-cream .d2d-map-topline,
+.portal-layout.nsos-cream .v2-map-footer,
+.portal-layout.nsos-cream .d2d-command-territory,
+.portal-layout.nsos-cream .d2d-map-shell,
+.portal-layout.nsos-cream .field-map-wrap,
+.portal-layout.nsos-cream .field-map-toolbar,
+.portal-layout.nsos-cream .d2d-primary-map .field-map-toolbar,
+.portal-layout.nsos-cream .map-style-switcher {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  border-color: #e4d9cc !important;
+}
+.portal-layout.nsos-cream .d2d-map-topline h2,
+.portal-layout.nsos-cream .d2d-command-territory strong,
+.portal-layout.nsos-cream .d2d-command-next strong {
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .d2d-command-territory span,
+.portal-layout.nsos-cream .d2d-territory-select label,
+.portal-layout.nsos-cream .map-legend {
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+}
+.portal-layout.nsos-cream .d2d-command-next {
+  background: #1c1814 !important;
+  color: #f6f1e8 !important;
+  -webkit-text-fill-color: #f6f1e8 !important;
+  border-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .d2d-command-next strong,
+.portal-layout.nsos-cream .d2d-command-next small,
+.portal-layout.nsos-cream .d2d-command-next svg {
+  color: #f6f1e8 !important;
+  -webkit-text-fill-color: #f6f1e8 !important;
+}
+.portal-layout.nsos-cream .status-filter {
+  background: #fff !important;
+  color: #3d3228 !important;
+  -webkit-text-fill-color: #3d3228 !important;
+  border-color: #e4d9cc !important;
+}
+.portal-layout.nsos-cream .status-filter.active {
+  background: #1c1814 !important;
+  color: #f6f1e8 !important;
+  -webkit-text-fill-color: #f6f1e8 !important;
+  border-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .map-style-switcher button,
+.portal-layout.nsos-cream .map-tool-btn,
+.portal-layout.nsos-cream .clock-mini {
+  background: #fff !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  border: 1px solid #e4d9cc !important;
+}
+.portal-layout.nsos-cream .map-style-switcher button.active,
+.portal-layout.nsos-cream .clock-mini.active {
+  background: #1c1814 !important;
+  color: #f6f1e8 !important;
+  -webkit-text-fill-color: #f6f1e8 !important;
+  border-color: #1c1814 !important;
+}
+
+.portal-layout.nsos-cream .crm-value {
+  background: #1c1814 !important;
+  color: #f6f1e8 !important;
+  -webkit-text-fill-color: #f6f1e8 !important;
+}
+.portal-layout.nsos-cream .timeclock-hero,
+.portal-layout.nsos-cream .pay-hero,
+.portal-layout.nsos-cream .command-hero,
+.portal-layout.nsos-cream .performance-hero,
+.portal-layout.nsos-cream .route-hero {
+  background: #1c1814 !important;
+  color: #f6f1e8 !important;
+  border-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .timeclock-hero h2,
+.portal-layout.nsos-cream .pay-hero h2,
+.portal-layout.nsos-cream .command-hero h2,
+.portal-layout.nsos-cream .performance-hero h2,
+.portal-layout.nsos-cream .route-hero h2,
+.portal-layout.nsos-cream .timeclock-hero strong,
+.portal-layout.nsos-cream .pay-hero strong {
+  color: #f6f1e8 !important;
+  -webkit-text-fill-color: #f6f1e8 !important;
+}
+.portal-layout.nsos-cream .timeclock-hero p,
+.portal-layout.nsos-cream .pay-hero p,
+.portal-layout.nsos-cream .command-hero p,
+.portal-layout.nsos-cream .performance-hero p,
+.portal-layout.nsos-cream .route-hero p {
+  color: #d4c4b0 !important;
+  -webkit-text-fill-color: #d4c4b0 !important;
+}
+
+.portal-layout.nsos-cream .calendar-editor,
+.portal-layout.nsos-cream .calendar-shell,
+.portal-layout.nsos-cream .shared-calendar-v16 {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  border-color: #e4d9cc !important;
+}
+.portal-layout.nsos-cream .calendar-toolbar,
+.portal-layout.nsos-cream .week-corner,
+.portal-layout.nsos-cream .week-day-head,
+.portal-layout.nsos-cream .week-time-label,
+.portal-layout.nsos-cream .week-slot,
+.portal-layout.nsos-cream .calendar-month-grid > button,
+.portal-layout.nsos-cream .calendar-day-strip-v29 button {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  border-color: #eadfd3 !important;
+}
+.portal-layout.nsos-cream .week-day-head.active,
+.portal-layout.nsos-cream .calendar-view-switch button.active,
+.portal-layout.nsos-cream .calendar-day-strip-v29 button.active {
+  background: #1c1814 !important;
+  color: #f6f1e8 !important;
+  -webkit-text-fill-color: #f6f1e8 !important;
+}
+.portal-layout.nsos-cream .calendar-view-switch {
+  background: #fff !important;
+  border-color: #e4d9cc !important;
+}
+.portal-layout.nsos-cream .calendar-view-switch button {
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+}
+.portal-layout.nsos-cream .calendar-editor-head h3,
+.portal-layout.nsos-cream .calendar-command-head h2 {
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .empty-slot-add {
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+}
+
+@media (max-width: 1180px) {
+  .portal-layout.nsos-cream .d2d-field-commandbar {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .portal-layout.nsos-cream .d2d-filter-row {
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .portal-layout.nsos-cream .status-filter { min-height: 40px !important; }
+}
+
+@media (max-width: 720px) {
+  .portal-layout.nsos-cream .d2d-field-commandbar { grid-template-columns: 1fr !important; }
+  .portal-layout.nsos-cream .d2d-map-topline { flex-direction: column !important; }
+  .portal-layout.nsos-cream .calendar-editor-backdrop {
+    padding: 0 !important;
+    align-items: end !important;
+  }
+  .portal-layout.nsos-cream .calendar-editor {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 20px 20px 0 0 !important;
+    max-height: 92dvh !important;
+  }
+  .portal-layout.nsos-cream .calendar-form-grid { grid-template-columns: 1fr !important; }
+  .portal-layout.nsos-cream .clock-mini {
+    min-height: 40px !important;
+    padding: 8px 12px !important;
   }
 }
