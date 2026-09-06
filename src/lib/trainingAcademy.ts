@@ -79,7 +79,7 @@ DNK is permanent. Tapping the wrong color wastes the next rep’s day.`,
 2. Why you: “We come to the driveway so you don’t sit at a wash.”
 3. Permission: “Do you have a minute about your [vehicle you can see]?”
 4. Problem: swirl, pollen, interior dust, water spots — only what you can see. Do not invent damage.
-5. Offer: Luxe Exterior / Interior / Signature. Membership if they keep a nice car in the driveway.
+5. Offer: Exterior or Interior at Essential / Signature / Elite. Full vehicle if they want both. Membership if they keep a nice car in the driveway.
 6. Book: open the calendar and take a day this week. Do not “I’ll text you later” unless they refuse a time.
 
 If they shut the door, log Not Interested and go. If they say “my husband handles that,” log Follow Up with a time, not a maybe.`,
@@ -226,7 +226,7 @@ Coatings and paint correction are not a surprise add-on in the driveway unless t
         sort_order: 4,
         content: `Before photos: all four corners, both sides, interior front and rear, wheels. After photos: the same angles.
 
-Work the service checklist in order. Required items must be checked. Exterior Luxe: foam, hand wash, wheels, glass, sealant. Interior: vacuum, surfaces, glass, dressing as specified.
+Work the service checklist in order. Required items must be checked. Exterior selves: foam, hand wash, wheels, glass, sealant — Signature adds decon, Elite adds paint enhancement. Interior selves: vacuum, surfaces, glass — Signature adds leather, Elite adds extraction.
 
 Do not use the wrong pad or compound on a ceramic-coated car. If you are unsure, stop.
 

@@ -4,6 +4,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { money, prettyLabel } from '@/lib/data';
+import { ServiceMenuSelect } from '@/components/DetailSelfPicker';
 import { DOOR_STATUSES, doorStatus } from '@/lib/fieldOps';
 import { employeeCanD2D } from '@/lib/workCapabilities';
 import type { Appointment, Employee, Lead, TerritoryDoor } from '@/lib/supabase';
@@ -35,7 +36,7 @@ const emptyDraft = () => ({
   customer_name: '',
   phone: '',
   address: '',
-  service_interest: 'Luxe Signature Detail',
+  service_interest: 'Luxe Signature',
   estimated_value: '275',
   assigned_employee_id: '',
   notes: '',
@@ -260,7 +261,7 @@ export default function OwnerLeadPipeline({ employees, setAppointments, onNaviga
             <label>Name<input value={draft.customer_name} onChange={(e) => setDraft((p) => ({ ...p, customer_name: e.target.value }))} placeholder="Resident" /></label>
             <label>Phone<input value={draft.phone} onChange={(e) => setDraft((p) => ({ ...p, phone: e.target.value }))} placeholder="919-555-0100" /></label>
             <label className="wide">Address<input value={draft.address} onChange={(e) => setDraft((p) => ({ ...p, address: e.target.value }))} placeholder="Street, city" /></label>
-            <label>Service<input value={draft.service_interest} onChange={(e) => setDraft((p) => ({ ...p, service_interest: e.target.value }))} placeholder="Luxe Signature Detail" /></label>
+            <label>Service<ServiceMenuSelect value={draft.service_interest} onChange={(name,pkg)=>setDraft((p)=>({...p,service_interest:name,estimated_value:String(pkg?.price||p.estimated_value)}))}/></label>
             <label>Value<input type="number" min="0" value={draft.estimated_value} onChange={(e) => setDraft((p) => ({ ...p, estimated_value: e.target.value }))} /></label>
             <label>Rep
               <select value={draft.assigned_employee_id} onChange={(e) => setDraft((p) => ({ ...p, assigned_employee_id: e.target.value }))}>

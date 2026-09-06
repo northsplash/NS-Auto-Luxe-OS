@@ -64,6 +64,7 @@ The two cores: **SalesRabbit** for territory maps, pins, knocks, and canvassing;
 - Every Owner/Admin workspace item is on `/os`: Sales (map, pipeline, territories, campaigns, follow-up), Customers (directory, records, photos, calendar, windows, slots, history, fleets), Operations (jobs through approvals), People (team through training), Finance (payroll, ledger, analytics, pay mix), and Admin (access through traffic)
 - Client photos: import before/after and portfolio shots onto a customer. Open **Customers → Client photos**, or import from a CRM record. Attach to a visit when the job already exists.
 - Jobber appointments (stage filters, customer, address) and job detail with Uber-style live status stepper
+- Exterior and interior details each have three selves — Essential, Signature, Elite — on the D2D pitch, customer booker, calendar, and the detailer checklist. Full vehicle packages keep the same three selves.
 - Square payments, Gusto hiring pipeline, Stripe settings
 - Teams-style messaging (Chat / Teams filters, composer, company channel). Send shows an error instead of failing silently.
 - Gusto hiring: Convert / Hire seeds the onboarding packet and opens the hire’s profile.
@@ -71,7 +72,7 @@ The two cores: **SalesRabbit** for territory maps, pins, knocks, and canvassing;
 
 ## Apply the hire packet in Supabase
 
-After pulling, run `supabase/migrations/20260906120000_v29_employee_onboarding_profiles.sql`, `supabase/migrations/20260906140000_v30_new_hire_academy.sql`, and `supabase/migrations/20260906150000_v31_client_photos.sql` on the live project (or `supabase db push`). The Owner UI still saves last-four tax/deposit into `onboarding_tasks` if that table is not applied yet. Full SSNs are never stored. The Training tab also upserts academy lessons if the SQL has not been applied yet. Client photo imports still land in storage and a local fallback if `client_photos` is not applied yet.
+After pulling, run `supabase/migrations/20260906120000_v29_employee_onboarding_profiles.sql`, `supabase/migrations/20260906140000_v30_new_hire_academy.sql`, `supabase/migrations/20260906150000_v31_client_photos.sql`, and `supabase/migrations/20260906160000_v32_exterior_interior_detail_selves.sql` on the live project (or `supabase db push`). The Owner UI still saves last-four tax/deposit into `onboarding_tasks` if that table is not applied yet. Full SSNs are never stored. The Training tab also upserts academy lessons if the SQL has not been applied yet. Client photo imports still land in storage and a local fallback if `client_photos` is not applied yet.
 - Device shells: phone (≤720) uses the cream bottom bar; tablet (721–1180) uses hamburger + overlay menu + bottom bar; web (≥1181) keeps a persistent sidebar and hides the bar. Hard-refresh after deploy.
 
 ## Supabase

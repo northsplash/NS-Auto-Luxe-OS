@@ -9,9 +9,11 @@ import { liveOpenSlots } from './appointmentSlots';
 import { channelLabel, COMM_GROUPS, COMM_VARIABLES, fillTemplate, SAMPLE_VARS } from '@/lib/communicationCatalog';
 import { emptyEmployeeDraft, type EmployeeDraft } from '@/lib/rolePresets';
 import { firstWord, isSettledPayment, money, prettyLabel, trendLabel } from '@/lib/data';
+import { DETAIL_FAMILY_COPY, packagesForFamily } from '@/lib/detailCatalog';
+import { ServiceMenuSelect } from '@/components/DetailSelfPicker';
 import { remainingStepLabels } from '@/lib/onboarding';
 import {
-  JOB_STEP_LABELS, JOB_STEPS, LEAD_STAGES, OS_SERVICES, SHIFT_DAYS, WEEKDAYS, initialsOf, payLine, revenueDays,
+  JOB_STEP_LABELS, JOB_STEPS, LEAD_STAGES, SHIFT_DAYS, WEEKDAYS, initialsOf, payLine, revenueDays,
   type JobStatus, type LeadStatus, type OsChat, type OsEmployee, type OsJob,
 } from './demoData';
 import { useOs } from './osStore';
@@ -710,8 +712,8 @@ export function CalendarView({ onOpen }: { onOpen: (id: string) => void }) {
     return calDays[offset];
   };
   const [draft, setDraft] = useState({
-    customer: '', service: OS_SERVICES[2].name, vehicle: '', address: '', time: '10:00 AM',
-    price: OS_SERVICES[2].price, detailer: os.employees.find((e) => e.role === 'detailer')?.name || 'Marcus Hale',
+    customer: '', service: 'Luxe Signature', vehicle: '', address: '', time: '10:00 AM',
+    price: 275, detailer: os.employees.find((e) => e.role === 'detailer')?.name || 'Marcus Hale',
   });
   const query = q.toLowerCase();
   const label = dayLabel(picked);
@@ -769,12 +771,7 @@ export function CalendarView({ onOpen }: { onOpen: (id: string) => void }) {
             <label className="nsos-field">Vehicle<input value={draft.vehicle} onChange={(e) => setDraft({ ...draft, vehicle: e.target.value })} placeholder="Year make model" /></label>
           </div>
           <label className="nsos-field">Service
-            <select value={draft.service} onChange={(e) => {
-              const svc = OS_SERVICES.find((s) => s.name === e.target.value) || OS_SERVICES[2];
-              setDraft({ ...draft, service: svc.name, price: svc.price });
-            }}>
-              {OS_SERVICES.map((s) => <option key={s.name} value={s.name}>{s.name} · {money(s.price)}</option>)}
-            </select>
+            <ServiceMenuSelect value={draft.service} onChange={(name, pkg) => setDraft({ ...draft, service: name, price: pkg?.price ?? draft.price })} />
           </label>
           <div className="form-row">
             <label className="nsos-field">When
@@ -1569,6 +1566,20 @@ export function JobDetail({ job }: { job: OsJob }) {
           {job.notes?.map((n) => <div key={n.id} style={{ fontSize: 13, padding: '8px 0', borderTop: '1px solid var(--os-line)' }}>{n.at} · {n.author}: {n.body}</div>)}
         </section>
         <section className="nsos-card">
+          <span className="nsos-eyebrow">Service checklist</span>
+          <h3>{job.service}</h3>
+          <p style={{ color: 'var(--os-muted)', fontSize: 12 }}>{(job.checklist || []).filter((s) => s.done).length}/{(job.checklist || []).length} steps</p>
+          <div className="job-checklist nsos-job-checklist">
+            {(job.checklist || []).map((step) => (
+              <button key={step.id} type="button" className={step.done ? 'completed' : ''} onClick={() => os.toggleJobChecklist(job.id, step.id)}>
+                <span className="check-box">{step.done ? <Check size={15} /> : null}</span>
+                <span>{step.label}{step.required ? <small>Required</small> : null}</span>
+              </button>
+            ))}
+            {!(job.checklist || []).length && <div className="nsos-empty">No service steps for this job.</div>}
+          </div>
+        </section>
+        <section className="nsos-card">
           <span className="nsos-eyebrow">Photos</span>
           <div className="nsos-photos">
             {(job.photos || []).map((p) => (
@@ -2035,6 +2046,24 @@ export function JobsHome({ jobs, onOpen }: { jobs: OsJob[]; onOpen: (id: string)
   const rows = jobs.filter((j) => filter === 'all' || (filter === 'open' ? j.status !== 'completed' : j.status === filter));
   return (
     <div>
+      <div className="detail-menu-board">
+        {(['exterior', 'interior', 'full'] as const).map((family) => (
+          <section className="nsos-card" key={family}>
+            <span className="nsos-eyebrow">{DETAIL_FAMILY_COPY[family].kicker}</span>
+            <h3>{DETAIL_FAMILY_COPY[family].title}</h3>
+            <p className="detail-selves-blurb">{DETAIL_FAMILY_COPY[family].blurb}</p>
+            <div className="detail-menu-selves">
+              {packagesForFamily(family).map((pkg) => (
+                <div key={pkg.id} className={pkg.featured ? 'featured' : ''}>
+                  <small>{pkg.tag}</small>
+                  <strong>{pkg.self === 'essential' ? 'Essential' : pkg.self === 'signature' ? 'Signature' : 'Elite'}</strong>
+                  <b>{money(pkg.price)}</b>
+                </div>
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
       <div className="nsos-tabs">
         {['open', 'en_route', 'arrived', 'in_progress', 'completed', 'all'].map((f) => (
           <button key={f} className={filter === f ? 'active' : ''} onClick={() => setFilter(f)}>{prettyLabel(f)}</button>

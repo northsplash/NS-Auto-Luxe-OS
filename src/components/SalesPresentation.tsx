@@ -4,7 +4,9 @@ import {
   Clock3, Crown, DollarSign, Droplets, Gauge, Home, Maximize2, ShieldCheck,
   Sparkles, Star, Target, X,
 } from 'lucide-react';
-import { MEMBERSHIPS, PACKAGES, VEHICLE_SIZES, money } from '@/lib/data';
+import { MEMBERSHIPS, VEHICLE_SIZES, money } from '@/lib/data';
+import { packageForSelf, type DetailFamily, type DetailSelf } from '@/lib/detailCatalog';
+import DetailSelfPicker from '@/components/DetailSelfPicker';
 import type { OpenSlot } from '@/os/appointmentSlots';
 
 type OfferSelection={
@@ -39,12 +41,13 @@ export default function SalesPresentation({customerName,onClose,onSelectOffer,on
   const [slide,setSlide]=useState(0);
   const [mode,setMode]=useState<'presentation'|'quote'|'book'>('presentation');
   const [offerType,setOfferType]=useState<'service'|'membership'>('membership');
-  const [serviceIndex,setServiceIndex]=useState(1);
+  const [family,setFamily]=useState<DetailFamily>('full');
+  const [self,setSelf]=useState<DetailSelf>('signature');
   const [membershipIndex,setMembershipIndex]=useState(1);
   const [vehicleIndex,setVehicleIndex]=useState(0);
   const [slotId,setSlotId]=useState(slots[0]?.id || '');
 
-  const pkg=PACKAGES[serviceIndex]??PACKAGES[0];
+  const pkg=packageForSelf(family,self);
   const vehicle=VEHICLE_SIZES[vehicleIndex]??VEHICLE_SIZES[0];
   const membership=MEMBERSHIPS[membershipIndex]??MEMBERSHIPS[0];
   const currentSlide=slides[slide]??slides[0];
@@ -100,13 +103,13 @@ export default function SalesPresentation({customerName,onClose,onSelectOffer,on
         <article><Home/><span>03</span><h3>Mobile-first convenience</h3><p>Your driveway becomes the service bay when mobile service is available.</p></article>
         <article><Crown/><span>04</span><h3>Built for ongoing care</h3><p>One-time details are available, but memberships make consistent maintenance simple.</p></article>
       </div></section>;
-      case 'services': return <section className="sales-slide"><div className="sales-slide-heading"><span className="sales-kicker">ONE-TIME SERVICES</span><h2>Choose the level your vehicle needs today.</h2><p>Final pricing can vary by vehicle size, condition and selected add-ons.</p></div><div className="sales-product-grid">{PACKAGES.map((p,i)=><article key={p.name} className={p.featured?'featured':''}><span>{p.tag}</span><h3>{p.name}</h3><strong>{money(p.price)}<small>+</small></strong><p>{p.desc}</p><ul>{p.features.slice(0,5).map(f=><li key={f}><Check/>{f}</li>)}</ul><button type="button" onClick={()=>{setServiceIndex(i);setOfferType('service');setMode('quote');onEvent?.('offer_view',{type:'service',name:p.name})}}>Price This Service</button></article>)}</div></section>;
+      case 'services': return <section className="sales-slide"><div className="sales-slide-heading"><span className="sales-kicker">ONE-TIME SERVICES</span><h2>Exterior and interior, each with three selves.</h2><p>Essential, Signature, and Elite. Final pricing can vary by vehicle size, condition and selected add-ons.</p></div><DetailSelfPicker tone="dark" family={family} self={self} onChange={(nextFamily,nextSelf,nextPkg)=>{setFamily(nextFamily);setSelf(nextSelf);setOfferType('service');onEvent?.('offer_view',{type:'service',name:nextPkg.name,family:nextFamily,self:nextSelf})}}/><div className="sales-self-quote"><button type="button" onClick={()=>{setOfferType('service');setMode('quote');onEvent?.('offer_view',{type:'service',name:pkg.name})}}>Price {pkg.name}</button></div></section>;
       case 'membership': return <section className="sales-slide sales-membership-story"><div className="sales-slide-heading"><span className="sales-kicker">WHY MEMBERSHIP?</span><h2>Stop waiting until the vehicle is “bad enough” to detail.</h2><p>A membership turns vehicle care into a routine instead of another task to remember.</p></div><div className="sales-membership-flow"><article><span>1</span><h3>Set the rhythm</h3><p>Choose the maintenance plan that matches how you want the vehicle to look.</p></article><i/><article><span>2</span><h3>We keep up with it</h3><p>Regular service helps prevent the long gaps that lead to heavier buildup.</p></article><i/><article><span>3</span><h3>Stay consistently ready</h3><p>Your vehicle stays closer to “just detailed” instead of cycling between clean and neglected.</p></article></div><div className="sales-membership-banner"><Star/><div><strong>The value is consistency.</strong><span>Priority-oriented scheduling and recurring care make the membership easier to use than repeatedly starting from zero.</span></div><button type="button" onClick={()=>go(6)}>Compare Plans <ArrowRight/></button></div></section>;
       case 'plans': return <section className="sales-slide"><div className="sales-slide-heading"><span className="sales-kicker">MEMBERSHIP OPTIONS</span><h2>Pick how hands-off you want vehicle care to be.</h2><p>Monthly pricing shown below. Exact service availability and terms are confirmed during enrollment.</p></div><div className="sales-product-grid memberships">{MEMBERSHIPS.map((m,i)=><article key={m.name} className={i===1?'featured':''}><span>{i===1?'MOST POPULAR':'MEMBERSHIP'}</span><h3>{m.name}</h3><strong>{money(m.price)}<small>/mo</small></strong><p>{m.desc}</p><ul>{m.features.map(f=><li key={f}><Check/>{f}</li>)}</ul><button type="button" onClick={()=>{setMembershipIndex(i);setOfferType('membership');setMode('quote');onEvent?.('offer_view',{type:'membership',name:m.name})}}>Show Customer Price</button></article>)}</div></section>;
       case 'close': return <section className="sales-slide sales-close-slide"><div className="sales-close-main"><span className="sales-kicker">READY WHEN YOU ARE</span><h2>What makes the most sense for your vehicle?</h2><p>We can start with a one-time detail or set up ongoing maintenance so you do not have to keep thinking about it.</p><div className="sales-close-options"><button type="button" onClick={()=>{setOfferType('service');setMode('quote')}}><Sparkles/><span><strong>One-Time Detail</strong><small>Reset the vehicle now</small></span><ChevronRight/></button><button type="button" className="primary" onClick={()=>{setOfferType('membership');setMode('quote')}}><Crown/><span><strong>Membership</strong><small>Keep it consistently maintained</small></span><ChevronRight/></button></div></div><div className="sales-close-card"><span>NORTH SPLASH AUTO LUXE</span><strong>Premium care.<br/>At your door.</strong><p>Choose your service with your North Splash representative.</p></div></section>;
       default:return null;
     }
-  },[currentSlide.id,greeting,onEvent]);
+  },[currentSlide.id,greeting,onEvent,family,self,pkg.name]);
 
   return <div className={`${embedded?'sales-presentation-embedded':'sales-presentation-overlay'}`}>
     <div className="sales-presentation-shell">
@@ -118,7 +121,7 @@ export default function SalesPresentation({customerName,onClose,onSelectOffer,on
       </>:null}
       {mode==='quote'&&<div className="sales-quote-mode">
         <section className="sales-quote-builder"><div className="sales-slide-heading"><span className="sales-kicker">CUSTOMER QUOTE</span><h2>Build the offer in front of the customer.</h2><p>Select a one-time service or membership. This creates a sales estimate for the D2D lead; final pricing can still be adjusted based on condition and add-ons.</p></div><div className="sales-quote-toggle"><button type="button" className={offerType==='service'?'active':''} onClick={()=>setOfferType('service')}><Sparkles/>One-Time Service</button><button type="button" className={offerType==='membership'?'active':''} onClick={()=>setOfferType('membership')}><Crown/>Membership</button></div>
-          {offerType==='service'?<div className="sales-quote-options"><label><span>Service</span><select value={serviceIndex} onChange={e=>setServiceIndex(Number(e.target.value))}>{PACKAGES.map((p,i)=><option value={i} key={p.name}>{p.name} — {money(p.price)}+</option>)}</select></label><label><span>Vehicle</span><select value={vehicleIndex} onChange={e=>setVehicleIndex(Number(e.target.value))}>{VEHICLE_SIZES.map((v,i)=><option value={i} key={v.name}>{v.name}{v.extra?` +${money(v.extra)}`:''}</option>)}</select></label></div>:<div className="sales-quote-plan-picker">{MEMBERSHIPS.map((m,i)=><button type="button" className={i===membershipIndex?'active':''} key={m.name} onClick={()=>setMembershipIndex(i)}><span>{m.name}</span><strong>{money(m.price)}<small>/mo</small></strong><em>{m.desc}</em></button>)}</div>}
+          {offerType==='service'?<><DetailSelfPicker tone="dark" family={family} self={self} onChange={(nextFamily,nextSelf)=>{setFamily(nextFamily);setSelf(nextSelf)}}/><div className="sales-quote-options"><label><span>Vehicle</span><select value={vehicleIndex} onChange={e=>setVehicleIndex(Number(e.target.value))}>{VEHICLE_SIZES.map((v,i)=><option value={i} key={v.name}>{v.name}{v.extra?` +${money(v.extra)}`:''}</option>)}</select></label></div></>:<div className="sales-quote-plan-picker">{MEMBERSHIPS.map((m,i)=><button type="button" className={i===membershipIndex?'active':''} key={m.name} onClick={()=>setMembershipIndex(i)}><span>{m.name}</span><strong>{money(m.price)}<small>/mo</small></strong><em>{m.desc}</em></button>)}</div>}
         </section>
         <aside className="sales-quote-summary"><span className="sales-kicker">TODAY'S RECOMMENDATION</span><h3>{currentOffer.name}</h3><strong>{money(currentOffer.amount)}<small>{currentOffer.type==='membership'?'/month':' estimated'}</small></strong><p>{currentOffer.detail}</p><div className="sales-quote-includes">{(currentOffer.type==='service'?pkg.features:membership.features).slice(0,6).map(f=><span key={f}><Check/>{f}</span>)}</div><button type="button" className="sales-use-offer" onClick={chooseOffer}><Target/>{slots.length?'Pick a live time':'Use This Offer for Lead'}</button><button type="button" className="sales-back-presentation" onClick={()=>setMode('presentation')}><ArrowLeft/>Back to Presentation</button><small>Final service price may change for vehicle size, condition or add-ons. Membership enrollment terms are confirmed before purchase.</small></aside>
       </div>}

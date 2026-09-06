@@ -1554,3 +1554,52 @@ html.nsos-active #root {
 .nsos-cream .nsos-sr-zones b { color: rgba(28,24,20,.22) !important; border-color: rgba(28,24,20,.08) !important; }
 .nsos-cream .nsos-street-row.active-row,
 .nsos-cream .nsos-territory-card-main:hover { background: #f6f1e8 !important; }
+
+.detail-selves { display: grid; gap: 12px; }
+.detail-selves-families { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.detail-selves-families button {
+  text-align: left; border: 1px solid var(--ns-line, #e4d9cc); background: #fffdf8; color: #1c1814;
+  border-radius: 14px; padding: 12px 14px; min-height: 64px;
+}
+.detail-selves-families button small { display: block; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: #6f675e; }
+.detail-selves-families button strong { display: block; margin-top: 4px; font-size: 16px; }
+.detail-selves-families button.active { border-color: #b8893a; background: #1c1814; color: #fffdf8; }
+.detail-selves-families button.active small { color: #e8c96a; }
+.detail-selves-blurb { margin: 0; color: #6f675e; font-size: 13px; line-height: 1.45; }
+.detail-selves-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.detail-self-card {
+  text-align: left; border: 1px solid #e4d9cc; background: #fff; color: #1c1814;
+  border-radius: 16px; padding: 16px; display: grid; gap: 6px; min-height: 220px; align-content: start;
+}
+.detail-self-card span { font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: #b8893a; }
+.detail-self-card h3 { margin: 0; font-size: 22px; }
+.detail-self-card strong { font-size: 24px; }
+.detail-self-card strong small { font-size: 12px; color: #6f675e; }
+.detail-self-card p { margin: 0; font-size: 12px; color: #6f675e; min-height: 48px; }
+.detail-self-card ul { list-style: none; margin: 0; padding: 8px 0 0; display: grid; gap: 6px; }
+.detail-self-card li { display: flex; gap: 6px; align-items: flex-start; font-size: 11px; color: #3d3832; }
+.detail-self-card.active, .detail-self-card.featured.active { border-color: #1c1814; box-shadow: 0 0 0 1px #1c1814; }
+.detail-selves-picked { margin: 0; font-size: 12px; font-weight: 700; color: #1c1814; }
+.detail-menu-board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+.detail-menu-selves { display: grid; gap: 8px; }
+.detail-menu-selves > div { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; padding: 10px 12px; border: 1px solid #e4d9cc; border-radius: 12px; background: #fff; }
+.detail-menu-selves small { grid-column: 1; font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: #6f675e; }
+.detail-menu-selves strong { grid-column: 1; font-size: 14px; }
+.detail-menu-selves b { grid-column: 2; grid-row: 1 / 3; align-self: center; color: #b8893a; }
+.detail-menu-selves > div.featured { border-color: #b8893a; }
+.nsos-job-checklist button, .job-checklist button {
+  width: 100%; text-align: left; border: 1px solid #e4d9cc; background: #fffdf8; color: #1c1814;
+  border-radius: 12px; padding: 10px 12px; display: flex; align-items: flex-start; gap: 10px;
+}
+.nsos-job-checklist button.completed, .job-checklist button.completed { background: #f3eee4; }
+.job-checklist .check-box, .nsos-job-checklist .check-box {
+  width: 20px; height: 20px; border-radius: 6px; border: 1px solid #c8b8a4; display: grid; place-items: center; flex: 0 0 auto;
+}
+.job-checklist button.completed .check-box, .nsos-job-checklist button.completed .check-box { background: #1c1814; color: #e8c96a; border-color: #1c1814; }
+.job-checklist small, .nsos-job-checklist small { display: block; color: #6f675e; font-size: 10px; }
+.job-checklist-group { display: grid; gap: 6px; margin-bottom: 12px; }
+.job-checklist-group > .eyebrow { margin-bottom: 2px; }
+@media (max-width: 900px) {
+  .detail-selves-grid, .detail-menu-board { grid-template-columns: 1fr; }
+  .detail-selves-families { grid-template-columns: 1fr; }
+}

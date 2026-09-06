@@ -9,7 +9,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { signOut } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { Appointment, Payment, Subscription } from '@/lib/supabase';
-import { money, calcSavings, PACKAGES, ADD_ONS, VEHICLE_SIZES, MEMBERSHIPS, prettyLabel } from '@/lib/data';
+import { money, calcSavings, ADD_ONS, VEHICLE_SIZES, MEMBERSHIPS, prettyLabel } from '@/lib/data';
+import { packageForSelf, type DetailFamily, type DetailSelf } from '@/lib/detailCatalog';
+import DetailSelfPicker from '@/components/DetailSelfPicker';
 import { sendCommunication } from '@/lib/communications';
 import EmployeeAvatar from '@/components/EmployeeAvatar';
 import WorkspaceGate from '@/components/WorkspaceGate';
@@ -89,7 +91,8 @@ export default function Portal() {
 
   // Booking form state
   const [showBook, setShowBook] = useState(false);
-  const [bookPkg, setBookPkg] = useState(1);
+  const [bookFamily, setBookFamily] = useState<DetailFamily>('full');
+  const [bookSelf, setBookSelf] = useState<DetailSelf>('signature');
   const [bookVehicle, setBookVehicle] = useState(0);
   const [bookAddOns, setBookAddOns] = useState<number[]>([]);
   const [bookNotes, setBookNotes] = useState('');
@@ -213,6 +216,8 @@ const [timesLoading, setTimesLoading] = useState(false);
   }
 };
   
+  const bookedPkg = packageForSelf(bookFamily, bookSelf);
+
   const handleBookSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
 
@@ -227,7 +232,7 @@ const [timesLoading, setTimesLoading] = useState(false);
 
   try {
     const price =
-      PACKAGES[bookPkg].price +
+      bookedPkg.price +
       VEHICLE_SIZES[bookVehicle].extra +
       bookAddOns.reduce((sum, i) => sum + ADD_ONS[i][1], 0);
 
@@ -238,11 +243,11 @@ const [timesLoading, setTimesLoading] = useState(false);
         customer_name: profile?.full_name ?? null,
         customer_email: user.email ?? null,
         customer_phone: profile?.phone ?? null,
-        service_name: PACKAGES[bookPkg].name,
+        service_name: bookedPkg.name,
         scheduled_at: new Date(
   `${bookDate}T${bookTime}:00`
 ).toISOString(),
-        package_name: PACKAGES[bookPkg].name,
+        package_name: bookedPkg.name,
         add_ons: bookAddOns.map(i => ADD_ONS[i][0]),
         vehicle_info: profile?.vehicle_info ?? '',
         price,
@@ -261,7 +266,7 @@ const [timesLoading, setTimesLoading] = useState(false);
         appointment_id: appointment.id,
         amount: price,
         status: 'pending',
-        description: PACKAGES[bookPkg].name,
+        description: bookedPkg.name,
       });
 
     if (paymentError) throw paymentError;
@@ -272,7 +277,7 @@ const [timesLoading, setTimesLoading] = useState(false);
         recipient_email: user.email,
         variables: {
           customer_name: profile?.full_name || 'Customer',
-          service_name: PACKAGES[bookPkg].name,
+          service_name: bookedPkg.name,
           appointment_date: new Date(appointment.scheduled_at).toLocaleDateString('en-US'),
           appointment_time: new Date(appointment.scheduled_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
         },
@@ -283,8 +288,8 @@ const [timesLoading, setTimesLoading] = useState(false);
   state: {
     appointmentId: appointment.id,
     amount: price,
-    serviceName: PACKAGES[bookPkg].name,
-    servicePrice: PACKAGES[bookPkg].price,
+    serviceName: bookedPkg.name,
+    servicePrice: bookedPkg.price,
     vehicleName: VEHICLE_SIZES[bookVehicle].name,
     vehicleExtra: VEHICLE_SIZES[bookVehicle].extra,
     addOns: bookAddOns.map(i => ({
@@ -743,15 +748,12 @@ const [timesLoading, setTimesLoading] = useState(false);
             ) : (
               <form className="modal-form" onSubmit={handleBookSubmit}>
                 <div className="form-group">
-                  <label>Package</label>
-                  <div className="pkg-choices">
-                    {PACKAGES.map((p, i) => (
-                      <button type="button" key={p.name} className={`pkg-choice ${bookPkg === i ? 'pkg-active' : ''}`} onClick={() => setBookPkg(i)}>
-                        <span>{p.name}</span>
-                        <strong>{money(p.price)}+</strong>
-                      </button>
-                    ))}
-                  </div>
+                  <label>Service</label>
+                  <DetailSelfPicker
+                    family={bookFamily}
+                    self={bookSelf}
+                    onChange={(family, self) => { setBookFamily(family); setBookSelf(self); }}
+                  />
                 </div>
                 <div className="form-group">
                   <label>Vehicle Size</label>
@@ -824,7 +826,7 @@ const [timesLoading, setTimesLoading] = useState(false);
                 </div>
                 <div className="modal-total">
                   <span>Estimated total</span>
-                  <strong>{money(PACKAGES[bookPkg].price + VEHICLE_SIZES[bookVehicle].extra + bookAddOns.reduce((s, i) => s + ADD_ONS[i][1], 0))}</strong>
+                  <strong>{money(bookedPkg.price + VEHICLE_SIZES[bookVehicle].extra + bookAddOns.reduce((s, i) => s + ADD_ONS[i][1], 0))}</strong>
                 </div>
                 <button type="submit" className="btn-primary btn-full" disabled={bookSubmitting}>
                   {bookSubmitting ? 'Opening Square...' : 'Continue to Payment'}

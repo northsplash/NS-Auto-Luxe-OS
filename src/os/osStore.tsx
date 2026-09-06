@@ -39,7 +39,7 @@ export type OsSnapshot = {
 function seed(): OsSnapshot {
   return {
     employees: seedEmployees,
-    jobs: seedJobs,
+    jobs: seedJobs.map((j) => normalizeJob(j)),
     leads: seedLeads,
     chats: seedChats,
     payments: seedPayments,
@@ -165,6 +165,7 @@ type OsApi = OsSnapshot & {
   assignJob: (jobId: string, detailer: string) => void;
   addJobNote: (id: string, body: string) => void;
   addJobPhoto: (id: string, kind: 'before' | 'after') => void;
+  toggleJobChecklist: (jobId: string, stepId: string) => void;
   setJobNotes: (id: string, internal_notes: string) => void;
   collectJob: (id: string) => void;
   refundPayment: (id: string) => void;
@@ -414,6 +415,13 @@ export function OsProvider({ children }: { children: ReactNode }) {
         }],
       }),
     })),
+    toggleJobChecklist: (jobId, stepId) => setState((s) => ({
+      ...s,
+      jobs: s.jobs.map((j) => j.id !== jobId ? j : {
+        ...j,
+        checklist: list(j.checklist).map((step) => step.id === stepId ? { ...step, done: !step.done } : step),
+      }),
+    })),
     setJobNotes: (id, internal_notes) => setState((s) => ({
       ...s,
       jobs: s.jobs.map((j) => j.id === id ? { ...j, internal_notes } : j),
@@ -498,12 +506,12 @@ export function OsProvider({ children }: { children: ReactNode }) {
           }
           return s;
         }
-        const job: OsJob = {
+        const job: OsJob = normalizeJob({
           id: jobId,
           customer: lead.name,
           email: '',
           phone: lead.phone,
-          service: opts?.service || (lead.value >= 500 ? 'Luxe Ceramic Coating' : 'Luxe Signature Detail'),
+          service: opts?.service || (lead.value >= 500 ? 'Luxe Ceramic Coating' : 'Luxe Signature'),
           vehicle: 'Vehicle TBD',
           address: lead.address,
           time: opts?.time || 'Fri · 11:00 AM',
@@ -512,10 +520,7 @@ export function OsProvider({ children }: { children: ReactNode }) {
           price: opts?.price || lead.value || 275,
           payment: 'due',
           internal_notes: `Converted from D2D lead (${lead.rep}). ${lead.notes}`.trim(),
-          notes: [],
-          photos: [],
-          comms: [],
-        };
+        });
         const customer: OsCustomer = {
           id: `cu_${id}`, name: lead.name, email: '', phone: lead.phone, vehicle: 'Vehicle TBD', address: lead.address, member: false, notes: [],
         };

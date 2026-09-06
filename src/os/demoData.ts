@@ -1,5 +1,6 @@
 import { DEFAULT_COMM_TEMPLATES, type CommunicationTemplate } from '@/lib/communicationCatalog';
 import { compensationSummary } from '@/lib/compensation';
+import { BOOKABLE_SERVICES, checklistForService } from '@/lib/detailCatalog';
 
 export type OsEmployee = {
   id: string;
@@ -90,6 +91,8 @@ export type OsNote = { id: string; at: string; author: string; body: string };
 export type OsPhoto = { id: string; label: string; kind: 'before' | 'after'; src: string };
 export type OsCommLog = { id: string; channel: 'email' | 'sms'; name: string; preview: string; at: string };
 
+export type OsJobStep = { id: string; label: string; done: boolean; required?: boolean };
+
 export type OsJob = {
   id: string;
   customer: string;
@@ -108,6 +111,7 @@ export type OsJob = {
   notes: OsNote[];
   photos: OsPhoto[];
   comms: OsCommLog[];
+  checklist?: OsJobStep[];
 };
 
 export type LeadStatus = 'new' | 'knocked' | 'interested' | 'appointment' | 'sold' | 'dnk';
@@ -253,7 +257,7 @@ export const seedJobs: OsJob[] = [
     comms: [{ id: uid(), channel: 'email', name: 'Booking confirmation', preview: 'Your North Splash detail is confirmed', at: 'Mon · 4:02 PM' }],
   },
   {
-    id: 'j3', customer: 'James Cole', email: 'james.cole@email.com', phone: '919-555-0199', service: 'Luxe Exterior Detail', vehicle: '2021 Tesla Model Y', address: '19 Cameron Village', time: 'Tomorrow · 9:00 AM', status: 'scheduled', detailer: 'Noah Patel', price: 125, payment: 'due',
+    id: 'j3', customer: 'James Cole', email: 'james.cole@email.com', phone: '919-555-0199', service: 'Exterior Signature', vehicle: '2021 Tesla Model Y', address: '19 Cameron Village', time: 'Tomorrow · 9:00 AM', status: 'scheduled', detailer: 'Noah Patel', price: 175, payment: 'due',
     internal_notes: '',
     notes: [],
     photos: [],
@@ -277,7 +281,7 @@ export const seedJobs: OsJob[] = [
     comms: [{ id: uid(), channel: 'email', name: 'Thank-you', preview: 'Thank you for trusting North Splash', at: 'Yesterday · 4:40 PM' }],
   },
   {
-    id: 'j6', customer: 'Sam Wright', email: 'sam.wright@email.com', phone: '919-555-1881', service: 'Luxe Interior Detail', vehicle: '2020 Lexus GX', address: 'Cary · MacGregor Downs', time: 'Today · 4:00 PM', status: 'scheduled', detailer: '', price: 175, payment: 'due',
+    id: 'j6', customer: 'Sam Wright', email: 'sam.wright@email.com', phone: '919-555-1881', service: 'Interior Signature', vehicle: '2020 Lexus GX', address: 'Cary · MacGregor Downs', time: 'Today · 4:00 PM', status: 'scheduled', detailer: '', price: 200, payment: 'due',
     internal_notes: 'Needs a tech. Customer prefers after school pickup.',
     notes: [],
     photos: [],
@@ -453,13 +457,7 @@ export function initialsOf(name?: string | null) {
   return String(name || '').split(' ').map((p) => p[0]).filter(Boolean).join('').slice(0, 2).toUpperCase() || 'NS';
 }
 
-export const OS_SERVICES = [
-  { name: 'Luxe Exterior Detail', price: 125 },
-  { name: 'Luxe Interior Detail', price: 150 },
-  { name: 'Luxe Signature Detail', price: 275 },
-  { name: 'Paint Correction', price: 350 },
-  { name: 'Luxe Ceramic Coating', price: 650 },
-];
+export const OS_SERVICES = BOOKABLE_SERVICES.map((pkg) => ({ name: pkg.name, price: pkg.price }));
 
 const FALLBACK_AVAIL: Record<Weekday, boolean> = {
   Mon: true, Tue: true, Wed: true, Thu: true, Fri: true, Sat: true, Sun: false,
@@ -548,7 +546,7 @@ export function normalizeJob(j: Partial<OsJob> & { id?: string }): OsJob {
     customer: 'Customer',
     email: '',
     phone: '',
-    service: 'Luxe Signature Detail',
+    service: 'Luxe Signature',
     vehicle: 'Vehicle TBD',
     address: '',
     time: 'TBD',
@@ -562,7 +560,7 @@ export function normalizeJob(j: Partial<OsJob> & { id?: string }): OsJob {
   return {
     ...merged,
     customer: merged.customer || 'Customer',
-    service: merged.service || 'Luxe Signature Detail',
+    service: merged.service || 'Luxe Signature',
     time: merged.time || 'TBD',
     status: merged.status || 'scheduled',
     detailer: merged.detailer || 'Unassigned',
@@ -571,6 +569,14 @@ export function normalizeJob(j: Partial<OsJob> & { id?: string }): OsJob {
     notes: Array.isArray(j.notes) ? j.notes : [],
     photos: Array.isArray(j.photos) ? j.photos : [],
     comms: Array.isArray(j.comms) ? j.comms : [],
+    checklist: Array.isArray(j.checklist) && j.checklist.length
+      ? j.checklist
+      : checklistForService(merged.service).map((step, index) => ({
+        id: `${merged.id}_step_${index}`,
+        label: step.label,
+        done: false,
+        required: step.required,
+      })),
   };
 }
 
