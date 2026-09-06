@@ -7,10 +7,15 @@ import {
   clockNow, defaultTemplates, initialsOf, normalizeActivity, normalizeChat, normalizeEmployee, normalizeJob, normalizeLead,
   seedActivity, seedCandidates, seedChats, seedCustomers, seedEmployees, seedJobs, seedLeads,
   seedPayments, seedSettings, seedShifts, seedTimeOff, uid, emptyOnboarding,
+  normalizeCandidate, normalizeCustomer,
   type JobDraft, type JobStatus, type LeadStatus, type OsActivity, type OsCandidate, type OsChat,
   type OsCustomer, type OsEmployee, type OsJob, type OsLead, type OsPayment, type OsSettings,
   type OsShift, type OsTimeOff, type Weekday,
 } from './demoData';
+
+function list<T>(value: T[] | undefined | null): T[] {
+  return Array.isArray(value) ? value : [];
+}
 
 const KEY = 'ns-os-v7';
 
@@ -65,7 +70,6 @@ function migrate(data: Partial<OsSnapshot>): OsSnapshot {
     leads: (data.leads?.length ? data.leads : base.leads).map((l) => normalizeLead(l)),
     chats: (data.chats?.length ? data.chats : base.chats).map((c) => normalizeChat(c)),
     payments: data.payments?.length ? data.payments : base.payments,
-    candidates: data.candidates?.length ? data.candidates : base.candidates,
     templates: defaultTemplates.map((t) => {
       const saved = (data.templates || []).find((x) => x.id === t.id);
       return saved ? { ...t, ...saved } : t;
@@ -73,7 +77,8 @@ function migrate(data: Partial<OsSnapshot>): OsSnapshot {
     shifts: data.shifts?.length ? data.shifts : base.shifts,
     timeOff: data.timeOff?.length ? data.timeOff : base.timeOff,
     activity: (data.activity?.length ? data.activity : base.activity).map((a) => normalizeActivity(a)),
-    customers: data.customers?.length ? data.customers : base.customers,
+    customers: (data.customers?.length ? data.customers : base.customers).map((c) => normalizeCustomer(c)),
+    candidates: (data.candidates?.length ? data.candidates : base.candidates).map((c) => normalizeCandidate(c)),
     settings: { ...base.settings, ...(data.settings || {}) },
   };
 }
@@ -307,7 +312,9 @@ export function OsProvider({ children }: { children: ReactNode }) {
           const status: OsEmployee['documents'][number]['status'] = d.status === 'complete' ? 'missing' : d.status === 'review' ? 'complete' : 'review';
           return { ...d, status };
         });
-        const onboarding = Math.round((documents.filter((d) => d.status === 'complete').length / documents.length) * 100);
+        const onboarding = documents.length
+          ? Math.round((documents.filter((d) => d.status === 'complete').length / documents.length) * 100)
+          : 0;
         return { ...e, documents, onboarding };
       }),
     })),
@@ -343,14 +350,15 @@ export function OsProvider({ children }: { children: ReactNode }) {
         const job = s.jobs.find((j) => j.id === id);
         if (!job || job.status === status) return s;
         const extra = fireComms(job, status, s.templates);
-        const have = new Set(job.comms.map((c) => c.id));
+        const comms = list(job.comms);
+        const have = new Set(comms.map((c) => c.id));
         const fresh = extra.filter((c) => !have.has(c.id));
         sent = fresh[0];
         const next: OsJob = {
           ...job,
           status,
           eta: status === 'en_route' ? job.eta || '15 min' : job.eta,
-          comms: [...fresh, ...job.comms],
+          comms: [...fresh, ...comms],
         };
         const crew = s.chats.find((c) => c.channel_type === 'crew' || (c.kind === 'space' && String(c.name || '').toLowerCase().includes('crew')));
         const actId = `act_${job.id}_${status}`;
@@ -382,23 +390,23 @@ export function OsProvider({ children }: { children: ReactNode }) {
       const extra = job.detailer === detailer ? [] : fireComms({ ...next, status: 'confirmed' }, 'confirmed', s.templates, 'detailer_assigned');
       return {
         ...s,
-        jobs: s.jobs.map((j) => j.id === jobId ? { ...next, comms: [...extra, ...j.comms] } : j),
+        jobs: s.jobs.map((j) => j.id === jobId ? { ...next, comms: [...extra, ...list(j.comms)] } : j),
         activity: [{ id: uid(), at: clockNow(), kind: 'ops', text: `${job.service} reassigned to ${detailer}.` }, ...s.activity],
       };
     }),
     addJobNote: (id, body) => setState((s) => ({
       ...s,
       jobs: s.jobs.map((j) => j.id !== id ? j : {
-        ...j, notes: [{ id: uid(), at: clockNow(), author: 'You', body }, ...j.notes],
+        ...j, notes: [{ id: uid(), at: clockNow(), author: 'You', body }, ...list(j.notes)],
       }),
     })),
     addJobPhoto: (id, kind) => setState((s) => ({
       ...s,
       jobs: s.jobs.map((j) => j.id !== id ? j : {
         ...j,
-        photos: [...j.photos, {
+        photos: [...list(j.photos), {
           id: uid(),
-          label: kind === 'before' ? `Before · ${j.photos.length + 1}` : `After · ${j.photos.length + 1}`,
+          label: kind === 'before' ? `Before · ${list(j.photos).length + 1}` : `After · ${list(j.photos).length + 1}`,
           kind,
           src: kind === 'before'
             ? 'https://images.pexels.com/photos/3802510/pexels-photo-3802510.jpeg?auto=compress&cs=tinysrgb&h=420&w=640'
@@ -416,11 +424,11 @@ export function OsProvider({ children }: { children: ReactNode }) {
         if (!job || job.payment === 'paid') return s;
         const pay: OsPayment = { id: `pay_${id}`, jobId: id, customer: job.customer, amount: job.price, method: 'Card on file', status: 'succeeded', at: clockNow() };
         const extra = fireComms({ ...job, payment: 'paid' }, 'completed', s.templates, 'payment_received');
-        const have = new Set((job.comms || []).map((c) => c.id));
+        const have = new Set(list(job.comms).map((c) => c.id));
         const fresh = extra.filter((c) => !have.has(c.id));
         return {
           ...s,
-          jobs: s.jobs.map((j) => j.id === id ? { ...j, payment: 'paid' as const, comms: [...fresh, ...j.comms] } : j),
+          jobs: s.jobs.map((j) => j.id === id ? { ...j, payment: 'paid' as const, comms: [...fresh, ...list(j.comms)] } : j),
           payments: s.payments.map((p) => p.jobId === id && p.status === 'pending' ? { ...p, status: 'succeeded' as const, at: clockNow(), method: 'Card on file' } : p).concat(
             s.payments.some((p) => p.jobId === id) ? [] : [pay],
           ),
@@ -438,7 +446,11 @@ export function OsProvider({ children }: { children: ReactNode }) {
         return {
           ...s,
           payments: s.payments.map((p) => p.id === id ? { ...p, status: 'refunded' as const } : p),
-          jobs: s.jobs.map((j) => j.id === pay.jobId ? { ...j, payment: 'refunded' as const, comms: [...extra.filter((c) => !j.comms.some((x) => x.id === c.id)), ...j.comms] } : j),
+          jobs: s.jobs.map((j) => {
+            if (j.id !== pay.jobId) return j;
+            const comms = list(j.comms);
+            return { ...j, payment: 'refunded' as const, comms: [...extra.filter((c) => !comms.some((x) => x.id === c.id)), ...comms] };
+          }),
           activity: [{ id: `act_ref_${id}`, at: clockNow(), kind: 'pay', text: `Refunded ${money(pay.amount)} to ${pay.customer}.` }, ...s.activity],
         };
       });
@@ -452,7 +464,7 @@ export function OsProvider({ children }: { children: ReactNode }) {
       ...s,
       leads: s.leads.map((l) => l.id !== id ? l : {
         ...l, status, temp: status === 'sold' || status === 'appointment' ? 'hot' : status === 'dnk' ? 'cold' : l.temp,
-        activity: [{ id: uid(), at: clockNow(), author: l.rep, body: `Moved to ${status}.` }, ...l.activity],
+        activity: [{ id: uid(), at: clockNow(), author: l.rep, body: `Moved to ${status}.` }, ...list(l.activity)],
       }),
       activity: [{ id: uid(), at: clockNow(), kind: 'sales', text: `Lead ${s.leads.find((l) => l.id === id)?.name} → ${status}.` }, ...s.activity],
     })),
@@ -463,7 +475,7 @@ export function OsProvider({ children }: { children: ReactNode }) {
     addLeadNote: (id, body) => setState((s) => ({
       ...s,
       leads: s.leads.map((l) => l.id !== id ? l : {
-        ...l, notes: body, activity: [{ id: uid(), at: clockNow(), author: 'You', body }, ...l.activity],
+        ...l, notes: body, activity: [{ id: uid(), at: clockNow(), author: 'You', body }, ...list(l.activity)],
       }),
     })),
     convertLead: (id, opts) => {
@@ -521,7 +533,7 @@ export function OsProvider({ children }: { children: ReactNode }) {
     addCustomerNote: (id, body) => setState((s) => ({
       ...s,
       customers: s.customers.map((c) => c.id !== id ? c : {
-        ...c, notes: [{ id: uid(), at: clockNow(), author: 'You', body }, ...c.notes],
+        ...c, notes: [{ id: uid(), at: clockNow(), author: 'You', body }, ...list(c.notes)],
       }),
     })),
     moveShift: (shiftId, day) => setState((s) => ({
@@ -554,8 +566,10 @@ export function OsProvider({ children }: { children: ReactNode }) {
       ...s,
       candidates: s.candidates.map((c) => {
         if (c.id !== candidateId) return c;
-        const checklist = c.checklist.map((i) => i.id === itemId ? { ...i, done: !i.done } : i);
-        const progress = Math.round((checklist.filter((i) => i.done).length / checklist.length) * 100);
+        const checklist = list(c.checklist).map((i) => i.id === itemId ? { ...i, done: !i.done } : i);
+        const progress = checklist.length
+          ? Math.round((checklist.filter((i) => i.done).length / checklist.length) * 100)
+          : 0;
         const nextOpen = checklist.find((i) => !i.done);
         return { ...c, checklist, progress, stage: nextOpen ? nextOpen.label : 'Ready to start' };
       }),
@@ -582,7 +596,7 @@ export function OsProvider({ children }: { children: ReactNode }) {
       }
       setState((s) => ({
         ...s,
-        jobs: s.jobs.map((j) => j.id !== job.id ? j : { ...j, comms: [...extra, ...j.comms] }),
+        jobs: s.jobs.map((j) => j.id !== job.id ? j : { ...j, comms: [...extra, ...list(j.comms)] }),
         activity: [{ id: uid(), at: clockNow(), text: `Test ${channelLabel(template)} sent to ${job.customer}: ${template.name}.`, kind: 'comms' }, ...s.activity],
       }));
       flash(`Test ${extra[0].channel.toUpperCase()} sent`, extra[0].preview);

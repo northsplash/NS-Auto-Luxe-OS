@@ -512,6 +512,36 @@ export function normalizeEmployee(e: Partial<OsEmployee> & { id?: string; name?:
   };
 }
 
+export function normalizeCustomer(c: Partial<OsCustomer> & { id?: string }): OsCustomer {
+  return {
+    id: c.id || uid(),
+    name: c.name || 'Customer',
+    email: c.email || '',
+    phone: c.phone || '',
+    vehicle: c.vehicle || '',
+    address: c.address || '',
+    member: Boolean(c.member),
+    notes: Array.isArray(c.notes) ? c.notes : [],
+    photo: c.photo,
+  };
+}
+
+export function normalizeCandidate(c: Partial<OsCandidate> & { id?: string }): OsCandidate {
+  const checklist = Array.isArray(c.checklist) ? c.checklist : [];
+  const done = checklist.filter((item) => item.done).length;
+  return {
+    id: c.id || uid(),
+    name: c.name || 'Candidate',
+    role: c.role || 'Team member',
+    email: c.email || '',
+    stage: c.stage || (checklist.find((item) => !item.done)?.label || 'Ready to start'),
+    progress: Number.isFinite(c.progress)
+      ? Number(c.progress)
+      : (checklist.length ? Math.round((done / checklist.length) * 100) : 0),
+    checklist,
+  };
+}
+
 export function normalizeJob(j: Partial<OsJob> & { id?: string }): OsJob {
   const merged = {
     id: j.id || uid(),

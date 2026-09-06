@@ -166,7 +166,7 @@ function TasksPage() {
 
 function DocumentsPage() {
   const os = useOs();
-  const docs = os.employees.flatMap((e) => e.documents.map((d) => ({ ...d, employee: e.name, employeeId: e.id })));
+  const docs = os.employees.flatMap((e) => (e.documents || []).map((d) => ({ ...d, employee: e.name, employeeId: e.id })));
   const missing = docs.filter((d) => d.status !== 'complete').length;
   return (
     <div>
@@ -469,7 +469,7 @@ function RetentionPage() {
 
 function PhotosPage() {
   const os = useOs();
-  const tiles = os.jobs.flatMap((j) => j.photos.map((p) => ({ ...p, jobId: j.id, customer: j.customer, vehicle: j.vehicle, service: j.service })));
+  const tiles = os.jobs.flatMap((j) => (j.photos || []).map((p) => ({ ...p, jobId: j.id, customer: j.customer, vehicle: j.vehicle, service: j.service })));
   const job = os.jobs.find((j) => j.status === 'completed') || os.jobs[0];
   return (
     <div>
