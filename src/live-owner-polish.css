@@ -682,6 +682,10 @@
   -webkit-text-fill-color: unset;
 }
 .portal-layout.nsos-cream .portal-sidebar { color: #f6f1e8; }
+.portal-layout.nsos-cream .sidebar-brand > div {
+  display: grid !important;
+  gap: 1px;
+}
 .portal-layout.nsos-cream .os-workspace-button { color: #d9d0c4 !important; -webkit-text-fill-color: #d9d0c4 !important; }
 .portal-layout.nsos-cream .os-workspace-button.active { color: #fff !important; -webkit-text-fill-color: #fff !important; }
 .portal-layout.nsos-cream .os-pinned-link { color: #c9bfb2 !important; -webkit-text-fill-color: #c9bfb2 !important; }
@@ -775,6 +779,195 @@
   border-bottom-color: #1c1814 !important;
 }
 
+/* —— Contrast lock: cream paper never keeps white fill from dark layers —— */
+.portal-layout.nsos-cream .portal-main .admin-card,
+.portal-layout.nsos-cream .portal-main .admin-stat,
+.portal-layout.nsos-cream .portal-main .phase-panel,
+.portal-layout.nsos-cream .portal-main .phase-kpi,
+.portal-layout.nsos-cream .portal-main .d2d-kpi,
+.portal-layout.nsos-cream .portal-main .ops-kpi-row > div,
+.portal-layout.nsos-cream .portal-main .report-metric-card,
+.portal-layout.nsos-cream .portal-main .stat-card,
+.portal-layout.nsos-cream .portal-main .v19-kpi,
+.portal-layout.nsos-cream .portal-main .crm-card,
+.portal-layout.nsos-cream .portal-main .ops-form,
+.portal-layout.nsos-cream .portal-main .ops-record,
+.portal-layout.nsos-cream .portal-main .lead-command-kpis > div,
+.portal-layout.nsos-cream .portal-main .lead-command-toolbar,
+.portal-layout.nsos-cream .portal-main .lead-command-table,
+.portal-layout.nsos-cream .portal-main .lead-command-row,
+.portal-layout.nsos-cream .portal-main .lead-map-card,
+.portal-layout.nsos-cream .portal-main .owner-glance-v17,
+.portal-layout.nsos-cream .portal-main .owner-mini-metrics > div,
+.portal-layout.nsos-cream .portal-main .owner-summary-cells,
+.portal-layout.nsos-cream .portal-main .calendar-slot,
+.portal-layout.nsos-cream .portal-main .calendar-day,
+.portal-layout.nsos-cream .portal-main .calendar-month-day,
+.portal-layout.nsos-cream .portal-main .dispatch-v2-job,
+.portal-layout.nsos-cream .portal-main .route-stop-card,
+.portal-layout.nsos-cream .portal-main .detailer-job-card,
+.portal-layout.nsos-cream .portal-main .assigned-job-card,
+.portal-layout.nsos-cream .portal-main .followup-card,
+.portal-layout.nsos-cream .portal-main .task-card,
+.portal-layout.nsos-cream .portal-main .team-directory-section,
+.portal-layout.nsos-cream .portal-main .team-portrait-card,
+.portal-layout.nsos-cream .portal-main .visitor-device-grid > div,
+.portal-layout.nsos-cream .portal-main .message-composer-box,
+.portal-layout.nsos-cream .portal-main .message-bubble .message-body,
+.portal-layout.nsos-cream .tab-content [style*="#fff"],
+.portal-layout.nsos-cream .tab-content [style*="rgb(255"],
+.portal-layout.nsos-cream .tab-content > form[style],
+.portal-layout.nsos-cream .tab-content > div[style] {
+  background: #fffdf8 !important;
+  background-color: #fffdf8 !important;
+  color: #1c1814 !important;
+  border-color: #e4d9cc !important;
+  box-shadow: 0 10px 28px rgba(48, 38, 28, .05) !important;
+}
+.portal-layout.nsos-cream .portal-main .admin-card *,
+.portal-layout.nsos-cream .portal-main .phase-panel *:not(.btn-primary):not(.btn-primary *),
+.portal-layout.nsos-cream .portal-main .phase-kpi *,
+.portal-layout.nsos-cream .portal-main .d2d-kpi *,
+.portal-layout.nsos-cream .portal-main .crm-card *,
+.portal-layout.nsos-cream .portal-main .ops-kpi-row > div *,
+.portal-layout.nsos-cream .portal-main .lead-command-row *,
+.portal-layout.nsos-cream .portal-main .owner-glance-v17 *,
+.portal-layout.nsos-cream .portal-main .owner-job-v17,
+.portal-layout.nsos-cream .portal-main .owner-job-v17 *,
+.portal-layout.nsos-cream .portal-main .owner-attention-row,
+.portal-layout.nsos-cream .portal-main .owner-attention-row *,
+.portal-layout.nsos-cream .portal-main .team-portrait-card *,
+.portal-layout.nsos-cream .portal-main .data-table-row * {
+  -webkit-text-fill-color: unset;
+}
+.portal-layout.nsos-cream .portal-main .admin-stat strong,
+.portal-layout.nsos-cream .portal-main .phase-kpi strong,
+.portal-layout.nsos-cream .portal-main .d2d-kpi strong,
+.portal-layout.nsos-cream .portal-main .ops-kpi-row strong,
+.portal-layout.nsos-cream .portal-main .v19-kpi strong,
+.portal-layout.nsos-cream .portal-main .lead-command-kpis strong,
+.portal-layout.nsos-cream .portal-main .stat-card strong,
+.portal-layout.nsos-cream .portal-main .team-stat strong,
+.portal-layout.nsos-cream .portal-main .owner-glance-v17 b,
+.portal-layout.nsos-cream .portal-main .owner-mini-metrics b,
+.portal-layout.nsos-cream .portal-main .owner-summary-cells b,
+.portal-layout.nsos-cream .portal-main .big-money,
+.portal-layout.nsos-cream .portal-main .crm-value,
+.portal-layout.nsos-cream .portal-main .crm-card h3,
+.portal-layout.nsos-cream .portal-main .phase-panel-head h3,
+.portal-layout.nsos-cream .portal-main .ops-form-title,
+.portal-layout.nsos-cream .portal-main .ops-record strong,
+.portal-layout.nsos-cream .portal-main .team-directory-heading h3,
+.portal-layout.nsos-cream .portal-main .team-portrait-card h4,
+.portal-layout.nsos-cream .portal-main .v19-leader-row strong,
+.portal-layout.nsos-cream .portal-main .v19-assignment-customer strong,
+.portal-layout.nsos-cream .portal-main .v19-premium-empty h3,
+.portal-layout.nsos-cream .portal-main .owner-job-v17,
+.portal-layout.nsos-cream .portal-main .owner-job-v17 b,
+.portal-layout.nsos-cream .portal-main .owner-attention-row,
+.portal-layout.nsos-cream .portal-main .lead-command-row,
+.portal-layout.nsos-cream .portal-main .lead-customer-cell {
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .portal-main .admin-stat span,
+.portal-layout.nsos-cream .portal-main .phase-kpi span,
+.portal-layout.nsos-cream .portal-main .d2d-kpi span,
+.portal-layout.nsos-cream .portal-main .d2d-kpi small,
+.portal-layout.nsos-cream .portal-main .ops-kpi-row span,
+.portal-layout.nsos-cream .portal-main .crm-card p,
+.portal-layout.nsos-cream .portal-main .crm-card small,
+.portal-layout.nsos-cream .portal-main .owner-glance-v17 small,
+.portal-layout.nsos-cream .portal-main .owner-job-v17 small,
+.portal-layout.nsos-cream .portal-main .owner-attention-row small,
+.portal-layout.nsos-cream .portal-main .lead-command-row small,
+.portal-layout.nsos-cream .portal-main .ops-record p,
+.portal-layout.nsos-cream .portal-main .team-portrait-card small {
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+}
+.portal-layout.nsos-cream .portal-main .btn-outline,
+.portal-layout.nsos-cream .portal-content .btn-outline,
+.portal-layout.nsos-cream .portal-content .btn-secondary,
+.portal-layout.nsos-cream .map-tool-btn,
+.portal-layout.nsos-cream .os-manage-data {
+  background: #fff !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  border: 1px solid #e4d9cc !important;
+}
+.portal-layout.nsos-cream .portal-main input,
+.portal-layout.nsos-cream .portal-main select,
+.portal-layout.nsos-cream .portal-main textarea,
+.portal-layout.nsos-cream .portal-content input:not([type=checkbox]):not([type=radio]):not([type=range]),
+.portal-layout.nsos-cream .portal-content select,
+.portal-layout.nsos-cream .portal-content textarea,
+.portal-layout.nsos-cream .search-box,
+.portal-layout.nsos-cream .search-control,
+.portal-layout.nsos-cream .google-map-search {
+  background: #fff !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  border: 1px solid #e4d9cc !important;
+  color-scheme: light !important;
+  caret-color: #b8893a !important;
+}
+.portal-layout.nsos-cream .portal-content input:-webkit-autofill,
+.portal-layout.nsos-cream .portal-content input:-webkit-autofill:hover,
+.portal-layout.nsos-cream .portal-content input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #1c1814 !important;
+  -webkit-box-shadow: 0 0 0 1000px #fff inset !important;
+  caret-color: #b8893a !important;
+}
+.portal-layout.nsos-cream .portal-content label,
+.portal-layout.nsos-cream .ops-field > span,
+.portal-layout.nsos-cream .form-group label {
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+}
+.portal-layout.nsos-cream .portal-main .btn-primary,
+.portal-layout.nsos-cream .portal-main .btn-primary * {
+  color: #f6f1e8 !important;
+  -webkit-text-fill-color: #f6f1e8 !important;
+}
+.portal-layout.nsos-cream .team-profile-drawer {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  border-left-color: #eadfd3 !important;
+}
+.portal-layout.nsos-cream .team-profile-drawer h2,
+.portal-layout.nsos-cream .team-profile-kpis strong,
+.portal-layout.nsos-cream .team-profile-info strong {
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .team-profile-kpis > div,
+.portal-layout.nsos-cream .team-profile-info > div,
+.portal-layout.nsos-cream .team-profile-schedule {
+  background: #fff !important;
+  border-color: #eadfd3 !important;
+  color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .message-composer {
+  background: #fffdf8 !important;
+}
+.portal-layout.nsos-cream .message-composer textarea {
+  background: transparent !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .visitor-range-tabs button {
+  background: #fff !important;
+  color: #6f675e !important;
+  border-color: #eadfd3 !important;
+}
+.portal-layout.nsos-cream .visitor-range-tabs button.active {
+  background: #1c1814 !important;
+  color: #f6f1e8 !important;
+  -webkit-text-fill-color: #f6f1e8 !important;
+  border-color: #1c1814 !important;
+}
+
 .auth-page .auth-card {
   background: #fffdf8;
   color: #1c1814;
@@ -843,8 +1036,27 @@
   }
   .portal-layout.nsos-cream .portal-sidebar.sidebar-open { left: 0 !important; }
   .portal-layout.nsos-cream .portal-main { margin-left: 0 !important; }
+  .portal-layout.nsos-cream .os-mobile-actions-trigger,
+  .portal-layout.nsos-cream .os-mobile-actions-menu { display: none !important; }
   .portal-layout.nsos-cream .sidebar-toggle,
   .portal-layout.nsos-cream .sidebar-close { display: grid !important; place-items: center; }
+  .portal-layout.nsos-cream .portal-sidebar .sidebar-brand > div,
+  .portal-layout.nsos-cream .portal-sidebar .sidebar-brand div strong,
+  .portal-layout.nsos-cream .portal-sidebar .sidebar-user > div:last-child,
+  .portal-layout.nsos-cream .os-workspace-button > span:not(.os-workspace-icon),
+  .portal-layout.nsos-cream .os-workspace-button small,
+  .portal-layout.nsos-cream .os-sidebar-section-label,
+  .portal-layout.nsos-cream .os-pinned-link span,
+  .portal-layout.nsos-cream .sidebar-footer span,
+  .portal-layout.nsos-cream .sidebar-footer a,
+  .portal-layout.nsos-cream .portal-sidebar .sidebar-item {
+    font-size: 13px !important;
+    width: auto !important;
+  }
+  .portal-layout.nsos-cream .os-sidebar-section-label { font-size: 9px !important; letter-spacing: .14em !important; }
+  .portal-layout.nsos-cream .os-workspace-button { grid-template-columns: 36px minmax(0, 1fr) auto !important; padding: 8px 10px !important; }
+  .portal-layout.nsos-cream .os-pinned-link,
+  .portal-layout.nsos-cream .portal-sidebar .sidebar-item { justify-content: flex-start !important; }
   .portal-layout.nsos-cream .os-secondary-nav {
     display: flex !important;
     top: 56px;
@@ -930,6 +1142,14 @@
   }
   .portal-layout.nsos-cream .portal-sidebar.sidebar-open { left: 0 !important; }
   .portal-layout.nsos-cream .portal-main { margin-left: 0 !important; padding-bottom: calc(64px + env(safe-area-inset-bottom)) !important; }
+  .portal-layout.nsos-cream .portal-sidebar .sidebar-brand > div,
+  .portal-layout.nsos-cream .portal-sidebar .sidebar-user > div:last-child,
+  .portal-layout.nsos-cream .os-workspace-button > span:not(.os-workspace-icon),
+  .portal-layout.nsos-cream .os-pinned-link span,
+  .portal-layout.nsos-cream .portal-sidebar .sidebar-item { font-size: 13px !important; }
+  .portal-layout.nsos-cream .os-workspace-button { grid-template-columns: 36px minmax(0, 1fr) auto !important; }
+  .portal-layout.nsos-cream .os-mobile-actions-trigger,
+  .portal-layout.nsos-cream .os-mobile-actions-menu { display: none !important; }
   .portal-layout.nsos-cream .os-secondary-nav { display: none !important; }
   .portal-layout.nsos-cream .os-mobile-bottom-nav,
   .portal-layout.nsos-cream .mobile-app-nav-v25 {
