@@ -1097,6 +1097,7 @@ export function PipelineView({ onBook }: { onBook?: (jobId: string) => void }) {
   const os = useOs();
   const [q, setQ] = useState('');
   const [focus, setFocus] = useState<'all' | 'hot' | 'unassigned'>('all');
+  const [compose, setCompose] = useState(false);
   const [draft, setDraft] = useState({ name: '', address: '', phone: '', value: '275' });
   const [dropStage, setDropStage] = useState('');
   const needle = q.trim().toLowerCase();
@@ -1116,6 +1117,12 @@ export function PipelineView({ onBook }: { onBook?: (jobId: string) => void }) {
   const reps = os.employees.filter((e) => e.role === 'd2d_agent' || e.role === 'owner');
   return (
     <div className="owner-demo-pipeline">
+      <div className="owner-leads-head-actions" style={{ marginBottom: 12 }}>
+        <button type="button" className="nsos-btn" onClick={() => setCompose((v) => !v)}>
+          <Plus size={15} />{compose ? 'Close form' : 'New Lead'}
+        </button>
+      </div>
+      {compose && (
       <form
         className="nsos-card owner-lead-compose"
         onSubmit={(e) => {
@@ -1126,6 +1133,7 @@ export function PipelineView({ onBook }: { onBook?: (jobId: string) => void }) {
             value: Number(draft.value || 0),
           });
           setDraft({ name: '', address: '', phone: '', value: '275' });
+          setCompose(false);
         }}
       >
         <span className="nsos-eyebrow">NEW LEAD</span>
@@ -1138,6 +1146,7 @@ export function PipelineView({ onBook }: { onBook?: (jobId: string) => void }) {
         </div>
         <button className="nsos-btn" type="submit"><Plus size={15} />Add to pipeline</button>
       </form>
+      )}
       <div className="nsos-alerts owner-lead-exceptions">
         {hot.length > 0 && (
           <button type="button" className={`nsos-alert hot ${focus === 'hot' ? 'selected' : ''}`} onClick={() => setFocus((v) => v === 'hot' ? 'all' : 'hot')}>
