@@ -59,6 +59,7 @@ The two cores: **SalesRabbit** for territory maps, pins, knocks, and canvassing;
 - ServiceTitan dispatch: unassigned rail, tech columns, drag-to-assign
 - SalesRabbit D2D: tall map, West / Central / East areas, knock outcomes, door list, book-the-door
 - HubSpot pipeline and customer records (search, last job, spend)
+- Client photos: import before/after and portfolio shots onto a customer. Open **Customers → Client photos**, or import from a CRM record. Attach to a visit when the job already exists.
 - Jobber appointments (stage filters, customer, address) and job detail with Uber-style live status stepper
 - Square payments, Gusto hiring pipeline, Stripe settings
 - Teams-style messaging (Chat / Teams filters, composer, company channel). Send shows an error instead of failing silently.
@@ -67,7 +68,7 @@ The two cores: **SalesRabbit** for territory maps, pins, knocks, and canvassing;
 
 ## Apply the hire packet in Supabase
 
-After pulling, run `supabase/migrations/20260906120000_v29_employee_onboarding_profiles.sql` and `supabase/migrations/20260906140000_v30_new_hire_academy.sql` on the live project (or `supabase db push`). The Owner UI still saves last-four tax/deposit into `onboarding_tasks` if that table is not applied yet. Full SSNs are never stored. The Training tab also upserts academy lessons if the SQL has not been applied yet.
+After pulling, run `supabase/migrations/20260906120000_v29_employee_onboarding_profiles.sql`, `supabase/migrations/20260906140000_v30_new_hire_academy.sql`, and `supabase/migrations/20260906150000_v31_client_photos.sql` on the live project (or `supabase db push`). The Owner UI still saves last-four tax/deposit into `onboarding_tasks` if that table is not applied yet. Full SSNs are never stored. The Training tab also upserts academy lessons if the SQL has not been applied yet. Client photo imports still land in storage and a local fallback if `client_photos` is not applied yet.
 - Phones: Home / Chat / Calendar / Team / More. Tablets use split map/list, chat, and dispatch.
 
 ## Supabase

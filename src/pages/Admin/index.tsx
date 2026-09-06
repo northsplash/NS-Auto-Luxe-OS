@@ -6,7 +6,7 @@ import {
   Eye, DollarSign, Activity, ChevronUp, Globe, Archive,
   BriefcaseBusiness, CalendarClock, Clock3, PackageSearch, Settings2,
   Target, MapPinned, ListChecks, Wrench, FileText, ShieldCheck, Bell,
-  ClipboardCheck, ScrollText, UserCog, Gauge, MessageCircle, Search, MoreHorizontal, CheckCircle2, Mail, Phone
+  ClipboardCheck, ScrollText, UserCog, Gauge, MessageCircle, Search, MoreHorizontal, CheckCircle2, Mail, Phone, Camera
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { signOut } from '@/lib/auth';
@@ -32,6 +32,7 @@ import { seedHireOnboarding } from '@/lib/onboarding';
 import { ensureOwnerFieldEmployee } from '@/lib/ownerFieldMode';
 import { employeeCanD2D, employeeCanDetail } from '@/lib/workCapabilities';
 import WorkspaceHero from '@/components/WorkspaceHero';
+import ClientPhotosSection from '@/components/ClientPhotosSection';
 
 type AdminTab =
   | 'dashboard'
@@ -65,7 +66,7 @@ type AdminTab =
   | 'audit'
   | 'payments'
   | 'visitors'
-  | 'command_center' | 'crm' | 'dispatch' | 'crews' | 'fleet' | 'locations' | 'marketing' | 'automations' | 'approvals' | 'incidents' | 'training' | 'purchasing' | 'communications' | 'messages' | 'retention' | 'continuity';
+  | 'command_center' | 'crm' | 'dispatch' | 'crews' | 'fleet' | 'locations' | 'marketing' | 'automations' | 'approvals' | 'incidents' | 'training' | 'purchasing' | 'communications' | 'messages' | 'retention' | 'continuity' | 'client_photos';
 
 function StatCard({ label, value, icon: Icon, trend, color = '' }: { label: string; value: string; icon: any; trend?: string; color?: string }) {
   return (
@@ -458,6 +459,7 @@ const handleDeleteAvailability = async (id: string) => {
     { id: 'audit' as AdminTab, label: 'Audit Log', Icon: ScrollText },
     { id: 'command_center' as AdminTab, label: 'Home', Icon: Gauge },
     { id: 'crm' as AdminTab, label: 'CRM', Icon: Users },
+    { id: 'client_photos' as AdminTab, label: 'Client photos', Icon: Camera },
     { id: 'dispatch' as AdminTab, label: 'Dispatch', Icon: CalendarClock },
     { id: 'crews' as AdminTab, label: 'Crew Command', Icon: Users },
     { id: 'fleet' as AdminTab, label: 'Fleet Accounts', Icon: Car },
@@ -479,7 +481,7 @@ const handleDeleteAvailability = async (id: string) => {
   const adminWorkspaces = [
     {id:'home',label:'Home',Icon:LayoutDashboard,items:['dashboard','command_center'] as AdminTab[]},
     {id:'sales',label:'Sales',Icon:Target,items:['sales','leads','territories','marketing','retention'] as AdminTab[]},
-    {id:'customers',label:'Customers',Icon:Users,items:['customers','crm','appointments','schedule','availability','archived','fleet'] as AdminTab[]},
+    {id:'customers',label:'Customers',Icon:Users,items:['customers','crm','client_photos','appointments','schedule','availability','archived','fleet'] as AdminTab[]},
     {id:'operations',label:'Operations',Icon:ListChecks,items:['dispatch','job_assignments','inventory','equipment','tasks','documents','notifications','purchasing','incidents','approvals'] as AdminTab[]},
     {id:'people',label:'People',Icon:UserCheck,items:['employees','crews','recruiting','messages','staff_schedule','timeclock','time_off','payroll_approval','training'] as AdminTab[]},
     {id:'finance',label:'Finance',Icon:DollarSign,items:['finance','payments','reports','pay_settings'] as AdminTab[]},
@@ -624,7 +626,7 @@ const handleDeleteAvailability = async (id: string) => {
 
         <div className="portal-content">
           {![
-            'command_center','crm','dispatch','crews','leads','territories','training','communications','automations',
+            'command_center','crm','dispatch','crews','leads','territories','training','communications','automations','client_photos',
             'recruiting','staff_schedule','timeclock','finance','sales','inventory','pay_settings',
             'job_assignments','tasks','equipment','documents','reports','permissions','notifications','time_off','payroll_approval','audit',
             'fleet','locations','marketing','approvals','incidents','purchasing','retention','continuity',
@@ -798,6 +800,14 @@ const handleDeleteAvailability = async (id: string) => {
                 </div>
               </div>
             </div>
+          )}
+
+          {tab === 'client_photos' && (
+            <ClientPhotosSection
+              customers={customers}
+              appointments={appointments}
+              currentEmployeeId={employees.find(e => e.user_id === user?.id)?.id || null}
+            />
           )}
 
           {/* APPOINTMENTS — Jobber */}

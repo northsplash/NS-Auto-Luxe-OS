@@ -382,6 +382,27 @@ export type JobMedia = {
   created_at: string;
 };
 
+export type ClientPhotoKind = 'before' | 'after' | 'damage' | 'portfolio';
+
+export type ClientPhoto = {
+  id: string;
+  customer_id: string | null;
+  customer_name: string | null;
+  customer_email: string | null;
+  appointment_id: string | null;
+  employee_id: string | null;
+  kind: ClientPhotoKind | string;
+  file_url: string;
+  storage_path?: string | null;
+  file_name?: string | null;
+  mime_type?: string | null;
+  caption: string | null;
+  vehicle_info: string | null;
+  featured: boolean;
+  source?: string | null;
+  created_at: string;
+};
+
 export type VehicleInspection = {
   id: string;
   appointment_id: string;

@@ -8,15 +8,16 @@ export type DataManagerSection =
   | 'territories'|'tasks'|'equipment'|'documents'|'reports'|'permissions'|'notifications'|'time_off'
   | 'payroll_approval'|'audit'|'payments'|'visitors'|'command_center'|'crm'|'dispatch'|'crews'|'fleet'
   | 'locations'|'marketing'|'automations'|'approvals'|'incidents'|'training'|'purchasing'|'communications'
-  | 'messages'|'retention'|'continuity';
+  | 'messages'|'retention'|'continuity'|'client_photos';
 
 type TableDef={table:string;label:string;description:string;protected?:boolean;archive?:boolean};
 
 const SECTIONS:Record<DataManagerSection,TableDef[]>={
   dashboard:[{table:'appointments',label:'Appointments',description:'Bookings and jobs'},{table:'business_notifications',label:'Notifications',description:'Operational alerts'},{table:'business_tasks',label:'Tasks',description:'Open business tasks'}],
   command_center:[{table:'appointments',label:'Appointments',description:'Jobs and bookings'},{table:'business_tasks',label:'Tasks',description:'Owner attention items'},{table:'crew_alerts',label:'Crew alerts',description:'Crew attention items'}],
-  customers:[{table:'profiles',label:'Customer accounts',description:'Registered customer profiles'},{table:'customer_vehicles',label:'Vehicles',description:'Saved customer vehicles'},{table:'crm_notes',label:'CRM notes',description:'Customer notes'}],
-  crm:[{table:'profiles',label:'Customer accounts',description:'Registered customer profiles'},{table:'crm_notes',label:'CRM notes',description:'Customer timeline notes'},{table:'customer_vehicles',label:'Vehicles',description:'Customer vehicles'}],
+  customers:[{table:'profiles',label:'Customer accounts',description:'Registered customer profiles'},{table:'customer_vehicles',label:'Vehicles',description:'Saved customer vehicles'},{table:'crm_notes',label:'CRM notes',description:'Customer notes'},{table:'client_photos',label:'Client photos',description:'Imported client vehicle photos'}],
+  crm:[{table:'profiles',label:'Customer accounts',description:'Registered customer profiles'},{table:'crm_notes',label:'CRM notes',description:'Customer timeline notes'},{table:'customer_vehicles',label:'Vehicles',description:'Customer vehicles'},{table:'client_photos',label:'Client photos',description:'Imported client vehicle photos'}],
+  client_photos:[{table:'client_photos',label:'Client photos',description:'Imported before/after and portfolio photos'},{table:'job_media',label:'Job photos',description:'Photos taken on a live job'}],
   appointments:[{table:'appointments',label:'Appointments',description:'Bookings, jobs and test appointments'}],
   schedule:[{table:'appointments',label:'Appointments',description:'Customer schedule records'}],
   availability:[{table:'availability',label:'Availability',description:'Availability blocks'}],

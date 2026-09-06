@@ -44,6 +44,12 @@ export const WORKSPACE_REFS: Record<
     modeled: 'HubSpot',
     lead: 'Search the company, last job, and spend. Click a row for the record.',
   },
+  client_photos: {
+    kicker: 'CRM',
+    title: 'Client photos',
+    modeled: 'Jobber + Housecall Pro',
+    lead: 'Import before and after shots onto a client. Star portfolio work you can show.',
+  },
   calendar: {
     kicker: 'Schedule',
     title: 'Calendar',
