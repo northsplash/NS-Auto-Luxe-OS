@@ -1368,7 +1368,7 @@
     height: 100% !important;
     background-size: min(72vw, 320px) auto !important;
     background-position: center 36% !important;
-    opacity: .05 !important;
+    opacity: .1 !important;
   }
   .portal-layout.nsos-cream .sidebar-backdrop {
     display: block !important;
