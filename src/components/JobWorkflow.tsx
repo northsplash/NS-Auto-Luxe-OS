@@ -8,6 +8,8 @@ import { buildAppleMapsUrl, localDateTime } from '@/lib/fieldOps';
 import { sendCommunication } from '@/lib/communications';
 import SignaturePad from './SignaturePad';
 
+const checklistSeedInFlight = new Set<string>();
+
 const STATUS_ACTIONS=[
   ['en_route','En Route',Navigation],['arrived','Arrived',MapPin],['started','Start Job',Clock3],['finished','Finish Job',CheckCircle2]
 ] as const;
@@ -28,6 +30,9 @@ export default function JobWorkflow({appointment,employee,onUpdate,onClose}:{app
     if(existing.length){setChecklist(existing);return existing;}
     const steps=checklistForService(job.service_name,job.package_name);
     if(!steps.length){setChecklist([]);return [];}
+    const again=await supabase.from('job_checklist_items').select('*').eq('appointment_id',job.id).order('sort_order');
+    const seeded=again.data??[];
+    if(seeded.length){setChecklist(seeded);return seeded;}
     const rows=steps.map((step,index)=>({appointment_id:job.id,label:step.label,sort_order:30+index*10,required:step.required}));
     const inserted=await supabase.from('job_checklist_items').insert(rows).select().order('sort_order');
     if(!inserted.error&&inserted.data?.length){setChecklist(inserted.data);return inserted.data;}
@@ -45,7 +50,12 @@ export default function JobWorkflow({appointment,employee,onUpdate,onClose}:{app
     setChecklist(local);
     return local;
   };
-  useEffect(()=>{load()},[job.id,job.service_name,job.package_name]);
+  useEffect(()=>{
+    if(!job.id)return;
+    if(checklistSeedInFlight.has(job.id))return;
+    checklistSeedInFlight.add(job.id);
+    void load().finally(()=>checklistSeedInFlight.delete(job.id));
+  },[job.id,job.service_name,job.package_name]);
   useEffect(()=>{if(!job.started_at||job.completed_at)return;const update=()=>setElapsed(Math.max(0,Date.now()-new Date(job.started_at!).getTime()));update();const id=setInterval(update,1000);return()=>clearInterval(id)},[job.started_at,job.completed_at]);
   const completedRequired=checklist.filter(c=>c.required).every(c=>c.completed);const beforeCount=media.filter(m=>m.media_type==='before').length;const afterCount=media.filter(m=>m.media_type==='after').length;
   const canFinish=completedRequired&&(!job.before_photos_required||beforeCount>0)&&(!job.after_photos_required||afterCount>0);

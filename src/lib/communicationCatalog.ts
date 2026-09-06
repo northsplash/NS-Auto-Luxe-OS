@@ -312,7 +312,7 @@ export const SAMPLE_VARS: Record<string, string> = {
   customer_first_name: 'Matthew',
   detailer_name: 'Marcus',
   vehicle: '2022 BMW 330i',
-  service: 'Luxe Signature Detail',
+  service: 'Luxe Signature',
   appointment_time: 'Saturday, September 12 · 10:30 AM',
   price: '$275.00',
   eta: '10:42 AM',

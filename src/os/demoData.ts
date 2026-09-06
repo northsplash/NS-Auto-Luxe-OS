@@ -1,6 +1,6 @@
 import { DEFAULT_COMM_TEMPLATES, type CommunicationTemplate } from '@/lib/communicationCatalog';
 import { compensationSummary } from '@/lib/compensation';
-import { BOOKABLE_SERVICES, checklistForService } from '@/lib/detailCatalog';
+import { BOOKABLE_SERVICES, checklistForService, findDetailPackage } from '@/lib/detailCatalog';
 
 export type OsEmployee = {
   id: string;
@@ -241,7 +241,7 @@ export const seedEmployees: OsEmployee[] = [
 
 export const seedJobs: OsJob[] = [
   {
-    id: 'j1', customer: 'Matthew Renner', email: 'matthew@renner.co', phone: '919-555-2210', service: 'Luxe Signature Detail', vehicle: '2022 BMW 330i', address: '412 Oakwood Ave, Raleigh', time: 'Today · 10:30 AM', status: 'en_route', detailer: 'Marcus Hale', price: 275, payment: 'due', eta: '10:42 AM',
+    id: 'j1', customer: 'Matthew Renner', email: 'matthew@renner.co', phone: '919-555-2210', service: 'Luxe Signature', vehicle: '2022 BMW 330i', address: '412 Oakwood Ave, Raleigh', time: 'Today · 10:30 AM', status: 'en_route', detailer: 'Marcus Hale', price: 275, payment: 'due', eta: '10:42 AM',
     internal_notes: 'Gate code 4412. Customer asked for extra interior vacuum on the rear seats.',
     notes: [{ id: uid(), at: 'Yesterday', author: 'Avery Chen', body: 'Confirmed window 10:30–12:00. BMW is in the driveway.' }],
     photos: [
@@ -271,7 +271,7 @@ export const seedJobs: OsJob[] = [
     comms: [],
   },
   {
-    id: 'j5', customer: 'Luis Ortega', email: 'luis.ortega@email.com', phone: '919-555-7720', service: 'Luxe Signature Detail', vehicle: '2023 Audi Q5', address: 'Durham · Trinity Park', time: 'Yesterday', status: 'completed', detailer: 'Marcus Hale', price: 275, payment: 'paid',
+    id: 'j5', customer: 'Luis Ortega', email: 'luis.ortega@email.com', phone: '919-555-7720', service: 'Luxe Signature', vehicle: '2023 Audi Q5', address: 'Durham · Trinity Park', time: 'Yesterday', status: 'completed', detailer: 'Marcus Hale', price: 275, payment: 'paid',
     internal_notes: '',
     notes: [{ id: uid(), at: 'Yesterday', author: 'Marcus Hale', body: 'Customer loved the interior. Rebook in 30 days.' }],
     photos: [
@@ -557,10 +557,11 @@ export function normalizeJob(j: Partial<OsJob> & { id?: string }): OsJob {
     internal_notes: '',
     ...j,
   };
+  const service = findDetailPackage(merged.service)?.name || merged.service || 'Luxe Signature';
   return {
     ...merged,
     customer: merged.customer || 'Customer',
-    service: merged.service || 'Luxe Signature',
+    service,
     time: merged.time || 'TBD',
     status: merged.status || 'scheduled',
     detailer: merged.detailer || 'Unassigned',
@@ -571,7 +572,7 @@ export function normalizeJob(j: Partial<OsJob> & { id?: string }): OsJob {
     comms: Array.isArray(j.comms) ? j.comms : [],
     checklist: Array.isArray(j.checklist) && j.checklist.length
       ? j.checklist
-      : checklistForService(merged.service).map((step, index) => ({
+      : checklistForService(service).map((step, index) => ({
         id: `${merged.id}_step_${index}`,
         label: step.label,
         done: false,
