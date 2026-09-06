@@ -431,7 +431,7 @@ function OsShell() {
         </div>
         <div className="sidebar-user">
           <div className="sidebar-avatar admin-avatar">NS</div>
-          <div><p>North Splash Admin</p><span>50% Owner</span></div>
+          <div><p>North Splash Admin</p><span>Owner</span></div>
         </div>
         <nav className="sidebar-nav os-workspace-nav">
           <div className="os-sidebar-section-label">WORKSPACES</div>

@@ -56,20 +56,25 @@ export default function Login() {
   };
 
   return (
-    <div className="auth-page">
+    <div className="auth-page nsos-cream">
+      <a className="skip-to-workspace" href="#auth-form">Skip to sign in</a>
       <div className="auth-bg">
-        <img src="https://images.pexels.com/photos/27968215/pexels-photo-27968215.jpeg?auto=compress&cs=tinysrgb&h=650&w=940" alt="Luxury vehicle" />
+        <img src="https://images.pexels.com/photos/27968215/pexels-photo-27968215.jpeg?auto=compress&cs=tinysrgb&h=650&w=940" alt="" />
         <div className="auth-bg-overlay" />
+        <div className="auth-bg-copy">
+          <span>NORTH SPLASH AUTO LUXE</span>
+          <p>One workspace for Owner, D2D, Detail, and customers.</p>
+        </div>
       </div>
 
       <div className="auth-card">
         <a href={SITE_URL} className="auth-back"><ArrowLeft size={16} /> Back to site</a>
 
         <div className="auth-brand">
-          <div className="brand-mark brand-mark-dark">NS</div>
+          <img className="auth-brand-logo" src={`${import.meta.env.BASE_URL}ns-auto-luxe-logo.svg`} alt="North Splash Auto Luxe" />
           <div>
             <strong>NORTH SPLASH</strong>
-            <small>AUTO LUXE</small>
+            <small>AUTO LUXE OS</small>
           </div>
         </div>
 
@@ -83,30 +88,30 @@ export default function Login() {
         </div>
 
         <h2 className="auth-title">
-          {mode === 'signin' ? 'Welcome back.' : 'Join the Luxe family.'}
+          {mode === 'signin' ? 'Welcome back.' : 'Create your account.'}
         </h2>
         <p className="auth-sub">
           {mode === 'signin'
-            ? 'Access your portal, track your details, and manage your membership.'
-            : 'Create your account to track appointments, subscriptions, and your vehicle\'s Luxe history.'}
+            ? 'Sign in to Owner, D2D, Detail, Manager, or the customer portal.'
+            : 'Customer accounts keep appointments, membership, and visit history in one place.'}
         </p>
 
-        <form className="auth-form" onSubmit={handleSubmit}>
+        <form id="auth-form" className="auth-form" onSubmit={handleSubmit}>
           {mode === 'signup' && (
             <>
               <div className="auth-field">
                 <label>Full Name</label>
-                <input required placeholder="Your full name" value={name} onChange={e => setName(e.target.value)} />
+                <input required autoComplete="name" placeholder="Your full name" value={name} onChange={e => setName(e.target.value)} />
               </div>
               <div className="auth-field">
                 <label>Phone Number</label>
-                <input type="tel" placeholder="330-000-0000" value={phone} onChange={e => setPhone(e.target.value)} />
+                <input type="tel" autoComplete="tel" placeholder="330-000-0000" value={phone} onChange={e => setPhone(e.target.value)} />
               </div>
             </>
           )}
           <div className="auth-field">
             <label>Email Address</label>
-            <input required type="email" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)} />
+            <input required type="email" autoComplete="email" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)} />
           </div>
           <div className="auth-field">
             <label>Password</label>
@@ -114,6 +119,7 @@ export default function Login() {
               <input
                 required
                 type={showPw ? 'text' : 'password'}
+                autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
                 placeholder={mode === 'signup' ? 'Create a password' : 'Your password'}
                 value={password}
                 onChange={e => setPassword(e.target.value)}
@@ -131,8 +137,8 @@ export default function Login() {
 
           {error && <div className="auth-error">{error}</div>}
 
-          <button type="submit" className="btn-primary btn-full btn-lg" disabled={loading}>
-            {loading ? 'Please wait...' : mode === 'signin' ? 'Sign In' : 'Create Account'}
+          <button type="submit" className="btn-primary btn-full btn-lg" disabled={loading} aria-busy={loading}>
+            {loading ? 'Please wait…' : mode === 'signin' ? 'Sign in' : 'Create account'}
           </button>
         </form>
 
