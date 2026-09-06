@@ -5138,20 +5138,24 @@
     min-height: 100dvh !important;
   }
   .auth-page .auth-bg {
-    min-height: 132px !important;
+    min-height: 176px !important;
     max-height: none !important;
     height: auto !important;
     display: flex !important;
     align-items: center;
     justify-content: center;
-    padding: 22px 16px 18px !important;
+    padding: 32px 16px 28px !important;
+    overflow: hidden;
   }
-  .auth-page .auth-bg img {
+  .auth-page .auth-bg > img {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
+  }
+  .auth-page .auth-bg-overlay {
+    z-index: 1;
   }
   .auth-page .auth-bg-copy {
     position: relative !important;
@@ -5169,9 +5173,14 @@
   .auth-page .auth-portals {
     display: none !important;
   }
-  .auth-hero-lockup {
-    width: min(168px, 46vw) !important;
+  .auth-page .auth-hero-lockup {
+    position: relative !important;
+    inset: auto !important;
+    width: min(148px, 42vw) !important;
+    height: auto !important;
     margin: 0 !important;
+    object-fit: contain !important;
+    z-index: 3;
   }
   .auth-page .auth-card {
     min-height: 0 !important;
@@ -5189,7 +5198,6 @@
 }
 
 @media (max-width: 420px) {
-  .portal-layout.nsos-cream .owner-kpis-v17,
   .portal-layout.nsos-cream .stripe-balances,
   .portal-layout.nsos-cream .dash-stats,
   .portal-layout.nsos-cream .manager-kpis {
