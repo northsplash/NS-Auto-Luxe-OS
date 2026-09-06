@@ -14,7 +14,9 @@ class RouteErrorBoundary extends Component<{children:ReactNode},{failed:boolean}
     return this.props.children;
   }
 }
-export default function App(){return <RouteErrorBoundary><BrowserRouter><Suspense fallback={<Loader/>}><Routes>
+const routerBasename = import.meta.env.BASE_URL.replace(/\/$/, '') || undefined;
+
+export default function App(){return <RouteErrorBoundary><BrowserRouter basename={routerBasename}><Suspense fallback={<Loader/>}><Routes>
 <Route path="/" element={<OsApp/>}/>
 <Route path="/os" element={<OsApp/>}/>
 <Route path="/login" element={<Login/>}/><Route path="/forgot-password" element={<ForgotPassword/>}/><Route path="/reset-password" element={<ResetPassword/>}/><Route path="/portal" element={<Portal/>}/><Route path="/admin" element={<Admin/>}/><Route path="/owner" element={<Admin/>}/><Route path="/manager" element={<ManagerPortal/>}/><Route path="/employee" element={<EmployeePortal/>}/><Route path="/d2d" element={<D2DPortal/>}/><Route path="*" element={<Navigate to="/" replace/>}/></Routes></Suspense></BrowserRouter></RouteErrorBoundary>}

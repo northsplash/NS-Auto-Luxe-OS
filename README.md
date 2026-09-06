@@ -15,6 +15,8 @@ npm run dev
 
 The app serves at `http://127.0.0.1:43127`. Demo state lives in this browser (`localStorage`). Reset it from **Manage data**.
 
+A public demo is on GitHub Pages: https://northsplash.github.io/NS-Auto-Luxe-OS/ — open **Owner → Dashboard**. Each push to `main` rebuilds that site.
+
 ## How it is modeled
 
 Visual language is **cream luxury**: ivory cards, espresso sidebar, tight type, 14px radius, gold only for primary actions, KPIs, and active states. Home is role-based (Owner / D2D / Detailer / Admin). Command Center leads with exceptions. Phones use a 5-button bar: Home / Chat / Calendar / Team / More, with bottom sheets instead of desktop popups.
