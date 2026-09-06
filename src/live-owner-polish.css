@@ -3171,7 +3171,11 @@
   .portal-layout.nsos-cream.nsos-admin-preview .os-mobile-bottom-nav.mobile-app-nav-v25 {
     display: grid !important;
   }
-  .portal-layout.nsos-cream .message-info-rail { display: none !important; }
+  .portal-layout.nsos-cream .message-info-rail,
+  .portal-layout.nsos-cream.nsos-admin-preview .team-messaging.messaging-v6 .message-info-rail { display: none !important; }
+  .portal-layout.nsos-cream.nsos-admin-preview.os-tab-messages .team-messaging.messaging-v6,
+  .portal-layout.nsos-cream.nsos-admin-preview.os-tab-messages .team-messaging.messaging-v6.with-info,
+  .portal-layout.nsos-cream.nsos-admin-preview .team-messaging.messaging-v6.thread-open,
   .portal-layout.nsos-cream .team-messaging,
   .portal-layout.nsos-cream .team-messaging.thread-open,
   .portal-layout.nsos-cream .team-messaging.with-info,
@@ -3179,17 +3183,28 @@
   .portal-layout.nsos-cream .team-messaging.messaging-v6,
   .portal-layout.nsos-cream .messaging-v6 {
     display: grid !important;
-    grid-template-columns: minmax(220px, 34%) minmax(0, 1fr) !important;
+    grid-template-columns: minmax(240px, 38%) minmax(0, 1fr) !important;
     grid-template-rows: minmax(0, 1fr) !important;
+    height: calc(100dvh - 168px) !important;
+    max-height: none !important;
   }
+  .portal-layout.nsos-cream.nsos-admin-preview .team-messaging.messaging-v6.thread-open .message-channel-rail,
+  .portal-layout.nsos-cream.nsos-admin-preview .team-messaging.messaging-v6:not(.thread-open) .message-channel-rail,
   .portal-layout.nsos-cream .message-channel-rail {
     display: flex !important;
+    flex-direction: column !important;
+    width: auto !important;
+    height: auto !important;
     max-height: none !important;
     border-bottom: 0 !important;
   }
+  .portal-layout.nsos-cream.nsos-admin-preview .team-messaging.messaging-v6.thread-open .message-thread,
+  .portal-layout.nsos-cream.nsos-admin-preview .team-messaging.messaging-v6:not(.thread-open) .message-thread,
   .portal-layout.nsos-cream .message-thread {
     display: flex !important;
     min-width: 0 !important;
+    width: auto !important;
+    height: auto !important;
   }
   .portal-layout.nsos-cream .message-mobile-back { display: none !important; }
 }

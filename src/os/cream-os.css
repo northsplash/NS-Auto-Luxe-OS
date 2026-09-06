@@ -774,6 +774,7 @@ html.nsos-active #root {
   .nsos-cream .os-secondary-nav { display: none !important; }
   .os-phone-subnav {
     display: flex !important;
+    flex-wrap: nowrap !important;
     gap: 6px;
     overflow-x: auto;
     padding: 8px 12px 10px;
