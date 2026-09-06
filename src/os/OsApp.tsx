@@ -15,8 +15,6 @@ import {
   SettingsView,
 } from './views';
 import TeamMessagesView from './TeamMessagesView';
-import './os.css';
-import './cream-os.css';
 
 export type OsTab =
   | 'dashboard' | 'command_center' | 'owner_growth' | 'owner_profits' | 'payment_test'
@@ -208,6 +206,8 @@ function OsShell() {
   const navigate = useNavigate();
   const [tab, setTab] = useState<OsTab>(() => {
     try {
+      const fromUrl = new URLSearchParams(window.location.search).get('tab');
+      if (fromUrl) return (LEGACY[fromUrl] || fromUrl) as OsTab;
       const raw = sessionStorage.getItem('ns-os-tab') || sessionStorage.getItem('ns-os-view') || 'command_center';
       return (LEGACY[raw] || raw || 'command_center') as OsTab;
     } catch { return 'command_center'; }
@@ -224,15 +224,10 @@ function OsShell() {
   const [peopleId, setPeopleId] = useState<string | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
   const [newWorkOpen, setNewWorkOpen] = useState(false);
-  const [ready, setReady] = useState(false);
   const [mode, setMode] = useState<WorkMode>(() => {
     try { return (sessionStorage.getItem('ns-os-mode') as WorkMode) || 'owner'; } catch { return 'owner'; }
   });
 
-  useEffect(() => {
-    const t = window.setTimeout(() => setReady(true), 220);
-    return () => window.clearTimeout(t);
-  }, []);
 
   useEffect(() => {
     try { sessionStorage.setItem('ns-os-mode', mode); } catch { /* ignore */ }
@@ -392,9 +387,7 @@ function OsShell() {
     return <SettingsView />;
   })();
 
-  const pageAction = tab === 'employees' ? (
-    <button className="btn-primary btn-sm" onClick={() => { setHirePreset(undefined); setHireOpen(true); }}><Plus size={15} />Add employee</button>
-  ) : (tab === 'appointments' || tab === 'jobs') && job ? (
+  const pageAction = (tab === 'appointments' || tab === 'jobs') && job ? (
     <button className="btn-outline btn-sm" onClick={() => setJobId(null)}>Back to list</button>
   ) : undefined;
 
@@ -551,12 +544,7 @@ function OsShell() {
         )}
 
         <div className="portal-content">
-          {!ready && (
-            <div className="nsos-skel" aria-hidden>
-              <i style={{ height: 48 }} /><i /><i style={{ height: 140 }} /><i /><i />
-            </div>
-          )}
-          {ready && !['messages', 'dashboard', 'command_center', 'sales', 'dispatch', 'jobs'].includes(tab) && (
+          {!['messages', 'dashboard', 'command_center', 'sales', 'dispatch', 'jobs'].includes(tab) && (
             <section className="os-workspace-pulse" aria-label={`${currentWorkspace.label} snapshot`}>
               {workspacePulse.map(({ label, value, Icon }) => (
                 <div className="os-pulse-metric" key={label}>
@@ -567,7 +555,6 @@ function OsShell() {
             </section>
           )}
 
-          {ready && (
           <OsErrorBoundary onReset={() => go('messages')}>
             {tab === 'messages' ? (
               <WorkspacePage tab="messages">
@@ -582,7 +569,6 @@ function OsShell() {
               </WorkspacePage>
             )}
           </OsErrorBoundary>
-          )}
         </div>
       </main>
 

@@ -1,9 +1,23 @@
 /* Cream luxury OS — last layer. Gold only for primary actions, KPIs, and active states. */
+html,
+body,
+#root,
 html.nsos-active,
 html.nsos-active body,
 html.nsos-active #root {
   background: #efe8dc !important;
   color: #1c1814 !important;
+  color-scheme: light !important;
+}
+
+.route-loader {
+  background: #efe8dc !important;
+  color: #1c1814 !important;
+}
+.route-loader-mark {
+  background: #1c1814 !important;
+  color: #e8c96a !important;
+  border: 1px solid rgba(184, 137, 58, .4) !important;
 }
 
 .nsos-admin-preview.portal-layout.nsos-cream {
@@ -115,6 +129,20 @@ html.nsos-active #root {
 .nsos-cream .eyebrow, .nsos-cream .os-page-kicker { color: var(--ns-gold) !important; }
 .nsos-cream .portal-content p, .nsos-cream .empty-text, .nsos-cream .os-page-lead { color: var(--ns-muted) !important; }
 
+.nsos-cream .portal-main .nsos-kpi,
+.nsos-cream .portal-main .nsos-card,
+.nsos-cream .portal-main .nsos-col,
+.nsos-cream .portal-main .nsos-lead,
+.nsos-cream .portal-main .nsos-shift,
+.nsos-cream .portal-main .phase-panel,
+.nsos-cream .portal-main .phase-kpi,
+.nsos-cream .portal-main .os-pulse-metric,
+.nsos-cream .portal-main .dispatch-column,
+.nsos-cream .portal-main .data-table,
+.nsos-cream .portal-main .data-table-row,
+.nsos-cream .portal-main .message-channel-rail,
+.nsos-cream .portal-main .message-thread,
+.nsos-cream .portal-main .message-info-rail,
 .nsos-cream .nsos-kpi,
 .nsos-cream .nsos-card,
 .nsos-cream .nsos-col,
@@ -170,17 +198,32 @@ html.nsos-active #root {
 .nsos-cream .portal-main input,
 .nsos-cream .portal-main select,
 .nsos-cream .portal-main textarea,
+.nsos-cream .portal-content input:not([type=checkbox]):not([type=radio]):not([type=range]),
+.nsos-cream .portal-content select,
+.nsos-cream .portal-content textarea,
 .nsos-cream .nsos-field input,
 .nsos-cream .nsos-field select,
 .nsos-cream .nsos-inline,
 .nsos-cream .nsos-select,
 .nsos-cream .nsos-search {
+  color-scheme: light !important;
   background: #fff !important;
   color: var(--ns-ink) !important;
   -webkit-text-fill-color: var(--ns-ink) !important;
-  border-color: var(--ns-line) !important;
+  border: 1px solid var(--ns-line) !important;
   border-radius: 12px !important;
+  caret-color: var(--ns-gold) !important;
 }
+.nsos-cream .portal-content [style*="background: rgb(255"],
+.nsos-cream .portal-content [style*="background:#fff"],
+.nsos-cream .portal-content [style*="background: '#fff"],
+.nsos-cream .portal-content [style*="background: #fff"] {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  border: 1px solid #e4d9cc !important;
+  box-shadow: 0 8px 24px rgba(48, 38, 28, .05) !important;
+}
+.nsos-cream .portal-content .admin-card-header h3 { color: #1c1814 !important; }
 
 .nsos-cream .status-badge, .nsos-cream .nsos-pill {
   border-radius: 999px !important;
@@ -347,3 +390,68 @@ html.nsos-active #root {
   .nsos-cream .owner-command-grid-v17 { grid-template-columns: 1fr 1fr !important; }
   .nsos-cream .owner-attention-v17 { grid-column: 1 / -1; }
 }
+
+/* Beat leftover dark portal rules after import-order is correct. */
+.nsos-cream .portal-main .owner-kpis-v17 .phase-kpi,
+.nsos-cream .portal-main .phase-kpi {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  border: 1px solid #e4d9cc !important;
+  box-shadow: 0 8px 24px rgba(48, 38, 28, .05) !important;
+}
+.nsos-cream .portal-main .owner-kpis-v17 .phase-kpi strong,
+.nsos-cream .portal-main .phase-kpi strong {
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.nsos-cream .portal-main .owner-kpis-v17 .phase-kpi span,
+.nsos-cream .portal-main .phase-kpi span { color: #6f675e !important; }
+.nsos-cream .portal-main .owner-glance-v17 {
+  background: #fffdf8 !important;
+  border: 1px solid #e4d9cc !important;
+}
+.nsos-cream .portal-main .owner-glance-v17 b,
+.nsos-cream .portal-main .owner-job-v17,
+.nsos-cream .portal-main .owner-job-v17 b,
+.nsos-cream .portal-main .phase-panel-head h3,
+.nsos-cream .portal-main .nsos-job,
+.nsos-cream .portal-main .nsos-job strong,
+.nsos-cream .portal-main .nsos-dir-row,
+.nsos-cream .portal-main .nsos-dir-row strong,
+.nsos-cream .portal-main .os-pulse-metric strong {
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.nsos-cream .portal-main .os-pulse-metric {
+  background: #fffdf8 !important;
+  border: 1px solid #e4d9cc !important;
+  color: #1c1814 !important;
+}
+.nsos-cream .portal-main .dispatch-column {
+  background: #f6f1e8 !important;
+  color: #1c1814 !important;
+}
+.nsos-cream .portal-main .dispatch-job {
+  background: #fff !important;
+  color: #1c1814 !important;
+  border: 1px solid #e4d9cc !important;
+}
+.nsos-cream .portal-main .team-messaging.messaging-v6,
+.nsos-cream .portal-main .message-channel-rail,
+.nsos-cream .portal-main .message-thread,
+.nsos-cream .portal-main .message-info-rail {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  border-color: #e4d9cc !important;
+}
+.nsos-cream .portal-main .message-channel {
+  color: #1c1814 !important;
+}
+.nsos-cream .portal-main .data-table,
+.nsos-cream .portal-main .data-table-row,
+.nsos-cream .portal-main .nsos-dir {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  border-color: #e4d9cc !important;
+}
+.nsos-cream .portal-main .nsos-dir-row .dt-cell { display: grid; gap: 2px; }
