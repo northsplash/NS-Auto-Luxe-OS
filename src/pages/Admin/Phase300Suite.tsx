@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import {
   Activity, ArrowRight, BarChart3, Bell, BookOpen, CalendarClock, CheckCircle2, ChevronRight, Clock3, Copy, DollarSign,
   GraduationCap, MapPinned, Mail, MapPin, Pause, Pencil, Play, Plus, Route,
@@ -6,16 +6,17 @@ import {
   Archive, ArchiveRestore, ExternalLink, Eye, Smartphone, Send, Receipt, RefreshCw, MessageSquare, UserRound
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { money, prettyLabel } from '@/lib/data';
-import FieldTerritoryMap from '@/components/FieldTerritoryMap';
-import DispatchCommandCenter from '@/components/DispatchCommandCenter';
-import TerritoryStreetView from '@/components/TerritoryStreetView';
-import { DOOR_STATUSES, doorStatus, percent } from '@/lib/fieldOps';
+import { firstWord, money, prettyLabel, trendLabel } from '@/lib/data';
+import { DOOR_STATUSES, doorStatus, localDateKey, percent, sameLocalDay } from '@/lib/fieldOps';
 import type { Appointment, Employee, Lead, LeadTerritory, Profile, TerritoryDoor } from '@/lib/supabase';
 import WorkspaceHero from '@/components/WorkspaceHero';
-import ClientPhotosSection from '@/components/ClientPhotosSection';
 import EmployeeAvatar from '@/components/EmployeeAvatar';
 import { applyNewHireAcademy, ACADEMY_COURSES } from '@/lib/trainingAcademy';
+
+const FieldTerritoryMap = lazy(() => import('@/components/FieldTerritoryMap'));
+const TerritoryStreetView = lazy(() => import('@/components/TerritoryStreetView'));
+const DispatchCommandCenter = lazy(() => import('@/components/DispatchCommandCenter'));
+const ClientPhotosSection = lazy(() => import('@/components/ClientPhotosSection'));
 
 type Section = 'command_center'|'crm'|'dispatch'|'crews'|'leads'|'territories'|'training'|'communications'|'automations';
 type Props = {
@@ -25,11 +26,16 @@ type Props = {
   setAppointments: React.Dispatch<React.SetStateAction<Appointment[]>>;
   customers: Profile[];
   payments: any[];
+  onNavigate?: (view: string) => void;
+  ownerName?: string;
 };
 
 type TerritoryForm = { id?:string; name:string; assigned_employee_id:string; status:string; notes:string; color:string; points:[number,number][] };
 const emptyTerritory = ():TerritoryForm => ({ name:'',assigned_employee_id:'',status:'active',notes:'',color:'#9d7651',points:[] });
-const dateKey = (d=new Date()) => d.toISOString().slice(0,10);
+const dateKey = (d: Date | string = new Date()) => localDateKey(d) || localDateKey();
+function PanelLoader({ label }: { label: string }) {
+  return <div className="workspace-chunk-loader">{label}</div>;
+}
 const humanStatus=(s?:string|null)=>prettyLabel(s).replace(/\b\w/g,c=>c.toUpperCase());
 const time=(v?:string|null)=>v?new Date(v).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}):'—';
 const when=(v?:string|null)=>v?new Date(v).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'—';
@@ -41,16 +47,16 @@ function KPI({label,value,detail}:{label:string;value:string;detail?:string}){
   return <div className="phase-kpi"><span>{label}</span><strong>{value}</strong>{detail&&<small>{detail}</small>}</div>;
 }
 
-export default function Phase300Suite({section,employees,appointments,setAppointments,customers,payments}:Props){
-  if(section==='territories') return <TerritoryCenter employees={employees}/>;
-  if(section==='leads') return <LeadCenter employees={employees}/>;
+export default function Phase300Suite({section,employees,appointments,setAppointments,customers,payments,onNavigate,ownerName}:Props){
+  if(section==='territories') return <Suspense fallback={<PanelLoader label="Opening territories…" />}><TerritoryCenter employees={employees}/></Suspense>;
+  if(section==='leads') return <Suspense fallback={<PanelLoader label="Opening leads…" />}><LeadCenter employees={employees}/></Suspense>;
   if(section==='training') return <TrainingCenter employees={employees}/>;
   if(section==='communications') return <CommunicationsCenter/>;
   if(section==='automations') return <AutomationCenter/>;
-  if(section==='crm') return <CRMCenter customers={customers} appointments={appointments}/>;
-  if(section==='dispatch') return <DispatchCenter employees={employees} appointments={appointments} setAppointments={setAppointments}/>;
+  if(section==='crm') return <Suspense fallback={<PanelLoader label="Opening CRM…" />}><CRMCenter customers={customers} appointments={appointments}/></Suspense>;
+  if(section==='dispatch') return <Suspense fallback={<PanelLoader label="Opening dispatch…" />}><DispatchCenter employees={employees} appointments={appointments} setAppointments={setAppointments}/></Suspense>;
   if(section==='crews') return <CrewCommandCenter employees={employees} appointments={appointments}/>;
-  return <CommandCenter employees={employees} appointments={appointments} customers={customers} payments={payments}/>;
+  return <CommandCenter employees={employees} appointments={appointments} customers={customers} payments={payments} onNavigate={onNavigate} ownerName={ownerName}/>;
 }
 
 
@@ -383,21 +389,28 @@ function OwnerRevenueChart({days}:{days:{label:string;rev:number}[]}){
 }
 function MiniAvatar({name}:{name:string}){const initials=name.split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase()||'NS';return <span className="v20-mini-avatar">{initials}</span>}
 
-function CommandCenter({employees,appointments,customers,payments}:{employees:Employee[];appointments:Appointment[];customers:Profile[];payments:any[]}){
- const today=dateKey(),now=Date.now(),monthAgo=now-30*86400000;
- const jobs=appointments.filter(a=>a.scheduled_at?.slice(0,10)===today&&a.status!=='cancelled').sort((a,b)=>+new Date(a.scheduled_at!)-+new Date(b.scheduled_at!));
- const collected=payments.filter(p=>p.status==='completed').reduce((s,p)=>s+Number(p.amount||0),0),monthCollected=payments.filter(p=>p.status==='completed'&&new Date(p.created_at).getTime()>=monthAgo).reduce((s,p)=>s+Number(p.amount||0),0),scheduled=jobs.reduce((s,j)=>s+Number(j.price||0),0);
- const completed30=appointments.filter(a=>a.status==='completed'&&new Date(a.completed_at||a.created_at).getTime()>=monthAgo),avgTicket=completed30.length?completed30.reduce((n,a)=>n+Number(a.price||0),0)/completed30.length:0,cancel30=appointments.filter(a=>a.status==='cancelled'&&new Date(a.created_at).getTime()>=monthAgo).length;
+function CommandCenter({employees,appointments,customers,payments,onNavigate,ownerName}:{employees:Employee[];appointments:Appointment[];customers:Profile[];payments:any[];onNavigate?:(view:string)=>void;ownerName?:string}){
+ const now=Date.now(),monthAgo=now-30*86400000;
+ const jobs=appointments.filter(a=>sameLocalDay(a.scheduled_at)&&a.status!=='cancelled').sort((a,b)=>+new Date(a.scheduled_at!)-+new Date(b.scheduled_at!));
+ const collected=payments.filter(p=>p.status==='completed').reduce((s,p)=>s+Number(p.amount||0),0);
+ const monthCollected=payments.filter(p=>p.status==='completed'&&new Date(p.created_at).getTime()>=monthAgo).reduce((s,p)=>s+Number(p.amount||0),0);
+ const priorCollected=payments.filter(p=>p.status==='completed'&&new Date(p.created_at).getTime()>=monthAgo-30*86400000&&new Date(p.created_at).getTime()<monthAgo).reduce((s,p)=>s+Number(p.amount||0),0);
+ const scheduled=jobs.reduce((s,j)=>s+Number(j.price||0),0);
+ const completed30=appointments.filter(a=>a.status==='completed'&&new Date(a.completed_at||a.created_at).getTime()>=monthAgo);
+ const priorCompleted=appointments.filter(a=>a.status==='completed'&&new Date(a.completed_at||a.created_at).getTime()>=monthAgo-30*86400000&&new Date(a.completed_at||a.created_at).getTime()<monthAgo).length;
+ const avgTicket=completed30.length?completed30.reduce((n,a)=>n+Number(a.price||0),0)/completed30.length:0;
+ const cancel30=appointments.filter(a=>a.status==='cancelled'&&new Date(a.created_at).getTime()>=monthAgo).length;
  const activeTeam=employees.filter(e=>e.status==='active').length, activeDetailers=employees.filter(e=>e.status==='active'&&e.role==='detailer').length;
- const unassigned=appointments.filter(a=>!a.assigned_employee_id&&!['completed','cancelled'].includes(a.status)).length,pending=appointments.filter(a=>a.status==='pending').length,qc=appointments.filter(a=>a.qc_status==='pending'||a.qc_status==='qc').length;
+ const unassigned=appointments.filter(a=>!a.assigned_employee_id&&!['completed','cancelled'].includes(a.status)).length,pending=appointments.filter(a=>a.status==='pending'||a.status==='scheduled').length,qc=appointments.filter(a=>a.qc_status==='pending'||a.qc_status==='qc').length;
  const attention=[['Unassigned jobs',unassigned,'Jobs need to be assigned'],['Pending bookings',pending,'Awaiting customer confirmation'],['QC queue',qc,'Jobs waiting for quality review'],['Cancellations (30d)',cancel30,'Review lost appointments']] as const;
- const days=[...Array(7)].map((_,i)=>{const d=new Date();d.setDate(d.getDate()-(6-i));const k=d.toISOString().slice(0,10);const rev=payments.filter(p=>p.status==='completed'&&p.created_at?.slice(0,10)===k).reduce((n,p)=>n+Number(p.amount||0),0);return{label:d.toLocaleDateString('en-US',{weekday:'short'}),rev}}),max=Math.max(1,...days.map(d=>d.rev));
+ const days=[...Array(7)].map((_,i)=>{const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()-(6-i));const k=localDateKey(d);const rev=payments.filter(p=>p.status==='completed'&&localDateKey(p.created_at)===k).reduce((n,p)=>n+Number(p.amount||0),0);return{label:d.toLocaleDateString('en-US',{weekday:'short'}),rev}});
  const next=jobs.find(j=>new Date(j.scheduled_at||0).getTime()>=now)||jobs[0];
- const go=(view:string)=>{const u=new URL(window.location.href);u.searchParams.set('view',view);window.location.href=u.toString()};
+ const go=(view:string)=>{if(onNavigate){onNavigate(view);return;}const u=new URL(window.location.href);u.searchParams.set('view',view);window.history.pushState({},'',u.toString())};
  const hour=new Date().getHours(),greeting=hour<12?'Good morning':hour<18?'Good afternoon':'Good evening';
+ const name=firstWord(ownerName,'there');
  return <div className="tab-content phase300 v2-page owner-command-v17">
    <a className="skip-to-workspace in-page" href="#owner-schedule">Skip to today’s schedule</a>
-   <div className="owner-command-head"><div><span className="eyebrow">Owner dashboard</span><h2>{greeting}, <em>North Splash</em></h2><p>Balances, today’s work, and the next action.</p></div><div className="owner-command-actions"><button className="btn-primary" onClick={()=>go('appointments')}><Plus size={15}/> Appointment</button><button className="btn-outline" onClick={()=>go('customers')}><Plus size={15}/> Customer</button><button className="btn-outline" onClick={()=>go('leads')}><Plus size={15}/> Lead</button><button className="btn-outline" onClick={()=>go('employees')}><Plus size={15}/> Employee</button></div></div>
+   <div className="owner-command-head"><div><span className="eyebrow">Owner dashboard</span><h2>{greeting}, <em>{name}</em></h2><p>Balances, today’s work, and the next action.</p></div><div className="owner-command-actions"><button className="btn-primary" onClick={()=>go('appointments')}><Plus size={15}/> Appointment</button><button className="btn-outline" onClick={()=>go('customers')}><Plus size={15}/> Customer</button><button className="btn-outline" onClick={()=>go('leads')}><Plus size={15}/> Lead</button><button className="btn-outline" onClick={()=>go('employees')}><Plus size={15}/> Employee</button></div></div>
    <div className="stripe-balances">
      <article><span>Gross volume</span><strong>{money(collected)}</strong><small>Lifetime collected</small></article>
      <article><span>Last 30 days</span><strong>{money(monthCollected)}</strong><small>Settled payments</small></article>
@@ -415,7 +428,7 @@ function CommandCenter({employees,appointments,customers,payments}:{employees:Em
      <button type="button" onClick={()=>go('recruiting')}>Hiring</button>
    </nav>
    <section id="owner-glance" className="owner-glance-v17"><div><CalendarClock/><span><b>{jobs.length}</b><small>Jobs Scheduled</small></span></div><div><DollarSign/><span><b>{money(scheduled)}</b><small>Revenue Scheduled</small></span></div><div><Users/><span><b>{activeDetailers}</b><small>Detailers Active</small></span></div><div><Clock3/><span><b>{next?time(next.scheduled_at):'—'}</b><small>{next?`${next.service_name} · ${next.service_address||next.customer_name||'Customer'}`:'No next job'}</small></span></div></section>
-   <div className="owner-kpis-v17"><KPI label="Revenue (30d)" value={money(monthCollected)}/><KPI label="Booked Today" value={money(scheduled)}/><KPI label="Avg Ticket" value={money(avgTicket)}/><KPI label="Jobs (30d)" value={String(completed30.length)}/><KPI label="Customers" value={String(customers.length)}/></div>
+   <div className="owner-kpis-v17"><KPI label="Revenue (30d)" value={money(monthCollected)} detail={trendLabel(monthCollected, priorCollected)}/><KPI label="Booked Today" value={money(scheduled)} detail={`${jobs.length} on the board`}/><KPI label="Avg Ticket" value={money(avgTicket)} detail={`${completed30.length} completed`}/><KPI label="Jobs (30d)" value={String(completed30.length)} detail={trendLabel(completed30.length, priorCompleted)}/><KPI label="Customers" value={String(customers.length)}/></div>
    <div className="owner-command-grid-v17">
     <section className="phase-panel owner-revenue-v17"><div className="phase-panel-head"><div><span className="eyebrow">REVENUE OVERVIEW</span><h3>{money(monthCollected)}</h3></div><small>Last 30 days</small></div><OwnerRevenueChart days={days}/><div className="owner-mini-metrics"><div><small>Lifetime collected</small><b>{money(collected)}</b></div><div><small>Avg ticket</small><b>{money(avgTicket)}</b></div><div><small>Days shown</small><b>7</b></div></div></section>
     <section id="owner-schedule" className="phase-panel owner-schedule-v17"><div className="phase-panel-head"><div><span className="eyebrow">TODAY'S SCHEDULE</span><h3>{jobs.length} jobs</h3></div><button className="btn-outline btn-sm" onClick={()=>go('schedule')}>View all</button></div>{jobs.slice(0,6).map(j=><button className="owner-job-v17" key={j.id} onClick={()=>go('dispatch')}><time>{time(j.scheduled_at)}</time><span><b>{j.customer_name||j.service_address||'Customer'}</b><small>{j.vehicle_info||'Vehicle not added'}</small></span><span><b>{j.service_name}</b><small>{money(Number(j.price||0))}</small></span><span><small>{j.assigned_employee_id?employees.find(e=>e.id===j.assigned_employee_id)?.name||'Assigned':'Unassigned'}</small><b className={`status-badge badge-${j.status==='completed'?'green':j.status==='cancelled'?'red':'blue'}`}>{humanStatus(j.status)}</b></span></button>)}{!jobs.length&&<div className="ns-empty">No appointments today. Your next scheduled job will appear here.</div>}</section>

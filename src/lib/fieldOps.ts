@@ -122,10 +122,15 @@ export function formatDistance(meters: number) {
   return `${miles.toFixed(miles < 10 ? 1 : 0)} mi`;
 }
 
+export function localDateKey(value?: string | Date | null) {
+  const d = value instanceof Date ? value : value ? new Date(value) : new Date();
+  if (Number.isNaN(d.getTime())) return '';
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 export function sameLocalDay(value?: string | null, date = new Date()) {
   if (!value) return false;
-  const d = new Date(value);
-  return d.getFullYear() === date.getFullYear() && d.getMonth() === date.getMonth() && d.getDate() === date.getDate();
+  return localDateKey(value) === localDateKey(date);
 }
 
 export function startOfWeek(date = new Date()) {

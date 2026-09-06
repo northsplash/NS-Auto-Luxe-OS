@@ -8,7 +8,7 @@ import OnboardingTab from './OnboardingTab';
 import { liveOpenSlots } from './appointmentSlots';
 import { channelLabel, COMM_GROUPS, COMM_VARIABLES, fillTemplate, SAMPLE_VARS } from '@/lib/communicationCatalog';
 import { emptyEmployeeDraft, type EmployeeDraft } from '@/lib/rolePresets';
-import { firstWord, money, prettyLabel } from '@/lib/data';
+import { firstWord, isSettledPayment, money, prettyLabel, trendLabel } from '@/lib/data';
 import {
   JOB_STEP_LABELS, JOB_STEPS, LEAD_STAGES, OS_SERVICES, SHIFT_DAYS, WEEKDAYS, initialsOf, payLine, revenueDays,
   type JobStatus, type LeadStatus, type OsChat, type OsEmployee, type OsJob,
@@ -99,11 +99,14 @@ export function OwnerDashboard({
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
   const ownerName = firstWord(employees.find((e) => e.role === 'owner')?.name, 'Jordan');
   const today = jobs.filter((j) => String(j.time || '').includes('Today') && jobOpen(j));
-  const scheduledRev = today.reduce((s, j) => s + j.price, 0);
-  const collected = payments.filter((p) => p.status === 'succeeded').reduce((s, p) => s + p.amount, 0);
-  const week = revenueDays.reduce((s, d) => s + d.v, 0);
+  const scheduledRev = today.reduce((s, j) => s + Number(j.price || 0), 0);
+  const collected = payments.filter((p) => isSettledPayment(p.status)).reduce((s, p) => s + Number(p.amount || 0), 0);
   const completed = jobs.filter((j) => j.status === 'completed');
-  const avgTicket = jobs.length ? Math.round(jobs.reduce((s, j) => s + j.price, 0) / jobs.length) : 0;
+  const completedRev = completed.reduce((s, j) => s + Number(j.price || 0), 0);
+  const avgTicket = completed.length ? Math.round(completedRev / completed.length) : 0;
+  const newLeads = leads.filter((l) => l.status === 'new').length;
+  const earlierCollected = payments.filter((p) => isSettledPayment(p.status) && String(p.at || '').includes('Yesterday')).reduce((s, p) => s + Number(p.amount || 0), 0);
+  const todayCollected = payments.filter((p) => isSettledPayment(p.status) && String(p.at || '').includes('Today')).reduce((s, p) => s + Number(p.amount || 0), 0);
   const activeTeam = employees.filter((e) => e.status === 'active');
   const activeDetailers = employees.filter((e) => e.status === 'active' && e.role === 'detailer').length;
   const unassigned = jobs.filter((j) => jobOpen(j) && jobUnassigned(j));
@@ -157,10 +160,10 @@ export function OwnerDashboard({
       </div>
 
       <div className="owner-kpis-v17">
-        <StripeKpi label="Revenue" value={money(week)} delta="+12.4%" />
-        <StripeKpi label="Jobs completed" value={String(completed.length)} delta="+20%" />
-        <StripeKpi label="New leads" value={String(leads.filter((l) => l.status !== 'dnk').length)} delta="+16%" />
-        <StripeKpi label="Avg job value" value={money(avgTicket)} delta="+9%" />
+        <StripeKpi label="Collected" value={money(collected)} delta={trendLabel(todayCollected, earlierCollected)} />
+        <StripeKpi label="Jobs completed" value={String(completed.length)} />
+        <StripeKpi label="New leads" value={String(newLeads)} />
+        <StripeKpi label="Avg completed job" value={money(avgTicket)} />
       </div>
 
       <section className="owner-glance-v17">
@@ -201,8 +204,8 @@ export function OwnerDashboard({
         </section>
         <section className="phase-panel owner-revenue-v17" id="ns-revenue">
           <div className="phase-panel-head">
-            <div><span className="eyebrow">REVENUE OVERVIEW</span><h3>{money(week)}</h3></div>
-            <small>Last 7 days</small>
+            <div><span className="eyebrow">COLLECTED</span><h3>{money(collected)}</h3></div>
+            <small>Settled payments on the board</small>
           </div>
           <OwnerRevenueChart days={days} />
           <div className="owner-mini-metrics">

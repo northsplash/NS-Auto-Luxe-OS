@@ -141,6 +141,19 @@ export function firstWord(value?: string | null, fallback = '') {
   return word || fallback;
 }
 
+export function isSettledPayment(status?: string | null) {
+  return status === 'completed' || status === 'succeeded';
+}
+
+export function trendLabel(current: number, previous: number) {
+  if (!Number.isFinite(current) || !Number.isFinite(previous)) return undefined;
+  if (previous === 0) return current > 0 ? 'New' : undefined;
+  const pct = ((current - previous) / Math.abs(previous)) * 100;
+  if (Math.abs(pct) < 0.5) return 'Even';
+  const rounded = Math.abs(pct) >= 10 ? Math.round(pct) : Math.round(pct * 10) / 10;
+  return `${rounded > 0 ? '+' : ''}${rounded}%`;
+}
+
 export function calcSavings(lifetimeSpend: number): number {
   // Industry estimate: every $1 spent on detailing prevents ~$3-5 in long-term damage
   // Paint fading alone: $500-2000 in respray. Leather cracking: $1000-3000 replacement.

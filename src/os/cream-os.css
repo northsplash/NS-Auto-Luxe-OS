@@ -1379,3 +1379,46 @@ html.nsos-active #root {
   .nsos-hire-head, .nsos-cal-toolbar, .nsos-sr-doors-head { flex-direction: column; align-items: stretch; }
   .nsos-onboard-hero { align-items: flex-start; }
 }
+
+.workspace-chunk-loader {
+  min-height: 280px;
+  display: grid;
+  place-items: center;
+  color: #6f675e;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .02em;
+}
+.nsos-cream .phase-kpi strong,
+.nsos-cream .owner-kpis-v17 strong,
+.nsos-cream .stripe-balances strong,
+.nsos-cream .owner-glance-v17 b,
+.nsos-cream .nsos-kpi strong {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+.nsos-cream .nsos-col,
+.nsos-cream .phase-panel,
+.nsos-cream .owner-job-v17 {
+  content-visibility: auto;
+  contain-intrinsic-size: 120px;
+}
+.nsos-cream .nsos-kanban {
+  gap: 12px;
+}
+.nsos-cream .nsos-lead {
+  padding: 12px !important;
+  border-radius: 14px !important;
+}
+.nsos-cream .nsos-lead-name {
+  font-size: 14px !important;
+  letter-spacing: -.01em;
+}
+.nsos-cream .nsos-lead-addr {
+  margin-top: 1px;
+}
+.nsos-cream .nsos-col h3 {
+  text-transform: capitalize;
+  font-size: 13px !important;
+  letter-spacing: .02em;
+}

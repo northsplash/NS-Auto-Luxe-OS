@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { lazy, Suspense, useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Calendar, CreditCard, UserCheck, Car,
@@ -14,15 +14,16 @@ import { supabase } from '@/lib/supabase';
 import { Profile, Appointment, Payment, Employee } from '@/lib/supabase';
 import { money, prettyLabel } from '@/lib/data';
 import { sendCommunication } from '@/lib/communications';
-import BusinessSuite, { BusinessSection } from './BusinessSuite';
-import EnterpriseSuite, { EnterpriseSection } from './EnterpriseSuite';
-import OperationsExpansion, { ExpansionSection } from './OperationsExpansion';
+import type { BusinessSection } from './BusinessSuite';
+import type { EnterpriseSection } from './EnterpriseSuite';
+import type { ExpansionSection } from './OperationsExpansion';
 import Phase300Suite from './Phase300Suite';
-import TeamMessaging from '@/components/TeamMessaging';
-import AdminDataManager from '@/components/AdminDataManager';
-import OwnerProfitTracker from './OwnerProfitTracker';
-import OwnerGrowthPlanner from './OwnerGrowthPlanner';
-import OwnerPaymentTest from './OwnerPaymentTest';
+const BusinessSuite = lazy(() => import('./BusinessSuite'));
+const EnterpriseSuite = lazy(() => import('./EnterpriseSuite'));
+const OperationsExpansion = lazy(() => import('./OperationsExpansion'));
+const OwnerProfitTracker = lazy(() => import('./OwnerProfitTracker'));
+const OwnerGrowthPlanner = lazy(() => import('./OwnerGrowthPlanner'));
+const OwnerPaymentTest = lazy(() => import('./OwnerPaymentTest'));
 import AdminTeamCalendar from '@/components/AdminTeamCalendar';
 import EmployeeAvatar from '@/components/EmployeeAvatar';
 import EmployeeProfileDrawer from '@/components/EmployeeProfileDrawer';
@@ -34,6 +35,8 @@ import { employeeCanD2D, employeeCanDetail } from '@/lib/workCapabilities';
 import WorkspaceHero from '@/components/WorkspaceHero';
 import ClientPhotosSection from '@/components/ClientPhotosSection';
 import WorkspaceGate from '@/components/WorkspaceGate';
+import TeamMessaging from '@/components/TeamMessaging';
+import AdminDataManager from '@/components/AdminDataManager';
 
 type AdminTab =
   | 'dashboard'
@@ -168,7 +171,8 @@ const [availabilityForm, setAvailabilityForm] = useState({
   useEffect(() => {
     if (!hasWorkspaceAccess) return;
     (async () => {
-      const [custs, apts, pays, emps, avail] = await Promise.all([
+      const since = new Date(Date.now() - 45 * 86400000).toISOString();
+      const [custs, apts, openApts, pays, emps, avail] = await Promise.all([
   supabase
     .from('profiles')
     .select('*')
@@ -178,14 +182,21 @@ const [availabilityForm, setAvailabilityForm] = useState({
   supabase
     .from('appointments')
     .select('*')
-    .order('created_at', { ascending: false })
-    .limit(100),
+    .gte('scheduled_at', since)
+    .order('scheduled_at', { ascending: false })
+    .limit(500),
+
+  supabase
+    .from('appointments')
+    .select('*')
+    .is('scheduled_at', null)
+    .limit(150),
 
   supabase
     .from('payments')
     .select('*')
     .order('created_at', { ascending: false })
-    .limit(200),
+    .limit(400),
 
   supabase
     .from('employees')
@@ -198,18 +209,9 @@ const [availabilityForm, setAvailabilityForm] = useState({
     .order('date', { ascending: true }),
 ]);
 
-      let visitQuery = await supabase
-        .from('site_visits')
-        .select('id,page,referrer,session_id,user_agent,user_id,visited_at')
-        .gte('visited_at', new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString())
-        .order('visited_at',{ascending:false})
-        .limit(20000);
-      if(visitQuery.error && /user_id/i.test(visitQuery.error.message||'')){
-        visitQuery=await supabase.from('site_visits').select('id,page,referrer,session_id,user_agent,visited_at').gte('visited_at',new Date(Date.now()-365*86400000).toISOString()).order('visited_at',{ascending:false}).limit(20000) as any;
-      }
-      const visitData=visitQuery.data;
-
-      const safeAppointments=(apts.data ?? []).map((a:any)=>({...a,add_ons:Array.isArray(a.add_ons)?a.add_ons:[]}));
+      const mergedAppointments=[...(apts.data ?? []), ...(openApts.data ?? [])];
+      const byId=new Map(mergedAppointments.map((a:any)=>[a.id,a]));
+      const safeAppointments=[...byId.values()].map((a:any)=>({...a,add_ons:Array.isArray(a.add_ons)?a.add_ons:[]}));
       setCustomers(custs.data ?? []);
       setAppointments(safeAppointments);
       setPayments(pays.data ?? []);
@@ -222,10 +224,25 @@ const [availabilityForm, setAvailabilityForm] = useState({
       }
       setEmployees(employeeRows);
       setAvailability(avail.data ?? []);
-      setVisits((visitData ?? []) as any);
       setDataLoading(false);
     })();
   }, [user, profile, hasWorkspaceAccess]);
+
+  useEffect(() => {
+    if (!hasWorkspaceAccess || tab !== 'visitors' || visits.length) return;
+    (async () => {
+      let visitQuery = await supabase
+        .from('site_visits')
+        .select('id,page,referrer,session_id,user_agent,user_id,visited_at')
+        .gte('visited_at', new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString())
+        .order('visited_at',{ascending:false})
+        .limit(8000);
+      if(visitQuery.error && /user_id/i.test(visitQuery.error.message||'')){
+        visitQuery=await supabase.from('site_visits').select('id,page,referrer,session_id,user_agent,visited_at').gte('visited_at',new Date(Date.now()-365*86400000).toISOString()).order('visited_at',{ascending:false}).limit(8000) as any;
+      }
+      setVisits((visitQuery.data ?? []) as any);
+    })();
+  }, [hasWorkspaceAccess, tab, visits.length]);
 
   useEffect(() => {
     if (!hasWorkspaceAccess) return;
@@ -1160,11 +1177,12 @@ const handleDeleteAvailability = async (id: string) => {
   </div>
 )}
           
-          {ownerMode && tab === 'owner_growth' && <OwnerGrowthPlanner />}
-          {ownerMode && tab === 'owner_profits' && <OwnerProfitTracker />}
-          {ownerMode && tab === 'payment_test' && <OwnerPaymentTest />}
+          {ownerMode && tab === 'owner_growth' && <Suspense fallback={<div className="workspace-chunk-loader">Opening growth planner…</div>}><OwnerGrowthPlanner /></Suspense>}
+          {ownerMode && tab === 'owner_profits' && <Suspense fallback={<div className="workspace-chunk-loader">Opening profit tracker…</div>}><OwnerProfitTracker /></Suspense>}
+          {ownerMode && tab === 'payment_test' && <Suspense fallback={<div className="workspace-chunk-loader">Opening payment test…</div>}><OwnerPaymentTest /></Suspense>}
 
           {(['recruiting', 'staff_schedule', 'timeclock', 'finance', 'sales', 'inventory', 'pay_settings'] as BusinessSection[]).includes(tab as BusinessSection) && (
+            <Suspense fallback={<div className="workspace-chunk-loader">Opening workspace…</div>}>
             <BusinessSuite
               section={tab as BusinessSection}
               employees={employees}
@@ -1177,13 +1195,24 @@ const handleDeleteAvailability = async (id: string) => {
                 setTab('employees');
               }}
             />
+            </Suspense>
           )}
 
           {(['command_center','crm','dispatch','crews','leads','territories','training','communications','automations'] as AdminTab[]).includes(tab) && (
-            <Phase300Suite section={tab as any} employees={employees} appointments={appointments} setAppointments={setAppointments} customers={customers} payments={payments} />
+            <Phase300Suite
+              section={tab as any}
+              employees={employees}
+              appointments={appointments}
+              setAppointments={setAppointments}
+              customers={customers}
+              payments={payments}
+              ownerName={profile?.full_name || user?.email || 'Owner'}
+              onNavigate={(view) => { setTab(view as AdminTab); setSidebarOpen(false); }}
+            />
           )}
 
           {(['job_assignments','tasks','equipment','documents','reports','permissions','notifications','time_off','payroll_approval','audit'] as AdminTab[]).includes(tab) && (
+            <Suspense fallback={<div className="workspace-chunk-loader">Opening workspace…</div>}>
             <EnterpriseSuite
               section={tab as EnterpriseSection}
               employees={employees}
@@ -1191,10 +1220,13 @@ const handleDeleteAvailability = async (id: string) => {
               appointments={appointments}
               setAppointments={setAppointments}
             />
+            </Suspense>
           )}
 
           {(['fleet','locations','marketing','approvals','incidents','purchasing','retention','continuity'] as AdminTab[]).includes(tab) && (
+            <Suspense fallback={<div className="workspace-chunk-loader">Opening workspace…</div>}>
             <OperationsExpansion section={tab as ExpansionSection} employees={employees} appointments={appointments} customers={customers} payments={payments} />
+            </Suspense>
           )}
 
 
