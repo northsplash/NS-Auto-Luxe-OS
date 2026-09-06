@@ -825,7 +825,7 @@
   box-shadow: 0 10px 28px rgba(48, 38, 28, .05) !important;
 }
 .portal-layout.nsos-cream .portal-main .admin-card *,
-.portal-layout.nsos-cream .portal-main .phase-panel *:not(.btn-primary):not(.btn-primary *),
+.portal-layout.nsos-cream .portal-main .phase-panel *,
 .portal-layout.nsos-cream .portal-main .phase-kpi *,
 .portal-layout.nsos-cream .portal-main .d2d-kpi *,
 .portal-layout.nsos-cream .portal-main .crm-card *,
