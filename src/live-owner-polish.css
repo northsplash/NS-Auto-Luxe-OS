@@ -1752,24 +1752,37 @@
   color: #1f5c38 !important;
   background: #f2faf4 !important;
 }
-.portal-layout.nsos-cream .current-plan-banner,
 .portal-layout.nsos-cream .plan-card {
   background: #fffdf8 !important;
   color: #1c1814 !important;
   border-color: #e4d9cc !important;
 }
 .portal-layout.nsos-cream .plan-card h3,
-.portal-layout.nsos-cream .plan-price,
-.portal-layout.nsos-cream .current-plan-banner strong {
+.portal-layout.nsos-cream .plan-price {
   color: #1c1814 !important;
   -webkit-text-fill-color: #1c1814 !important;
 }
 .portal-layout.nsos-cream .plan-card p,
-.portal-layout.nsos-cream .plan-card li,
-.portal-layout.nsos-cream .current-plan-banner span,
-.portal-layout.nsos-cream .current-plan-banner p {
+.portal-layout.nsos-cream .plan-card li {
   color: #6f675e !important;
   -webkit-text-fill-color: #6f675e !important;
+}
+.portal-layout.nsos-cream .plan-featured {
+  background: #1c1814 !important;
+  color: #f6f1e8 !important;
+  border-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .plan-featured h3,
+.portal-layout.nsos-cream .plan-featured .plan-price,
+.portal-layout.nsos-cream .plan-featured strong {
+  color: #f6f1e8 !important;
+  -webkit-text-fill-color: #f6f1e8 !important;
+}
+.portal-layout.nsos-cream .plan-featured p,
+.portal-layout.nsos-cream .plan-featured li,
+.portal-layout.nsos-cream .plan-featured .plan-price small {
+  color: #d4c4b0 !important;
+  -webkit-text-fill-color: #d4c4b0 !important;
 }
 
 /* Overlays: command, data manager, dialogs, house sheets — never keep dark-theme white type. */
@@ -2409,5 +2422,189 @@
   .portal-layout.nsos-cream .clock-mini {
     min-height: 40px !important;
     padding: 8px 12px !important;
+  }
+}
+
+/* Customer portal: espresso welcome stays cream-on-dark; cards stay ink-on-ivory. */
+.portal-layout.nsos-cream .dash-welcome,
+.portal-layout.nsos-cream .current-plan-banner {
+  background: #1c1814 !important;
+  color: #f6f1e8 !important;
+  border: 1px solid #1c1814 !important;
+  border-radius: 16px !important;
+}
+.portal-layout.nsos-cream .dash-welcome h2,
+.portal-layout.nsos-cream .current-plan-banner strong,
+.portal-layout.nsos-cream .dash-welcome .btn-primary,
+.portal-layout.nsos-cream .dash-welcome .btn-primary * {
+  color: #f6f1e8 !important;
+  -webkit-text-fill-color: #f6f1e8 !important;
+}
+.portal-layout.nsos-cream .dash-welcome p,
+.portal-layout.nsos-cream .current-plan-banner p,
+.portal-layout.nsos-cream .current-plan-banner span {
+  color: #d4c4b0 !important;
+  -webkit-text-fill-color: #d4c4b0 !important;
+}
+.portal-layout.nsos-cream .dash-welcome .btn-primary {
+  background: transparent !important;
+  border: 1px solid #d4c4b0 !important;
+}
+
+.portal-layout.nsos-cream .dash-stat-card,
+.portal-layout.nsos-cream .dash-card,
+.portal-layout.nsos-cream .apt-card,
+.portal-layout.nsos-cream .billing-savings-card,
+.portal-layout.nsos-cream .payment-list,
+.portal-layout.nsos-cream .payment-row {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  border: 1px solid #e4d9cc !important;
+  border-radius: 14px !important;
+}
+.portal-layout.nsos-cream .dash-stat-card strong,
+.portal-layout.nsos-cream .dash-card h3,
+.portal-layout.nsos-cream .apt-info h4,
+.portal-layout.nsos-cream .apt-card-price,
+.portal-layout.nsos-cream .apt-service,
+.portal-layout.nsos-cream .apt-price,
+.portal-layout.nsos-cream .billing-savings-header h3,
+.portal-layout.nsos-cream .payment-info strong,
+.portal-layout.nsos-cream .payment-amount strong,
+.portal-layout.nsos-cream .member-detail strong {
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .dash-stat-card span,
+.portal-layout.nsos-cream .dash-card-sub,
+.portal-layout.nsos-cream .apt-addons,
+.portal-layout.nsos-cream .apt-vehicle,
+.portal-layout.nsos-cream .apt-date,
+.portal-layout.nsos-cream .apt-notes,
+.portal-layout.nsos-cream .member-detail span,
+.portal-layout.nsos-cream .payment-info span,
+.portal-layout.nsos-cream .billing-savings-header p {
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+}
+.portal-layout.nsos-cream .dash-stat-icon,
+.portal-layout.nsos-cream .apt-icon,
+.portal-layout.nsos-cream .payment-icon {
+  background: #f6efe8 !important;
+  color: #1c1814 !important;
+  border: 1px solid #e4d9cc !important;
+}
+.portal-layout.nsos-cream .member-plan-badge {
+  background: #1c1814 !important;
+  color: #f6f1e8 !important;
+  -webkit-text-fill-color: #f6f1e8 !important;
+}
+.portal-layout.nsos-cream .savings-spent {
+  background: #1c1814 !important;
+  color: #f6f1e8 !important;
+}
+.portal-layout.nsos-cream .savings-spent span {
+  color: #f6f1e8 !important;
+  -webkit-text-fill-color: #f6f1e8 !important;
+}
+.portal-layout.nsos-cream .savings-saved span {
+  color: #f6f1e8 !important;
+  -webkit-text-fill-color: #f6f1e8 !important;
+}
+
+.portal-layout.nsos-cream .pkg-choice,
+.portal-layout.nsos-cream .mini-addon {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  border: 1px solid #e4d9cc !important;
+}
+.portal-layout.nsos-cream .pkg-choice span,
+.portal-layout.nsos-cream .mini-addon span {
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+}
+.portal-layout.nsos-cream .pkg-active,
+.portal-layout.nsos-cream .mini-active {
+  background: #1c1814 !important;
+  color: #f6f1e8 !important;
+  -webkit-text-fill-color: #f6f1e8 !important;
+  border-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .pkg-active span,
+.portal-layout.nsos-cream .pkg-active strong,
+.portal-layout.nsos-cream .mini-active span {
+  color: #f6f1e8 !important;
+  -webkit-text-fill-color: #f6f1e8 !important;
+}
+.portal-layout.nsos-cream .modal-total,
+.portal-layout.nsos-cream .modal-total strong {
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .modal-total span {
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+}
+
+/* V20 leftover dark boards: kanban, dispatch, checklists, quizzes. */
+.portal-layout.nsos-cream .lead-kanban-col,
+.portal-layout.nsos-cream .dispatch-command-col,
+.portal-layout.nsos-cream .dispatch-v2-column,
+.portal-layout.nsos-cream .admin-lead-kanban > section {
+  background: #f6efe8 !important;
+  color: #1c1814 !important;
+  border-color: #e4d9cc !important;
+}
+.portal-layout.nsos-cream .lead-kanban-col > header,
+.portal-layout.nsos-cream .dispatch-command-col > header,
+.portal-layout.nsos-cream .admin-lead-kanban > section > header,
+.portal-layout.nsos-cream .lead-kanban-col > header strong,
+.portal-layout.nsos-cream .admin-lead-kanban > section > header strong {
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  background: #fffdf8 !important;
+  border-color: #e4d9cc !important;
+}
+.portal-layout.nsos-cream .lead-kanban-card,
+.portal-layout.nsos-cream .admin-lead-kanban button,
+.portal-layout.nsos-cream .dispatch-v2-job {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  border-color: #e4d9cc !important;
+}
+.portal-layout.nsos-cream .job-checklist label,
+.portal-layout.nsos-cream .quiz-options label,
+.portal-layout.nsos-cream .crew-member-metrics div,
+.portal-layout.nsos-cream .crew-detail-grid > div {
+  background: #f6efe8 !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  border-color: #e4d9cc !important;
+}
+
+@media (max-width: 1180px) {
+  .portal-layout.nsos-cream .dash-welcome,
+  .portal-layout.nsos-cream .current-plan-banner {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 14px !important;
+  }
+  .portal-layout.nsos-cream .plan-grid { grid-template-columns: 1fr !important; max-width: 520px; }
+  .portal-layout.nsos-cream .pkg-choices { grid-template-columns: 1fr 1fr !important; }
+}
+
+@media (max-width: 720px) {
+  .portal-layout.nsos-cream .dash-stats { grid-template-columns: 1fr !important; }
+  .portal-layout.nsos-cream .pkg-choices,
+  .portal-layout.nsos-cream .mini-addons { grid-template-columns: 1fr !important; }
+  .portal-layout.nsos-cream.customer-os .dash-welcome .btn-primary {
+    width: 100%;
+    justify-content: center;
+  }
+  .portal-layout.nsos-cream.customer-os .portal-topbar {
+    grid-template-columns: 44px minmax(0, 1fr) auto !important;
   }
 }
