@@ -96,12 +96,18 @@ function StatusBadge({ status }: { status?: string | null }) {
 export default function Admin() {
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
-  const ownerMode = window.location.pathname.startsWith('/owner');
+  const ownerMode = (() => {
+    const path = window.location.pathname.replace(/\/$/, '') || '/';
+    return path === '/' || path.startsWith('/owner');
+  })();
   const hasWorkspaceAccess = Boolean(user && (ownerMode ? profile?.portal_role === 'owner' : profile?.role === 'admin'));
   const siteUrl=(import.meta.env.VITE_SITE_URL||'https://www.northsplash.com').replace(/\/$/,'');
   const [tab, setTab] = useState<AdminTab>(() => {
-    const initial = new URLSearchParams(window.location.search).get('view');
-    return (initial || 'dashboard') as AdminTab;
+    const params = new URLSearchParams(window.location.search);
+    const initial = params.get('view') || params.get('tab');
+    if (initial) return initial as AdminTab;
+    const path = window.location.pathname.replace(/\/$/, '') || '/';
+    return (path === '/' || path.startsWith('/owner') ? 'command_center' : 'dashboard') as AdminTab;
   });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [commandOpen,setCommandOpen]=useState(false);

@@ -2,7 +2,7 @@
 
 Field-service operating system for North Splash Auto Luxe. One cream-luxury OS — Stripe hierarchy, SalesRabbit D2D, ServiceTitan dispatch — not 15 tools stitched together.
 
-`/` and `/os` open the Admin OS. D2D canvassing is `/d2d`. The detailer portal is `/employee`. Sign-in stays at `/login`.
+`/` and `/owner` open the live Owner portal (Supabase team, jobs, and cash). `/os` is the demo cream OS with sample data. D2D canvassing is `/d2d`. The detailer portal is `/employee`. Sign-in stays at `/login`.
 
 ## Run locally
 
@@ -18,7 +18,7 @@ The app serves at `http://127.0.0.1:43127`. Demo state lives in this browser (`l
 ## Public URLs
 
 - GitHub Pages (updates on every push to `main`): https://northsplash.github.io/NS-Auto-Luxe-OS/?tab=dashboard
-- Vercel: import **this GitHub repo**, production branch **`main`** (not `gh-pages`). `vercel.json` runs `npm ci --include=dev` then `npm run build` into `dist`. `gh-pages` is a static snapshot for GitHub Pages only — it has no Vite, so a Vercel build of that branch fails with `vite: command not found`. Add `northsplash.com` or `app.northsplash.com` as the project domain, then point DNS to Vercel. This repository cannot change northsplash.com DNS by itself.
+- Vercel: import **this GitHub repo**, production branch **`main`** (not `gh-pages`). `vercel.json` runs `npm ci --include=dev` then `npm run build` into `dist`, and turns off Vercel builds for `gh-pages`. `gh-pages` is a static snapshot for GitHub Pages only — it has no Vite, so a Vercel build of that branch fails with `vite: command not found`. Add `northsplash.com` or `app.northsplash.com` as the project domain, then point DNS to Vercel. This repository cannot change northsplash.com DNS by itself.
 
 Open **Owner → Dashboard**. Each push to `main` rebuilds GitHub Pages.
 
