@@ -1288,10 +1288,36 @@
   }
   .portal-layout.nsos-cream .portal-sidebar.sidebar-open { left: 0 !important; }
   .portal-layout.nsos-cream .portal-main { margin-left: 0 !important; }
+  .portal-layout.nsos-cream .sidebar-backdrop {
+    display: block !important;
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 1250 !important;
+    background: rgba(28, 24, 20, .38) !important;
+    backdrop-filter: blur(3px);
+  }
   .portal-layout.nsos-cream .os-mobile-actions-trigger,
   .portal-layout.nsos-cream .os-mobile-actions-menu { display: none !important; }
   .portal-layout.nsos-cream .sidebar-toggle,
   .portal-layout.nsos-cream .sidebar-close { display: grid !important; place-items: center; }
+  .portal-layout.nsos-cream .portal-topbar {
+    display: grid !important;
+    grid-template-columns: 44px minmax(0, 1fr) 44px auto auto !important;
+    gap: 8px !important;
+    align-items: center !important;
+    min-height: 56px !important;
+    padding: 0 12px !important;
+  }
+  .portal-layout.nsos-cream .os-command-trigger {
+    width: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    padding: 0 !important;
+    justify-content: center !important;
+  }
+  .portal-layout.nsos-cream .os-command-trigger span,
+  .portal-layout.nsos-cream .os-command-trigger kbd,
+  .portal-layout.nsos-cream .desktop-top-action span { display: none !important; }
   .portal-layout.nsos-cream .portal-sidebar .sidebar-brand > div,
   .portal-layout.nsos-cream .portal-sidebar .sidebar-brand div strong,
   .portal-layout.nsos-cream .portal-sidebar .sidebar-user > div:last-child,
@@ -1742,4 +1768,238 @@
 .portal-layout.nsos-cream .current-plan-banner p {
   color: #6f675e !important;
   -webkit-text-fill-color: #6f675e !important;
+}
+
+/* Overlays: command, data manager, dialogs, house sheets — never keep dark-theme white type. */
+.portal-layout.nsos-cream .os-command-backdrop,
+.portal-layout.nsos-cream .data-manager-backdrop,
+.portal-layout.nsos-cream .modal-overlay,
+.portal-layout.nsos-cream .house-drawer-backdrop {
+  background: rgba(28, 24, 20, .42) !important;
+}
+.portal-layout.nsos-cream .os-command-palette,
+.portal-layout.nsos-cream .data-manager-shell,
+.portal-layout.nsos-cream .modal,
+.portal-layout.nsos-cream .house-drawer,
+.portal-layout.nsos-cream .house-drawer.field-house-sheet,
+.portal-layout.nsos-cream .door-sheet {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  border-color: #e4d9cc !important;
+  box-shadow: 0 28px 80px rgba(61, 42, 26, .18) !important;
+}
+.portal-layout.nsos-cream .os-command-palette *,
+.portal-layout.nsos-cream .data-manager-shell *,
+.portal-layout.nsos-cream .modal *,
+.portal-layout.nsos-cream .house-drawer *:not(.btn-primary):not(.btn-primary *) {
+  -webkit-text-fill-color: unset;
+}
+.portal-layout.nsos-cream .os-command-input {
+  border-bottom-color: #eadfd3 !important;
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .os-command-input input,
+.portal-layout.nsos-cream .os-command-palette input {
+  background: transparent !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+.portal-layout.nsos-cream .os-command-input input::placeholder {
+  color: #8a8178 !important;
+  -webkit-text-fill-color: #8a8178 !important;
+}
+.portal-layout.nsos-cream .os-command-input button {
+  background: #f4efe8 !important;
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+}
+.portal-layout.nsos-cream .os-command-results > button {
+  background: transparent !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .os-command-results > button span,
+.portal-layout.nsos-cream .os-command-results > button strong {
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .os-command-results > button small {
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+}
+.portal-layout.nsos-cream .os-command-results > button:hover {
+  background: #f4efe8 !important;
+}
+.portal-layout.nsos-cream .data-manager-header,
+.portal-layout.nsos-cream .data-manager-tabs,
+.portal-layout.nsos-cream .data-manager-toolbar,
+.portal-layout.nsos-cream .data-manager-list,
+.portal-layout.nsos-cream .modal-header,
+.portal-layout.nsos-cream .modal-form {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  border-color: #eadfd3 !important;
+}
+.portal-layout.nsos-cream .data-manager-header h2,
+.portal-layout.nsos-cream .data-manager-list-head strong,
+.portal-layout.nsos-cream .data-manager-record strong,
+.portal-layout.nsos-cream .modal-header h3,
+.portal-layout.nsos-cream .house-drawer-head h2,
+.portal-layout.nsos-cream .field-house-address strong,
+.portal-layout.nsos-cream .field-house-address h2 {
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .data-manager-header p,
+.portal-layout.nsos-cream .data-manager-record span,
+.portal-layout.nsos-cream .data-manager-empty,
+.portal-layout.nsos-cream .data-manager-loading,
+.portal-layout.nsos-cream .house-drawer-head p,
+.portal-layout.nsos-cream .house-drawer-head small {
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+}
+.portal-layout.nsos-cream .data-manager-tabs {
+  background: #f7f1ea !important;
+}
+.portal-layout.nsos-cream .data-manager-tabs button {
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+  background: transparent !important;
+}
+.portal-layout.nsos-cream .data-manager-tabs button.active {
+  background: #1c1814 !important;
+  color: #f6f1e8 !important;
+  -webkit-text-fill-color: #f6f1e8 !important;
+  border-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .data-manager-list-head {
+  background: #f4efe8 !important;
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+  border-color: #eadfd3 !important;
+}
+.portal-layout.nsos-cream .data-manager-row {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  border-color: #eadfd3 !important;
+}
+.portal-layout.nsos-cream .data-manager-row:hover,
+.portal-layout.nsos-cream .data-manager-row.selected {
+  background: #f7f1ea !important;
+}
+.portal-layout.nsos-cream .data-manager-empty,
+.portal-layout.nsos-cream .data-manager-loading {
+  background: #fffdf8 !important;
+}
+.portal-layout.nsos-cream .data-manager-empty h3 {
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .icon-btn,
+.portal-layout.nsos-cream .modal-header button,
+.portal-layout.nsos-cream .house-drawer-head button,
+.portal-layout.nsos-cream .data-manager-row-actions button {
+  background: #f4efe8 !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  border: 1px solid #e4d9cc !important;
+}
+.portal-layout.nsos-cream .data-manager-row-actions button.danger,
+.portal-layout.nsos-cream .btn-danger-soft {
+  background: #fdf4f2 !important;
+  color: #8a2e26 !important;
+  -webkit-text-fill-color: #8a2e26 !important;
+  border-color: #f0c9c4 !important;
+}
+.portal-layout.nsos-cream .house-contact-actions a,
+.portal-layout.nsos-cream .house-quick-grid button,
+.portal-layout.nsos-cream .quick-status,
+.portal-layout.nsos-cream .field-quick-grid button {
+  background: #fff !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  border-color: #e4d9cc !important;
+}
+.portal-layout.nsos-cream .field-quick-grid button.active,
+.portal-layout.nsos-cream .quick-status.active {
+  background: #1c1814 !important;
+  color: #f6f1e8 !important;
+  -webkit-text-fill-color: #f6f1e8 !important;
+  border-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .territory-setup-card-v13,
+.portal-layout.nsos-cream .territory-form-section-v13 {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  border-color: #e4d9cc !important;
+}
+.portal-layout.nsos-cream .territory-setup-card-v13 label,
+.portal-layout.nsos-cream .territory-setup-card-v13 input,
+.portal-layout.nsos-cream .territory-setup-card-v13 select,
+.portal-layout.nsos-cream .territory-setup-card-v13 textarea {
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .territory-setup-card-v13 input:not([type=color]),
+.portal-layout.nsos-cream .territory-setup-card-v13 select,
+.portal-layout.nsos-cream .territory-setup-card-v13 textarea {
+  background: #fff !important;
+  border-color: #e4d9cc !important;
+}
+
+@media (max-width: 1180px) {
+  .portal-layout.nsos-cream .os-command-backdrop {
+    padding: 12px 12px 0 !important;
+    align-items: start !important;
+  }
+  .portal-layout.nsos-cream .os-command-palette {
+    width: min(720px, 100%) !important;
+    border-radius: 18px !important;
+  }
+  .portal-layout.nsos-cream .os-command-results > button {
+    min-height: 48px !important;
+  }
+  .portal-layout.nsos-cream .data-manager-backdrop {
+    padding: 0 !important;
+    align-items: flex-end !important;
+  }
+  .portal-layout.nsos-cream .data-manager-shell,
+  .portal-layout.nsos-cream .modal {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: min(92dvh, 900px) !important;
+    border-radius: 20px 20px 0 0 !important;
+  }
+  .portal-layout.nsos-cream .house-drawer,
+  .portal-layout.nsos-cream .door-sheet {
+    width: min(100vw, 420px) !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .portal-layout.nsos-cream .sidebar-backdrop {
+    display: block !important;
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 1250 !important;
+    background: rgba(28, 24, 20, .4) !important;
+  }
+  .portal-layout.nsos-cream .os-command-palette {
+    width: 100% !important;
+    border-radius: 0 0 18px 18px !important;
+  }
+  .portal-layout.nsos-cream .house-drawer,
+  .portal-layout.nsos-cream .door-sheet {
+    width: 100% !important;
+    max-height: 88dvh !important;
+    border-radius: 20px 20px 0 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+  }
 }
