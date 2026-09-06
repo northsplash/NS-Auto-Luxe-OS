@@ -9,6 +9,7 @@ import { liveOpenSlots } from './appointmentSlots';
 import { channelLabel, COMM_GROUPS, COMM_VARIABLES, fillTemplate, SAMPLE_VARS } from '@/lib/communicationCatalog';
 import { emptyEmployeeDraft, type EmployeeDraft } from '@/lib/rolePresets';
 import { firstWord, isSettledPayment, money, prettyLabel, trendLabel } from '@/lib/data';
+import { remainingStepLabels } from '@/lib/onboarding';
 import {
   JOB_STEP_LABELS, JOB_STEPS, LEAD_STAGES, OS_SERVICES, SHIFT_DAYS, WEEKDAYS, initialsOf, payLine, revenueDays,
   type JobStatus, type LeadStatus, type OsChat, type OsEmployee, type OsJob,
@@ -518,7 +519,7 @@ export function PeopleProfile({ employee }: { employee: OsEmployee }) {
         <div style={{ flex: 1 }}>
           <span className="nsos-eyebrow">{employee.department}{needsOnboarding ? ' · onboarding' : ''}</span>
           <h2>{employee.name}</h2>
-          <p style={{ color: 'var(--os-muted)' }}>{employee.title} · {employee.location}</p>
+          <p style={{ color: 'var(--os-muted)' }}>{employee.title} · {employee.location}{needsOnboarding ? ` · ${employee.onboarding}% packet` : ''}</p>
         </div>
         <select className="nsos-select" value={employee.status} onChange={(e) => os.updateEmployee(employee.id, { status: e.target.value as OsEmployee['status'] })}>
           <option value="active">Active</option>
@@ -1474,7 +1475,7 @@ export function HireView({ onHire, onOpen }: { onHire: (name?: string, title?: s
           {onboard.map((e) => (
             <button key={e.id} type="button" className="nsos-card" onClick={() => onOpen?.(e.id)}>
               <strong>{e.name}</strong>
-              <small>{e.title} · {e.onboarding}% packet</small>
+              <small>{e.title} · {e.onboarding}% · next {remainingStepLabels(e.onboarding_packet)[0] || 'done'}</small>
               <i className="nsos-onboard"><b style={{ width: `${e.onboarding}%` }} /></i>
             </button>
           ))}
@@ -1490,7 +1491,7 @@ export function HireView({ onHire, onOpen }: { onHire: (name?: string, title?: s
                 <button className="nsos-lead" type="button" key={e.id} onClick={() => onOpen?.(e.id)}>
                   <strong className="nsos-lead-name">{e.name}</strong>
                   <small className="nsos-lead-addr">{e.email}</small>
-                  <div style={{ marginTop: 8, fontSize: 12 }}>{e.onboarding}% complete · open packet</div>
+                  <div style={{ marginTop: 8, fontSize: 12 }}>{e.onboarding}% · next {remainingStepLabels(e.onboarding_packet)[0] || 'done'}</div>
                 </button>
               ))}
               {rows.map((c) => (

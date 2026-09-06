@@ -187,6 +187,44 @@
 .live-onboard-tasks > div small { grid-column: 1; color: #6f675e; }
 .live-onboard-tasks > div em { font-style: normal; font-size: 11px; color: #8a7d6e; text-transform: capitalize; }
 .live-onboard-tasks > div.done { opacity: .7; }
+.live-onboard-tasks.academy { margin-top: 2px; }
+.owner-onboard-queue {
+  margin: 0 0 18px;
+  padding: 14px 16px;
+  border: 1px solid #e4d9cc;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #fffdf8, #f6efe4);
+}
+.owner-onboard-queue-head {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.owner-onboard-queue-head svg { color: #b8893a; }
+.owner-onboard-queue-head h3 { margin: 0; font-size: 16px; }
+.owner-onboard-queue-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px;
+}
+.owner-onboard-queue-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: center;
+  text-align: left;
+  padding: 10px 12px;
+  border: 1px solid #eadfd3;
+  border-radius: 14px;
+  background: #fff;
+  color: inherit;
+}
+.owner-onboard-queue-card strong { display: block; font-size: 14px; }
+.owner-onboard-queue-card small { color: #6f675e; display: block; margin: 2px 0 6px; }
+.owner-onboard-queue-card .nsos-onboard { display: block; height: 4px; border-radius: 99px; background: #eadfd3; overflow: hidden; }
+.owner-onboard-queue-card .nsos-onboard b { display: block; height: 100%; background: #c8a96a; }
+.owner-onboard-queue-card em { font-style: normal; font-weight: 800; color: #b8893a; font-variant-numeric: tabular-nums; }
 
 .nsos-cream .portal-layout,
 .portal-layout.nsos-cream {

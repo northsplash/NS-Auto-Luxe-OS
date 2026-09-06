@@ -1198,6 +1198,50 @@ html.nsos-active #root {
   color: #b8893a;
   letter-spacing: -.03em;
 }
+.nsos-onboard-meter {
+  display: grid;
+  justify-items: end;
+  gap: 6px;
+  min-width: 88px;
+}
+.nsos-onboard-meter .nsos-onboard {
+  width: 88px;
+  height: 6px;
+  background: #eadfd3;
+}
+.nsos-onboard-meter small {
+  font-size: 11px;
+  color: #8a7d6e;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.nsos-onboard-hero.complete {
+  background: linear-gradient(180deg, #f7f3ea, #efe4cc);
+}
+.nsos-onboard-done {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid #e4d9cc;
+  border-radius: 14px;
+  background: #fffdf8;
+}
+.nsos-onboard-done svg { color: #8a6420; flex-shrink: 0; }
+.nsos-onboard-done strong { display: block; font-size: 15px; }
+.nsos-onboard-done p { margin: 2px 0 0; color: #6f675e; font-size: 13px; }
+.nsos-onboard-done .btn-primary { margin-left: auto; }
+.nsos-onboard-index {
+  width: 16px;
+  height: 16px;
+  border-radius: 99px;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  background: #f3ece2;
+  color: #6f675e;
+}
 .nsos-onboard-steps {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -1378,6 +1422,8 @@ html.nsos-active #root {
   .nsos-onboard-steps { grid-template-columns: 1fr 1fr; }
   .nsos-hire-head, .nsos-cal-toolbar, .nsos-sr-doors-head { flex-direction: column; align-items: stretch; }
   .nsos-onboard-hero { align-items: flex-start; }
+  .nsos-onboard-done { flex-wrap: wrap; }
+  .nsos-onboard-done .btn-primary { margin-left: 0; width: 100%; justify-content: center; }
 }
 
 .workspace-chunk-loader {

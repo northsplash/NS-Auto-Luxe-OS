@@ -53,7 +53,14 @@ function migrate(data: Partial<OsSnapshot>): OsSnapshot {
   return {
     ...base,
     ...data,
-    employees: (data.employees?.length ? data.employees : base.employees).map((e) => normalizeEmployee(e)),
+    employees: (data.employees?.length ? data.employees : base.employees).map((e) => {
+      const next = normalizeEmployee(e);
+      if (!next.onboarding_packet) {
+        const seeded = base.employees.find((s) => s.id === next.id);
+        if (seeded?.onboarding_packet) next.onboarding_packet = seeded.onboarding_packet;
+      }
+      return next;
+    }),
     jobs: (data.jobs?.length ? data.jobs : base.jobs).map((j) => normalizeJob(j)),
     leads: (data.leads?.length ? data.leads : base.leads).map((l) => normalizeLead(l)),
     chats: (data.chats?.length ? data.chats : base.chats).map((c) => normalizeChat(c)),

@@ -49,9 +49,41 @@ export function last4(value?: string | null) {
   return String(value || '').replace(/\D/g, '').slice(-4);
 }
 
+export const ONBOARDING_STEP_META: Array<{ id: OnboardingStepId; label: string; hint: string; next: string }> = [
+  { id: 'identity', label: 'Identity', hint: 'Legal name, birthday, and a headshot for the roster.', next: 'legal name and headshot' },
+  { id: 'tax', label: 'Tax', hint: 'W-4 style withholding. We keep only the last four of the SSN.', next: 'tax withholding' },
+  { id: 'pay', label: 'Direct deposit', hint: 'Bank routing and account, last four only.', next: 'direct deposit' },
+  { id: 'work', label: 'Work eligibility', hint: 'I-9 attestation the hire completes themselves.', next: 'I-9 eligibility' },
+  { id: 'emergency', label: 'Emergency', hint: 'Who we call if something happens in the field.', next: 'emergency contact' },
+];
+
 export function onboardingPercent(packet?: OnboardingPacket | null) {
   const done = ONBOARDING_STEPS.filter((s) => packet?.steps?.[s]).length;
   return Math.round((done / ONBOARDING_STEPS.length) * 100);
+}
+
+export function remainingStepIds(packet?: OnboardingPacket | null) {
+  return ONBOARDING_STEPS.filter((id) => !packet?.steps?.[id]);
+}
+
+export function remainingStepLabels(packet?: OnboardingPacket | null) {
+  return remainingStepIds(packet).map((id) => ONBOARDING_STEP_META.find((s) => s.id === id)?.label || id);
+}
+
+export function nextOnboardingStep(packet?: OnboardingPacket | null) {
+  const id = remainingStepIds(packet)[0];
+  return ONBOARDING_STEP_META.find((s) => s.id === id) || null;
+}
+
+export function academyNextLabel(employee?: Pick<Employee, 'role' | 'work_modes'> | null) {
+  if (!employee) return 'New-hire academy';
+  const ids = courseIdsForEmployee(employee as Employee);
+  const d2d = ids.includes(D2D_ACADEMY_ID);
+  const detail = ids.includes(DETAIL_ACADEMY_ID);
+  if (d2d && detail) return 'Door-to-door and detailing academies';
+  if (d2d) return 'Door-to-door academy';
+  if (detail) return 'Detailing academy';
+  return 'New-hire academy';
 }
 
 export function onboardingStatusLabel(percent: number) {
@@ -169,6 +201,7 @@ export async function saveOnboardingPacket(employee: Employee, packet: Onboardin
     onboarding_status: status,
   };
   if (packet.steps.identity && displayName) employeePatch.name = displayName;
+  await syncHireTasks(employee.id, packet);
   const { data, error } = await supabase.from('employees').update(employeePatch).eq('id', employee.id).select().single();
   if (error && !/onboarding_status/i.test(error.message)) throw error;
   if (error && /onboarding_status/i.test(error.message)) {
@@ -226,4 +259,43 @@ export type OnboardingTask = {
 export async function loadOnboardingTasks(employeeId: string): Promise<OnboardingTask[]> {
   const { data } = await supabase.from('onboarding_tasks').select('*').eq('employee_id', employeeId).order('created_at');
   return ((data || []) as OnboardingTask[]).filter((t) => t.title !== PACKET_TASK_TITLE);
+}
+
+async function syncHireTasks(employeeId: string, packet: OnboardingPacket) {
+  const titles: string[] = [];
+  if (packet.steps.identity) titles.push('Identity & headshot');
+  if (packet.steps.tax) titles.push('Tax withholding (W-4)');
+  if (packet.steps.pay) titles.push('Direct deposit');
+  if (packet.steps.work) titles.push('I-9 work eligibility');
+  if (packet.handbook_ack || packet.steps.work) titles.push('Review company policies');
+  if (packet.steps.emergency) titles.push('Emergency contact');
+  if (!titles.length) return;
+  await supabase.from('onboarding_tasks').update({
+    status: 'completed',
+    completed_at: new Date().toISOString(),
+  }).eq('employee_id', employeeId).in('title', titles);
+}
+
+export type OnboardingSummary = {
+  employeeId: string;
+  percent: number;
+  nextLabel: string;
+  remaining: string[];
+};
+
+export async function loadOnboardingSummaries(employeeIds: string[]): Promise<OnboardingSummary[]> {
+  if (!employeeIds.length) return [];
+  const { data } = await supabase.from('employee_onboarding_profiles').select('employee_id, percent_complete, steps').in('employee_id', employeeIds);
+  const byId = new Map((data || []).map((row: Record<string, unknown>) => [String(row.employee_id), row]));
+  return employeeIds.map((id) => {
+    const row = byId.get(id);
+    const packet = row ? fromRow(row) : emptyOnboarding();
+    const remaining = remainingStepLabels(packet);
+    return {
+      employeeId: id,
+      percent: Number(row?.percent_complete ?? onboardingPercent(packet)) || 0,
+      nextLabel: remaining[0] || 'Packet complete',
+      remaining,
+    };
+  });
 }

@@ -27,6 +27,7 @@ const OwnerPaymentTest = lazy(() => import('./OwnerPaymentTest'));
 import AdminTeamCalendar from '@/components/AdminTeamCalendar';
 import EmployeeAvatar from '@/components/EmployeeAvatar';
 import EmployeeProfileDrawer from '@/components/EmployeeProfileDrawer';
+import OwnerOnboardingQueue from '@/components/OwnerOnboardingQueue';
 import AddEmployeeForm from '@/components/AddEmployeeForm';
 import { emptyEmployeeDraft, type EmployeeDraft } from '@/lib/rolePresets';
 import { seedHireOnboarding } from '@/lib/onboarding';
@@ -1243,6 +1244,7 @@ const handleDeleteAvailability = async (id: string) => {
                 <input type="search" placeholder="Search people, title, or role" value={teamQuery} onChange={e=>setTeamQuery(e.target.value)} aria-label="Search team" />
                 <button className="btn-primary" onClick={() => setShowEmpForm(true)}><Plus size={16}/>Add member</button>
               </div>
+              <OwnerOnboardingQueue employees={employees} onOpen={(hire)=>{setProfileInitialTab('onboarding');setSelectedEmployeeId(hire.id)}} />
               <div className="team-directory-groups">
                 {[
                   {title:'Leadership',roles:['manager']},

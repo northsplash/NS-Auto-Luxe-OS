@@ -1,17 +1,11 @@
 import { FormEvent, useMemo, useState } from 'react';
-import { Camera, Check, Landmark, ShieldCheck, UserRound, FileText } from 'lucide-react';
+import { Camera } from 'lucide-react';
 import { firstWord } from '@/lib/data';
 import type { OnboardingPacket, OsEmployee } from './demoData';
 import { emptyOnboarding, onboardingPercent } from './demoData';
+import { nextOnboardingStep, ONBOARDING_STEP_META, remainingStepLabels, type OnboardingStepId } from '@/lib/onboarding';
 import { useOs } from './osStore';
-
-const STEPS = [
-  { id: 'identity', label: 'Identity', Icon: UserRound, hint: 'Legal name, birthday, and a headshot for the roster.' },
-  { id: 'tax', label: 'Tax', Icon: FileText, hint: 'W-4 style withholding. We keep only the last four of the SSN.' },
-  { id: 'pay', label: 'Direct deposit', Icon: Landmark, hint: 'Bank routing and account, last four only.' },
-  { id: 'work', label: 'Work eligibility', Icon: ShieldCheck, hint: 'I-9 attestation the hire completes themselves.' },
-  { id: 'emergency', label: 'Emergency', Icon: ShieldCheck, hint: 'Who we call if something happens in the field.' },
-] as const;
+import OnboardingPacketShell from '@/components/OnboardingPacketShell';
 
 function last4(value?: string | null) {
   return String(value || '').replace(/\D/g, '').slice(-4);
@@ -49,7 +43,7 @@ function shrinkHeadshot(file: File): Promise<string> {
 export default function OnboardingTab({ employee }: { employee: OsEmployee }) {
   const os = useOs();
   const packet: OnboardingPacket = { ...emptyOnboarding(), ...(employee.onboarding_packet || {}) };
-  const [step, setStep] = useState<(typeof STEPS)[number]['id']>('identity');
+  const [step, setStep] = useState<OnboardingStepId>(() => nextOnboardingStep(employee.onboarding_packet)?.id || 'identity');
   const [ssnDraft, setSsnDraft] = useState('');
   const [routingDraft, setRoutingDraft] = useState('');
   const [accountDraft, setAccountDraft] = useState('');
@@ -79,7 +73,7 @@ export default function OnboardingTab({ employee }: { employee: OsEmployee }) {
     });
   };
 
-  const completeStep = (id: (typeof STEPS)[number]['id']) => {
+  const completeStep = (id: OnboardingStepId) => {
     setError('');
     if (id === 'identity') {
       if (!packet.legal_first.trim() || !packet.legal_last.trim() || !packet.dob) {
@@ -128,7 +122,7 @@ export default function OnboardingTab({ employee }: { employee: OsEmployee }) {
       return;
     }
     patch({}, [id]);
-    const order = STEPS.map((s) => s.id);
+    const order = ONBOARDING_STEP_META.map((s) => s.id);
     setStep(order[Math.min(order.indexOf(id) + 1, order.length - 1)]);
   };
 
@@ -143,32 +137,24 @@ export default function OnboardingTab({ employee }: { employee: OsEmployee }) {
     }
   };
 
-  const remaining = useMemo(() => STEPS.filter((s) => !packet.steps[s.id]), [packet.steps]);
+  const remaining = useMemo(() => remainingStepLabels(packet), [packet.steps]);
+  const nextMeta = nextOnboardingStep(packet);
 
   return (
-    <div className="nsos-onboard-flow">
-      <div className="nsos-onboard-hero">
-        <div>
-          <span className="nsos-eyebrow">Onboarding packet</span>
-          <h3>Finish hiring {firstWord(employee.name)}</h3>
-          <p>The hire fills this in. North Splash stores last-four identifiers only — never a full Social or full account number.</p>
-        </div>
-        <strong>{percent}%</strong>
-      </div>
-      <ol className="nsos-onboard-steps">
-        {STEPS.map((s) => (
-          <li key={s.id}>
-            <button type="button" className={`${step === s.id ? 'active' : ''} ${packet.steps[s.id] ? 'done' : ''}`} onClick={() => setStep(s.id)}>
-              {packet.steps[s.id] ? <Check size={14} /> : <s.Icon size={14} />}
-              {s.label}
-            </button>
-          </li>
-        ))}
-      </ol>
-      {error && <div className="nsos-onboard-error" role="alert">{error}</div>}
+    <OnboardingPacketShell
+      audience="manager"
+      hireName={firstWord(employee.name)}
+      percent={percent}
+      remaining={remaining}
+      nextLabel={nextMeta?.label}
+      steps={ONBOARDING_STEP_META.map((s) => ({ id: s.id, label: s.label, done: Boolean(packet.steps[s.id]) }))}
+      activeStep={step}
+      onSelectStep={(id) => setStep(id as OnboardingStepId)}
+      error={error}
+    >
       {step === 'identity' && (
         <form className="nsos-card nsos-onboard-card" onSubmit={(e) => { e.preventDefault(); completeStep('identity'); }}>
-          <p>{STEPS[0].hint}</p>
+          <p>{ONBOARDING_STEP_META[0].hint}</p>
           <label className="nsos-headshot">
             {packet.headshot ? <img src={packet.headshot} alt="" /> : <span><Camera size={18} />Add headshot</span>}
             <input type="file" accept="image/*" onChange={onPhoto} />
@@ -193,7 +179,7 @@ export default function OnboardingTab({ employee }: { employee: OsEmployee }) {
       )}
       {step === 'tax' && (
         <form className="nsos-card nsos-onboard-card" onSubmit={(e) => { e.preventDefault(); completeStep('tax'); }}>
-          <p>{STEPS[1].hint}</p>
+          <p>{ONBOARDING_STEP_META[1].hint}</p>
           <label className="nsos-field">Social Security number
             <input
               inputMode="numeric"
@@ -220,7 +206,7 @@ export default function OnboardingTab({ employee }: { employee: OsEmployee }) {
       )}
       {step === 'pay' && (
         <form className="nsos-card nsos-onboard-card" onSubmit={(e) => { e.preventDefault(); completeStep('pay'); }}>
-          <p>{STEPS[2].hint}</p>
+          <p>{ONBOARDING_STEP_META[2].hint}</p>
           <label className="nsos-field">Bank name<input value={packet.bank_name} onChange={(e) => patch({ bank_name: e.target.value })} /></label>
           <div className="form-row">
             <label className="nsos-field">Routing number<input inputMode="numeric" placeholder={packet.routing_last4 ? `••••${packet.routing_last4}` : '9 digits'} value={routingDraft} onChange={(e) => setRoutingDraft(e.target.value)} /></label>
@@ -238,7 +224,7 @@ export default function OnboardingTab({ employee }: { employee: OsEmployee }) {
       )}
       {step === 'work' && (
         <form className="nsos-card nsos-onboard-card" onSubmit={(e) => { e.preventDefault(); completeStep('work'); }}>
-          <p>{STEPS[3].hint}</p>
+          <p>{ONBOARDING_STEP_META[3].hint}</p>
           <label className="nsos-field">Citizenship / work status
             <select value={packet.work_auth} onChange={(e) => patch({ work_auth: e.target.value })}>
               <option value="">Select</option>
@@ -260,7 +246,7 @@ export default function OnboardingTab({ employee }: { employee: OsEmployee }) {
       )}
       {step === 'emergency' && (
         <form className="nsos-card nsos-onboard-card" onSubmit={(e) => { e.preventDefault(); completeStep('emergency'); }}>
-          <p>{STEPS[4].hint}</p>
+          <p>{ONBOARDING_STEP_META[4].hint}</p>
           <div className="form-row">
             <label className="nsos-field">Contact name<input value={packet.emergency_name} onChange={(e) => patch({ emergency_name: e.target.value })} required /></label>
             <label className="nsos-field">Phone<input value={packet.emergency_phone} onChange={(e) => patch({ emergency_phone: e.target.value })} required /></label>
@@ -269,6 +255,6 @@ export default function OnboardingTab({ employee }: { employee: OsEmployee }) {
           <button className="nsos-btn" type="submit">{remaining.length <= 1 ? 'Complete onboarding' : 'Save emergency contact'}</button>
         </form>
       )}
-    </div>
+    </OnboardingPacketShell>
   );
 }
