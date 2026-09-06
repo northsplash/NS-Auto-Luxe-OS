@@ -2608,3 +2608,219 @@
     grid-template-columns: 44px minmax(0, 1fr) auto !important;
   }
 }
+
+/* V26/V27 leftovers: lead workspace, pay rules, crew roster, profile drawer. */
+.portal-layout.nsos-cream .os-secondary-nav {
+  background: rgba(255, 253, 248, .96) !important;
+  border-bottom: 1px solid #eadfd3 !important;
+  color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .os-secondary-nav-scroll button {
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+  background: transparent !important;
+}
+.portal-layout.nsos-cream .os-secondary-nav-scroll button.active {
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  background: transparent !important;
+  border-bottom-color: #b8893a !important;
+}
+
+.portal-layout.nsos-cream .owner-field-mode-btn {
+  background: #2a241e !important;
+  color: #f6f1e8 !important;
+  border-color: #3d342c !important;
+}
+.portal-layout.nsos-cream .owner-field-mode-btn strong {
+  color: #f6f1e8 !important;
+  -webkit-text-fill-color: #f6f1e8 !important;
+}
+.portal-layout.nsos-cream .owner-field-mode-btn small {
+  color: #c4b6a4 !important;
+  -webkit-text-fill-color: #c4b6a4 !important;
+}
+
+.portal-layout.nsos-cream .crew-roster,
+.portal-layout.nsos-cream .crew-goal-strip label,
+.portal-layout.nsos-cream .lead-command-v26,
+.portal-layout.nsos-cream .lead-view-switch-v26,
+.portal-layout.nsos-cream .lead-kpis-v26 > div,
+.portal-layout.nsos-cream .lead-toolbar-v26,
+.portal-layout.nsos-cream .lead-map-sidebar-v26,
+.portal-layout.nsos-cream .lead-pipeline-v26 > section,
+.portal-layout.nsos-cream .lead-pipeline-cards-v26 article,
+.portal-layout.nsos-cream .lead-list-v26,
+.portal-layout.nsos-cream .comp-rule-builder-v26,
+.portal-layout.nsos-cream .comp-rule-row,
+.portal-layout.nsos-cream .capability-field-v27,
+.portal-layout.nsos-cream .capability-checks-v27 label,
+.portal-layout.nsos-cream .customer-job-progress-v25 {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  border-color: #e4d9cc !important;
+}
+.portal-layout.nsos-cream .lead-view-switch-v26 button {
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+  background: transparent !important;
+}
+.portal-layout.nsos-cream .lead-view-switch-v26 button.active {
+  background: #1c1814 !important;
+  color: #f6f1e8 !important;
+  -webkit-text-fill-color: #f6f1e8 !important;
+}
+.portal-layout.nsos-cream .lead-kpis-v26 strong,
+.portal-layout.nsos-cream .lead-map-sidebar-v26 h4,
+.portal-layout.nsos-cream .lead-map-sidebar-v26 button strong,
+.portal-layout.nsos-cream .lead-pipeline-v26 header strong,
+.portal-layout.nsos-cream .lead-pipeline-card-head strong,
+.portal-layout.nsos-cream .crew-roster h3,
+.portal-layout.nsos-cream .comp-rule-head strong,
+.portal-layout.nsos-cream .capability-field-v27 > span {
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .lead-map-sidebar-v26 button,
+.portal-layout.nsos-cream .lead-pipeline-v26 > section > header,
+.portal-layout.nsos-cream .lead-pipeline-actions-v26 > * {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  border-color: #eadfd3 !important;
+}
+.portal-layout.nsos-cream .lead-map-sidebar-v26 button:hover,
+.portal-layout.nsos-cream .lead-pipeline-cards-v26 article:hover {
+  background: #f6efe8 !important;
+}
+.portal-layout.nsos-cream .lead-map-sidebar-v26 button small,
+.portal-layout.nsos-cream .lead-pipeline-cards-v26 p,
+.portal-layout.nsos-cream .lead-pipeline-cards-v26 > article > small,
+.portal-layout.nsos-cream .lead-mobile-command-v26 p,
+.portal-layout.nsos-cream .comp-rule-head small,
+.portal-layout.nsos-cream .comp-inline-field-v27 > span,
+.portal-layout.nsos-cream .comp-rule-empty,
+.portal-layout.nsos-cream .capability-field-v27 > small {
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+}
+.portal-layout.nsos-cream .lead-map-sidebar-v26 em,
+.portal-layout.nsos-cream .lead-pipeline-card-head em,
+.portal-layout.nsos-cream .lead-pipeline-meta span:first-child,
+.portal-layout.nsos-cream .lead-map-sidebar-v26 header > span {
+  color: #b8893a !important;
+  -webkit-text-fill-color: #b8893a !important;
+}
+.portal-layout.nsos-cream .lead-toolbar-v26 select,
+.portal-layout.nsos-cream .comp-rule-fields select,
+.portal-layout.nsos-cream .comp-rule-fields input,
+.portal-layout.nsos-cream .comp-rule-value,
+.portal-layout.nsos-cream .comp-rule-limits label > div,
+.portal-layout.nsos-cream .profile-field-v25 input,
+.portal-layout.nsos-cream .profile-field-v25 select,
+.portal-layout.nsos-cream .profile-field-v25 textarea {
+  background: #fff !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  border-color: #e4d9cc !important;
+}
+.portal-layout.nsos-cream .comp-rule-value input,
+.portal-layout.nsos-cream .comp-rule-limits input {
+  background: transparent !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+
+.portal-layout.nsos-cream .lead-map-legend,
+.portal-layout.nsos-cream .lead-map-controls-v26 button {
+  background: rgba(28, 24, 20, .92) !important;
+  color: #f6f1e8 !important;
+  -webkit-text-fill-color: #f6f1e8 !important;
+  border-color: #3d342c !important;
+}
+
+.portal-layout.nsos-cream .employee-profile-tabs-v25 {
+  border-bottom-color: #eadfd3 !important;
+}
+.portal-layout.nsos-cream .employee-profile-tabs-v25 button {
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+  background: transparent !important;
+}
+.portal-layout.nsos-cream .employee-profile-tabs-v25 button.active {
+  background: #1c1814 !important;
+  color: #f6f1e8 !important;
+  -webkit-text-fill-color: #f6f1e8 !important;
+}
+.portal-layout.nsos-cream .profile-section-title-v25 strong,
+.portal-layout.nsos-cream .employee-activity-v25 span strong,
+.portal-layout.nsos-cream .employee-comp-rules-v26 strong {
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .profile-section-title-v25 small,
+.portal-layout.nsos-cream .profile-field-v25,
+.portal-layout.nsos-cream .employee-activity-v25 span small {
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+}
+.portal-layout.nsos-cream .employee-profile-save-v25 {
+  background: #fffdf8 !important;
+  border-top-color: #eadfd3 !important;
+}
+.portal-layout.nsos-cream .customer-progress-steps-v25 span {
+  color: #6f675e !important;
+}
+.portal-layout.nsos-cream .customer-progress-steps-v25 b {
+  background: #f6efe8 !important;
+  color: #1c1814 !important;
+  border-color: #e4d9cc !important;
+}
+.portal-layout.nsos-cream .customer-progress-steps-v25 span.done {
+  color: #6b4e1f !important;
+}
+.portal-layout.nsos-cream .customer-progress-steps-v25 span.done b {
+  background: #b8893a !important;
+  color: #fffdf8 !important;
+  border-color: #b8893a !important;
+}
+.portal-layout.nsos-cream .customer-progress-track-v25 {
+  background: #eadfd3 !important;
+}
+
+@media (max-width: 1180px) {
+  .portal-layout.nsos-cream .lead-map-layout-v26 {
+    grid-template-columns: 1fr !important;
+  }
+  .portal-layout.nsos-cream .lead-map-sidebar-v26 {
+    max-height: 280px !important;
+  }
+  .portal-layout.nsos-cream .lead-pipeline-v26 {
+    display: flex !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .portal-layout.nsos-cream .lead-pipeline-v26 > section {
+    flex: 0 0 min(78vw, 280px);
+  }
+  .portal-layout.nsos-cream .lead-toolbar-v26 {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .portal-layout.nsos-cream .lead-view-switch-v26 { width: 100%; }
+}
+
+@media (max-width: 720px) {
+  .portal-layout.nsos-cream .lead-kpis-v26 { grid-template-columns: 1fr 1fr !important; }
+  .portal-layout.nsos-cream .lead-toolbar-v26 { grid-template-columns: 1fr !important; }
+  .portal-layout.nsos-cream .lead-view-switch-v26 {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .portal-layout.nsos-cream .comp-rule-fields,
+  .portal-layout.nsos-cream .comp-rule-row-v27 .comp-rule-fields {
+    grid-template-columns: 1fr !important;
+  }
+  .portal-layout.nsos-cream .profile-edit-grid-v25 { grid-template-columns: 1fr !important; }
+  .portal-layout.nsos-cream .customer-progress-steps-v25 small { font-size: 8px; }
+}
