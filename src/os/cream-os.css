@@ -194,7 +194,7 @@ html.nsos-active #root {
 .nsos-cream .nsos-job { border-color: var(--ns-line) !important; color: var(--ns-ink) !important; }
 .nsos-cream .nsos-job.active-row { background: #f6ead4 !important; border-color: #e0c48a !important; }
 .nsos-cream .nsos-tabs button { color: var(--ns-muted); }
-.nsos-cream .nsos-tabs button.active { background: #1c1814 !important; color: #f6f1e8 !important; }
+.nsos-cream .nsos-tabs button.active { background: #1c1814 !important; color: #f6f1e8 !important; -webkit-text-fill-color: #f6f1e8 !important; }
 .nsos-cream .portal-main input,
 .nsos-cream .portal-main select,
 .nsos-cream .portal-main textarea,
@@ -285,7 +285,7 @@ html.nsos-active #root {
   color: var(--ns-ink) !important;
   border-color: var(--ns-line) !important;
 }
-.nsos-cream .os-more-sheet-grid button.active { background: #1c1814 !important; color: #f6f1e8 !important; }
+.nsos-cream .os-more-sheet-grid button.active { background: #1c1814 !important; color: #f6f1e8 !important; -webkit-text-fill-color: #f6f1e8 !important; }
 
 .nsos-avatar { border-radius: 50%; object-fit: cover; }
 .nsos-quick { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -344,8 +344,9 @@ html.nsos-active #root {
 }
 .nsos-week button small { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #6f675e; }
 .nsos-week button b { font-size: 16px; }
-.nsos-week button.active { background: #1c1814; color: #f6f1e8; border-color: #1c1814; }
-.nsos-week button.active small { color: #e8c96a; }
+.nsos-week button.active { background: #1c1814; color: #f6f1e8; border-color: #1c1814; -webkit-text-fill-color: #f6f1e8; }
+.nsos-week button.active small { color: #e8c96a; -webkit-text-fill-color: #e8c96a; }
+.nsos-week button.active b { color: #f6f1e8; -webkit-text-fill-color: #f6f1e8; }
 .nsos-cream .dispatch-column { background: #f6f1e8 !important; }
 .nsos-cream .dispatch-column h3,
 .nsos-cream .nsos-st-col h3 { color: #1c1814 !important; }
@@ -1292,9 +1293,11 @@ html.nsos-active #root {
 .nsos-cal .nsos-week button.active {
   background: #1c1814;
   border-color: #1c1814;
-  color: #c8a96a;
+  color: #f6f1e8;
+  -webkit-text-fill-color: #f6f1e8;
 }
-.nsos-cal .nsos-week button.active b { color: #fffdf8; }
+.nsos-cal .nsos-week button.active b { color: #fffdf8; -webkit-text-fill-color: #fffdf8; }
+.nsos-cal .nsos-week button.active small { color: #e8c96a; -webkit-text-fill-color: #e8c96a; }
 
 .nsos-sr-door {
   display: grid;

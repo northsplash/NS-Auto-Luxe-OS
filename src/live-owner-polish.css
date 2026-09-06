@@ -3216,3 +3216,177 @@
     grid-template-columns: 1fr !important;
   }
 }
+
+/* Last-wins phone shell: full-width chat, readable espresso chips, cream more sheet. */
+@media (max-width: 720px) {
+  html.nsos-active .portal-layout.nsos-cream,
+  .portal-layout.nsos-cream.nsos-admin-preview,
+  .portal-layout.nsos-cream {
+    grid-template-columns: minmax(0, 1fr) !important;
+    overflow-x: hidden !important;
+  }
+  .portal-layout.nsos-cream .portal-main {
+    margin-left: 0 !important;
+    min-width: 0 !important;
+    overflow-x: hidden !important;
+    padding-bottom: calc(64px + env(safe-area-inset-bottom)) !important;
+  }
+  .portal-layout.nsos-cream .portal-content {
+    padding: 10px 12px calc(84px + env(safe-area-inset-bottom)) !important;
+    overflow-x: hidden !important;
+  }
+  .portal-layout.nsos-cream .portal-topbar {
+    display: grid !important;
+    grid-template-columns: 44px minmax(0, 1fr) 44px !important;
+    height: calc(52px + env(safe-area-inset-top)) !important;
+    padding: env(safe-area-inset-top) 10px 0 !important;
+  }
+  .portal-layout.nsos-cream .desktop-top-action,
+  .portal-layout.nsos-cream .os-mobile-actions-trigger,
+  .portal-layout.nsos-cream .os-mobile-actions-menu { display: none !important; }
+  .portal-layout.nsos-cream .sidebar-toggle,
+  .portal-layout.nsos-cream .os-command-trigger {
+    display: grid !important;
+    place-items: center;
+    width: 44px !important;
+    min-width: 44px !important;
+    height: 44px !important;
+  }
+  .portal-layout.nsos-cream .v2-page-head h2,
+  .portal-layout.nsos-cream .tab-header h2,
+  .portal-layout.nsos-cream .os-page-lead,
+  .portal-layout.nsos-cream .v2-page-head p,
+  .portal-layout.nsos-cream .tab-header p,
+  .portal-layout.nsos-cream .calendar-command-head p { display: none !important; }
+  .portal-layout.nsos-cream .os-phone-subnav,
+  .portal-layout.nsos-cream .nsos-owner-jump,
+  .portal-layout.nsos-cream .owner-jump-nav-v29 {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .portal-layout.nsos-cream .os-phone-subnav::-webkit-scrollbar,
+  .portal-layout.nsos-cream .nsos-owner-jump::-webkit-scrollbar { display: none; }
+  .portal-layout.nsos-cream .os-phone-subnav button.active,
+  .portal-layout.nsos-cream .nsos-tabs button.active,
+  .portal-layout.nsos-cream .nsos-week button.active,
+  .portal-layout.nsos-cream .nsos-week button.active b,
+  .portal-layout.nsos-cream .calendar-day-strip-v29 button.active,
+  .portal-layout.nsos-cream .calendar-day-strip-v29 button.active strong,
+  .portal-layout.nsos-cream .os-mode-row button.active,
+  .portal-layout.nsos-cream .os-mode-row button.active * {
+    color: #f6f1e8 !important;
+    -webkit-text-fill-color: #f6f1e8 !important;
+  }
+  .portal-layout.nsos-cream .nsos-week button.active small,
+  .portal-layout.nsos-cream .calendar-day-strip-v29 button.active span,
+  .portal-layout.nsos-cream .calendar-day-strip-v29 button.active small {
+    color: #e8c96a !important;
+    -webkit-text-fill-color: #e8c96a !important;
+  }
+  .portal-layout.nsos-cream .os-mobile-bottom-nav.mobile-app-nav-v25,
+  .portal-layout.nsos-cream.nsos-admin-preview .os-mobile-bottom-nav.mobile-app-nav-v25 {
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    background: rgba(255, 253, 248, .98) !important;
+    border-top: 1px solid #eadfd3 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+  .portal-layout.nsos-cream .os-mobile-bottom-nav button.active,
+  .portal-layout.nsos-cream .mobile-app-nav-v25 button.active {
+    color: #1c1814 !important;
+    -webkit-text-fill-color: #1c1814 !important;
+    background: #f6ead4 !important;
+    border-radius: 10px !important;
+  }
+  .portal-layout.nsos-cream.nsos-admin-preview .os-more-sheet,
+  .portal-layout.nsos-cream .os-more-sheet,
+  .portal-layout.nsos-cream .os-command-palette,
+  .portal-layout.nsos-cream .os-sheet {
+    background: #fffdf8 !important;
+    color: #1c1814 !important;
+    -webkit-text-fill-color: #1c1814 !important;
+    border: 1px solid #eadfd3 !important;
+  }
+  .portal-layout.nsos-cream.nsos-admin-preview .os-more-sheet-head strong,
+  .portal-layout.nsos-cream .os-more-sheet-head strong {
+    color: #1c1814 !important;
+    -webkit-text-fill-color: #1c1814 !important;
+  }
+  .portal-layout.nsos-cream.nsos-admin-preview .os-more-sheet-grid button,
+  .portal-layout.nsos-cream.nsos-admin-preview .os-more-sheet-pins button,
+  .portal-layout.nsos-cream .os-more-sheet-grid button,
+  .portal-layout.nsos-cream .os-more-sheet-pins button {
+    background: #fff !important;
+    color: #1c1814 !important;
+    -webkit-text-fill-color: #1c1814 !important;
+    border-color: #e4d9cc !important;
+  }
+  .portal-layout.nsos-cream.nsos-admin-preview .os-more-sheet-grid button.active,
+  .portal-layout.nsos-cream .os-more-sheet-grid button.active {
+    background: #1c1814 !important;
+    color: #f6f1e8 !important;
+    -webkit-text-fill-color: #f6f1e8 !important;
+  }
+  .portal-layout.nsos-cream.os-tab-messages .portal-content {
+    padding: 0 0 calc(72px + env(safe-area-inset-bottom)) !important;
+  }
+  .portal-layout.nsos-cream.os-tab-messages .os-phone-subnav {
+    padding: 8px 12px 8px !important;
+  }
+  .portal-layout.nsos-cream.nsos-admin-preview.os-tab-messages .team-messaging.messaging-v6,
+  .portal-layout.nsos-cream.nsos-admin-preview.os-tab-messages .team-messaging.messaging-v6.with-info,
+  .portal-layout.nsos-cream .team-messaging,
+  .portal-layout.nsos-cream .team-messaging.thread-open,
+  .portal-layout.nsos-cream .team-messaging.with-info,
+  .portal-layout.nsos-cream .team-messaging.messaging-v6 {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: 1fr !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-height: calc(100dvh - 168px) !important;
+    height: calc(100dvh - 168px) !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: #fffdf8 !important;
+  }
+  .portal-layout.nsos-cream .message-channel-list {
+    display: flex !important;
+    flex-direction: column !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    max-height: none !important;
+  }
+  .portal-layout.nsos-cream .message-channel {
+    min-width: 0 !important;
+    width: 100% !important;
+    flex: 0 0 auto !important;
+  }
+  .portal-layout.nsos-cream .message-workspace-brand,
+  .portal-layout.nsos-cream .message-rail-footer,
+  .portal-layout.nsos-cream .message-info-rail { display: none !important; }
+  .portal-layout.nsos-cream .team-messaging:not(.thread-open) .message-thread { display: none !important; }
+  .portal-layout.nsos-cream .team-messaging.thread-open .message-channel-rail { display: none !important; }
+  .portal-layout.nsos-cream.nsos-admin-preview .team-messaging.messaging-v6.thread-open .message-channel-rail { display: none !important; }
+  .portal-layout.nsos-cream .team-messaging.thread-open .message-thread,
+  .portal-layout.nsos-cream.nsos-admin-preview .team-messaging.messaging-v6.thread-open .message-thread {
+    display: flex !important;
+    flex: 1 !important;
+    min-height: 0 !important;
+    width: 100% !important;
+  }
+  .portal-layout.nsos-cream .owner-kpis-v17,
+  .portal-layout.nsos-cream .stripe-balances,
+  .portal-layout.nsos-cream .owner-glance-v17,
+  .portal-layout.nsos-cream .dashboard-grid { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+  .auth-page .auth-bg {
+    min-height: 120px !important;
+    max-height: 18vh !important;
+  }
+  .auth-page .auth-bg-copy p { font-size: 18px !important; }
+  .auth-page .auth-card { padding: 20px 18px calc(24px + env(safe-area-inset-bottom)) !important; }
+}
