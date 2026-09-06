@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import type { Appointment } from '@/lib/supabase';
+import { notifyCustomer } from '@/lib/communications';
 
 const SETTLED = new Set(['paid', 'succeeded', 'completed', 'settled']);
 
@@ -67,5 +68,8 @@ export async function markJobCollected(job: Appointment, method: CollectMethod) 
     .select()
     .single();
   if (error) throw error;
-  return data as Appointment;
+  const next = data as Appointment;
+  void notifyCustomer('payment_received', next, { payment_method: method });
+  if (qcIsPassed(job) || next.status === 'completed') void notifyCustomer('job_completed', next);
+  return next;
 }

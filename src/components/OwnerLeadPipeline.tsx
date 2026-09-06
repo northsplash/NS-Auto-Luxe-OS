@@ -4,6 +4,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { money, prettyLabel } from '@/lib/data';
+import { notifyCustomer } from '@/lib/communications';
 import { ServiceMenuSelect } from '@/components/DetailSelfPicker';
 import { DOOR_STATUSES, doorStatus } from '@/lib/fieldOps';
 import { employeeCanD2D } from '@/lib/workCapabilities';
@@ -572,6 +573,7 @@ function LeadInspector({
     if (error) return alert(error.message);
     setAppointments?.((p) => [...p, data].sort((a, b) => new Date(a.scheduled_at || 0).getTime() - new Date(b.scheduled_at || 0).getTime()));
     await patchLead(selected, { status: 'appointment_set', appointment_id: data.id }, { type: 'status_change', previous: selected.status, next: 'appointment_set', notes: 'Booked from owner pipeline' });
+    void notifyCustomer('booking_received', data);
     onNavigate?.('appointments');
   };
 

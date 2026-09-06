@@ -3188,6 +3188,11 @@
 .portal-layout.nsos-cream .team-profile-actions {
   background: linear-gradient(180deg, rgba(255, 253, 248, 0), #fffdf8 28%) !important;
 }
+.portal-layout.nsos-cream .profile-invite-note {
+  margin: 0 18px 16px;
+  color: #5c534a;
+  font-size: 0.86rem;
+}
 
 .portal-layout.nsos-cream .pay-command-kpis > div,
 .portal-layout.nsos-cream .pay-employee-list-v25 > button,

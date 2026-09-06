@@ -27,7 +27,7 @@ import {
   SOLD_STATUSES, doorStatus, haversineMeters, localDateTime, optimizeWalkingRoute, rankNextBestHouse,
   percent, sameLocalDay,
 } from '@/lib/fieldOps';
-import { sendCommunication } from '@/lib/communications';
+import { sendCommunication, notifyCustomer } from '@/lib/communications';
 import EmployeeAvatar from '@/components/EmployeeAvatar';
 import WorkspaceGate from '@/components/WorkspaceGate';
 import { BackToOwnerBanner, PortalSwitchGrid, PortalSwitchRail, TopbarOwnerLink, canSwitchLivePortals } from '@/components/PortalSwitch';
@@ -305,6 +305,7 @@ export default function D2DPortal(){
           const {data,error}=await supabase.from('appointments').insert(item.payload).select('id').maybeSingle();
           if(error)throw error;
           if(data?.id&&leadId)await supabase.from('leads').update({status:'appointment_set',appointment_id:data.id}).eq('id',leadId);
+          if(data?.id&&item.payload.customer_email)void notifyCustomer('booking_received',{...item.payload,id:data.id});
         }
       }catch{remaining.push(item)}
     }
@@ -360,7 +361,10 @@ export default function D2DPortal(){
     if(!employee||!selectedDoor)return;let lead=selectedDoor.lead_id?leads.find(l=>l.id===selectedDoor.lead_id):null;
     if(!lead){await saveLead(undefined,'estimate');return alert('Lead saved. Reopen the house and create the estimate.');}
     const amount=Number(form.estimated_value||lead.estimated_value||0);const {data,error}=await supabase.from('customer_estimates').insert({lead_id:lead.id,employee_id:employee.id,sales_rep_employee_id:employee.id,amount,subtotal:amount,total:amount,status:'draft',line_items:[{name:form.service_interest||'Detailing service',quantity:1,price:amount}],notes:form.notes}).select().single();if(error)return alert(error.message);
-    await supabase.from('leads').update({status:'estimate',estimate_id:data.id}).eq('id',lead.id);setLeads(p=>p.map(x=>x.id===lead!.id?{...x,status:'estimate',estimate_id:data.id}:x));setForm(p=>({...p,status:'estimate'}));alert('Estimate created. It is now attached to this lead.');
+    await supabase.from('leads').update({status:'estimate',estimate_id:data.id}).eq('id',lead.id);setLeads(p=>p.map(x=>x.id===lead!.id?{...x,status:'estimate',estimate_id:data.id}:x));setForm(p=>({...p,status:'estimate'}));
+    const email=form.email||lead.email;
+    if(email)sendCommunication('estimate_sent',{estimate_id:data.id,lead_id:lead.id,recipient_email:email,variables:{customer_name:form.customer_name||lead.customer_name||'Customer',service_name:form.service_interest||lead.service_interest||'Detailing service',price:money(amount)}}).catch(console.warn);
+    alert('Estimate created. It is now attached to this lead.');
   };
 
   const createAppointment=async(lead:Lead)=>{
@@ -375,6 +379,7 @@ export default function D2DPortal(){
     setAppointments(p=>[...p,data].sort((x,y)=>new Date(x.scheduled_at||0).getTime()-new Date(y.scheduled_at||0).getTime()));
     await supabase.from('leads').update({status:'appointment_set',appointment_id:data.id}).eq('id',lead.id);
     setLeads(p=>p.map(x=>x.id===lead.id?{...x,status:'appointment_set',appointment_id:data.id}:x));
+    void notifyCustomer('booking_received', data);
   };
 
   const startRoute=async()=>{
@@ -415,6 +420,7 @@ export default function D2DPortal(){
     if(error){alert(error.message);return}
     setAppointments(p=>[...p,data].sort((a,b)=>new Date(a.scheduled_at||0).getTime()-new Date(b.scheduled_at||0).getTime()));
     if(data.lead_id){await supabase.from('leads').update({status:'appointment_set',appointment_id:data.id,next_action:'appointment',next_action_at:data.scheduled_at}).eq('id',data.lead_id);setLeads(p=>p.map(l=>l.id===data.lead_id?{...l,status:'appointment_set',appointment_id:data.id}:l))}
+    void notifyCustomer('booking_received', data);
   };
   const updateCalendarAppointment=async(id:string,payload:Record<string,unknown>)=>{const {data,error}=await supabase.from('appointments').update(payload).eq('id',id).select().single();if(error){alert(error.message);return}setAppointments(p=>p.map(a=>a.id===id?data:a))};
 

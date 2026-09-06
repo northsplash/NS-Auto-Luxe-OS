@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Activity, BriefcaseBusiness, Calendar, ClipboardCheck, Clock3, Mail, MessageCircle, Phone, Save, Trash2, WalletCards, X } from 'lucide-react';
+import { Activity, BriefcaseBusiness, Calendar, ClipboardCheck, Clock3, Mail, MessageCircle, Phone, Save, Send, Trash2, WalletCards, X } from 'lucide-react';
 import EmployeeAvatar from './EmployeeAvatar';
 import EmployeeOnboardingTab from './EmployeeOnboardingTab';
 import CompensationRuleBuilder from './CompensationRuleBuilder';
@@ -8,6 +8,7 @@ import { SYSTEM_ROLES } from '@/lib/rolePresets';
 import { supabase, type Appointment, type Employee } from '@/lib/supabase';
 import { money, prettyLabel } from '@/lib/data';
 import { isOnboardingOpen } from '@/lib/onboarding';
+import { inviteEmployeeLogin, portalRoleFromPosition } from '@/lib/inviteHire';
 
 type Tab='onboarding'|'overview'|'employment'|'pay'|'documents'|'schedule'|'activity';
 type Props={employee:Employee;employees:Employee[];appointments:Appointment[];initialTab?:Tab;onClose:()=>void;onOpenCalendar:(id:string)=>void;onOpenMessages:()=>void;onDelete:(id:string)=>void;onUpdated:(e:Employee)=>void};
@@ -16,13 +17,26 @@ const payLabel=(e:Employee)=>compensationSummary(e);
 
 export default function EmployeeProfileDrawer({employee:e,employees,appointments,initialTab,onClose,onOpenCalendar,onOpenMessages,onDelete,onUpdated}:Props){
  const needsOnboarding=isOnboardingOpen(e.onboarding_status);
- const [tab,setTab]=useState<Tab>(initialTab||(needsOnboarding?'onboarding':'overview'));const [draft,setDraft]=useState<Partial<Employee>>({...e});const [saving,setSaving]=useState(false);
+ const [tab,setTab]=useState<Tab>(initialTab||(needsOnboarding?'onboarding':'overview'));const [draft,setDraft]=useState<Partial<Employee>>({...e});const [saving,setSaving]=useState(false);const [inviteBusy,setInviteBusy]=useState(false);const [inviteNote,setInviteNote]=useState('');
  useEffect(()=>{setDraft({...e})},[e.id]);
  useEffect(()=>{if(initialTab)setTab(initialTab)},[initialTab,e.id]);
  const assigned=useMemo(()=>appointments.filter(a=>a.assigned_employee_id===e.id&&!a.archived),[appointments,e.id]);
  const upcoming=assigned.filter(a=>a.scheduled_at&&new Date(a.scheduled_at)>=new Date()&&!['cancelled','completed'].includes(a.status)).sort((a,b)=>+new Date(a.scheduled_at!)-+new Date(b.scheduled_at!));
  const completed=assigned.filter(a=>a.status==='completed');
  const save=async()=>{const name=String(draft.name||'').trim();if(!name)return alert('Name is required.');setSaving(true);const payload={name,email:String(draft.email||'').trim()||null,phone:String(draft.phone||'').trim()||null,role:draft.role||e.role,employment_level:Number(draft.employment_level||1),title:draft.title||null,department:draft.department||null,status:draft.status||'active',manager_employee_id:draft.manager_employee_id||null,work_location:draft.work_location||null,hire_date:draft.hire_date||null,pay_type:draft.pay_type||'hourly',hourly_rate:Number(draft.hourly_rate||0),weekly_base:Number(draft.weekly_base||0),commission_rate:Number(draft.commission_rate||0),annual_salary:Number(draft.annual_salary||0),per_job_rate:Number(draft.per_job_rate||0),flat_commission:Number(draft.flat_commission||0),commission_basis:draft.commission_basis||'revenue',pay_schedule:draft.pay_schedule||'weekly',overtime_eligible:draft.overtime_eligible!==false,compensation_notes:draft.compensation_notes||null,custom_compensation:draft.custom_compensation||{rules:[]},work_modes:Array.isArray(draft.work_modes)?draft.work_modes:[]};const{data,error}=await supabase.from('employees').update(payload).eq('id',e.id).select().single();setSaving(false);if(error)return alert(error.message);if(data){setDraft(data);onUpdated(data)}};
+ const resendInvite=async()=>{
+  if(!e.email)return alert('Add an email, then save, before sending a login invite.');
+  setInviteBusy(true);setInviteNote('');
+  const {data,error}=await inviteEmployeeLogin(e.id, portalRoleFromPosition(e.role));
+  setInviteBusy(false);
+  if(error||data?.error)return alert(error?.message||data.error);
+  if(data?.action_link){
+    try{await navigator.clipboard.writeText(data.action_link);setInviteNote('Setup link copied. Email did not send.');}
+    catch{window.prompt('Copy this setup link', data.action_link);}
+    return;
+  }
+  setInviteNote(data?.emailed?`Invite emailed to ${e.email}.`:'Login linked.');
+ };
  const field=(label:string,key:keyof Employee,placeholder='')=><label className="profile-field-v25"><span>{label}</span><input value={String(draft[key]??'')} placeholder={placeholder} onChange={ev=>setDraft(p=>({...p,[key]:ev.target.value}))}/></label>;
  return <div className="team-profile-backdrop" onClick={onClose}><section className="team-profile-drawer employee-profile-v25" onClick={ev=>ev.stopPropagation()}>
   <header className="employee-profile-hero-v25"><div className="team-profile-identity"><EmployeeAvatar employee={e} size="xl" editable onUploaded={url=>onUpdated({...e,avatar_url:url})}/><div><span className="eyebrow">{e.title||prettyLabel(e.role)}</span><h2>{e.name}</h2><p>{e.department||'North Splash Auto Luxe'} · {e.status||'active'}</p></div></div><button className="icon-btn" onClick={onClose}><X size={18}/></button></header>
@@ -37,6 +51,7 @@ export default function EmployeeProfileDrawer({employee:e,employees,appointments
    {tab==='activity'&&<section className="employee-activity-v25"><div className="profile-section-title-v25"><Activity/><div><strong>Recent Activity</strong><small>Operational activity currently available from appointments.</small></div></div>{assigned.slice(0,20).map(a=><div key={a.id}><Clock3 size={14}/><span><strong>{a.service_name}</strong><small>{a.customer_name||'Customer'} · {new Date(a.scheduled_at||a.created_at).toLocaleString()}</small></span><em>{prettyLabel(a.status)}</em></div>)}{!assigned.length&&<div className="ns-empty compact">No activity recorded yet.</div>}</section>}
   </div>
   {['employment','pay'].includes(tab)&&<div className="employee-profile-save-v25"><button className="btn-primary" onClick={save} disabled={saving}><Save size={15}/>{saving?'Saving...':'Save Changes'}</button></div>}
-  <footer className="team-profile-actions">{e.email&&<a className="btn-outline" href={`mailto:${e.email}`}><Mail size={15}/>Email</a>}{e.phone&&<a className="btn-outline" href={`tel:${e.phone}`}><Phone size={15}/>Call</a>}<button className="btn-outline" onClick={onOpenMessages}><MessageCircle size={15}/>Message</button><button className="btn-outline" onClick={()=>onOpenCalendar(e.id)}><Calendar size={15}/>Calendar</button><button className="danger-button" onClick={()=>onDelete(e.id)}><Trash2 size={15}/>Permanently Delete</button></footer>
+  <footer className="team-profile-actions">{e.email&&<a className="btn-outline" href={`mailto:${e.email}`}><Mail size={15}/>Email</a>}{e.phone&&<a className="btn-outline" href={`tel:${e.phone}`}><Phone size={15}/>Call</a>}<button className="btn-outline" onClick={()=>void resendInvite()} disabled={inviteBusy}><Send size={15}/>{inviteBusy?'Sending…':'Resend invite'}</button><button className="btn-outline" onClick={onOpenMessages}><MessageCircle size={15}/>Message</button><button className="btn-outline" onClick={()=>onOpenCalendar(e.id)}><Calendar size={15}/>Calendar</button><button className="danger-button" onClick={()=>onDelete(e.id)}><Trash2 size={15}/>Permanently Delete</button></footer>
+  {inviteNote&&<p className="profile-invite-note">{inviteNote}</p>}
  </section></div>
 }

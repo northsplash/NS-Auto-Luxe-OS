@@ -14,7 +14,8 @@ import { supabase } from '@/lib/supabase';
 import { Profile, Appointment, Payment, Employee } from '@/lib/supabase';
 import { isSettledPayment, money, prettyLabel } from '@/lib/data';
 import { sameLocalDay } from '@/lib/fieldOps';
-import { sendCommunication } from '@/lib/communications';
+import { sendCommunication, notifyCustomer } from '@/lib/communications';
+import { canCollectJob, markJobCollected, type CollectMethod } from '@/lib/collectPayment';
 import type { BusinessSection } from './BusinessSuite';
 import type { EnterpriseSection } from './EnterpriseSuite';
 import type { ExpansionSection } from './OperationsExpansion';
@@ -140,7 +141,7 @@ export default function Admin() {
   const [selectedEmployeeId,setSelectedEmployeeId]=useState('');
   const [profileInitialTab,setProfileInitialTab]=useState<'onboarding'|'overview'|undefined>(undefined);
   const [customerQuery,setCustomerQuery]=useState('');
-  const [appointmentStage,setAppointmentStage]=useState<'all'|'upcoming'|'confirmed'|'in_progress'|'completed'>('all');
+  const [appointmentStage,setAppointmentStage]=useState<'all'|'upcoming'|'confirmed'|'in_progress'|'unpaid'|'completed'>('all');
   const [teamQuery,setTeamQuery]=useState('');
   const [dataLoading, setDataLoading] = useState(true);
   const [teamCalendarEmployee,setTeamCalendarEmployee]=useState('');
@@ -392,13 +393,25 @@ const [availabilityForm, setAvailabilityForm] = useState({
     setAppointments(prev => prev.map(a => a.id === id ? data : a));
     const email = data?.customer_email || current?.customer_email;
     const event = status === 'confirmed' ? 'booking_confirmed' : status === 'cancelled' ? 'appointment_cancelled' : status === 'completed' ? 'job_completed' : null;
-    if (event && email) sendCommunication(event, { appointment_id:id, recipient_email:email, variables:{ customer_name:data?.customer_name||current?.customer_name||'Customer', service_name:data?.service_name||current?.service_name||'Detailing service', appointment_time:data?.scheduled_at?new Date(data.scheduled_at).toLocaleString():'' } }).catch(console.warn);
+    if (event && email && !(event === 'job_completed' && current && canCollectJob(current))) {
+      sendCommunication(event, { appointment_id:id, recipient_email:email, variables:{ customer_name:data?.customer_name||current?.customer_name||'Customer', service_name:data?.service_name||current?.service_name||'Detailing service', appointment_time:data?.scheduled_at?new Date(data.scheduled_at).toLocaleString():'' } }).catch(console.warn);
+    }
+  };
+
+  const collectAppointment = async (job: Appointment, method: CollectMethod) => {
+    try {
+      const next = await markJobCollected(job, method);
+      setAppointments((prev) => prev.map((a) => a.id === next.id ? next : a));
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : 'Unable to mark this job collected.');
+    }
   };
 
 const handleCreateCalendarAppointment=async(payload:Record<string,unknown>)=>{
-  const {data,error}=await supabase.from('appointments').insert({...payload,source_channel:(payload.source_channel as string)||'admin',field_status:'scheduled'}).select().single();
+  const {data,error}=await supabase.from('appointments').insert({...payload,source_channel:(payload.source_channel as string)||'admin',field_status:'scheduled',dispatch_status:(payload as {assigned_employee_id?:string}).assigned_employee_id?'assigned':'unassigned'}).select().single();
   if(error){alert(error.message);return}
   setAppointments(prev=>[...prev,data].sort((a,b)=>new Date(a.scheduled_at||0).getTime()-new Date(b.scheduled_at||0).getTime()));
+  void notifyCustomer('booking_received', data);
 };
 const handleCalendarAppointmentUpdate=async(id:string,payload:Record<string,unknown>)=>{
   const current=appointments.find(a=>a.id===id);
@@ -945,6 +958,7 @@ const handleDeleteAvailability = async (id: string) => {
                   ['upcoming','Upcoming'],
                   ['confirmed','Confirmed'],
                   ['in_progress','In progress'],
+                  ['unpaid','Unpaid'],
                   ['completed','Completed'],
                 ] as const).map(([id,label])=> (
                   <button key={id} type="button" className={appointmentStage===id?'active':''} onClick={()=>setAppointmentStage(id)}>{label}</button>
@@ -960,7 +974,8 @@ const handleDeleteAvailability = async (id: string) => {
                     .filter(a => {
                       if (appointmentStage==='all') return true;
                       if (appointmentStage==='upcoming') return !['completed','cancelled'].includes(a.status) && (!a.scheduled_at || new Date(a.scheduled_at).getTime()>=Date.now()-6*3600000);
-                      if (appointmentStage==='in_progress') return ['en_route','arrived','in_progress'].includes(a.status) || ['en_route','arrived','started'].includes(a.field_status||'');
+                      if (appointmentStage==='in_progress') return ['en_route','arrived','in_progress'].includes(a.status) || ['en_route','arrived','started','finished'].includes(a.field_status||'');
+                      if (appointmentStage==='unpaid') return canCollectJob(a);
                       return a.status===appointmentStage;
                     })
                     .map(a => (
@@ -981,7 +996,15 @@ const handleDeleteAvailability = async (id: string) => {
                       <span className="dt-cell"><StatusBadge status={a.field_status || a.status} /></span>
                       <span className="dt-cell"><strong>{money(a.price)}</strong></span>
                       <div className="dt-cell dt-actions">
-                        {a.status !== 'completed' && a.status !== 'cancelled' && (
+                        {canCollectJob(a) && (
+                          <>
+                            <button className="btn-sm btn-outline" onClick={() => void collectAppointment(a, 'cash')}>Cash</button>
+                            <button className="btn-sm btn-outline" onClick={() => void collectAppointment(a, 'check')}>Check</button>
+                            <button className="btn-sm btn-primary" onClick={() => void collectAppointment(a, 'card')}>Card collected</button>
+                            <button className="btn-sm btn-outline" onClick={() => handleArchiveAppointment(a.id)}>Archive</button>
+                          </>
+                        )}
+                        {a.status !== 'completed' && a.status !== 'cancelled' && !canCollectJob(a) && (
                           <>
                             <button className="btn-sm btn-outline" onClick={() => handleUpdateAptStatus(a.id, 'confirmed')}>Confirm</button>
                             <button className="btn-sm btn-outline" onClick={() => handleUpdateAptStatus(a.id, 'cancelled')}>Decline</button>
