@@ -561,6 +561,23 @@
   --ns-muted: #6f675e;
   --ns-line: #e4d9cc;
   --ns-gold: #b8893a;
+  --lux-text: #1c1814;
+  --lux-text-soft: #3d3228;
+  --lux-muted: #6f675e;
+  --lux-surface: #fffdf8;
+  --lux-bg: #efe8dc;
+  --v17-text: #1c1814;
+  --v17-text-soft: #3d3228;
+  --v17-muted: #6f675e;
+  --v19-text: #1c1814;
+  --v19-soft: #6f675e;
+  --v19-panel: #fffdf8;
+  --v21-text: #1c1814;
+  --v21-muted: #6f675e;
+  --v21-panel: #fffdf8;
+  --v21-bg: #efe8dc;
+  --v26-text: #1c1814;
+  --v26-muted: #6f675e;
   font-feature-settings: "ss01" on, "cv11" on;
 }
 .portal-layout.nsos-cream .portal-main,
@@ -589,10 +606,26 @@
 .portal-layout.nsos-cream .tab-header h2,
 .portal-layout.nsos-cream .v2-page-head h2,
 .portal-layout.nsos-cream .v2-page-head h3,
-.portal-layout.nsos-cream .owner-command-head h2 {
+.portal-layout.nsos-cream .owner-command-head h2,
+.portal-layout.nsos-cream .phase300-header h2,
+.portal-layout.nsos-cream .enterprise-page-header h2,
+.portal-layout.nsos-cream .portal-content .admin-card-header h3,
+.portal-layout.nsos-cream .manager-panel h3,
+.portal-layout.nsos-cream .portal-topbar,
+.portal-layout.nsos-cream .portal-topbar h1,
+.portal-layout.nsos-cream .topbar-title h1 {
   color: #1c1814 !important;
   -webkit-text-fill-color: #1c1814 !important;
   letter-spacing: -.025em;
+}
+.portal-layout.nsos-cream .admin-stat strong,
+.portal-layout.nsos-cream .phase-kpi strong,
+.portal-layout.nsos-cream .d2d-kpi strong,
+.portal-layout.nsos-cream .big-money,
+.portal-layout.nsos-cream .v19-kpi strong,
+.portal-layout.nsos-cream .owner-kpis-v17 .phase-kpi strong {
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
 }
 .portal-layout.nsos-cream .portal-content p,
 .portal-layout.nsos-cream .tab-header p,
@@ -943,6 +976,14 @@
   color-scheme: light !important;
   caret-color: #b8893a !important;
 }
+.portal-layout.nsos-cream .portal-content input::placeholder,
+.portal-layout.nsos-cream .portal-content textarea::placeholder,
+.portal-layout.nsos-cream .portal-main input::placeholder,
+.portal-layout.nsos-cream .portal-main textarea::placeholder {
+  color: #8a8178 !important;
+  -webkit-text-fill-color: #8a8178 !important;
+  opacity: 1;
+}
 .portal-layout.nsos-cream .portal-content input:-webkit-autofill,
 .portal-layout.nsos-cream .portal-content input:-webkit-autofill:hover,
 .portal-layout.nsos-cream .portal-content input:-webkit-autofill:focus {
@@ -1001,6 +1042,10 @@
 
 .auth-page.nsos-cream,
 .auth-page {
+  --lux-text: #1c1814;
+  --v17-text: #1c1814;
+  --v19-text: #1c1814;
+  --v21-text: #1c1814;
   background: #efe8dc !important;
   color: #1c1814 !important;
   color-scheme: light !important;
