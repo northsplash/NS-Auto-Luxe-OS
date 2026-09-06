@@ -5591,3 +5591,301 @@
   font-size: .78rem !important;
   padding: 8px 10px !important;
 }
+
+/* Device fit — last wins.
+   Phone ≤720, tablet ≤1180 plus coarse iPads up to 1366, web otherwise. */
+html, body, #root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
+}
+.auth-page,
+.workspace-gate,
+.route-error-v27,
+.route-loader,
+.portal-layout.nsos-cream,
+.portal-layout.nsos-cream .portal-main,
+.portal-layout.nsos-cream .portal-content {
+  min-width: 0;
+  max-width: 100%;
+}
+.auth-page img:not(.auth-hero-lockup):not(.auth-brand-logo):not(.auth-bg img),
+.workspace-gate img:not(.auth-brand-logo),
+.route-error-v27 img:not(.auth-brand-logo) {
+  max-width: 100%;
+  height: auto;
+}
+
+@media (max-width: 1180px), (max-width: 1366px) and (pointer: coarse) {
+  html, body, #root {
+    height: auto !important;
+    max-height: none !important;
+    overflow-x: clip !important;
+    overflow-y: auto !important;
+  }
+  html:has(.portal-layout.nsos-cream),
+  html:has(.portal-layout.nsos-cream) body,
+  html:has(.portal-layout.nsos-cream) #root {
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    overflow: hidden !important;
+  }
+
+  .auth-page,
+  .auth-page.nsos-cream {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    width: 100% !important;
+    min-height: 100dvh !important;
+    min-height: 100svh !important;
+    overflow-x: clip !important;
+  }
+  .auth-page .auth-bg {
+    min-height: 168px !important;
+    max-height: min(30vh, 260px) !important;
+    height: auto !important;
+  }
+  .auth-page .auth-card {
+    min-height: 0 !important;
+    width: 100% !important;
+    max-width: 560px;
+    margin: 0 auto;
+    border-left: 0 !important;
+    padding: 24px 22px calc(28px + env(safe-area-inset-bottom)) !important;
+  }
+  .auth-page .auth-portals {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    width: 100%;
+    max-width: 520px;
+  }
+  .auth-page .auth-portals span {
+    min-width: 0 !important;
+    width: auto !important;
+    padding: 8px 6px !important;
+  }
+  .auth-page .auth-field input,
+  .auth-page .pw-wrap input,
+  .auth-page .btn-primary {
+    width: 100%;
+    min-height: 48px !important;
+  }
+
+  .workspace-gate,
+  .route-error-v27,
+  .route-loader {
+    width: 100% !important;
+    min-height: 100dvh !important;
+    min-height: 100svh !important;
+    padding: max(20px, env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom)) !important;
+    overflow-x: clip !important;
+    overflow-y: auto !important;
+  }
+  .route-error-card-v27 {
+    width: min(100%, 440px);
+    margin: 0 auto;
+  }
+  .route-error-actions-v27,
+  .workspace-gate-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+    max-width: 440px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .route-error-actions-v27 > *,
+  .workspace-gate-actions > * {
+    min-width: 0 !important;
+    width: 100%;
+  }
+
+  .portal-layout.nsos-cream,
+  .portal-layout.nsos-cream.nsos-admin-preview,
+  .cream-os.portal-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    overflow: hidden !important;
+    padding-bottom: 0 !important;
+  }
+  .portal-layout.nsos-cream .portal-sidebar {
+    position: fixed !important;
+    left: -320px !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    width: min(86vw, 300px) !important;
+    min-width: 0 !important;
+    max-width: min(86vw, 300px) !important;
+    z-index: 1300 !important;
+  }
+  .portal-layout.nsos-cream .portal-sidebar.sidebar-open { left: 0 !important; }
+  .portal-layout.nsos-cream .sidebar-toggle,
+  .portal-layout.nsos-cream .sidebar-close {
+    display: grid !important;
+    place-items: center;
+    width: 44px !important;
+    min-width: 44px !important;
+    height: 44px !important;
+  }
+  .portal-layout.nsos-cream .portal-main {
+    flex: 1 1 auto !important;
+    margin-left: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding-bottom: 0 !important;
+  }
+  .portal-layout.nsos-cream .portal-content {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    width: 100% !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    padding: 12px 14px calc(88px + env(safe-area-inset-bottom)) !important;
+  }
+  .portal-layout.nsos-cream .os-mobile-bottom-nav.mobile-app-nav-v25 {
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    position: fixed !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    z-index: 1200 !important;
+    padding-bottom: env(safe-area-inset-bottom) !important;
+  }
+  .portal-layout.nsos-cream .owner-command-head {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  .portal-layout.nsos-cream .portal-main .nsos-quick {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    width: 100%;
+    gap: 8px !important;
+  }
+  .portal-layout.nsos-cream .portal-main .nsos-quick button {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+  .portal-layout.nsos-cream .ns-field-loop {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  }
+  .portal-layout.nsos-cream .house-drawer,
+  .portal-layout.nsos-cream .door-sheet {
+    width: min(100%, 420px) !important;
+    max-width: 100% !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .portal-layout.nsos-cream .portal-main .nsos-quick,
+  .portal-layout.nsos-cream .ns-field-loop {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .portal-layout.nsos-cream .owner-command-grid-v17,
+  .portal-layout.nsos-cream .owner-kpis-v17,
+  .portal-layout.nsos-cream .owner-glance-v17,
+  .portal-layout.nsos-cream .stripe-balances {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .auth-page .auth-portals {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+  .route-error-actions-v27,
+  .workspace-gate-actions {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .portal-layout.nsos-cream .portal-topbar {
+    display: grid !important;
+    grid-template-columns: 44px minmax(0, 1fr) 44px !important;
+    width: 100%;
+    padding: env(safe-area-inset-top) 10px 0 !important;
+  }
+  .portal-layout.nsos-cream .portal-content {
+    padding: 10px 12px calc(84px + env(safe-area-inset-bottom)) !important;
+  }
+  .portal-layout.nsos-cream .owner-command-head h2 {
+    font-size: clamp(24px, 7vw, 32px) !important;
+  }
+  .portal-layout.nsos-cream .owner-kpis-v17,
+  .portal-layout.nsos-cream .owner-glance-v17,
+  .portal-layout.nsos-cream .stripe-balances,
+  .portal-layout.nsos-cream .owner-command-grid-v17 {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .auth-page .auth-portals { display: none !important; }
+  .auth-page .auth-bg-copy p { font-size: 20px !important; }
+  .auth-hero-lockup { width: min(168px, 54vw) !important; }
+}
+
+@media (min-width: 1181px) and (pointer: fine) {
+  html, body, #root {
+    height: auto !important;
+    max-height: none !important;
+    overflow-x: clip !important;
+    overflow-y: auto !important;
+  }
+  .portal-layout.nsos-cream,
+  .cream-os.portal-layout {
+    display: grid !important;
+    grid-template-columns: 272px minmax(0, 1fr) !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  .portal-layout.nsos-cream .portal-sidebar {
+    position: relative !important;
+    left: auto !important;
+    width: 272px !important;
+    min-width: 272px !important;
+    max-width: 272px !important;
+  }
+  .portal-layout.nsos-cream .sidebar-toggle,
+  .portal-layout.nsos-cream .os-mobile-bottom-nav,
+  .portal-layout.nsos-cream .mobile-app-nav-v25 {
+    display: none !important;
+  }
+  .portal-layout.nsos-cream .portal-main {
+    display: block !important;
+    margin-left: 0 !important;
+    overflow: visible !important;
+    padding-bottom: 0 !important;
+  }
+  .portal-layout.nsos-cream .portal-content {
+    max-width: 1440px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 22px 28px 40px !important;
+    overflow: visible !important;
+  }
+  .auth-page,
+  .auth-page.nsos-cream {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.15fr) minmax(380px, 480px) !important;
+    min-height: 100dvh !important;
+  }
+  .auth-page .auth-bg {
+    min-height: 100dvh !important;
+    max-height: none !important;
+  }
+  .auth-page .auth-card {
+    max-width: none;
+    min-height: 100dvh !important;
+    padding: 44px 40px !important;
+  }
+}
