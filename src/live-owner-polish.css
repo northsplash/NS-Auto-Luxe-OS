@@ -5609,7 +5609,6 @@ html, body, #root {
   min-width: 0;
   max-width: 100%;
 }
-.auth-page img:not(.auth-hero-lockup):not(.auth-brand-logo):not(.auth-bg img),
 .workspace-gate img:not(.auth-brand-logo),
 .route-error-v27 img:not(.auth-brand-logo) {
   max-width: 100%;
