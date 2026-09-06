@@ -14,6 +14,9 @@ import OwnerLeadPipeline from '@/components/OwnerLeadPipeline';
 import WorkspaceHero from '@/components/WorkspaceHero';
 import EmployeeAvatar from '@/components/EmployeeAvatar';
 import { applyNewHireAcademy, ACADEMY_COURSES } from '@/lib/trainingAcademy';
+import { canCollectJob } from '@/lib/collectPayment';
+import { hiredCrew } from '@/lib/ownerFieldMode';
+import { setOwnerBoardFilter } from '@/lib/ownerJump';
 
 const FieldTerritoryMap = lazy(() => import('@/components/FieldTerritoryMap'));
 const TerritoryStreetView = lazy(() => import('@/components/TerritoryStreetView'));
@@ -356,43 +359,44 @@ function CommandCenter({employees,appointments,customers,payments,onNavigate,own
  const completedToday=completed.filter(a=>sameLocalDay(a.completed_at||a.finished_at||a.scheduled_at));
  const avgTicket=completed.length?completed.reduce((n,a)=>n+Number(a.price||0),0)/completed.length:0;
  const activeTeam=employees.filter(e=>e.status==='active');
+ const crew=hiredCrew(employees);
  const packetOpen=(e:Employee)=>{const st=String(e.onboarding_status||'').toLowerCase();return Boolean(st)&&!['complete','completed','done'].includes(st)};
  const unassigned=appointments.filter(a=>!a.assigned_employee_id&&!['completed','cancelled'].includes(a.status)).length;
  const pending=appointments.filter(a=>a.status==='pending'||a.status==='scheduled').length;
  const qc=appointments.filter(a=>a.qc_status==='pending'||a.qc_status==='qc').length;
- const unpaid=appointments.filter(a=>{if(a.status==='cancelled')return false;const pay=String(a.payment_status||'').toLowerCase();if(['paid','succeeded','completed','settled'].includes(pay))return false;return pay==='unpaid'||pay==='due'||pay==='failed'||(a.status==='completed'&&!pay)});
+ const unpaid=appointments.filter(a=>canCollectJob(a));
  const packets=employees.filter(packetOpen).length;
  const inField=appointments.filter(a=>['en_route','in_progress','in_field','on_site'].includes(String(a.status||''))).length;
  const assigned=appointments.filter(a=>a.assigned_employee_id&&!['completed','cancelled'].includes(a.status)).length;
  const d2d=appointments.filter(a=>a.source_channel==='d2d').length;
  const days=[...Array(7)].map((_,i)=>{const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()-(6-i));const k=localDateKey(d);const rev=payments.filter(p=>isSettledPayment(p.status)&&localDateKey(p.created_at)===k).reduce((n,p)=>n+Number(p.amount||0),0);return{label:d.toLocaleDateString('en-US',{weekday:'short'}),rev}});
  const next=jobs.find(j=>new Date(j.scheduled_at||0).getTime()>=now)||jobs[0];
- const go=(view:string)=>{if(onNavigate){onNavigate(view);return;}const u=new URL(window.location.href);u.searchParams.set('view',view);window.history.pushState({},'',u.toString())};
+ const go=(view:string,filter?:'unassigned'|'run'|'collect')=>{if(filter)setOwnerBoardFilter(filter);if(onNavigate){onNavigate(view);return;}const u=new URL(window.location.href);u.searchParams.set('view',view);window.history.pushState({},'',u.toString())};
  const hour=new Date().getHours(),greeting=hour<12?'Good morning':hour<18?'Good afternoon':'Good evening';
  const name=firstWord(ownerName,'there');
  const exceptions=[
   unassigned?{n:unassigned,title:'Unassigned jobs',sub:'Need a technician',view:'dispatch',hot:true}:null,
-  unpaid.length?{n:unpaid.length,title:'Unpaid invoices',sub:'Collect before the van leaves',view:'payments',hot:true}:null,
+  unpaid.length?{n:unpaid.length,title:'Unpaid finished jobs',sub:'Collect before the van leaves',view:'dispatch',hot:true}:null,
   leadSnap.hot?{n:leadSnap.hot,title:'Hot leads',sub:'Ready to book from the map',view:'leads',hot:true}:null,
   packets?{n:packets,title:'Open hire packets',sub:'Finish identity, tax, or deposit',view:'employees',hot:true}:null,
   pending?{n:pending,title:'Pending bookings',sub:'Awaiting confirmation',view:'appointments',hot:false}:null,
   qc?{n:qc,title:'QC queue',sub:'Jobs waiting for quality review',view:'dispatch',hot:false}:null,
  ].filter(Boolean) as {n:number;title:string;sub:string;view:string;hot:boolean}[];
  const fieldLoop=[
-  {key:'knock',n:leadSnap.knocked,label:'Knock',sub:'Contacted today',view:'leads'},
-  {key:'book',n:pending,label:'Book',sub:'Waiting confirm',view:'appointments'},
-  {key:'assign',n:unassigned,label:'Assign',sub:'Need a tech',view:'dispatch'},
-  {key:'run',n:inField,label:'Run',sub:'On the road',view:'dispatch'},
-  {key:'collect',n:unpaid.length,label:'Collect',sub:'Still unpaid',view:'payments'},
+  {key:'knock',n:leadSnap.knocked,label:'Knock',sub:'Contacted today',view:'leads' as const,filter:undefined as undefined|'unassigned'|'run'|'collect'},
+  {key:'book',n:pending,label:'Book',sub:'Waiting confirm',view:'appointments' as const,filter:undefined},
+  {key:'assign',n:unassigned,label:'Assign',sub:'Need a tech',view:'dispatch' as const,filter:'unassigned' as const},
+  {key:'run',n:inField,label:'Run',sub:'On the road',view:'dispatch' as const,filter:'run' as const},
+  {key:'collect',n:unpaid.length,label:'Collect',sub:'Still unpaid',view:'dispatch' as const,filter:'collect' as const},
  ];
  const nextMoves=[
-  !activeTeam.length?{view:'employees',title:'Invite a technician',sub:'No crew on the board yet. Hire so jobs can be assigned.'}:null,
+  !crew.length?{view:'employees',title:'Invite a technician',sub:'No hired crew yet. The Owner field profile is not a technician.'}:null,
   !appointments.length?{view:'appointments',title:'Book the first job',sub:'Nothing on the calendar. Book here or send a customer to the portal.'}:null,
   {view:'leads',title:'Open D2D field',sub:'Knock, book, and the job lands on Dispatch.'},
-  {view:'dispatch',title:unassigned?`Assign ${unassigned} job${unassigned===1?'':'s'}`:'Assign work',sub:unassigned?'Booked and waiting on a tech.':'Put a technician on the next stop.'},
-  unpaid.length?{view:'payments',title:`Collect ${unpaid.length}`,sub:'Finished work still unpaid.'}:null,
- ].filter(Boolean) as {view:string;title:string;sub:string}[];
- const teamRows=[...activeTeam].sort((a,b)=>{
+  {view:'dispatch',title:unassigned?`Assign ${unassigned} job${unassigned===1?'':'s'}`:'Assign work',sub:unassigned?'Booked and waiting on a tech.':'Put a technician on the next stop.',filter:'unassigned' as const},
+  unpaid.length?{view:'dispatch',title:`Collect ${unpaid.length}`,sub:'Finished work still unpaid.',filter:'collect' as const}:null,
+ ].filter(Boolean) as {view:string;title:string;sub:string;filter?:'unassigned'|'run'|'collect'}[];
+ const teamRows=[...crew].sort((a,b)=>{
   const ao=packetOpen(a)?0:1;
   const bo=packetOpen(b)?0:1;
   return ao-bo;
@@ -422,14 +426,14 @@ function CommandCenter({employees,appointments,customers,payments,onNavigate,own
      <button type="button" onClick={()=>go('employees')}>Open team</button>
    </nav>
    <div className="ns-field-loop" id="owner-field-loop" aria-label="Field loop">
-     {fieldLoop.map((step,i)=><button type="button" key={step.key} className={step.n?'hot':''} onClick={()=>go(step.view)}><em>{step.n}</em><span><b>{step.label}</b><small>{step.sub}</small></span>{i<fieldLoop.length-1&&<i className="ns-field-loop-arrow" aria-hidden/>}</button>)}
+     {fieldLoop.map((step,i)=><button type="button" key={step.key} className={step.n?'hot':''} onClick={()=>go(step.view,step.filter)}><em>{step.n}</em><span><b>{step.label}</b><small>{step.sub}</small></span>{i<fieldLoop.length-1&&<i className="ns-field-loop-arrow" aria-hidden/>}</button>)}
    </div>
    <div className="nsos-alerts" id="owner-exceptions">
      {exceptions.length===0&&<div className="ns-next-actions">
        <p className="ns-next-lead">The board is quiet. Pick a next move from live company data.</p>
-       {nextMoves.map(item=><button type="button" className="nsos-alert" key={item.title} onClick={()=>go(item.view)}><span><b>{item.title}</b><small>{item.sub}</small></span><ChevronRight size={16}/></button>)}
+       {nextMoves.map(item=><button type="button" className="nsos-alert" key={item.title} onClick={()=>go(item.view,item.filter)}><span><b>{item.title}</b><small>{item.sub}</small></span><ChevronRight size={16}/></button>)}
      </div>}
-     {exceptions.map(item=><button className={`nsos-alert ${item.hot?'hot':''}`} key={item.title} onClick={()=>go(item.view)}><em>{item.n}</em><span><b>{item.title}</b><small>{item.sub}</small></span><ChevronRight size={16}/></button>)}
+     {exceptions.map(item=><button className={`nsos-alert ${item.hot?'hot':''}`} key={item.title} onClick={()=>go(item.view,item.title.includes('Unpaid')?'collect':item.view==='dispatch'&&item.title.includes('Unassigned')?'unassigned':undefined)}><em>{item.n}</em><span><b>{item.title}</b><small>{item.sub}</small></span><ChevronRight size={16}/></button>)}
    </div>
    <div className="owner-kpis-v17">
      <KPI label="Collected" value={money(collected)} detail={trendLabel(todayCollected,earlierCollected)}/>
@@ -444,12 +448,12 @@ function CommandCenter({employees,appointments,customers,payments,onNavigate,own
      <div><Clock3/><span><b>{next?time(next.scheduled_at):'—'}</b><small>{next?`${next.service_name} · ${next.customer_name||next.service_address||'Customer'}`:'No next job'}</small></span></div>
    </section>
    <div className="owner-command-grid-v17">
-    <section id="owner-schedule" className="phase-panel owner-schedule-v17"><div className="phase-panel-head"><div><span className="eyebrow">TODAY'S SCHEDULE</span><h3>{jobs.length} jobs</h3></div><button className="btn-outline btn-sm" onClick={()=>go('schedule')}>View all</button></div>{jobs.slice(0,6).map(j=><button className="owner-job-v17" key={j.id} onClick={()=>go('dispatch')}><time>{time(j.scheduled_at)}</time><span><b>{j.customer_name||j.service_address||'Customer'}</b><small>{j.vehicle_info||'Vehicle not added'}</small></span><span><b>{j.service_name}</b><small>{money(Number(j.price||0))}</small></span><span><small>{j.assigned_employee_id?employees.find(e=>e.id===j.assigned_employee_id)?.name||'Assigned':'Unassigned'}</small><b className={`status-badge badge-${j.status==='completed'?'green':j.status==='cancelled'?'red':'blue'}`}>{humanStatus(j.status)}</b></span></button>)}{!jobs.length&&<div className="ns-empty"><strong>No appointments today</strong><p>Book a job or open D2D so the first visit lands here.</p><div className="ns-empty-actions"><button type="button" className="btn-primary" onClick={()=>go('appointments')}>Book</button><button type="button" className="btn-outline" onClick={()=>go('leads')}>Open D2D</button></div></div>}</section>
+    <section id="owner-schedule" className="phase-panel owner-schedule-v17"><div className="phase-panel-head"><div><span className="eyebrow">TODAY'S SCHEDULE</span><h3>{jobs.length} jobs</h3></div><button className="btn-outline btn-sm" onClick={()=>go('schedule')}>View all</button></div>{jobs.slice(0,6).map(j=><button className="owner-job-v17" key={j.id} onClick={()=>go('dispatch')}><time>{time(j.scheduled_at)}</time><span><b>{j.customer_name||j.service_address||'Customer'}</b><small>{j.vehicle_info||'Vehicle not added'}</small></span><span><b>{j.service_name}</b><small>{money(Number(j.price||0))}</small></span><span><small>{j.assigned_employee_id?employees.find(e=>e.id===j.assigned_employee_id)?.name||'Assigned':'Unassigned'}</small><b className={`status-badge badge-${j.status==='completed'?'green':j.status==='cancelled'?'red':'blue'}`}>{humanStatus(j.status)}</b></span></button>)}{!jobs.length&&<div className="ns-empty"><strong>{crew.length?'Crew is idle today':'No appointments today'}</strong><p>{crew.length?'Nobody is on the calendar. Book a job or open D2D so the next visit lands here.':'Hire a technician, then book the first job — the Owner field profile is not a crew.'}</p><div className="ns-empty-actions"><button type="button" className="btn-primary" onClick={()=>go(crew.length?'appointments':'employees')}>{crew.length?'Book':'Invite a technician'}</button><button type="button" className="btn-outline" onClick={()=>go('leads')}>Open D2D</button></div></div>}</section>
     <section id="owner-revenue" className="phase-panel owner-revenue-v17"><div className="phase-panel-head"><div><span className="eyebrow">COLLECTED</span><h3>{money(collected)}</h3></div><small>Settled payments on the board</small></div><OwnerRevenueChart days={days}/><div className="owner-mini-metrics"><div><small>Today</small><b>{money(todayCollected)}</b></div><div><small>Avg ticket</small><b>{money(avgTicket)}</b></div><div><small>Days shown</small><b>7</b></div></div></section>
    </div>
    <div className="owner-bottom-v17 v20-owner-bottom">
      <section id="owner-pipeline" className="phase-panel v20-pipeline-panel"><div className="phase-panel-head"><div><span className="eyebrow">SALES PIPELINE</span><h3>Booking flow</h3></div></div><div className="v20-stage-flow"><div><span>D2D</span><b>{d2d||leadSnap.open}</b></div><i/><div><span>Pending</span><b>{pending}</b></div><i/><div><span>Assigned</span><b>{assigned}</b></div><i/><div><span>Completed</span><b>{completedToday.length}</b></div></div><button className="btn-outline btn-sm" style={{marginTop:14}} onClick={()=>go('leads')}>Open pipeline</button></section>
-     <section id="owner-team" className="phase-panel v20-team-panel"><div className="phase-panel-head"><div><span className="eyebrow">TEAM STATUS</span><h3>{activeTeam.length} active</h3></div><button className="btn-outline btn-sm" onClick={()=>go('employees')}>Directory</button></div><div className="v20-team-list">{teamRows.map(e=><button type="button" key={e.id} onClick={()=>go('employees')}><EmployeeAvatar employee={e} size="sm" className="v23-team-avatar"/><span><b>{e.name}</b><small>{packetOpen(e)?'Onboarding packet':humanStatus(e.role)}</small></span><i className={packetOpen(e)?'packet':e.status==='active'?'online':''}/></button>)}{!activeTeam.length&&<div className="v20-dark-empty">No active employees yet. Invite a technician from People.</div>}</div></section>
+     <section id="owner-team" className="phase-panel v20-team-panel"><div className="phase-panel-head"><div><span className="eyebrow">TEAM STATUS</span><h3>{crew.length} hired</h3></div><button className="btn-outline btn-sm" onClick={()=>go('employees')}>Directory</button></div><div className="v20-team-list">{teamRows.map(e=><button type="button" key={e.id} onClick={()=>go('employees')}><EmployeeAvatar employee={e} size="sm" className="v23-team-avatar"/><span><b>{e.name}</b><small>{packetOpen(e)?'Onboarding packet':humanStatus(e.role)}</small></span><i className={packetOpen(e)?'packet':e.status==='active'?'online':''}/></button>)}{!crew.length&&<div className="v20-dark-empty">No hired technicians yet. Invite from People — the Owner field profile does not count as crew.</div>}</div></section>
      <section className="phase-panel v20-health-panel"><div className="phase-panel-head"><div><span className="eyebrow">BUSINESS HEALTH</span><h3>On the board</h3></div></div><div className="owner-summary-cells nsos-health-cells"><div><b>{money(collected)}</b><small>Collected</small></div><div><b>{inField}</b><small>In the field</small></div><div><b>{money(avgTicket)}</b><small>Avg ticket</small></div><div><b>{unpaid.length}</b><small>Unpaid</small></div></div></section>
    </div>
  </div>;

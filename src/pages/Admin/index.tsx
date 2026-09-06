@@ -35,6 +35,8 @@ import { seedHireOnboarding } from '@/lib/onboarding';
 import { ensureOwnerFieldEmployee } from '@/lib/ownerFieldMode';
 import { employeeCanD2D, employeeCanDetail } from '@/lib/workCapabilities';
 import { readOwnerHomeCache, writeOwnerHomeCache } from '@/lib/ownerHomeCache';
+import { isOwnerFieldEmployee } from '@/lib/ownerFieldMode';
+import { inviteEmployeeLogin, portalRoleFromPosition } from '@/lib/inviteHire';
 import WorkspaceHero from '@/components/WorkspaceHero';
 import ClientPhotosSection from '@/components/ClientPhotosSection';
 import WorkspaceGate from '@/components/WorkspaceGate';
@@ -318,6 +320,17 @@ const [availabilityForm, setAvailabilityForm] = useState({
 
   const detailers = employees.filter(employeeCanDetail);
   const d2dAgents = employees.filter(employeeCanD2D);
+  const waitingAccess = employees.filter((e) => !isOwnerFieldEmployee(e) && e.email && (!e.user_id || (e.onboarding_status && e.onboarding_status !== 'complete')));
+  const resendAccess = async (emp: Employee) => {
+    const { data, error } = await inviteEmployeeLogin(emp.id, portalRoleFromPosition(emp.role));
+    if (error || data?.error) return alert(error?.message || data.error);
+    if (data?.action_link) {
+      try { await navigator.clipboard.writeText(data.action_link); alert('Setup link copied. Email did not send.'); }
+      catch { window.prompt('Copy this setup link', data.action_link); }
+      return;
+    }
+    alert(data?.emailed ? `Invite emailed to ${emp.email}.` : 'Login linked.');
+  };
 
   const handleAddEmployee = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1343,6 +1356,7 @@ const handleDeleteAvailability = async (id: string) => {
                 <button className="btn-primary" onClick={() => setShowEmpForm(true)}><Plus size={16}/>Add member</button>
               </div>
               <OwnerOnboardingQueue employees={employees} onOpen={(hire)=>{setProfileInitialTab('onboarding');setSelectedEmployeeId(hire.id)}} />
+              {waitingAccess.length>0&&<section className="waiting-access-strip"><div><span className="eyebrow">Waiting on password</span><h3>{waitingAccess.length} hire{waitingAccess.length===1?'':'s'} still need to open their portal</h3></div><div className="waiting-access-list">{waitingAccess.slice(0,8).map(e=><div key={e.id}><EmployeeAvatar employee={e} size="sm"/><span><b>{e.name}</b><small>{e.email} · {e.user_id?'Packet / first sign-in':'Invite not linked'}</small></span><button type="button" className="btn-outline btn-sm" onClick={()=>void resendAccess(e)}>Resend invite</button></div>)}</div></section>}
               <div className="team-directory-groups">
                 {[
                   {title:'Leadership',roles:['owner','admin','manager']},
@@ -1372,17 +1386,22 @@ const handleDeleteAvailability = async (id: string) => {
                 <div className="admin-card-header"><h3>Transactions</h3></div>
                 <div className="data-table">
                   <div className="data-table-head">
-                    <span>Description</span><span>Amount</span><span>Method</span><span>Status</span><span>Date</span>
+                    <span>Description</span><span>Amount</span><span>Method</span><span>Source</span><span>Status</span><span>Date</span>
                   </div>
-                  {payments.map(p => (
+                  {payments.map(p => {
+                    const apt=appointments.find(a=>a.id===p.appointment_id);
+                    const desc=(p.description||'').toLowerCase();
+                    const source=apt?.source_channel||(desc.includes('cash')?'cash':desc.includes('check')?'check':p.payment_method)||'—';
+                    return (
                     <div key={p.id} className="data-table-row">
                       <span className="dt-cell">{p.description ?? 'Service'}</span>
                       <span className="dt-cell"><strong>{money(p.amount)}</strong></span>
                       <span className="dt-cell">{p.payment_method || 'Card'}</span>
+                      <span className="dt-cell">{prettyLabel(source)}</span>
                       <span className="dt-cell"><StatusBadge status={p.status} /></span>
                       <span className="dt-cell">{new Date(p.created_at).toLocaleDateString()}</span>
                     </div>
-                  ))}
+                  );})}
                   {payments.length === 0 && <p className="empty-text">No payments recorded yet. Completed jobs and Square charges land here.</p>}
                 </div>
               </div>

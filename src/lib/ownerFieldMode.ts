@@ -2,6 +2,19 @@
 import { supabase } from '@/lib/supabase';
 import type { Employee } from '@/lib/supabase';
 
+export function isOwnerFieldEmployee(employee?: Employee | null) {
+  if (!employee) return false;
+  if (employee.title === 'Owner / Field Operator') return true;
+  if (employee.department === 'Ownership') return true;
+  if (String(employee.notes || '').includes('Owner field profile')) return true;
+  const modes = employee.work_modes || [];
+  return modes.includes('owner') && employee.role === 'detailer' && Number(employee.employment_level || 0) >= 5;
+}
+
+export function hiredCrew(employees: Employee[]) {
+  return employees.filter((employee) => employee.status === 'active' && !isOwnerFieldEmployee(employee));
+}
+
 export async function ensureOwnerFieldEmployee(userId:string, name?:string|null, email?:string|null):Promise<Employee|null>{
   const rpc=await supabase.rpc('ensure_owner_field_employee');
   if(!rpc.error&&rpc.data)return rpc.data as Employee;

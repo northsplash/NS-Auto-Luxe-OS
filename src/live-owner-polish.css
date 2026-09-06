@@ -5528,3 +5528,61 @@
     display: none;
   }
 }
+
+.hire-invite-card,
+.waiting-access-strip {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 16px;
+  padding: 16px 18px;
+  border: 1px solid rgba(157, 118, 81, .22);
+  border-radius: 16px;
+  background: #f7f1e8;
+  color: #1c1814;
+}
+.hire-invite-card p,
+.waiting-access-strip p {
+  margin: 6px 0 0;
+  color: #6f655b;
+}
+.hire-invite-actions,
+.waiting-access-list > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.waiting-access-list {
+  display: grid;
+  gap: 10px;
+}
+.waiting-access-list span {
+  flex: 1;
+  min-width: 140px;
+}
+.waiting-access-list small,
+.hire-invite-card small {
+  display: block;
+  color: #6f655b;
+}
+.field-book-now {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 4px;
+  padding: 12px;
+  border: 1px solid rgba(157, 118, 81, .18);
+  border-radius: 14px;
+  background: #f7f1e8;
+}
+.field-book-now input {
+  width: 100%;
+}
+.field-book-now p {
+  margin: 0;
+  color: #6f655b;
+  font-size: .82rem;
+}
+.ns-map-fallback {
+  font-size: .78rem !important;
+  padding: 8px 10px !important;
+}

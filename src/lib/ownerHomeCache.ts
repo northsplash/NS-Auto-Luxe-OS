@@ -24,6 +24,15 @@ export function readOwnerHomeCache(): OwnerHomeCache | null {
 
 export function writeOwnerHomeCache(payload: Omit<OwnerHomeCache, 'at'>) {
   try {
+    const existing = readOwnerHomeCache();
+    if (
+      existing &&
+      existing.appointments.length > 0 &&
+      payload.appointments.length === 0 &&
+      payload.employees.length === 0
+    ) {
+      return;
+    }
     localStorage.setItem(KEY, JSON.stringify({ at: Date.now(), ...payload }));
   } catch {
     /* private mode / quota */

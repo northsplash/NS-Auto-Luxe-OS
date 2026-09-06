@@ -2,7 +2,7 @@
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import {
   BriefcaseBusiness, CalendarDays, Clock3, DollarSign, PackageSearch,
-  Plus, Save, Trash2, TrendingUp, UserPlus, Users, WalletCards, Trophy, Target, BarChart3, CircleDollarSign
+  Plus, Save, Trash2, TrendingUp, UserPlus, Users, WalletCards, Trophy, Target, BarChart3, CircleDollarSign, Copy, X
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import type {
@@ -11,7 +11,7 @@ import type {
 } from '@/lib/supabase';
 import { money, prettyLabel, RECRUITING_STAGES } from '@/lib/data';
 import { seedHireOnboarding } from '@/lib/onboarding';
-import { hireInviteMessage, inviteEmployeeLogin, portalRoleFromPosition } from '@/lib/inviteHire';
+import { hireInviteResult, inviteEmployeeLogin, paySummary, portalRoleFromPosition, type HireInviteResult } from '@/lib/inviteHire';
 import EmployeeAvatar from '@/components/EmployeeAvatar';
 import CompensationRuleBuilder from '@/components/CompensationRuleBuilder';
 import { compensationSummary, estimateCustomRulePay } from '@/lib/compensation';
@@ -92,6 +92,7 @@ export default function BusinessSuite({ section, employees, setEmployees, comple
   const [compEmployeeId,setCompEmployeeId]=useState('');
   const [compDraft,setCompDraft]=useState<Partial<Employee>>({});
   const [editingCandidateId,setEditingCandidateId]=useState<string|null>(null);
+  const [hireNotice,setHireNotice]=useState<HireInviteResult|null>(null);
 
   const emptyCandidateForm = {
     full_name: '', email: '', phone: '', position: 'detailer', stage: 'applied', source: '',
@@ -263,11 +264,12 @@ export default function BusinessSuite({ section, employees, setEmployees, comple
       setEmployees(p => [data, ...p]);
       onHired?.(data);
       const portal_role = portalRoleFromPosition(candidate.position || data.role);
+      const pay = paySummary(data);
       if (candidate.email) {
         const { data: invite, error: inviteErr } = await inviteEmployeeLogin(data.id, portal_role);
-        alert(hireInviteMessage(data.name, candidate.email, portal_role, invite, inviteErr));
+        setHireNotice(hireInviteResult(data.name, candidate.email, portal_role, invite, inviteErr, pay));
       } else {
-        alert(hireInviteMessage(data.name, null, portal_role, null, null));
+        setHireNotice(hireInviteResult(data.name, null, portal_role, null, null, pay));
       }
     }
     await updateCandidateStage(candidate.id, 'employed');
@@ -378,6 +380,7 @@ export default function BusinessSuite({ section, employees, setEmployees, comple
     return (
       <div className="tab-content business-suite">
         <SectionHeader tab="recruiting" />
+        {hireNotice && <HireInviteCard result={hireNotice} onClose={() => setHireNotice(null)} />}
         <div className="ops-kpi-row">
           <div><strong>{candidates.filter(c => !['rejected','withdrawn','archived'].includes(c.stage)).length}</strong><span>Active Candidates</span></div>
           <div><strong>{candidates.filter(c => c.stage === 'background_check').length}</strong><span>Background Checks</span></div>
@@ -577,6 +580,39 @@ export default function BusinessSuite({ section, employees, setEmployees, comple
       </div>
       <div className="admin-card"><div className="admin-card-header"><h3><Users size={18}/> Employee Income</h3><span className="ops-muted">Estimates — not tax withholding or payroll filing</span></div><div className="data-table"><div className="data-table-head ops-five"><span>Employee</span><span>Weekly</span><span>Monthly</span><span>Lifetime</span><span>Pay Structure</span></div>{employees.map(e=>{const w=employeeIncome(e,startOfWeek);const m=employeeIncome(e,startOfMonth);const l=employeeIncome(e);return <div className="data-table-row ops-five" key={e.id}><div className="dt-cell"><strong>{e.name}</strong><span>{roleLabel(e.role)} · Level {e.employment_level||1}</span></div><strong className="dt-cell">{money(Math.round(w.total))}</strong><strong className="dt-cell">{money(Math.round(m.total))}</strong><strong className="dt-cell">{money(Math.round(l.total))}</strong><span className="dt-cell">{compensationSummary(e)}</span></div>})}</div></div>
       <div className="admin-card"><div className="admin-card-header"><h3>Expense History</h3><strong>{money(Math.round(totalExpenses))} tracked</strong></div><div className="ops-list">{expenses.slice(0,100).map(e=><div className="ops-list-row" key={e.id}><div className="ops-primary"><strong>{e.description}</strong><span>{e.category}{e.recurring?' · recurring':''}</span></div><strong>{money(Number(e.amount))}</strong><span>{new Date(`${e.expense_date}T12:00:00`).toLocaleDateString()}</span><div className="ops-actions"><button className="btn-sm btn-outline" onClick={async()=>{await supabase.from('expenses').delete().eq('id',e.id);setExpenses(p=>p.filter(x=>x.id!==e.id));}}><Trash2 size={13}/></button></div></div>)}</div></div>
+    </div>
+  );
+}
+
+function HireInviteCard({ result, onClose }: { result: HireInviteResult; onClose: () => void }) {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    if (!result.action_link) return;
+    try {
+      await navigator.clipboard.writeText(result.action_link);
+      setCopied(true);
+    } catch {
+      window.prompt('Copy this setup link', result.action_link);
+    }
+  };
+  return (
+    <div className="hire-invite-card">
+      <div>
+        <span className="eyebrow">{result.emailed ? 'Invite sent' : result.action_link ? 'Copy setup link' : 'Hired'}</span>
+        <h3>{result.name}</h3>
+        <p>{result.message}</p>
+        {(result.pay || result.email) && (
+          <small>{[result.pay, result.email, `lands in ${result.portal_role === 'd2d' ? 'D2D' : result.portal_role === 'manager' ? 'Manager' : 'Detail'}`].filter(Boolean).join(' · ')}</small>
+        )}
+      </div>
+      <div className="hire-invite-actions">
+        {result.action_link && (
+          <button type="button" className="btn-primary" onClick={() => void copy()}>
+            <Copy size={14} />{copied ? 'Copied' : 'Copy link'}
+          </button>
+        )}
+        <button type="button" className="btn-outline" onClick={onClose}><X size={14} />Close</button>
+      </div>
     </div>
   );
 }

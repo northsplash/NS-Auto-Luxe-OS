@@ -34,7 +34,13 @@ export default function ResetPassword() {
       return;
     }
 
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session: first } } = await supabase.auth.getSession();
+    let session = first;
+    if (!session?.user) {
+      await new Promise((resolve) => window.setTimeout(resolve, 400));
+      const again = await supabase.auth.getSession();
+      session = again.data.session;
+    }
     if (session?.user) {
       const { data: profile } = await supabase
         .from('profiles')

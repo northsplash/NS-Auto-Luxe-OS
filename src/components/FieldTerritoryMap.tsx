@@ -15,7 +15,7 @@ export default function FieldTerritoryMap(props: FieldTerritoryMapProps) {
   return (
     <div className={`ns-map-shell ${className}`}>
       {engine === 'leaflet' && fallbackReason && (
-        <div className="ns-map-fallback">{fallbackReason} Street map stays on so you can still knock.</div>
+        <div className="ns-map-fallback">Street map is on. Add a Google Maps key in Vercel for satellite pins.</div>
       )}
       {map}
     </div>
