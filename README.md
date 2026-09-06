@@ -60,7 +60,12 @@ The two cores: **SalesRabbit** for territory maps, pins, knocks, and canvassing;
 - HubSpot pipeline and customer records
 - Jobber appointments (week strip + day board) and job detail with Uber-style live status
 - Square payments, Gusto hiring pipeline, Stripe settings
-- Teams-style messaging (Chat / Teams filters, composer, company channel)
+- Teams-style messaging (Chat / Teams filters, composer, company channel). Send shows an error instead of failing silently.
+- Gusto hiring: Convert / Hire seeds the onboarding packet and opens the hire’s profile.
+
+## Apply the hire packet in Supabase
+
+After pulling, run `supabase/migrations/20260906120000_v29_employee_onboarding_profiles.sql` on the live project (or `supabase db push`). The Owner UI still saves last-four tax/deposit into `onboarding_tasks` if that table is not applied yet. Full SSNs are never stored.
 - Phones: Home / Chat / Calendar / Team / More. Tablets use split map/list, chat, and dispatch.
 
 ## Supabase

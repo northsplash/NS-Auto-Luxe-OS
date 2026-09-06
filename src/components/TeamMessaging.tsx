@@ -66,6 +66,8 @@ export default function TeamMessaging({employee,employees=[],portalKind='employe
   const [messageSearch,setMessageSearch]=useState('');
   const [loading,setLoading]=useState(true);
   const [sending,setSending]=useState(false);
+  const [sendError,setSendError]=useState('');
+  const [railFilter,setRailFilter]=useState<'all'|'unread'|'chat'|'teams'>('all');
   const [showCreate,setShowCreate]=useState(false);
   const [newName,setNewName]=useState('');
   const [newMembers,setNewMembers]=useState<string[]>([]);
@@ -103,13 +105,31 @@ export default function TeamMessaging({employee,employees=[],portalKind='employe
     }
     setChannelMeta(next);
   };
+  const ensureCompanyChannel=async(existing:Channel[]=channels)=>{
+    const found=existing.find(c=>c.channel_type==='company'||c.slug==='company'||c.slug==='general');
+    if(found)return found;
+    const {data,error}=await supabase.from('employee_message_channels').insert({name:'Company',slug:'company',channel_type:'company',description:'Everyone at North Splash',created_by:user?.id||null,is_active:true}).select().single();
+    if(data)return data as Channel;
+    if(error && /duplicate|unique/i.test(error.message||'')){
+      const reload=await supabase.from('employee_message_channels').select('*').eq('is_active',true);
+      return ((reload.data??[]) as Channel[]).find(c=>c.slug==='company'||c.channel_type==='company')||null;
+    }
+    if(error) throw error;
+    return null;
+  };
   const loadChannels=async()=>{
     const {data,error}=await supabase.from('employee_message_channels').select('*').eq('is_active',true).order('channel_type').order('name');
-    if(error){console.warn('[messages] channel load',error);setLoading(false);return}
-    const list=(data??[]) as Channel[];
+    if(error){console.warn('[messages] channel load',error);setSendError(error.message);setLoading(false);return}
+    let list=(data??[]) as Channel[];
+    if(!list.length){
+      try{
+        const company=await ensureCompanyChannel([]);
+        if(company)list=[company];
+      }catch(err){console.warn('[messages] ensure company',err)}
+    }
     setChannels(list);
     void loadChannelMeta(list);
-    setActiveId(v=>v&&list.some(c=>c.id===v)?v:(list[0]?.id||''));
+    setActiveId(v=>v&&list.some(c=>c.id===v)?v:(list.find(c=>c.channel_type==='company')?.id||list[0]?.id||''));
     setLoading(false);
   };
   const loadMessages=async(channelId:string)=>{
@@ -144,7 +164,15 @@ export default function TeamMessaging({employee,employees=[],portalKind='employe
   },[activeId,user?.id]);
   useEffect(()=>{endRef.current?.scrollIntoView({behavior:'smooth',block:'nearest'})},[messages.length,activeId]);
 
-  const filteredChannels=channels.filter(c=>!search||`${c.name} ${c.description||''}`.toLowerCase().includes(search.toLowerCase()));
+  const isTeamChannel=(c:Channel)=>['company','role','crew'].includes(c.channel_type);
+  const isChatChannel=(c:Channel)=>c.channel_type==='custom';
+  const filteredChannels=channels.filter(c=>{
+    if(search&&!`${c.name} ${c.description||''}`.toLowerCase().includes(search.toLowerCase()))return false;
+    if(railFilter==='unread')return Number(channelMeta[c.id]?.unread||0)>0;
+    if(railFilter==='chat')return isChatChannel(c);
+    if(railFilter==='teams')return isTeamChannel(c);
+    return true;
+  });
   const favoriteChannels=filteredChannels.filter(c=>favorites.includes(c.id));
   const regularChannels=filteredChannels.filter(c=>!favorites.includes(c.id));
   const active=channels.find(c=>c.id===activeId)||null;
@@ -153,12 +181,33 @@ export default function TeamMessaging({employee,employees=[],portalKind='employe
   const recentAuthors=useMemo(()=>Array.from(new Set(messages.slice(-40).map(m=>m.sender_name))).slice(0,6),[messages]);
 
   const send=async(e?:FormEvent)=>{
-    e?.preventDefault();if(!draft.trim()||!activeId||!user)return;setSending(true);
-    let senderAvatar=employee?.avatar_url||profile?.avatar_url||null;
-    if(!employee?.avatar_url){const {data:latestProfile}=await supabase.from('profiles').select('avatar_url').eq('id',user.id).maybeSingle();senderAvatar=latestProfile?.avatar_url||senderAvatar;}
-    const payload={channel_id:activeId,sender_user_id:user.id,sender_employee_id:employee?.id||null,sender_name:employee?.name||profile?.full_name||'North Splash Team',sender_avatar_url:senderAvatar,body:draft.trim(),message_kind:kind||'message'};
-    const {error}=await supabase.from('employee_messages').insert(payload);
-    setSending(false);if(error)return alert(error.message);setDraft('');setKind('message');composerRef.current?.focus();
+    e?.preventDefault();
+    setSendError('');
+    if(!draft.trim())return;
+    if(!user){setSendError('Sign in to send messages. Stay on the owner portal while logged in.');return;}
+    setSending(true);
+    try{
+      let channelId=activeId;
+      if(!channelId){
+        const company=await ensureCompanyChannel();
+        if(!company)throw new Error('No team channel is available yet. Create a group or refresh.');
+        channelId=company.id;
+        setActiveId(channelId);
+        setChannels(p=>p.some(c=>c.id===company.id)?p:[...p,company]);
+      }
+      let senderAvatar=employee?.avatar_url||profile?.avatar_url||null;
+      if(!employee?.avatar_url){const {data:latestProfile}=await supabase.from('profiles').select('avatar_url').eq('id',user.id).maybeSingle();senderAvatar=latestProfile?.avatar_url||senderAvatar;}
+      const payload:Record<string,unknown>={channel_id:channelId,sender_user_id:user.id,sender_employee_id:employee?.id||null,sender_name:employee?.name||profile?.full_name||user.email?.split('@')[0]||'North Splash Team',sender_avatar_url:senderAvatar,body:draft.trim(),message_kind:kind||'message'};
+      let {error}=await supabase.from('employee_messages').insert(payload);
+      if(error&&/sender_avatar_url|column/i.test(error.message||'')){
+        const rest={...payload}; delete rest.sender_avatar_url;
+        ({error}=await supabase.from('employee_messages').insert(rest));
+      }
+      if(error)throw error;
+      setDraft('');setKind('message');composerRef.current?.focus();
+    }catch(err:unknown){
+      setSendError(err instanceof Error?err.message:'Message could not send. Check that you are signed in and try again.');
+    }finally{setSending(false)}
   };
   const onComposerKeyDown=(e:KeyboardEvent<HTMLTextAreaElement>)=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();void send();}};
   const quickSend=(q:{text:string;kind:string})=>{setDraft(q.text);setKind(q.kind);setTimeout(()=>composerRef.current?.focus(),0)};
@@ -184,7 +233,12 @@ export default function TeamMessaging({employee,employees=[],portalKind='employe
     <aside className="message-channel-rail">
       <div className="message-workspace-brand"><span className="message-workspace-mark">NS</span><div><strong>North Splash</strong><small>Field Communications</small></div><ChevronDown size={15}/></div>
       <div className="message-search"><Search size={15}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Find a channel"/><kbd>⌘K</kbd></div>
-      <div className="message-rail-actions"><button onClick={()=>setActiveId(channels.find(c=>c.channel_type==='company')?.id||activeId)}><BellRing size={15}/>Updates</button><button onClick={()=>composerRef.current?.focus()}><AtSign size={15}/>Compose</button></div>
+      <div className="message-rail-filters" role="tablist" aria-label="Channel filter">
+        {([['all','All'],['unread','Unread'],['chat','Chat'],['teams','Teams']] as const).map(([id,label])=>
+          <button type="button" key={id} role="tab" aria-selected={railFilter===id} className={railFilter===id?'active':''} onClick={()=>setRailFilter(id)}>{label}</button>
+        )}
+      </div>
+      <div className="message-rail-actions"><button type="button" onClick={()=>setActiveId(channels.find(c=>c.channel_type==='company')?.id||activeId)}><BellRing size={15}/>Updates</button><button type="button" onClick={()=>composerRef.current?.focus()}><AtSign size={15}/>Compose</button></div>
       <div className="message-channel-list">
         {favoriteChannels.length>0&&<><div className="message-section-label"><span><Star size={12}/>Favorites</span></div>{favoriteChannels.map(channelButton)}</>}
         <div className="message-section-label"><span><Hash size={12}/>Channels</span>{elevated&&<button onClick={()=>setShowCreate(true)} title="Create group"><Plus size={14}/></button>}</div>
@@ -216,7 +270,9 @@ export default function TeamMessaging({employee,employees=[],portalKind='employe
           <div ref={endRef}/>
         </div>
         <form className="message-composer" onSubmit={send}>
-          <div className="message-composer-box"><div className="message-composer-toolbar"><button type="button" title="Add attachment"><Plus size={16}/></button><button type="button" title="Attach file"><Paperclip size={15}/></button><span>{kind!=='message'?kind.replaceAll('_',' '):'Message'}</span></div><textarea ref={composerRef} value={draft} onChange={e=>setDraft(e.target.value)} onKeyDown={onComposerKeyDown} placeholder={`Message #${active.name.toLowerCase().replaceAll(' ','-')}`} rows={2}/><div className="message-composer-bottom"><small>Enter to send · Shift+Enter for new line</small><button className="message-send-btn" disabled={sending||!draft.trim()}><Send size={16}/>{sending?'Sending':'Send'}</button></div></div>
+          {sendError&&<div className="message-send-error" role="alert">{sendError}</div>}
+          {!user&&<div className="message-send-error" role="alert">You are not signed in, so messages cannot send.</div>}
+          <div className="message-composer-box"><div className="message-composer-toolbar"><button type="button" title="Add attachment"><Plus size={16}/></button><button type="button" title="Attach file"><Paperclip size={15}/></button><span>{kind!=='message'?kind.replaceAll('_',' '):'Message'}</span></div><textarea ref={composerRef} value={draft} onChange={e=>setDraft(e.target.value)} onKeyDown={onComposerKeyDown} placeholder={`Message #${active.name.toLowerCase().replaceAll(' ','-')}`} rows={2}/><div className="message-composer-bottom"><small>Enter to send · Shift+Enter for new line</small><button type="submit" className="message-send-btn" disabled={sending||!draft.trim()}><Send size={16}/>{sending?'Sending':'Send'}</button></div></div>
         </form>
       </>:<div className="message-thread-empty"><MessageCircle/><strong>Select a channel</strong><span>Choose a team channel to start messaging.</span></div>}
     </section>

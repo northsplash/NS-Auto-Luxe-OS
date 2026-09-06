@@ -139,6 +139,7 @@ export type Employee = {
   total_earnings: number;
   notes: string | null;
   avatar_url?: string | null;
+  onboarding_status?: string | null;
   created_at: string;
 };
 

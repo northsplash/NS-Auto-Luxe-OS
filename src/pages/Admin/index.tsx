@@ -28,6 +28,7 @@ import EmployeeAvatar from '@/components/EmployeeAvatar';
 import EmployeeProfileDrawer from '@/components/EmployeeProfileDrawer';
 import AddEmployeeForm from '@/components/AddEmployeeForm';
 import { emptyEmployeeDraft, type EmployeeDraft } from '@/lib/rolePresets';
+import { seedHireOnboarding } from '@/lib/onboarding';
 import { ensureOwnerFieldEmployee } from '@/lib/ownerFieldMode';
 import { employeeCanD2D, employeeCanDetail } from '@/lib/workCapabilities';
 
@@ -122,6 +123,7 @@ export default function Admin() {
   const [visits, setVisits] = useState<{ id?:string; page: string; referrer?:string|null; session_id?:string|null; user_agent?:string|null; user_id?:string|null; visited_at:string }[]>([]);
   const [visitorRange,setVisitorRange]=useState<'1h'|'6h'|'12h'|'24h'|'3d'|'7d'|'14d'|'30d'|'90d'|'6m'|'1y'>('24h');
   const [selectedEmployeeId,setSelectedEmployeeId]=useState('');
+  const [profileInitialTab,setProfileInitialTab]=useState<'onboarding'|'overview'|undefined>(undefined);
   const [dataLoading, setDataLoading] = useState(true);
   const [teamCalendarEmployee,setTeamCalendarEmployee]=useState('');
   const [availability, setAvailability] = useState<any[]>([]);
@@ -253,7 +255,12 @@ const [availabilityForm, setAvailabilityForm] = useState({
       setEmpSubmitting(false);
       return;
     }
-    if (data) setEmployees(prev => [data, ...prev]);
+    if (data) {
+      try { await seedHireOnboarding(data, empForm.role); } catch (err) { console.warn('Onboarding seed skipped', err); }
+      setEmployees(prev => [data, ...prev]);
+      setSelectedEmployeeId(data.id);
+      setProfileInitialTab('onboarding');
+    }
     setEmpSubmitting(false);
     setShowEmpForm(false);
     setEmpForm(emptyEmployeeDraft());
@@ -538,7 +545,8 @@ const handleDeleteAvailability = async (id: string) => {
   const maxRevenue = Math.max(...cashflowData.map(m => m.revenue), 1);
 
   return (
-    <div className="portal-layout">
+    <div className="portal-layout nsos-cream">
+      <a className="skip-to-workspace" href="#portal-workspace">Skip to workspace</a>
       <aside className={`portal-sidebar admin-sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <div className="sidebar-header">
           <Link to={ownerMode ? "/owner" : "/admin"} className="sidebar-brand">
@@ -577,7 +585,7 @@ const handleDeleteAvailability = async (id: string) => {
 
       {sidebarOpen && <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} />}
 
-      <main className="portal-main">
+      <main id="portal-workspace" className="portal-main" tabIndex={-1}>
         <div className="portal-topbar">
           <button className="sidebar-toggle" onClick={() => setSidebarOpen(true)}><Menu size={20} /></button>
           <div className="topbar-title"><span>{currentWorkspace.label}</span><h1>{navItems.find(n => n.id === tab)?.label}</h1></div>
@@ -1133,6 +1141,12 @@ const handleDeleteAvailability = async (id: string) => {
               employees={employees}
               setEmployees={setEmployees}
               completedRevenue={monthRevenue}
+              onHired={(hire)=>{
+                setEmployees(p=>p.some(x=>x.id===hire.id)?p:[hire,...p]);
+                setSelectedEmployeeId(hire.id);
+                setProfileInitialTab('onboarding');
+                setTab('employees');
+              }}
             />
           )}
 
@@ -1158,7 +1172,7 @@ const handleDeleteAvailability = async (id: string) => {
           {tab === 'messages' && (
             <div className="tab-content v2-page">
               <div className="v2-page-head"><div><span className="eyebrow">INTERNAL COMMUNICATION</span><h2>Team Messages</h2><p>Company, role, crew and private group messaging in one workspace.</p></div></div>
-              <TeamMessaging employees={employees} portalKind="admin" />
+              <TeamMessaging employees={employees} employee={employees.find(e=>e.user_id===user?.id)||null} portalKind="admin" />
             </div>
           )}
 
@@ -1175,10 +1189,10 @@ const handleDeleteAvailability = async (id: string) => {
                   {title:'D2D Sales',roles:['d2d_agent']},
                   {title:'Detailing',roles:['detailer']},
                   {title:'Other Team',roles:['employee','admin']},
-                ].map(group=>{const people=employees.filter(e=>group.roles.includes(e.role));if(!people.length)return null;return <section key={group.title} className="team-directory-section"><div className="team-directory-heading"><h3>{group.title}</h3><span>{people.length}</span></div><div className="team-portrait-grid">{people.map(e=><button className="team-portrait-card" key={e.id} onClick={()=>setSelectedEmployeeId(e.id)}><EmployeeAvatar employee={e} size="xl"/><span className={`team-presence ${e.status==='active'?'online':''}`}/><strong>{e.title||e.role.replaceAll('_',' ')}</strong><h4>{e.name}</h4><small>{e.status==='active'?'Active':'Inactive'} · Level {e.employment_level??1}</small></button>)}</div></section>})}
+                ].map(group=>{const people=employees.filter(e=>group.roles.includes(e.role));if(!people.length)return null;return <section key={group.title} className="team-directory-section"><div className="team-directory-heading"><h3>{group.title}</h3><span>{people.length}</span></div><div className="team-portrait-grid">{people.map(e=><button className="team-portrait-card" key={e.id} onClick={()=>{setProfileInitialTab(e.onboarding_status&&e.onboarding_status!=='complete'?'onboarding':'overview');setSelectedEmployeeId(e.id)}}><EmployeeAvatar employee={e} size="xl"/><span className={`team-presence ${e.status==='active'?'online':''}`}/><strong>{e.title||e.role.replaceAll('_',' ')}</strong><h4>{e.name}</h4><small>{e.onboarding_status&&e.onboarding_status!=='complete'?'Onboarding packet':e.status==='active'?'Active':'Inactive'} · Level {e.employment_level??1}</small></button>)}</div></section>})}
                 {!employees.length&&<div className="v19-premium-empty"><Users size={28}/><h3>No team members yet</h3><p>Add your first employee to start scheduling, messaging, training and dispatch.</p></div>}
               </div>
-              {selectedEmployeeId&&(()=>{const e=employees.find(x=>x.id===selectedEmployeeId);if(!e)return null;return <EmployeeProfileDrawer employee={e} employees={employees} appointments={appointments} onClose={()=>setSelectedEmployeeId('')} onOpenCalendar={id=>{setTeamCalendarEmployee(id);setSelectedEmployeeId('');setTab('schedule')}} onOpenMessages={()=>{setSelectedEmployeeId('');setTab('messages')}} onDelete={handleDeleteEmployee} onUpdated={updated=>setEmployees(p=>p.map(x=>x.id===updated.id?updated:x))}/>})()}
+              {selectedEmployeeId&&(()=>{const e=employees.find(x=>x.id===selectedEmployeeId);if(!e)return null;return <EmployeeProfileDrawer employee={e} employees={employees} appointments={appointments} initialTab={profileInitialTab} onClose={()=>{setSelectedEmployeeId('');setProfileInitialTab(undefined)}} onOpenCalendar={id=>{setTeamCalendarEmployee(id);setSelectedEmployeeId('');setTab('schedule')}} onOpenMessages={()=>{setSelectedEmployeeId('');setTab('messages')}} onDelete={handleDeleteEmployee} onUpdated={updated=>setEmployees(p=>p.map(x=>x.id===updated.id?updated:x))}/>})()}
             </div>
           )}
 

@@ -10,6 +10,7 @@ import type {
   PaySetting, RecruitingCandidate, SalesRecord, TimeEntry
 } from '@/lib/supabase';
 import { money, RECRUITING_STAGES } from '@/lib/data';
+import { seedHireOnboarding } from '@/lib/onboarding';
 import EmployeeAvatar from '@/components/EmployeeAvatar';
 import CompensationRuleBuilder from '@/components/CompensationRuleBuilder';
 import { compensationSummary, estimateCustomRulePay } from '@/lib/compensation';
@@ -29,6 +30,7 @@ type Props = {
   employees: Employee[];
   setEmployees: React.Dispatch<React.SetStateAction<Employee[]>>;
   completedRevenue: number;
+  onHired?: (employee: Employee) => void;
 };
 
 const roleLabel = (role: string) => {
@@ -79,7 +81,7 @@ function SalesLineChart({ values }: { values: { label: string; value: number }[]
   </svg><div className="v19-chart-labels">{values.map(v=><span key={v.label}>{v.label}</span>)}</div></div>;
 }
 
-export default function BusinessSuite({ section, employees, setEmployees, completedRevenue }: Props) {
+export default function BusinessSuite({ section, employees, setEmployees, completedRevenue, onHired }: Props) {
   const [loading, setLoading] = useState(true);
   const [candidates, setCandidates] = useState<RecruitingCandidate[]>([]);
   const [shifts, setShifts] = useState<EmployeeShift[]>([]);
@@ -206,7 +208,7 @@ export default function BusinessSuite({ section, employees, setEmployees, comple
 
   const hireCandidate = async (candidate: RecruitingCandidate) => {
     const pay = paySettings.find(p => p.role_key === candidate.position && p.employment_level === 1);
-    const { data, error } = await supabase.from('employees').insert({
+    const payload: Record<string, unknown> = {
       name: candidate.full_name,
       email: candidate.email,
       phone: candidate.phone,
@@ -219,10 +221,20 @@ export default function BusinessSuite({ section, employees, setEmployees, comple
       commission_rate: pay?.commission_rate ?? (candidate.position === 'd2d_agent' ? 10 : 0),
       hire_date: dateInput(),
       start_date: candidate.start_date || null,
+      onboarding_status: 'in_progress',
       notes: `Hired from recruiting pipeline${candidate.notes ? ` — ${candidate.notes}` : ''}`,
-    }).select().single();
+    };
+    let { data, error } = await supabase.from('employees').insert(payload).select().single();
+    if (error && /onboarding_status/i.test(error.message || '')) {
+      const { onboarding_status: _status, ...rest } = payload;
+      ({ data, error } = await supabase.from('employees').insert(rest).select().single());
+    }
     if (error) return alert(error.message);
-    if (data) setEmployees(p => [data, ...p]);
+    if (data) {
+      try { await seedHireOnboarding(data, candidate.position); } catch (err) { console.warn('Onboarding seed skipped', err); }
+      setEmployees(p => [data, ...p]);
+      onHired?.(data);
+    }
     await updateCandidateStage(candidate.id, 'employed');
   };
 
@@ -330,7 +342,7 @@ export default function BusinessSuite({ section, employees, setEmployees, comple
     const stages = RECRUITING_STAGES.filter(([id]) => !['archived', 'rejected', 'withdrawn', 'no_show'].includes(id));
     return (
       <div className="tab-content business-suite">
-        <SectionHeader title="Recruiting" subtitle="Manage candidates from first application through their first day." />
+        <SectionHeader title="Hiring" subtitle="Gusto-style pipeline: screen → offer → hire. Convert opens the onboarding packet (headshot, legal name, tax last-4, deposit last-4, I-9)." />
         <div className="ops-kpi-row">
           <div><strong>{candidates.filter(c => !['rejected','withdrawn','archived'].includes(c.stage)).length}</strong><span>Active Candidates</span></div>
           <div><strong>{candidates.filter(c => c.stage === 'background_check').length}</strong><span>Background Checks</span></div>
@@ -369,6 +381,23 @@ export default function BusinessSuite({ section, employees, setEmployees, comple
             ))}
             {candidates.length===0 && <p className="empty-text">No recruiting candidates yet.</p>}
           </div>
+        </div>
+        <div className="hire-kanban-v29" aria-label="Hiring pipeline">
+          {stages.filter(([id])=>!['employed'].includes(id)).map(([id,label])=>{
+            const rows=candidates.filter(c=>c.stage===id);
+            return <section key={id}>
+              <header><strong>{label}</strong><span>{rows.length}</span></header>
+              {rows.map(c=><article key={c.id}>
+                <strong>{c.full_name}</strong>
+                <small>{roleLabel(c.position)}{c.source?` · ${c.source}`:''}</small>
+                <div className="hire-kanban-actions">
+                  {id!=='offer_accepted'&&id!=='scheduled_to_start'&&<button type="button" className="btn-sm btn-outline" onClick={()=>updateCandidateStage(c.id, id==='applied'?'review':id==='review'?'first_interview_pending':id.includes('interview')?'job_offer_pending':'offer_accepted')}>Advance</button>}
+                  <button type="button" className="btn-sm btn-primary" onClick={()=>hireCandidate(c)}>Convert / Hire</button>
+                </div>
+              </article>)}
+              {!rows.length&&<p className="empty-text">Empty</p>}
+            </section>;
+          })}
         </div>
       </div>
     );
