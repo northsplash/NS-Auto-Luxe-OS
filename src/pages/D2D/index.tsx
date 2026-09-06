@@ -28,6 +28,8 @@ import {
 } from '@/lib/fieldOps';
 import { sendCommunication } from '@/lib/communications';
 import EmployeeAvatar from '@/components/EmployeeAvatar';
+import WorkspaceGate from '@/components/WorkspaceGate';
+import { BRAND_LOGO } from '@/lib/brand';
 
 type Tab='territory'|'route'|'leads'|'calendar'|'followups'|'presentation'|'messages'|'performance'|'timeclock'|'training'|'onboarding';
 type LiveLocation={latitude:number;longitude:number;accuracy?:number|null};
@@ -384,8 +386,8 @@ export default function D2DPortal(){
   const updateCalendarAppointment=async(id:string,payload:Record<string,unknown>)=>{const {data,error}=await supabase.from('appointments').update(payload).eq('id',id).select().single();if(error){alert(error.message);return}setAppointments(p=>p.map(a=>a.id===id?data:a))};
 
   const logout=async()=>{await signOut().catch(()=>{});navigate('/')};
-  if(loading||busy)return <div className="portal-loading"><div className="portal-spinner"/><p>Loading D2D field system…</p></div>;
-  if(!employee)return <div className="portal-loading"><p>Your account is not linked to a D2D employee profile yet.</p><Link to="/">Home</Link></div>;
+  if(loading||busy)return <WorkspaceGate busy title="Opening D2D" body="Loading territories, doors, and today's knocks." />;
+  if(!employee)return <WorkspaceGate title="D2D profile not linked" body="Ask an owner to link your login in People → Permissions." homeHref="/login" homeLabel="Back to sign in" />;
 
   const nav:[Tab,string,any,string][]=[
     ['territory','Territory',MapPin,'field'],['route','Route',Route,'field'],['leads','My Leads',Target,'field'],['calendar','Calendar',CalendarDays,'field'],['followups','Follow-Ups',Navigation,'field'],['presentation','Sales Presentation',Presentation,'field'],['messages','Messages',MessageCircle,'field'],
@@ -429,7 +431,7 @@ export default function D2DPortal(){
   return <div className="portal-layout d2d-os nsos-cream">
     <a className="skip-to-workspace" href="#portal-workspace">Skip to workspace</a>
     <aside className={`portal-sidebar ${sidebar?'sidebar-open':''}`}>
-      <div className="sidebar-header"><Link to="/" className="sidebar-brand"><div className="brand-mark brand-mark-sm">NS</div><div><strong>D2D SALES</strong><small>NORTH SPLASH</small></div></Link><button className="sidebar-close" onClick={()=>setSidebar(false)}><X size={18}/></button></div>
+      <div className="sidebar-header"><Link to="/" className="sidebar-brand"><img className="portal-brand-logo" src={BRAND_LOGO} alt="North Splash Auto Luxe"/><div><strong>D2D SALES</strong><small>NORTH SPLASH</small></div></Link><button className="sidebar-close" onClick={()=>setSidebar(false)}><X size={18}/></button></div>
       <div className="sidebar-user"><EmployeeAvatar employee={employee} size="md" editable onUploaded={url=>setEmployee(p=>p?{...p,avatar_url:url}:p)} className="sidebar-avatar"/><div><p>{employee.name}</p><span>Level {employee.employment_level||1} · {employee.commission_rate}%</span></div></div>
       <nav className="sidebar-nav">{[['field','Field Work'],['performance','Results'],['account','My Account']].map(([id,label])=><div className="nav-group" key={id}><button className="nav-group-title" onClick={()=>setGroups(p=>Object.fromEntries(Object.keys(p).map(k=>[k,k===id?!p[id]:false])))}>{label}<ChevronDown size={14} className={groups[id]?'nav-chevron-open':''}/></button>{groups[id]&&nav.filter(n=>n[3]===id).map(([tid,l,Icon])=><button key={tid} className={`sidebar-item ${tab===tid?'sidebar-active':''}`} onClick={()=>{setTab(tid);setSidebar(false)}}><Icon size={18}/>{l}{tid==='followups'&&dueFollowups.length>0&&<span className="nav-count">{dueFollowups.length}</span>}</button>)}</div>)}</nav>
       <div className="sidebar-footer"><div className={`connection-pill ${online?'online':'offline'}`}>{online?'Online':'Offline'}{offlineCount>0&&` · ${offlineCount} queued`}</div><button className="sidebar-item sidebar-signout" onClick={logout}><LogOut size={18}/>Sign Out</button></div>

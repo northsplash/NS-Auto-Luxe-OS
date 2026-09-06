@@ -33,6 +33,7 @@ import { ensureOwnerFieldEmployee } from '@/lib/ownerFieldMode';
 import { employeeCanD2D, employeeCanDetail } from '@/lib/workCapabilities';
 import WorkspaceHero from '@/components/WorkspaceHero';
 import ClientPhotosSection from '@/components/ClientPhotosSection';
+import WorkspaceGate from '@/components/WorkspaceGate';
 
 type AdminTab =
   | 'dashboard'
@@ -422,11 +423,11 @@ const handleDeleteAvailability = async (id: string) => {
   };
 
   if (loading || dataLoading) {
-    return <div className="portal-loading"><div className="portal-spinner" /><p>Loading admin panel...</p></div>;
+    return <WorkspaceGate busy title="Opening Owner workspace" body="Loading live jobs, team, and cash." />;
   }
 
   if (!hasWorkspaceAccess) {
-    return <div className="portal-loading"><p>Access denied.</p><Link to="/portal">Go to Portal</Link></div>;
+    return <WorkspaceGate title="This workspace is closed" body="Your account does not have Owner or Admin access." homeHref="/portal" homeLabel="Open customer portal" />;
   }
 
   const navItems = [
@@ -556,7 +557,7 @@ const handleDeleteAvailability = async (id: string) => {
       <aside className={`portal-sidebar admin-sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <div className="sidebar-header">
           <Link to={ownerMode ? "/owner" : "/admin"} className="sidebar-brand">
-            <img className="portal-brand-logo" src="/ns-auto-luxe-logo.png" alt="North Splash Auto Luxe"/>
+            <img className="portal-brand-logo" src={`${import.meta.env.BASE_URL}ns-auto-luxe-logo.svg`} alt="North Splash Auto Luxe"/>
             <div><strong>{ownerMode ? "OWNER PORTAL" : "ADMIN PANEL"}</strong><small>NORTH SPLASH</small></div>
           </Link>
           <button className="sidebar-close" onClick={() => setSidebarOpen(false)}><X size={18} /></button>

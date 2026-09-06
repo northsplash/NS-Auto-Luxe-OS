@@ -12,6 +12,8 @@ import { Appointment, Payment, Subscription } from '@/lib/supabase';
 import { money, calcSavings, PACKAGES, ADD_ONS, VEHICLE_SIZES, MEMBERSHIPS } from '@/lib/data';
 import { sendCommunication } from '@/lib/communications';
 import EmployeeAvatar from '@/components/EmployeeAvatar';
+import WorkspaceGate from '@/components/WorkspaceGate';
+import { BRAND_LOGO } from '@/lib/brand';
 
 type Tab = 'dashboard' | 'appointments' | 'subscription' | 'billing';
 
@@ -355,13 +357,17 @@ const [timesLoading, setTimesLoading] = useState(false);
     { id: 'billing', label: 'Billing & Savings', Icon: CreditCard },
   ];
 
+  if (loading || !user) {
+    return <WorkspaceGate busy title="Opening customer portal" body="Loading your appointments and membership." />;
+  }
+
   return (
     <div className="portal-layout nsos-cream customer-os">
       {/* Sidebar */}
       <aside className={`portal-sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <div className="sidebar-header">
           <Link to="/" className="sidebar-brand">
-            <div className="brand-mark brand-mark-sm">NS</div>
+            <img className="portal-brand-logo" src={BRAND_LOGO} alt="North Splash Auto Luxe" />
             <div>
               <strong>NORTH SPLASH</strong>
               <small>AUTO LUXE</small>

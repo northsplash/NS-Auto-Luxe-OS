@@ -50,7 +50,7 @@ const LEAD_STATUSES = [
 const roleLabel = (r?: string | null) => ({ owner: 'Owner / Admin', manager: 'Manager', employee: 'Employee', d2d: 'D2D Sales', recruiter: 'Recruiter', finance: 'Finance', customer: 'Customer' }[r || 'customer'] || r || 'Customer');
 const dt = (v?: string | null) => v ? new Date(v).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '—';
 const day = (v?: string | null) => v ? new Date(`${v}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
-const card: React.CSSProperties = { background: 'linear-gradient(180deg,#131313,#0e0e0e)', color: '#f7f7f5', border: '1px solid rgba(255,255,255,.08)', borderRadius: 14, padding: 18, boxShadow: '0 16px 34px rgba(0,0,0,.24)' };
+const card: React.CSSProperties = { background: '#fffdf8', color: '#1c1814', border: '1px solid #e4d9cc', borderRadius: 14, padding: 18, boxShadow: '0 10px 28px rgba(48,38,28,.06)' };
 const grid: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 14 };
 const reverseAddress=async(lat:number,lng:number)=>{try{const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,{headers:{'Accept-Language':'en-US,en'}});if(!r.ok)return'';const d=await r.json();const a=d.address||{};const street=[a.house_number,a.road||a.residential||a.pedestrian].filter(Boolean).join(' ');const city=a.city||a.town||a.village||a.municipality;const region=[city,a.state,a.postcode].filter(Boolean).join(', ').replace(/, ([0-9]{5})$/, ' $1');return [street,region].filter(Boolean).join(', ')||d.display_name||''}catch{return''}};
 

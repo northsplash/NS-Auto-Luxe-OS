@@ -8,7 +8,7 @@ import WorkspaceHero from '@/components/WorkspaceHero';
 
 export type ExpansionSection='command_center'|'crm'|'dispatch'|'fleet'|'locations'|'marketing'|'automations'|'approvals'|'incidents'|'training'|'purchasing'|'communications'|'retention'|'continuity';
 type Props={section:ExpansionSection;employees:Employee[];appointments:Appointment[];customers:Profile[];payments:any[]};
-const card:React.CSSProperties={background:'linear-gradient(180deg,#121212,#0d0d0d)',color:'#f7f7f5',border:'1px solid rgba(255,255,255,.08)',borderRadius:14,padding:20,boxShadow:'0 14px 34px rgba(0,0,0,.28)'};
+const card:React.CSSProperties={background:'#fffdf8',color:'#1c1814',border:'1px solid #e4d9cc',borderRadius:14,padding:20,boxShadow:'0 10px 28px rgba(48,38,28,.06)'};
 const grid:React.CSSProperties={display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(230px,1fr))',gap:14};
 const Header=({tab}:{tab:string})=><WorkspaceHero tab={tab} />;
 const Metric=({label,value,detail}:{label:string;value:string;detail?:string})=><div className="ops-metric"><span>{label}</span><strong>{value}</strong>{detail&&<small>{detail}</small>}</div>;
