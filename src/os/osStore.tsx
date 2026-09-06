@@ -302,7 +302,12 @@ export function OsProvider({ children }: { children: ReactNode }) {
     },
     updateEmployee: (id, patch) => setState((s) => ({
       ...s,
-      employees: s.employees.map((e) => e.id === id ? { ...e, ...patch } : e),
+      employees: s.employees.map((e) => {
+        if (e.id !== id) return e;
+        const next = { ...e, ...patch };
+        if (typeof patch.name === 'string' && patch.name.trim()) next.initials = initialsOf(next.name);
+        return next;
+      }),
     })),
     toggleDocument: (employeeId, docId) => setState((s) => ({
       ...s,

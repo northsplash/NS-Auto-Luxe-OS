@@ -7,7 +7,7 @@ import SalesPresentation from '@/components/SalesPresentation';
 import OnboardingTab from './OnboardingTab';
 import { liveOpenSlots } from './appointmentSlots';
 import { channelLabel, COMM_GROUPS, COMM_VARIABLES, fillTemplate, SAMPLE_VARS } from '@/lib/communicationCatalog';
-import { emptyEmployeeDraft, type EmployeeDraft } from '@/lib/rolePresets';
+import { emptyEmployeeDraft, SYSTEM_ROLES, type EmployeeDraft } from '@/lib/rolePresets';
 import { firstWord, isSettledPayment, money, prettyLabel, trendLabel } from '@/lib/data';
 import { DETAIL_FAMILY_COPY, packagesForFamily } from '@/lib/detailCatalog';
 import { ServiceMenuSelect } from '@/components/DetailSelfPicker';
@@ -544,13 +544,33 @@ export function PeopleProfile({ employee }: { employee: OsEmployee }) {
         </div>
       )}
       {tab === 'employment' && (
-        <div className="nsos-card">
-          <p><b>Email</b> · {employee.email}</p>
-          <p><b>Phone</b> · {employee.phone}</p>
-          <p><b>System role</b> · {prettyLabel(employee.role)}</p>
-          <p><b>Job title</b> · {employee.title}</p>
-          <label className="nsos-field" style={{ marginTop: 12 }}>Hours this week
-            <input type="number" value={employee.hours_week} onChange={(e) => os.updateEmployee(employee.id, { hours_week: Number(e.target.value) })} />
+        <div className="nsos-card nsos-hire-edit">
+          <p style={{ color: 'var(--os-muted)', marginBottom: 12 }}>This hire stays editable. Change name, title, role, or contact without recreating the packet.</p>
+          <label className="nsos-field">Full name
+            <input value={employee.name} onChange={(ev) => os.updateEmployee(employee.id, { name: ev.target.value })} />
+          </label>
+          <label className="nsos-field">Job title
+            <input value={employee.title} onChange={(ev) => os.updateEmployee(employee.id, { title: ev.target.value })} />
+          </label>
+          <label className="nsos-field">System role
+            <select className="nsos-select" value={employee.role} onChange={(ev) => os.updateEmployee(employee.id, { role: ev.target.value })}>
+              {SYSTEM_ROLES.map((r) => <option value={r.value} key={r.value}>{r.label}</option>)}
+            </select>
+          </label>
+          <label className="nsos-field">Department
+            <input value={employee.department} onChange={(ev) => os.updateEmployee(employee.id, { department: ev.target.value })} />
+          </label>
+          <label className="nsos-field">Email
+            <input type="email" value={employee.email} onChange={(ev) => os.updateEmployee(employee.id, { email: ev.target.value })} />
+          </label>
+          <label className="nsos-field">Phone
+            <input value={employee.phone} onChange={(ev) => os.updateEmployee(employee.id, { phone: ev.target.value })} />
+          </label>
+          <label className="nsos-field">Work location
+            <input value={employee.location} onChange={(ev) => os.updateEmployee(employee.id, { location: ev.target.value })} />
+          </label>
+          <label className="nsos-field">Hours this week
+            <input type="number" value={employee.hours_week} onChange={(ev) => os.updateEmployee(employee.id, { hours_week: Number(ev.target.value) })} />
           </label>
         </div>
       )}
@@ -566,10 +586,44 @@ export function PeopleProfile({ employee }: { employee: OsEmployee }) {
         </div>
       )}
       {tab === 'pay' && (
-        <div className="nsos-card">
-          <p>Paid as <b>{prettyLabel(employee.pay_type)}</b> on a {employee.pay_schedule} schedule.</p>
-          <p style={{ marginTop: 8 }}>{payLine(employee)}</p>
-          <p style={{ color: 'var(--os-muted)', marginTop: 8 }}>Add employee supports any mix of salary, hourly, draw, commission, per-job, and custom rules — including admins.</p>
+        <div className="nsos-card nsos-hire-edit">
+          <p style={{ color: 'var(--os-muted)', marginBottom: 12 }}>Pay mix is per person. Change it here after the hire lands.</p>
+          <label className="nsos-field">Pay structure
+            <select className="nsos-select" value={employee.pay_type} onChange={(ev) => os.updateEmployee(employee.id, { pay_type: ev.target.value })}>
+              <option value="hourly">Hourly</option>
+              <option value="salary">Salary</option>
+              <option value="base_commission">Weekly draw + commission</option>
+              <option value="commission_only">Commission only</option>
+              <option value="per_job">Per completed job</option>
+              <option value="hourly_plus_commission">Hourly + commission</option>
+              <option value="salary_plus_commission">Salary + commission</option>
+              <option value="custom">Custom mix</option>
+            </select>
+          </label>
+          <label className="nsos-field">Pay schedule
+            <select className="nsos-select" value={employee.pay_schedule} onChange={(ev) => os.updateEmployee(employee.id, { pay_schedule: ev.target.value })}>
+              <option value="weekly">Weekly</option>
+              <option value="biweekly">Biweekly</option>
+              <option value="semimonthly">Twice monthly</option>
+              <option value="monthly">Monthly</option>
+            </select>
+          </label>
+          <label className="nsos-field">Hourly rate
+            <input type="number" min="0" step="0.25" value={employee.hourly_rate} onChange={(ev) => os.updateEmployee(employee.id, { hourly_rate: Number(ev.target.value) })} />
+          </label>
+          <label className="nsos-field">Annual salary
+            <input type="number" min="0" step="500" value={employee.annual_salary} onChange={(ev) => os.updateEmployee(employee.id, { annual_salary: Number(ev.target.value) })} />
+          </label>
+          <label className="nsos-field">Weekly draw
+            <input type="number" min="0" step="25" value={employee.weekly_base} onChange={(ev) => os.updateEmployee(employee.id, { weekly_base: Number(ev.target.value) })} />
+          </label>
+          <label className="nsos-field">Commission %
+            <input type="number" min="0" max="100" step="0.25" value={employee.commission_rate} onChange={(ev) => os.updateEmployee(employee.id, { commission_rate: Number(ev.target.value) })} />
+          </label>
+          <label className="nsos-field">Per-job rate
+            <input type="number" min="0" step="5" value={employee.per_job_rate} onChange={(ev) => os.updateEmployee(employee.id, { per_job_rate: Number(ev.target.value) })} />
+          </label>
+          <p style={{ marginTop: 12 }}>{payLine(employee)}</p>
         </div>
       )}
       {tab === 'schedule' && (

@@ -90,11 +90,13 @@ export default function BusinessSuite({ section, employees, setEmployees, comple
   const [company, setCompany] = useState<CompanySetting>({ id: 'main', company_value: 0, valuation_note: '', updated_at: new Date().toISOString() });
   const [compEmployeeId,setCompEmployeeId]=useState('');
   const [compDraft,setCompDraft]=useState<Partial<Employee>>({});
+  const [editingCandidateId,setEditingCandidateId]=useState<string|null>(null);
 
-  const [candidateForm, setCandidateForm] = useState({
+  const emptyCandidateForm = {
     full_name: '', email: '', phone: '', position: 'detailer', stage: 'applied', source: '',
     expected_pay: '', interview_date: '', start_date: '', background_status: 'not_started', notes: '',
-  });
+  };
+  const [candidateForm, setCandidateForm] = useState(emptyCandidateForm);
   const [shiftForm, setShiftForm] = useState({ employee_id: '', shift_date: dateInput(), start_time: '09:00', end_time: '17:00', status: 'scheduled', notes: '' });
   const [editingShiftId, setEditingShiftId] = useState<string | null>(null);
   const [timeForm, setTimeForm] = useState({ employee_id: '', clock_in: '', clock_out: '', break_minutes: 0, status: 'approved', notes: '' });
@@ -189,11 +191,40 @@ export default function BusinessSuite({ section, employees, setEmployees, comple
       expected_pay: candidateForm.expected_pay ? Number(candidateForm.expected_pay) : null,
       interview_date: candidateForm.interview_date ? new Date(candidateForm.interview_date).toISOString() : null,
       start_date: candidateForm.start_date || null,
+      updated_at: new Date().toISOString(),
     };
-    const { data, error } = await supabase.from('recruiting_candidates').insert(payload).select().single();
-    if (error) return alert(error.message);
-    if (data) setCandidates(p => [data, ...p]);
-    setCandidateForm({ full_name: '', email: '', phone: '', position: 'detailer', stage: 'applied', source: '', expected_pay: '', interview_date: '', start_date: '', background_status: 'not_started', notes: '' });
+    if (editingCandidateId) {
+      const { data, error } = await supabase.from('recruiting_candidates').update(payload).eq('id', editingCandidateId).select().single();
+      if (error) return alert(error.message);
+      if (data) setCandidates(p => p.map(c => c.id === data.id ? data : c));
+      setEditingCandidateId(null);
+    } else {
+      const { data, error } = await supabase.from('recruiting_candidates').insert(payload).select().single();
+      if (error) return alert(error.message);
+      if (data) setCandidates(p => [data, ...p]);
+    }
+    setCandidateForm(emptyCandidateForm);
+  };
+
+  const startEditCandidate = (c: RecruitingCandidate) => {
+    const interview = c.interview_date ? new Date(c.interview_date) : null;
+    const pad = (n: number) => String(n).padStart(2, '0');
+    setEditingCandidateId(c.id);
+    setCandidateForm({
+      full_name: c.full_name || '',
+      email: c.email || '',
+      phone: c.phone || '',
+      position: c.position || 'detailer',
+      stage: c.stage || 'applied',
+      source: c.source || '',
+      expected_pay: c.expected_pay != null ? String(c.expected_pay) : '',
+      interview_date: interview && !Number.isNaN(interview.getTime())
+        ? `${interview.getFullYear()}-${pad(interview.getMonth() + 1)}-${pad(interview.getDate())}T${pad(interview.getHours())}:${pad(interview.getMinutes())}`
+        : '',
+      start_date: c.start_date || '',
+      background_status: c.background_status || 'not_started',
+      notes: c.notes || '',
+    });
   };
 
   const updateCandidateStage = async (id: string, stage: string) => {
@@ -347,7 +378,7 @@ export default function BusinessSuite({ section, employees, setEmployees, comple
         </div>
         <div className="admin-two-col ops-align-start">
           <form className="admin-card ops-form" onSubmit={addCandidate}>
-            <div className="admin-card-header"><h3><UserPlus size={18}/> Add Candidate</h3></div>
+            <div className="admin-card-header"><h3><UserPlus size={18}/> {editingCandidateId ? 'Edit candidate' : 'Add Candidate'}</h3></div>
             <div className="form-group"><label>Full Name</label><input required value={candidateForm.full_name} onChange={e=>setCandidateForm(p=>({...p,full_name:e.target.value}))}/></div>
             <div className="form-row"><div className="form-group"><label>Email</label><input type="email" value={candidateForm.email} onChange={e=>setCandidateForm(p=>({...p,email:e.target.value}))}/></div><div className="form-group"><label>Phone</label><input value={candidateForm.phone} onChange={e=>setCandidateForm(p=>({...p,phone:e.target.value}))}/></div></div>
             <div className="form-row"><div className="form-group"><label>Position</label><select value={candidateForm.position} onChange={e=>setCandidateForm(p=>({...p,position:e.target.value}))}><option value="detailer">Detailer</option><option value="d2d_agent">D2D Sales</option><option value="manager">Manager</option></select></div><div className="form-group"><label>Stage</label><select value={candidateForm.stage} onChange={e=>setCandidateForm(p=>({...p,stage:e.target.value}))}>{RECRUITING_STAGES.map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></div></div>
@@ -355,7 +386,8 @@ export default function BusinessSuite({ section, employees, setEmployees, comple
             <div className="form-row"><div className="form-group"><label>Interview Date</label><input type="datetime-local" value={candidateForm.interview_date} onChange={e=>setCandidateForm(p=>({...p,interview_date:e.target.value}))}/></div><div className="form-group"><label>Planned Start</label><input type="date" value={candidateForm.start_date} onChange={e=>setCandidateForm(p=>({...p,start_date:e.target.value}))}/></div></div>
             <div className="form-group"><label>Background Check</label><select value={candidateForm.background_status} onChange={e=>setCandidateForm(p=>({...p,background_status:e.target.value}))}><option value="not_started">Not Started</option><option value="pending">Pending</option><option value="clear">Clear</option><option value="review">Needs Review</option></select></div>
             <div className="form-group"><label>Notes</label><textarea rows={3} value={candidateForm.notes} onChange={e=>setCandidateForm(p=>({...p,notes:e.target.value}))}/></div>
-            <button className="btn-primary btn-full" type="submit"><Plus size={15}/> Add Candidate</button>
+            <button className="btn-primary btn-full" type="submit"><Plus size={15}/> {editingCandidateId ? 'Save candidate' : 'Add Candidate'}</button>
+            {editingCandidateId && <button className="btn-outline btn-full" type="button" onClick={()=>{setEditingCandidateId(null);setCandidateForm(emptyCandidateForm);}}>Cancel edit</button>}
           </form>
           <div className="admin-card">
             <div className="admin-card-header"><h3><BriefcaseBusiness size={18}/> Pipeline</h3></div>
@@ -372,7 +404,7 @@ export default function BusinessSuite({ section, employees, setEmployees, comple
                 <div className="ops-primary"><strong>{c.full_name}</strong><span>{roleLabel(c.position)} · {c.email || c.phone || 'No contact'}</span></div>
                 <div><span className="ops-label">Background</span><strong>{prettyLabel(c.background_status)}</strong></div>
                 <div><span className="ops-label">Stage</span><select value={c.stage} onChange={e=>updateCandidateStage(c.id,e.target.value)}>{RECRUITING_STAGES.map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></div>
-                <div className="ops-actions">{c.stage !== 'employed' && <button className="btn-sm btn-primary" onClick={()=>hireCandidate(c)}>Hire</button>}<button className="btn-sm btn-outline" onClick={()=>updateCandidateStage(c.id,'archived')}>Archive</button></div>
+                <div className="ops-actions">{c.stage !== 'employed' && <button className="btn-sm btn-primary" onClick={()=>hireCandidate(c)}>Hire</button>}<button className="btn-sm btn-outline" type="button" onClick={()=>startEditCandidate(c)}>Edit</button><button className="btn-sm btn-outline" onClick={()=>updateCandidateStage(c.id,'archived')}>Archive</button></div>
               </div>
             ))}
             {candidates.length===0 && <p className="empty-text">No recruiting candidates yet.</p>}
@@ -387,6 +419,7 @@ export default function BusinessSuite({ section, employees, setEmployees, comple
                 <strong>{c.full_name}</strong>
                 <small>{roleLabel(c.position)}{c.source?` · ${c.source}`:''}</small>
                 <div className="hire-kanban-actions">
+                  <button type="button" className="btn-sm btn-outline" onClick={()=>startEditCandidate(c)}>Edit</button>
                   {id!=='offer_accepted'&&id!=='scheduled_to_start'&&<button type="button" className="btn-sm btn-outline" onClick={()=>updateCandidateStage(c.id, id==='applied'?'review':id==='review'?'first_interview_pending':id.includes('interview')?'job_offer_pending':'offer_accepted')}>Advance</button>}
                   <button type="button" className="btn-sm btn-primary" onClick={()=>hireCandidate(c)}>Convert / Hire</button>
                 </div>
