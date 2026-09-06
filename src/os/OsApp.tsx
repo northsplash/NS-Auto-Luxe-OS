@@ -7,6 +7,7 @@ import {
   Target, Trash2, TrendingUp, UserCheck, Users, Wrench, X,
 } from 'lucide-react';
 import type { EmployeeDraft } from '@/lib/rolePresets';
+import { BRAND_LOGO } from '@/lib/brand';
 import { money } from '@/lib/data';
 import { OsProvider, useOs } from './osStore';
 import {
@@ -190,7 +191,8 @@ class OsErrorBoundary extends Component<{ children: ReactNode; onReset?: () => v
     if (this.state.failed) {
       return (
         <div className="nsos-card route-error-inline-v50" style={{ margin: 20 }}>
-          <span className="nsos-eyebrow">NORTH SPLASH OS</span>
+          <span className="nsos-eyebrow">North Splash Auto Luxe</span>
+          <img className="auth-brand-logo" src={BRAND_LOGO} alt="North Splash Auto Luxe" />
           <h2>This view could not load</h2>
           <p style={{ color: 'var(--os-muted)', margin: '8px 0 14px' }}>The rest of the OS is still running. Try this view again, or open Team Chat.</p>
           {this.state.message && <p className="empty-text">{this.state.message}</p>}

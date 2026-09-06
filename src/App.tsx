@@ -1,5 +1,6 @@
 import { Component, lazy, Suspense, type ErrorInfo, type ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
+import { BRAND_LOGO } from './lib/brand';
 
 const OsApp = lazy(() => import('@/os/OsApp'));
 const Login = lazy(() => import('@/pages/Login'));
@@ -25,17 +26,26 @@ function Loader() {
 
 function WorkspaceCrashScreen({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
-    <div className="route-error-v27">
+    <div className="route-error-v27 nsos-cream">
       <div className="route-error-card-v27">
-        <div className="route-error-mark-v27">NS</div>
-        <span className="eyebrow">NORTH SPLASH OS</span>
+        <span className="eyebrow">North Splash Auto Luxe</span>
+        <img className="auth-brand-logo" src={BRAND_LOGO} alt="North Splash Auto Luxe" />
         <h2>This screen could not load</h2>
-        <p>North Splash stopped this page so you would not get a blank screen. Try it again, or open another workspace.</p>
-        {message && <p className="empty-text" style={{ marginTop: 8 }}>{message}</p>}
+        <p>
+          The rest of the company is still here. Try this screen again, open the
+          demo OS, or sign in.
+        </p>
+        {message && <p className="empty-text">{message}</p>}
         <div className="route-error-actions-v27">
-          <button type="button" onClick={onRetry} className="btn-primary">Try again</button>
-          <Link to="/os" className="btn-outline">Open demo OS</Link>
-          <Link to="/login" className="btn-outline">Sign in</Link>
+          <button type="button" className="btn-primary" onClick={onRetry}>
+            Try again
+          </button>
+          <Link className="btn-outline" to="/os">
+            Open demo OS
+          </Link>
+          <Link className="btn-outline" to="/login">
+            Sign in
+          </Link>
           <button
             type="button"
             className="btn-outline"
