@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  Award, BarChart3, CalendarDays, ChevronDown, Clock3, Crosshair, DollarSign, Gauge,
+  Award, BarChart3, CalendarDays, ChevronDown, ClipboardCheck, Clock3, Crosshair, DollarSign, Gauge,
   History, ListChecks, LogOut, MapPin, Menu, Navigation, Pause, Phone,
   Play, Plus, RefreshCw, Route, Search, Target, TrendingUp, UserRound,
   WifiOff, X, Eye, MessageCircle, Presentation,
@@ -17,6 +17,7 @@ import { money } from '@/lib/data';
 import FieldTerritoryMap from '@/components/FieldTerritoryMap';
 import TrainingPortal from '@/components/TrainingPortal';
 import TeamMessaging from '@/components/TeamMessaging';
+import EmployeeOnboardingTab from '@/components/EmployeeOnboardingTab';
 import SalesPresentation from '@/components/SalesPresentation';
 import LeadCommandCenter from '@/components/LeadCommandCenter';
 import SharedCalendar from '@/components/SharedCalendar';
@@ -28,7 +29,7 @@ import {
 import { sendCommunication } from '@/lib/communications';
 import EmployeeAvatar from '@/components/EmployeeAvatar';
 
-type Tab='territory'|'route'|'leads'|'calendar'|'followups'|'presentation'|'messages'|'performance'|'timeclock'|'training';
+type Tab='territory'|'route'|'leads'|'calendar'|'followups'|'presentation'|'messages'|'performance'|'timeclock'|'training'|'onboarding';
 type LiveLocation={latitude:number;longitude:number;accuracy?:number|null};
 type OfflineAction={id:string;type:'save_lead'|'door_status';payload:any;created_at:string};
 const OFFLINE_KEY='ns_d2d_offline_queue_v2';
@@ -388,7 +389,7 @@ export default function D2DPortal(){
 
   const nav:[Tab,string,any,string][]=[
     ['territory','Territory',MapPin,'field'],['route','Route',Route,'field'],['leads','My Leads',Target,'field'],['calendar','Calendar',CalendarDays,'field'],['followups','Follow-Ups',Navigation,'field'],['presentation','Sales Presentation',Presentation,'field'],['messages','Messages',MessageCircle,'field'],
-    ['performance','Performance',BarChart3,'performance'],['timeclock','Time Clock',Clock3,'account'],['training','Training',Award,'account'],
+    ['performance','Performance',BarChart3,'performance'],['onboarding','Onboarding',ClipboardCheck,'account'],['timeclock','Time Clock',Clock3,'account'],['training','Training',Award,'account'],
   ];
   const filteredLeads=leads.filter(l=>{
     const matchesSearch=!search||`${l.customer_name||''} ${l.address||''} ${l.phone||''} ${l.service_interest||''}`.toLowerCase().includes(search.toLowerCase());
@@ -425,16 +426,19 @@ export default function D2DPortal(){
     void supabase.from('d2d_presentation_events').insert({employee_id:employee.id,lead_id:selectedDoor?.lead_id||null,territory_id:selectedTerritory||null,event_type:event,event_data:detail}).then(()=>{},()=>{});
   };
 
-  return <div className="portal-layout d2d-os">
+  return <div className="portal-layout d2d-os nsos-cream">
+    <a className="skip-to-workspace" href="#portal-workspace">Skip to workspace</a>
     <aside className={`portal-sidebar ${sidebar?'sidebar-open':''}`}>
       <div className="sidebar-header"><Link to="/" className="sidebar-brand"><div className="brand-mark brand-mark-sm">NS</div><div><strong>D2D SALES</strong><small>NORTH SPLASH</small></div></Link><button className="sidebar-close" onClick={()=>setSidebar(false)}><X size={18}/></button></div>
       <div className="sidebar-user"><EmployeeAvatar employee={employee} size="md" editable onUploaded={url=>setEmployee(p=>p?{...p,avatar_url:url}:p)} className="sidebar-avatar"/><div><p>{employee.name}</p><span>Level {employee.employment_level||1} · {employee.commission_rate}%</span></div></div>
       <nav className="sidebar-nav">{[['field','Field Work'],['performance','Results'],['account','My Account']].map(([id,label])=><div className="nav-group" key={id}><button className="nav-group-title" onClick={()=>setGroups(p=>Object.fromEntries(Object.keys(p).map(k=>[k,k===id?!p[id]:false])))}>{label}<ChevronDown size={14} className={groups[id]?'nav-chevron-open':''}/></button>{groups[id]&&nav.filter(n=>n[3]===id).map(([tid,l,Icon])=><button key={tid} className={`sidebar-item ${tab===tid?'sidebar-active':''}`} onClick={()=>{setTab(tid);setSidebar(false)}}><Icon size={18}/>{l}{tid==='followups'&&dueFollowups.length>0&&<span className="nav-count">{dueFollowups.length}</span>}</button>)}</div>)}</nav>
       <div className="sidebar-footer"><div className={`connection-pill ${online?'online':'offline'}`}>{online?'Online':'Offline'}{offlineCount>0&&` · ${offlineCount} queued`}</div><button className="sidebar-item sidebar-signout" onClick={logout}><LogOut size={18}/>Sign Out</button></div>
     </aside>
-    {sidebar&&<div className="sidebar-backdrop" onClick={()=>setSidebar(false)}/>}<main className="portal-main">
+    {sidebar&&<div className="sidebar-backdrop" onClick={()=>setSidebar(false)}/>}<main id="portal-workspace" className="portal-main" tabIndex={-1}>
       <div className="portal-topbar"><button className="sidebar-toggle" onClick={()=>setSidebar(true)}><Menu size={20}/></button><div className="topbar-title"><h1>{nav.find(n=>n[0]===tab)?.[1]}</h1><span>{territories.find(t=>t.id===selectedTerritory)?.name||'No territory assigned'}</span></div><div className="topbar-actions">{offlineCount>0&&<button className="btn-outline" onClick={syncOffline}><RefreshCw size={15}/> Sync {offlineCount}</button>}</div></div>
       <div className="portal-content">
+        {employee.onboarding_status&&employee.onboarding_status!=='complete'&&tab!=='onboarding'&&<button type="button" className="portal-notice" onClick={()=>setTab('onboarding')}><ClipboardCheck size={17}/><div><strong>Finish your hire packet</strong><span>Headshot, legal name, tax last-4, deposit last-4, and I-9.</span></div><small>Open</small></button>}
+        {tab==='onboarding'&&<div className="tab-content v2-page"><div className="v2-page-head"><div><span className="eyebrow">NEW HIRE</span><h2>Onboarding packet</h2><p>You fill this in. North Splash stores last-four identifiers only.</p></div></div><EmployeeOnboardingTab employee={employee} onUpdated={setEmployee}/></div>}
         {tab==='territory'&&<div className="tab-content d2d-field-page v2-page">
           <div className="v2-page-head"><div><span className="eyebrow">FIELD WORKSPACE</span><h2>Work Your Territory</h2><p>Tap a house, record the outcome, then move directly to the next best door.</p></div><div className="v2-head-actions"><button className="btn-outline" onClick={manualLead}><Plus size={15}/> Outside Territory Lead</button><button className="btn-primary" onClick={nextBest}><Target size={15}/> Next Best House</button></div></div>
           <div className="d2d-field-commandbar">
