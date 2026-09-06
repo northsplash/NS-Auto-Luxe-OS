@@ -859,7 +859,10 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
   const [note, setNote] = useState('');
   const [door, setDoor] = useState({ name: '', address: '' });
   const [zone, setZone] = useState<'all' | 'west' | 'central' | 'east'>('all');
-  const [pane, setPane] = useState<'map' | 'pitch' | 'list'>('map');
+  const [pane, setPane] = useState<'map' | 'pitch' | 'list'>(() => {
+    const next = new URLSearchParams(window.location.search).get('pane');
+    return next === 'pitch' || next === 'list' ? next : 'map';
+  });
   const lead = os.leads.find((l) => l.id === active) || os.leads[0];
   const territory = (x: number) => (x < 33 ? 'west' : x < 66 ? 'central' : 'east');
   const pins = os.leads.filter((l) => zone === 'all' || territory(l.x) === zone);
