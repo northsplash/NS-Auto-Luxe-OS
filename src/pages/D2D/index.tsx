@@ -36,9 +36,10 @@ import { ServiceMenuSelect } from '@/components/DetailSelfPicker';
 
 type Tab='territory'|'route'|'leads'|'calendar'|'followups'|'presentation'|'messages'|'performance'|'timeclock'|'training'|'onboarding';
 type LiveLocation={latitude:number;longitude:number;accuracy?:number|null};
-type OfflineAction={id:string;type:'save_lead'|'door_status';payload:any;created_at:string};
+type OfflineAction={id:string;type:'save_lead'|'door_status'|'create_appointment';payload:any;created_at:string};
 const OFFLINE_KEY='ns_d2d_offline_queue_v2';
 const DOOR_CACHE_KEY='ns_d2d_territory_doors_v3';
+const JOBS_CACHE_KEY='ns_d2d_jobs_cache_v1';
 const STATUS_QUICK=['no_answer','revisit','interested','follow_up','estimate','appointment_set','sold','do_not_knock'] as const;
 
 const emptyForm=()=>({
@@ -96,6 +97,10 @@ export default function D2DPortal(){
     const {data:emp}=await supabase.from('employees').select('*').eq('user_id',user.id).maybeSingle();
     setEmployee(emp);
     if(!emp)return;
+    if(!navigator.onLine){
+      const cachedJobs=loadJobsCache();
+      if(cachedJobs.length)setAppointments(cachedJobs);
+    }
     const [l,t,s,ti,g,r,a]=await Promise.all([
       supabase.from('leads').select('*').eq('assigned_employee_id',emp.id).order('created_at',{ascending:false}),
       supabase.from('lead_territories').select('*').eq('assigned_employee_id',emp.id).eq('status','active').order('priority',{ascending:false}),
@@ -105,7 +110,7 @@ export default function D2DPortal(){
       supabase.from('territory_routes').select('*').eq('employee_id',emp.id).in('status',['active','paused']).order('started_at',{ascending:false}).limit(1).maybeSingle(),
       supabase.from('appointments').select('*').or(`sales_rep_employee_id.eq.${emp.id},assigned_employee_id.eq.${emp.id}`).order('scheduled_at'),
     ]);
-    setLeads(l.data??[]);setTerritories(t.data??[]);setSales(s.data??[]);setTimes(ti.data??[]);setGoals(g.data??null);setRoute(r.data??null);setAppointments(a.data??[]);
+    setLeads(l.data??[]);setTerritories(t.data??[]);setSales(s.data??[]);setTimes(ti.data??[]);setGoals(g.data??null);setRoute(r.data??null);setAppointments(a.data??[]);cacheJobs(a.data??[]);
     const currentTerritory=selectedTerritory||(t.data?.[0]?.id??'');
     setSelectedTerritory(currentTerritory);
     const ids=(t.data??[]).map(x=>x.id);
@@ -277,7 +282,7 @@ export default function D2DPortal(){
   const syncOffline=async()=>{
     if(!employee||!navigator.onLine)return;const q=loadOffline();if(!q.length)return;
     const remaining:OfflineAction[]=[];
-    for(const item of q){try{if(item.type==='save_lead'){const {error}=await supabase.from('leads').upsert(item.payload,{onConflict:'id'});if(error)throw error}else if(item.type==='door_status'){const {error}=await supabase.from('territory_doors').update(item.payload.patch).eq('id',item.payload.id);if(error)throw error}}catch{remaining.push(item)}}
+    for(const item of q){try{if(item.type==='save_lead'){const {error}=await supabase.from('leads').upsert(item.payload,{onConflict:'id'});if(error)throw error}else if(item.type==='door_status'){const {error}=await supabase.from('territory_doors').update(item.payload.patch).eq('id',item.payload.id);if(error)throw error}else if(item.type==='create_appointment'){const {error}=await supabase.from('appointments').insert(item.payload);if(error)throw error}}catch{remaining.push(item)}}
     localStorage.setItem(OFFLINE_KEY,JSON.stringify(remaining));setOfflineCount(remaining.length);if(remaining.length!==q.length)await load();
   };
 
@@ -318,6 +323,7 @@ export default function D2DPortal(){
       if(!navigator.onLine||String(error?.message||'').toLowerCase().includes('network')){
         queueOffline({id:crypto.randomUUID(),type:'save_lead',payload:{...payload,id:payload.id||crypto.randomUUID()},created_at:new Date().toISOString()});
         if(selectedDoor.id)queueOffline({id:crypto.randomUUID(),type:'door_status',payload:{id:selectedDoor.id,patch:{status:nextStatus,last_visited_at:new Date().toISOString(),last_employee_id:employee.id,notes:form.notes}},created_at:new Date().toISOString()});
+        if(nextStatus==='appointment_set'&&form.appointment_at)queueOffline({id:crypto.randomUUID(),type:'create_appointment',payload:appointmentDraft({...payload,converted_customer_id:null},employee,form,selectedDoor),created_at:new Date().toISOString()});
         alert('Saved offline. North Splash will sync this lead when your connection returns.');setSelectedDoor(null);setManual(false);setSaving(false);return true;
       }else alert(error?.message||'Unable to save lead.');setSaving(false);return false;
     }
@@ -376,7 +382,7 @@ export default function D2DPortal(){
 
   const createCalendarAppointment=async(payload:Record<string,unknown>)=>{
     if(!employee)return;
-    const {data,error}=await supabase.from('appointments').insert({...payload,sales_rep_employee_id:employee.id,source_channel:'d2d',field_status:'scheduled'}).select().single();
+    const {data,error}=await supabase.from('appointments').insert({...payload,sales_rep_employee_id:employee.id,source_channel:'d2d',field_status:'scheduled',dispatch_status:'unassigned'}).select().single();
     if(error){alert(error.message);return}
     setAppointments(p=>[...p,data].sort((a,b)=>new Date(a.scheduled_at||0).getTime()-new Date(b.scheduled_at||0).getTime()));
     if(data.lead_id){await supabase.from('leads').update({status:'appointment_set',appointment_id:data.id,next_action:'appointment',next_action_at:data.scheduled_at}).eq('id',data.lead_id);setLeads(p=>p.map(l=>l.id===data.lead_id?{...l,status:'appointment_set',appointment_id:data.id}:l))}
@@ -439,6 +445,7 @@ export default function D2DPortal(){
       <PortalSwitchRail allow={canSwitchLivePortals(profile?.portal_role)}/>
       <BackToOwnerBanner allow={canSwitchLivePortals(profile?.portal_role)}/>
       <div className="portal-content">
+        {(!online||offlineCount>0)&&<div className={`d2d-offline-banner ${online?'queued':'down'}`}><WifiOff size={16}/><div><strong>{online?`${offlineCount} knock${offlineCount===1?'':'s'} queued`:'Working offline'}</strong><span>{online?'Sync when the connection is solid.':'Knocks save on this phone until you are back online.'}</span></div>{online&&offlineCount>0&&<button type="button" className="btn-primary" onClick={()=>void syncOffline()}>Sync now</button>}</div>}
         {employee.onboarding_status&&employee.onboarding_status!=='complete'&&tab!=='onboarding'&&<button type="button" className="portal-notice" onClick={()=>setTab('onboarding')}><ClipboardCheck size={17}/><div><strong>Finish your hire packet</strong><span>Headshot, legal name, tax last-4, deposit last-4, and I-9.</span></div><small>Open</small></button>}
         {tab==='onboarding'&&<div className="tab-content v2-page"><EmployeeOnboardingTab employee={employee} audience="self" onUpdated={setEmployee} onOpenTraining={()=>setTab('training')}/></div>}
         {tab==='territory'&&<div className="tab-content d2d-field-page v2-page">
@@ -455,6 +462,7 @@ export default function D2DPortal(){
             {discoveringHouses&&<div className="d2d-house-discovery"><span className="live-dot"/> Mapping residential doors inside this territory…</div>}
             {houseDiscoveryError&&<div className="d2d-house-discovery error">{houseDiscoveryError}<button type="button" onClick={()=>discoverTerritoryHouses(selectedTerritory,true)}>Try again</button></div>}
             {!territories.length?<div className="ns-empty"><strong>No territory assigned</strong><p>Ask an owner to pin a neighborhood to this D2D login. Once it lands, houses, knock colors, and Next Best House appear here.</p></div>:<FieldTerritoryMap fieldMode className="d2d-primary-map" territories={territories.filter(t=>!selectedTerritory||t.id===selectedTerritory)} doors={territoryDoors} leads={leads.filter(l=>!selectedTerritory||l.territory_id===selectedTerritory)} liveLocation={live} routeDoorIds={routeDoorIds} activeDoorId={selectedDoor?.id||null} statusFilter={filters} showDoorLabels={showLabels} onDoorClick={pickDoor} onMapClick={pickMapPoint}/>}
+            <button type="button" className="d2d-phone-next" onClick={nextBest}><Target size={18}/><span><small>Next Best House</small><strong>{nextSuggestedDoor?.address||'Open the next door'}</strong></span><Navigation size={16}/></button>
             <div className="territory-bottom-stats v2-map-footer"><span><strong>{territoryProgress}%</strong> complete</span>{currentStreet&&<span><strong>{streetProgress}%</strong> {currentStreet}</span>}<span><strong>{dueFollowups.length}</strong> follow-ups</span><span><strong>{territoryDoors.filter(d=>d.status==='unworked').length}</strong> unworked</span>{!online&&<span><WifiOff size={14}/> Offline</span>}</div>
           </div>
         </div>}
@@ -541,4 +549,15 @@ function Goal({label,value,goal,moneyMode=false}:{label:string;value:number;goal
 function loadOffline():OfflineAction[]{try{return JSON.parse(localStorage.getItem(OFFLINE_KEY)||'[]')}catch{return[]}}
 function cacheTerritoryDoors(doors:TerritoryDoor[]){try{localStorage.setItem(DOOR_CACHE_KEY,JSON.stringify({savedAt:Date.now(),doors:doors.slice(0,5000)}))}catch{/* storage can be unavailable/private */}}
 function loadTerritoryDoors(ids:string[]):TerritoryDoor[]{try{const parsed=JSON.parse(localStorage.getItem(DOOR_CACHE_KEY)||'{}');if(!Array.isArray(parsed?.doors))return[];return parsed.doors.filter((d:TerritoryDoor)=>ids.includes(String(d.territory_id||'')))}catch{return[]}}
+function cacheJobs(jobs:Appointment[]){try{localStorage.setItem(JOBS_CACHE_KEY,JSON.stringify({savedAt:Date.now(),jobs:jobs.slice(0,200)}))}catch{/* storage can be unavailable/private */}}
+function loadJobsCache():Appointment[]{try{const parsed=JSON.parse(localStorage.getItem(JOBS_CACHE_KEY)||'{}');return Array.isArray(parsed?.jobs)?parsed.jobs:[]}catch{return[]}}
+function appointmentDraft(lead:any,employee:Employee,form:ReturnType<typeof emptyForm>,door:(Partial<TerritoryDoor>&{lead_id?:string|null})|null){
+  return {
+    user_id:lead.converted_customer_id||null,customer_name:form.customer_name||lead.customer_name,customer_email:form.email||lead.email,customer_phone:form.phone||lead.phone,
+    service_name:form.service_interest||lead.service_interest||'Detailing Service',package_name:form.service_interest||lead.service_interest||null,add_ons:[],vehicle_info:form.vehicle_info||lead.vehicle_info||'',
+    scheduled_at:new Date(form.appointment_at).toISOString(),status:'pending',price:Number(form.estimated_value||lead.estimated_value||0),notes:form.notes||lead.notes||'',
+    service_address:form.address||lead.address,latitude:door?.latitude??lead.latitude,longitude:door?.longitude??lead.longitude,
+    sales_rep_employee_id:employee.id,lead_id:lead.id||null,source_channel:'d2d',dispatch_status:'unassigned',field_status:'scheduled',
+  };
+}
 function getPosition():Promise<LiveLocation|null>{return new Promise(resolve=>{if(!navigator.geolocation)return resolve(null);navigator.geolocation.getCurrentPosition(p=>resolve({latitude:p.coords.latitude,longitude:p.coords.longitude,accuracy:p.coords.accuracy}),()=>resolve(null),{enableHighAccuracy:true,timeout:10000,maximumAge:30000})})}

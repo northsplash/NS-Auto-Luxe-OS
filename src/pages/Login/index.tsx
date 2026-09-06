@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { signIn, signUp } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
@@ -11,6 +11,10 @@ const SITE_URL=(import.meta.env.VITE_SITE_URL||'https://www.northsplash.com').re
 
 export default function Login() {
   const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const notice = typeof (location.state as { notice?: string } | null)?.notice === 'string'
+    ? (location.state as { notice: string }).notice
+    : '';
   const [mode, setMode] = useState<'signin' | 'signup'>(() => searchParams.get('mode') === 'signup' ? 'signup' : 'signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -135,6 +139,7 @@ export default function Login() {
           <Link to="/forgot-password">Forgot password?</Link>
         )}
 
+        {notice && <div className="auth-notice">{notice}</div>}
         {error && <div className="auth-error">{error}</div>}
 
         <button type="submit" className="btn-primary btn-full btn-lg" disabled={loading} aria-busy={loading}>

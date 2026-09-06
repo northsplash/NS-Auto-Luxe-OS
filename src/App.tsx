@@ -29,11 +29,8 @@ function WorkspaceCrashScreen({ message, onRetry }: { message: string; onRetry: 
       <div className="route-error-card-v27">
         <span className="eyebrow">North Splash Auto Luxe</span>
         <img className="auth-brand-logo" src={BRAND_LOGO} alt="North Splash Auto Luxe" />
-        <h2>This screen could not load</h2>
-        <p>
-          The rest of the company is still here. Try this screen again, open the
-          demo OS, or sign in.
-        </p>
+        <h2>This screen stopped</h2>
+        <p>Try again. The rest of the company is still here.</p>
         {message && <p className="empty-text">{message}</p>}
         <div className="route-error-actions-v27">
           <button type="button" className="btn-primary" onClick={onRetry}>

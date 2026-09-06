@@ -34,6 +34,7 @@ import { emptyEmployeeDraft, type EmployeeDraft } from '@/lib/rolePresets';
 import { seedHireOnboarding } from '@/lib/onboarding';
 import { ensureOwnerFieldEmployee } from '@/lib/ownerFieldMode';
 import { employeeCanD2D, employeeCanDetail } from '@/lib/workCapabilities';
+import { readOwnerHomeCache, writeOwnerHomeCache } from '@/lib/ownerHomeCache';
 import WorkspaceHero from '@/components/WorkspaceHero';
 import ClientPhotosSection from '@/components/ClientPhotosSection';
 import WorkspaceGate from '@/components/WorkspaceGate';
@@ -189,6 +190,14 @@ const [availabilityForm, setAvailabilityForm] = useState({
       setDataLoading(false);
       return;
     }
+    const cached = readOwnerHomeCache();
+    if (cached) {
+      if (cached.appointments.length) setAppointments(cached.appointments);
+      if (cached.employees.length) setEmployees(cached.employees);
+      if (cached.customers.length) setCustomers(cached.customers);
+      if (cached.payments.length) setPayments(cached.payments);
+      setDataLoading(false);
+    }
     (async () => {
       try {
       const since = new Date(Date.now() - 45 * 86400000).toISOString();
@@ -244,6 +253,12 @@ const [availabilityForm, setAvailabilityForm] = useState({
       }
       setEmployees(employeeRows);
       setAvailability(avail.data ?? []);
+      writeOwnerHomeCache({
+        appointments: safeAppointments as Appointment[],
+        employees: employeeRows,
+        customers: (custs.data ?? []) as Profile[],
+        payments: (pays.data ?? []) as Payment[],
+      });
       } catch (err) {
         console.warn('Owner workspace load failed', err);
       } finally {
@@ -251,6 +266,17 @@ const [availabilityForm, setAvailabilityForm] = useState({
       }
     })();
   }, [user, profile, hasWorkspaceAccess]);
+
+  useEffect(() => {
+    if (!hasWorkspaceAccess) return;
+    const timer = window.setTimeout(() => {
+      void import('./BusinessSuite');
+      void import('./EnterpriseSuite');
+      void import('./OwnerProfitTracker');
+      void import('./OwnerGrowthPlanner');
+    }, 700);
+    return () => window.clearTimeout(timer);
+  }, [hasWorkspaceAccess]);
 
   useEffect(() => {
     if (!hasWorkspaceAccess || tab !== 'visitors' || visits.length) return;

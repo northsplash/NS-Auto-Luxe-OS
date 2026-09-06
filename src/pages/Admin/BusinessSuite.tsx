@@ -11,6 +11,7 @@ import type {
 } from '@/lib/supabase';
 import { money, prettyLabel, RECRUITING_STAGES } from '@/lib/data';
 import { seedHireOnboarding } from '@/lib/onboarding';
+import { hireInviteMessage, inviteEmployeeLogin, portalRoleFromPosition } from '@/lib/inviteHire';
 import EmployeeAvatar from '@/components/EmployeeAvatar';
 import CompensationRuleBuilder from '@/components/CompensationRuleBuilder';
 import { compensationSummary, estimateCustomRulePay } from '@/lib/compensation';
@@ -261,6 +262,13 @@ export default function BusinessSuite({ section, employees, setEmployees, comple
       try { await seedHireOnboarding(data, candidate.position); } catch (err) { console.warn('Onboarding seed skipped', err); }
       setEmployees(p => [data, ...p]);
       onHired?.(data);
+      const portal_role = portalRoleFromPosition(candidate.position || data.role);
+      if (candidate.email) {
+        const { data: invite, error: inviteErr } = await inviteEmployeeLogin(data.id, portal_role);
+        alert(hireInviteMessage(data.name, candidate.email, portal_role, invite, inviteErr));
+      } else {
+        alert(hireInviteMessage(data.name, null, portal_role, null, null));
+      }
     }
     await updateCandidateStage(candidate.id, 'employed');
   };

@@ -343,8 +343,8 @@ function OwnerRevenueChart({days}:{days:{label:string;rev:number}[]}){
 function MiniAvatar({name}:{name:string}){const initials=String(name||'').split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase()||'NS';return <span className="v20-mini-avatar">{initials}</span>}
 
 function CommandCenter({employees,appointments,customers,payments,onNavigate,ownerName}:{employees:Employee[];appointments:Appointment[];customers:Profile[];payments:any[];onNavigate?:(view:string)=>void;ownerName?:string}){
- const [leadSnap,setLeadSnap]=useState({hot:0,neu:0,open:0});
- useEffect(()=>{let live=true;supabase.from('leads').select('id,status').limit(2500).then(({data})=>{if(!live)return;const rows=data??[];const closed=new Set(['sold','lost','not_interested','do_not_knock','existing_customer']);setLeadSnap({hot:rows.filter(l=>['interested','estimate','estimate_sent','appointment_set','follow_up'].includes(String(l.status||''))).length,neu:rows.filter(l=>l.status==='new'||l.status==='unworked').length,open:rows.filter(l=>!closed.has(String(l.status||''))).length})});return()=>{live=false}},[]);
+ const [leadSnap,setLeadSnap]=useState({hot:0,neu:0,open:0,knocked:0});
+ useEffect(()=>{let live=true;supabase.from('leads').select('id,status,last_contacted_at').limit(2500).then(({data})=>{if(!live)return;const rows=data??[];const closed=new Set(['sold','lost','not_interested','do_not_knock','existing_customer']);setLeadSnap({hot:rows.filter(l=>['interested','estimate','estimate_sent','appointment_set','follow_up'].includes(String(l.status||''))).length,neu:rows.filter(l=>l.status==='new'||l.status==='unworked').length,open:rows.filter(l=>!closed.has(String(l.status||''))).length,knocked:rows.filter(l=>sameLocalDay((l as {last_contacted_at?:string}).last_contacted_at)).length})});return()=>{live=false}},[]);
  const now=Date.now();
  const yesterday=new Date();yesterday.setDate(yesterday.getDate()-1);
  const jobs=appointments.filter(a=>sameLocalDay(a.scheduled_at)&&a.status!=='cancelled').sort((a,b)=>+new Date(a.scheduled_at||0)-+new Date(b.scheduled_at||0));
@@ -378,6 +378,20 @@ function CommandCenter({employees,appointments,customers,payments,onNavigate,own
   pending?{n:pending,title:'Pending bookings',sub:'Awaiting confirmation',view:'appointments',hot:false}:null,
   qc?{n:qc,title:'QC queue',sub:'Jobs waiting for quality review',view:'dispatch',hot:false}:null,
  ].filter(Boolean) as {n:number;title:string;sub:string;view:string;hot:boolean}[];
+ const fieldLoop=[
+  {key:'knock',n:leadSnap.knocked,label:'Knock',sub:'Contacted today',view:'leads'},
+  {key:'book',n:pending,label:'Book',sub:'Waiting confirm',view:'appointments'},
+  {key:'assign',n:unassigned,label:'Assign',sub:'Need a tech',view:'dispatch'},
+  {key:'run',n:inField,label:'Run',sub:'On the road',view:'dispatch'},
+  {key:'collect',n:unpaid.length,label:'Collect',sub:'Still unpaid',view:'payments'},
+ ];
+ const nextMoves=[
+  !activeTeam.length?{view:'employees',title:'Invite a technician',sub:'No crew on the board yet. Hire so jobs can be assigned.'}:null,
+  !appointments.length?{view:'appointments',title:'Book the first job',sub:'Nothing on the calendar. Book here or send a customer to the portal.'}:null,
+  {view:'leads',title:'Open D2D field',sub:'Knock, book, and the job lands on Dispatch.'},
+  {view:'dispatch',title:unassigned?`Assign ${unassigned} job${unassigned===1?'':'s'}`:'Assign work',sub:unassigned?'Booked and waiting on a tech.':'Put a technician on the next stop.'},
+  unpaid.length?{view:'payments',title:`Collect ${unpaid.length}`,sub:'Finished work still unpaid.'}:null,
+ ].filter(Boolean) as {view:string;title:string;sub:string}[];
  const teamRows=[...activeTeam].sort((a,b)=>{
   const ao=packetOpen(a)?0:1;
   const bo=packetOpen(b)?0:1;
@@ -389,7 +403,7 @@ function CommandCenter({employees,appointments,customers,payments,onNavigate,own
      <div>
        <span className="eyebrow">OWNER / COMMAND CENTER</span>
        <h2>{greeting}, <em>{name}</em></h2>
-       <p>Exceptions first. Then the numbers. Then the run.</p>
+       <p>Knock, book, assign, run, collect — then the numbers.</p>
      </div>
      <div className="nsos-quick">
        <button type="button" onClick={()=>{try{sessionStorage.setItem('ns-compose-lead','1')}catch{} go('leads')}}><Target size={16}/>New Lead</button>
@@ -399,6 +413,7 @@ function CommandCenter({employees,appointments,customers,payments,onNavigate,own
      </div>
    </div>
    <nav className="nsos-owner-jump" aria-label="Jump to owner sections">
+     <a href="#owner-field-loop">Field loop</a>
      <a href="#owner-exceptions">Needs you</a>
      <a href="#owner-schedule">Today</a>
      <a href="#owner-revenue">Revenue</a>
@@ -406,8 +421,14 @@ function CommandCenter({employees,appointments,customers,payments,onNavigate,own
      <button type="button" onClick={()=>go('schedule')}>Open calendar</button>
      <button type="button" onClick={()=>go('employees')}>Open team</button>
    </nav>
+   <div className="ns-field-loop" id="owner-field-loop" aria-label="Field loop">
+     {fieldLoop.map((step,i)=><button type="button" key={step.key} className={step.n?'hot':''} onClick={()=>go(step.view)}><em>{step.n}</em><span><b>{step.label}</b><small>{step.sub}</small></span>{i<fieldLoop.length-1&&<i className="ns-field-loop-arrow" aria-hidden/>}</button>)}
+   </div>
    <div className="nsos-alerts" id="owner-exceptions">
-     {exceptions.length===0&&<div className="ns-empty">Nothing needs you right now. The board is clean.</div>}
+     {exceptions.length===0&&<div className="ns-next-actions">
+       <p className="ns-next-lead">The board is quiet. Pick a next move from live company data.</p>
+       {nextMoves.map(item=><button type="button" className="nsos-alert" key={item.title} onClick={()=>go(item.view)}><span><b>{item.title}</b><small>{item.sub}</small></span><ChevronRight size={16}/></button>)}
+     </div>}
      {exceptions.map(item=><button className={`nsos-alert ${item.hot?'hot':''}`} key={item.title} onClick={()=>go(item.view)}><em>{item.n}</em><span><b>{item.title}</b><small>{item.sub}</small></span><ChevronRight size={16}/></button>)}
    </div>
    <div className="owner-kpis-v17">
@@ -423,12 +444,12 @@ function CommandCenter({employees,appointments,customers,payments,onNavigate,own
      <div><Clock3/><span><b>{next?time(next.scheduled_at):'—'}</b><small>{next?`${next.service_name} · ${next.customer_name||next.service_address||'Customer'}`:'No next job'}</small></span></div>
    </section>
    <div className="owner-command-grid-v17">
-    <section id="owner-schedule" className="phase-panel owner-schedule-v17"><div className="phase-panel-head"><div><span className="eyebrow">TODAY'S SCHEDULE</span><h3>{jobs.length} jobs</h3></div><button className="btn-outline btn-sm" onClick={()=>go('schedule')}>View all</button></div>{jobs.slice(0,6).map(j=><button className="owner-job-v17" key={j.id} onClick={()=>go('dispatch')}><time>{time(j.scheduled_at)}</time><span><b>{j.customer_name||j.service_address||'Customer'}</b><small>{j.vehicle_info||'Vehicle not added'}</small></span><span><b>{j.service_name}</b><small>{money(Number(j.price||0))}</small></span><span><small>{j.assigned_employee_id?employees.find(e=>e.id===j.assigned_employee_id)?.name||'Assigned':'Unassigned'}</small><b className={`status-badge badge-${j.status==='completed'?'green':j.status==='cancelled'?'red':'blue'}`}>{humanStatus(j.status)}</b></span></button>)}{!jobs.length&&<div className="ns-empty">No appointments today. Your next scheduled job will appear here.</div>}</section>
+    <section id="owner-schedule" className="phase-panel owner-schedule-v17"><div className="phase-panel-head"><div><span className="eyebrow">TODAY'S SCHEDULE</span><h3>{jobs.length} jobs</h3></div><button className="btn-outline btn-sm" onClick={()=>go('schedule')}>View all</button></div>{jobs.slice(0,6).map(j=><button className="owner-job-v17" key={j.id} onClick={()=>go('dispatch')}><time>{time(j.scheduled_at)}</time><span><b>{j.customer_name||j.service_address||'Customer'}</b><small>{j.vehicle_info||'Vehicle not added'}</small></span><span><b>{j.service_name}</b><small>{money(Number(j.price||0))}</small></span><span><small>{j.assigned_employee_id?employees.find(e=>e.id===j.assigned_employee_id)?.name||'Assigned':'Unassigned'}</small><b className={`status-badge badge-${j.status==='completed'?'green':j.status==='cancelled'?'red':'blue'}`}>{humanStatus(j.status)}</b></span></button>)}{!jobs.length&&<div className="ns-empty"><strong>No appointments today</strong><p>Book a job or open D2D so the first visit lands here.</p><div className="ns-empty-actions"><button type="button" className="btn-primary" onClick={()=>go('appointments')}>Book</button><button type="button" className="btn-outline" onClick={()=>go('leads')}>Open D2D</button></div></div>}</section>
     <section id="owner-revenue" className="phase-panel owner-revenue-v17"><div className="phase-panel-head"><div><span className="eyebrow">COLLECTED</span><h3>{money(collected)}</h3></div><small>Settled payments on the board</small></div><OwnerRevenueChart days={days}/><div className="owner-mini-metrics"><div><small>Today</small><b>{money(todayCollected)}</b></div><div><small>Avg ticket</small><b>{money(avgTicket)}</b></div><div><small>Days shown</small><b>7</b></div></div></section>
    </div>
    <div className="owner-bottom-v17 v20-owner-bottom">
      <section id="owner-pipeline" className="phase-panel v20-pipeline-panel"><div className="phase-panel-head"><div><span className="eyebrow">SALES PIPELINE</span><h3>Booking flow</h3></div></div><div className="v20-stage-flow"><div><span>D2D</span><b>{d2d||leadSnap.open}</b></div><i/><div><span>Pending</span><b>{pending}</b></div><i/><div><span>Assigned</span><b>{assigned}</b></div><i/><div><span>Completed</span><b>{completedToday.length}</b></div></div><button className="btn-outline btn-sm" style={{marginTop:14}} onClick={()=>go('leads')}>Open pipeline</button></section>
-     <section id="owner-team" className="phase-panel v20-team-panel"><div className="phase-panel-head"><div><span className="eyebrow">TEAM STATUS</span><h3>{activeTeam.length} active</h3></div><button className="btn-outline btn-sm" onClick={()=>go('employees')}>Directory</button></div><div className="v20-team-list">{teamRows.map(e=><button type="button" key={e.id} onClick={()=>go('employees')}><EmployeeAvatar employee={e} size="sm" className="v23-team-avatar"/><span><b>{e.name}</b><small>{packetOpen(e)?'Onboarding packet':humanStatus(e.role)}</small></span><i className={packetOpen(e)?'packet':e.status==='active'?'online':''}/></button>)}{!activeTeam.length&&<div className="v20-dark-empty">No active employees yet.</div>}</div></section>
+     <section id="owner-team" className="phase-panel v20-team-panel"><div className="phase-panel-head"><div><span className="eyebrow">TEAM STATUS</span><h3>{activeTeam.length} active</h3></div><button className="btn-outline btn-sm" onClick={()=>go('employees')}>Directory</button></div><div className="v20-team-list">{teamRows.map(e=><button type="button" key={e.id} onClick={()=>go('employees')}><EmployeeAvatar employee={e} size="sm" className="v23-team-avatar"/><span><b>{e.name}</b><small>{packetOpen(e)?'Onboarding packet':humanStatus(e.role)}</small></span><i className={packetOpen(e)?'packet':e.status==='active'?'online':''}/></button>)}{!activeTeam.length&&<div className="v20-dark-empty">No active employees yet. Invite a technician from People.</div>}</div></section>
      <section className="phase-panel v20-health-panel"><div className="phase-panel-head"><div><span className="eyebrow">BUSINESS HEALTH</span><h3>On the board</h3></div></div><div className="owner-summary-cells nsos-health-cells"><div><b>{money(collected)}</b><small>Collected</small></div><div><b>{inField}</b><small>In the field</small></div><div><b>{money(avgTicket)}</b><small>Avg ticket</small></div><div><b>{unpaid.length}</b><small>Unpaid</small></div></div></section>
    </div>
  </div>;

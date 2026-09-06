@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import AuthShell from '@/components/AuthShell';
 import { BRAND_LOGO } from '@/lib/brand';
+import { portalPath } from '@/lib/permissions';
 
 export default function ResetPassword() {
   const [password, setPassword] = useState('');
@@ -33,7 +34,24 @@ export default function ResetPassword() {
       return;
     }
 
-    navigate('/login');
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('portal_role, role, is_active')
+        .eq('id', session.user.id)
+        .maybeSingle();
+      if (profile?.is_active === false) {
+        navigate('/login', { state: { notice: 'Password saved. This account is disabled — ask an owner to restore it.' } });
+        return;
+      }
+      const destination = profile?.portal_role === 'owner'
+        ? '/owner'
+        : profile?.role === 'admin' ? '/admin' : portalPath(profile?.portal_role);
+      navigate(destination);
+    } else {
+      navigate('/login', { state: { notice: 'Password saved. Sign in to open your portal.' } });
+    }
   };
 
   return (

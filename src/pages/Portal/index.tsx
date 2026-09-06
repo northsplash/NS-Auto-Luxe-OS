@@ -103,6 +103,7 @@ const [bookTime, setBookTime] = useState('');
 const [availableTimes, setAvailableTimes] = useState<string[]>([]);
 const [timesLoading, setTimesLoading] = useState(false);
   const [bookDone, setBookDone] = useState(false);
+  const [lastBook, setLastBook] = useState<{ name: string; when: string; price: number; addOns: string } | null>(null);
   const [subscribeBusy, setSubscribeBusy] = useState(false);
   const [subscribeNotice, setSubscribeNotice] = useState('');
 
@@ -274,6 +275,9 @@ const [timesLoading, setTimesLoading] = useState(false);
           price,
           notes: bookNotes,
           status: 'pending',
+          source_channel: 'portal',
+          dispatch_status: 'unassigned',
+          field_status: 'scheduled',
         })
         .select()
         .single();
@@ -310,6 +314,13 @@ const [timesLoading, setTimesLoading] = useState(false);
       }
 
       await refreshPortal();
+      const when = appointment.scheduled_at ? new Date(appointment.scheduled_at) : new Date(`${bookDate}T${bookTime}:00`);
+      setLastBook({
+        name: bookedPkg.name,
+        when: when.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }),
+        price,
+        addOns: bookAddOns.map(i => ADD_ONS[i][0]).join(', '),
+      });
       setBookDone(true);
     } catch (error) {
       console.error('Booking error:', error);
@@ -511,9 +522,9 @@ const [timesLoading, setTimesLoading] = useState(false);
                     </button>
                   </div>
                 ) : (
-                  <div className="empty-state">
+                  <div className="empty-state ns-empty">
                     <Sparkles size={32} />
-                    <p>No upcoming appointments. Pick a self and we will confirm the window.</p>
+                    <p>No upcoming visits. Pick Exterior, Interior, or Full — then Essential, Signature, or Elite.</p>
                     <button className="btn-primary" onClick={openBook}>Book a self</button>
                   </div>
                 )}
@@ -536,7 +547,7 @@ const [timesLoading, setTimesLoading] = useState(false);
                     <button className="btn-outline" onClick={() => setTab('subscription')}>Manage <ChevronRight size={14} /></button>
                   </div>
                 ) : (
-                  <div className="empty-state">
+                  <div className="empty-state ns-empty">
                     <Star size={32} />
                     <p>No active membership. Monthly plans keep Signature visits on the calendar.</p>
                     <button className="btn-outline" onClick={() => setTab('subscription')}>Explore Plans</button>
@@ -560,10 +571,10 @@ const [timesLoading, setTimesLoading] = useState(false);
               </PortalPageHead>
 
               {appointments.length === 0 ? (
-                <div className="empty-page">
+                <div className="empty-page ns-empty">
                   <Calendar size={48} />
                   <h3>No appointments yet</h3>
-                  <p>Choose Exterior, Interior, or Full vehicle — then Essential, Signature, or Elite.</p>
+                  <p>Choose Exterior, Interior, or Full vehicle — then Essential, Signature, or Elite. Dispatch picks up the request from here.</p>
                   <button className="btn-primary" onClick={openBook}>Book a self</button>
                 </div>
               ) : (
@@ -772,11 +783,18 @@ const [timesLoading, setTimesLoading] = useState(false);
               <button onClick={() => setShowBook(false)}><X size={20} /></button>
             </div>
             {bookDone ? (
-              <div className="modal-success">
+              <div className="modal-success portal-book-confirm">
                 <CheckCircle size={48} />
-                <h4>Appointment Requested!</h4>
-                <p>We'll be in touch to confirm your booking.</p>
-                <button type="button" className="btn-primary" onClick={() => setShowBook(false)}>Done</button>
+                <span className="eyebrow">Requested</span>
+                <h4>You're on the board</h4>
+                <p>We'll confirm {lastBook?.name || 'this self'}. Dispatch will assign a technician.</p>
+                <dl className="portal-book-facts">
+                  <div><dt>Self</dt><dd>{lastBook?.name || bookedPkg.name}</dd></div>
+                  <div><dt>When</dt><dd>{lastBook?.when || '—'}</dd></div>
+                  <div><dt>Price</dt><dd>{money(lastBook?.price || 0)}</dd></div>
+                  {lastBook?.addOns ? <div><dt>Add-ons</dt><dd>{lastBook.addOns}</dd></div> : null}
+                </dl>
+                <button type="button" className="btn-primary" onClick={() => { setShowBook(false); setBookDone(false); }}>Done</button>
               </div>
             ) : (
               <form className="modal-form" onSubmit={handleBookSubmit}>
