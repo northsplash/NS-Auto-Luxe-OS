@@ -3145,28 +3145,55 @@
   }
   .portal-layout.nsos-cream .os-secondary-nav,
   .portal-layout.nsos-cream .os-desktop-subnav { display: none !important; }
+  .portal-layout.nsos-cream .os-phone-subnav {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .portal-layout.nsos-cream .os-phone-subnav button {
+    color: #6f675e !important;
+    -webkit-text-fill-color: #6f675e !important;
+  }
+  .portal-layout.nsos-cream .os-phone-subnav button.active {
+    background: #1c1814 !important;
+    color: #f6f1e8 !important;
+    -webkit-text-fill-color: #f6f1e8 !important;
+    border-color: #1c1814 !important;
+  }
+  .portal-layout.nsos-cream .nsos-owner-jump,
+  .portal-layout.nsos-cream .owner-jump-nav-v29 {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    scrollbar-width: none;
+  }
   .portal-layout.nsos-cream .os-mobile-bottom-nav.mobile-app-nav-v25,
   .portal-layout.nsos-cream.nsos-admin-preview .os-mobile-bottom-nav.mobile-app-nav-v25 {
     display: grid !important;
   }
   .portal-layout.nsos-cream .message-info-rail { display: none !important; }
-  .portal-layout.nsos-cream .team-messaging.with-info,
-  .portal-layout.nsos-cream .messaging-v6.with-info {
-    grid-template-columns: minmax(200px, 240px) minmax(0, 1fr) !important;
-  }
-}
-@media (min-width: 721px) and (max-width: 900px) {
   .portal-layout.nsos-cream .team-messaging,
+  .portal-layout.nsos-cream .team-messaging.thread-open,
   .portal-layout.nsos-cream .team-messaging.with-info,
+  .portal-layout.nsos-cream .team-messaging.messaging-os,
+  .portal-layout.nsos-cream .team-messaging.messaging-v6,
   .portal-layout.nsos-cream .messaging-v6 {
-    grid-template-columns: 1fr !important;
-    grid-template-rows: auto minmax(0, 1fr) !important;
+    display: grid !important;
+    grid-template-columns: minmax(220px, 34%) minmax(0, 1fr) !important;
+    grid-template-rows: minmax(0, 1fr) !important;
   }
   .portal-layout.nsos-cream .message-channel-rail {
-    max-height: 180px !important;
-    border-right: 0 !important;
-    border-bottom: 1px solid #eadfd3 !important;
+    display: flex !important;
+    max-height: none !important;
+    border-bottom: 0 !important;
   }
+  .portal-layout.nsos-cream .message-thread {
+    display: flex !important;
+    min-width: 0 !important;
+  }
+  .portal-layout.nsos-cream .message-mobile-back { display: none !important; }
+}
+@media (min-width: 721px) and (max-width: 900px) {
   .portal-layout.nsos-cream .owner-command-grid-v17,
   .portal-layout.nsos-cream .crm-command,
   .portal-layout.nsos-cream .training-admin-layout,

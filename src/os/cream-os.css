@@ -794,7 +794,8 @@ html.nsos-active #root {
   }
   .os-phone-subnav button.active {
     background: #1c1814;
-    color: #f6f1e8;
+    color: #f6f1e8 !important;
+    -webkit-text-fill-color: #f6f1e8 !important;
     border-color: #1c1814;
   }
   .nsos-cream .os-mobile-bottom-nav,
@@ -1076,13 +1077,20 @@ html.nsos-active #root {
   }
   .os-phone-subnav button.active {
     background: #1c1814;
-    color: #f6f1e8;
+    color: #f6f1e8 !important;
+    -webkit-text-fill-color: #f6f1e8 !important;
     border-color: #1c1814;
   }
   .os-mode-banner {
     padding: 8px 12px;
     align-items: flex-start;
   }
+  .nsos-seg { grid-template-columns: 1fr 1fr 1fr auto; }
+  .nsos-seg.message-rail-seg { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .nsos-pitch-slots { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 720px) {
   .nsos-cream .team-messaging.messaging-os,
   .nsos-cream .team-messaging.messaging-os.with-info,
   .nsos-cream .team-messaging.messaging-os:not(.with-info) {
@@ -1093,9 +1101,6 @@ html.nsos-active #root {
   .nsos-cream .message-thread { display: none !important; }
   .nsos-cream .team-messaging.thread-open .message-channel-rail { display: none !important; }
   .nsos-cream .team-messaging.thread-open .message-thread { display: flex !important; }
-  .nsos-seg { grid-template-columns: 1fr 1fr 1fr auto; }
-  .nsos-seg.message-rail-seg { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .nsos-pitch-slots { grid-template-columns: 1fr 1fr; }
 }
 
 /* Skip, focus, onboarding, hiring, calendar, owner jump, SalesRabbit doors */
