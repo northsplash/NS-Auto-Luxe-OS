@@ -573,8 +573,8 @@ html.nsos-active #root {
   display: flex;
   align-items: flex-end;
   gap: 10px;
-  height: 220px;
-  padding-top: 8px;
+  height: 168px;
+  padding-top: 4px;
 }
 .nsos-cream .cashflow-bar-wrap {
   flex: 1;
@@ -600,7 +600,7 @@ html.nsos-active #root {
   background: linear-gradient(180deg, #d4af37, #b8893a) !important;
   min-height: 8px;
 }
-.nsos-cream .cashflow-amount, .nsos-cream .cashflow-label { color: #6f675e !important; font-size: 11px; }
+.nsos-cream .cashflow-amount, .nsos-cream .cashflow-label { color: #6f675e !important; font-size: 10px; font-variant-numeric: tabular-nums; }
 .nsos-cream .nsos-team-overview {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
