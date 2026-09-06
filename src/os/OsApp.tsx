@@ -155,10 +155,27 @@ const TAB_SHORT: Record<OsTab, string> = {
 };
 
 const LEGACY: Record<string, OsTab> = {
-  home: 'command_center', dashboard: 'command_center', chat: 'messages', people: 'employees', schedule: 'staff_schedule',
-  calendar: 'appointments', d2d: 'sales', pipeline: 'leads', jobs: 'appointments', hire: 'recruiting',
-  comms: 'communications', settings: 'pay_settings', more: 'command_center',
+  home: 'command_center',
+  command: 'command_center',
+  chat: 'messages',
+  people: 'employees',
+  calendar: 'appointments',
+  d2d: 'sales',
+  map: 'sales',
+  pipeline: 'leads',
+  hire: 'recruiting',
+  comms: 'communications',
+  settings: 'pay_settings',
+  more: 'command_center',
 };
+
+function resolveTab(raw?: string | null): OsTab {
+  const id = String(raw || '').trim();
+  if (id && id in PAGE) return id as OsTab;
+  const mapped = LEGACY[id];
+  if (mapped && mapped in PAGE) return mapped;
+  return 'command_center';
+}
 
 function nav(id: OsTab) {
   return NAV.find((n) => n.id === id);
@@ -210,9 +227,9 @@ function OsShell() {
   const [tab, setTab] = useState<OsTab>(() => {
     try {
       const fromUrl = new URLSearchParams(window.location.search).get('tab');
-      if (fromUrl) return (LEGACY[fromUrl] || fromUrl) as OsTab;
+      if (fromUrl) return resolveTab(fromUrl);
       const raw = sessionStorage.getItem('ns-os-tab') || sessionStorage.getItem('ns-os-view') || 'command_center';
-      return (LEGACY[raw] || raw || 'command_center') as OsTab;
+      return resolveTab(raw);
     } catch { return 'command_center'; }
   });
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -240,6 +257,12 @@ function OsShell() {
 
   useEffect(() => {
     try { sessionStorage.setItem('ns-os-tab', tab); } catch { /* ignore */ }
+    try {
+      const url = new URL(window.location.href);
+      if (tab === 'command_center') url.searchParams.delete('tab');
+      else url.searchParams.set('tab', tab);
+      window.history.replaceState({}, '', url);
+    } catch { /* ignore */ }
     const ws = WORKSPACES.find((w) => w.items.includes(tab));
     if (!ws) return;
     setLastByWorkspace((prev) => {
@@ -269,7 +292,7 @@ function OsShell() {
   }, []);
 
   const go = (id: string) => {
-    const next = (LEGACY[id] || id) as OsTab;
+    const next = resolveTab(id);
     setTab(next);
     setSidebarOpen(false);
     setMoreOpen(false);

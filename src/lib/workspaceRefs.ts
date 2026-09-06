@@ -322,11 +322,12 @@ export const WORKSPACE_REFS: Record<
   },
 }
 
-export function workspaceRef(id: string) {
+export function workspaceRef(id?: string | null) {
+  const key = String(id || '').trim()
   return (
-    WORKSPACE_REFS[id] || {
+    WORKSPACE_REFS[key] || {
       kicker: 'Workspace',
-      title: id.replace(/_/g, ' '),
+      title: key ? key.replace(/_/g, ' ') : 'Home',
       modeled: 'NS Auto Luxe',
       lead: 'Live company data.',
     }

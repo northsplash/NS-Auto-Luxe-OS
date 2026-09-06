@@ -178,8 +178,12 @@ const [availabilityForm, setAvailabilityForm] = useState({
   },[]);
 
   useEffect(() => {
-    if (!hasWorkspaceAccess) return;
+    if (!hasWorkspaceAccess) {
+      setDataLoading(false);
+      return;
+    }
     (async () => {
+      try {
       const since = new Date(Date.now() - 45 * 86400000).toISOString();
       const [custs, apts, openApts, pays, emps, avail] = await Promise.all([
   supabase
@@ -233,7 +237,11 @@ const [availabilityForm, setAvailabilityForm] = useState({
       }
       setEmployees(employeeRows);
       setAvailability(avail.data ?? []);
-      setDataLoading(false);
+      } catch (err) {
+        console.warn('Owner workspace load failed', err);
+      } finally {
+        setDataLoading(false);
+      }
     })();
   }, [user, profile, hasWorkspaceAccess]);
 

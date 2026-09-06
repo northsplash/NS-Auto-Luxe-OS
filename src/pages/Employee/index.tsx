@@ -34,7 +34,7 @@ export default function EmployeePortal(){
   const [packetOpened,setPacketOpened]=useState(false);
 
   useEffect(()=>{if(!loading&&(!user||!['employee','manager','d2d','owner'].includes(profile?.portal_role||'')))navigate('/portal')},[user,profile,loading,navigate]);
-  const load=async()=>{if(!user)return;setBusy(true);let {data:emp}=await supabase.from('employees').select('*').eq('user_id',user.id).maybeSingle();if(!emp&&profile?.portal_role==='owner')emp=await ensureOwnerFieldEmployee(user.id,profile?.full_name||user.email?.split('@')[0]||'North Splash Owner',user.email);setEmployee(emp);if(!emp){setBusy(false);return}const [j,s,t,b,tk,o,n,c]=await Promise.all([
+  const load=async()=>{if(!user)return;setBusy(true);try{let {data:emp}=await supabase.from('employees').select('*').eq('user_id',user.id).maybeSingle();if(!emp&&profile?.portal_role==='owner')emp=await ensureOwnerFieldEmployee(user.id,profile?.full_name||user.email?.split('@')[0]||'North Splash Owner',user.email);setEmployee(emp);if(!emp)return;const [j,s,t,b,tk,o,n,c]=await Promise.all([
     supabase.from('appointments').select('*').or(`assigned_employee_id.eq.${emp.id},assigned_manager_id.eq.${emp.id}`).order('scheduled_at'),
     supabase.from('employee_shifts').select('*').eq('employee_id',emp.id).order('shift_date'),
     supabase.from('time_entries').select('*').eq('employee_id',emp.id).order('clock_in',{ascending:false}).limit(100),
@@ -43,7 +43,7 @@ export default function EmployeePortal(){
     supabase.from('time_off_requests').select('*').eq('employee_id',emp.id).order('created_at',{ascending:false}),
     supabase.from('business_notifications').select('*').or(`target_employee_id.eq.${emp.id},target_user_id.eq.${user.id},target_portal_role.eq.employee`).order('created_at',{ascending:false}).limit(30),
     supabase.from('commission_ledger').select('*').eq('employee_id',emp.id).order('earned_at',{ascending:false}),
-  ]);setJobs(j.data??[]);setShifts(s.data??[]);setTimes(t.data??[]);setBreaks(b.data??[]);setTasks(tk.data??[]);setOff(o.data??[]);setNotifications(n.data??[]);setCommissions(c.data??[]);setBusy(false)};useEffect(()=>{load()},[user]);
+  ]);setJobs(j.data??[]);setShifts(s.data??[]);setTimes(t.data??[]);setBreaks(b.data??[]);setTasks(tk.data??[]);setOff(o.data??[]);setNotifications(n.data??[]);setCommissions(c.data??[])}catch(err){console.warn('Detail workspace load failed',err)}finally{setBusy(false)}};useEffect(()=>{load()},[user]);
 
   useEffect(()=>{
     if(!employee)return;

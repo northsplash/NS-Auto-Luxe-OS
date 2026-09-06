@@ -44,17 +44,21 @@ export default function SalesPresentation({customerName,onClose,onSelectOffer,on
   const [vehicleIndex,setVehicleIndex]=useState(0);
   const [slotId,setSlotId]=useState(slots[0]?.id || '');
 
-  const servicePrice=PACKAGES[serviceIndex].price+VEHICLE_SIZES[vehicleIndex].extra;
+  const pkg=PACKAGES[serviceIndex]??PACKAGES[0];
+  const vehicle=VEHICLE_SIZES[vehicleIndex]??VEHICLE_SIZES[0];
+  const membership=MEMBERSHIPS[membershipIndex]??MEMBERSHIPS[0];
+  const currentSlide=slides[slide]??slides[0];
+  const servicePrice=pkg.price+vehicle.extra;
   const currentOffer:OfferSelection=offerType==='service'
-    ?{type:'service',name:PACKAGES[serviceIndex].name,amount:servicePrice,detail:`${VEHICLE_SIZES[vehicleIndex].name} · starting estimate`}
-    :{type:'membership',name:MEMBERSHIPS[membershipIndex].name,amount:MEMBERSHIPS[membershipIndex].price,detail:'monthly membership'};
+    ?{type:'service',name:pkg.name,amount:servicePrice,detail:`${vehicle.name} · starting estimate`}
+    :{type:'membership',name:membership.name,amount:membership.price,detail:'monthly membership'};
 
   const progress=((slide+1)/slides.length)*100;
   const greeting=customerName?.trim()?`For ${customerName.trim()}`:'Premium vehicle care, brought to you';
 
   const go=(next:number)=>{
     const clamped=Math.max(0,Math.min(slides.length-1,next));
-    if(clamped!==slide){setSlide(clamped);onEvent?.('slide_view',{slide:slides[clamped].id,index:clamped});}
+    if(clamped!==slide){setSlide(clamped);onEvent?.('slide_view',{slide:slides[clamped]?.id,index:clamped});}
   };
   const presentFullscreen=async()=>{
     onEvent?.('presentation_started',{source:'fullscreen'});
@@ -74,7 +78,7 @@ export default function SalesPresentation({customerName,onClose,onSelectOffer,on
   };
 
   const content=useMemo(()=>{
-    switch(slides[slide].id){
+    switch(currentSlide.id){
       case 'welcome': return <section className="sales-slide sales-slide-hero">
         <div className="sales-hero-copy"><span className="sales-kicker">NORTH SPLASH AUTO LUXE</span><p>{greeting}</p><h2>Your vehicle deserves more than a quick wash.</h2><p className="sales-lead">We bring premium detailing directly to your driveway, with a repeatable process built around convenience, careful vehicle care and a finish you can actually inspect.</p><div className="sales-hero-pills"><span><Home/>Mobile convenience</span><span><Sparkles/>Detail-focused care</span><span><ShieldCheck/>Professional process</span></div></div>
         <div className="sales-hero-mark"><div className="sales-monogram">NS</div><strong>AUTO LUXE</strong><span>PREMIUM DETAILING</span></div>
@@ -102,7 +106,7 @@ export default function SalesPresentation({customerName,onClose,onSelectOffer,on
       case 'close': return <section className="sales-slide sales-close-slide"><div className="sales-close-main"><span className="sales-kicker">READY WHEN YOU ARE</span><h2>What makes the most sense for your vehicle?</h2><p>We can start with a one-time detail or set up ongoing maintenance so you do not have to keep thinking about it.</p><div className="sales-close-options"><button type="button" onClick={()=>{setOfferType('service');setMode('quote')}}><Sparkles/><span><strong>One-Time Detail</strong><small>Reset the vehicle now</small></span><ChevronRight/></button><button type="button" className="primary" onClick={()=>{setOfferType('membership');setMode('quote')}}><Crown/><span><strong>Membership</strong><small>Keep it consistently maintained</small></span><ChevronRight/></button></div></div><div className="sales-close-card"><span>NORTH SPLASH AUTO LUXE</span><strong>Premium care.<br/>At your door.</strong><p>Choose your service with your North Splash representative.</p></div></section>;
       default:return null;
     }
-  },[slide,greeting,onEvent]);
+  },[currentSlide.id,greeting,onEvent]);
 
   return <div className={`${embedded?'sales-presentation-embedded':'sales-presentation-overlay'}`}>
     <div className="sales-presentation-shell">
@@ -116,7 +120,7 @@ export default function SalesPresentation({customerName,onClose,onSelectOffer,on
         <section className="sales-quote-builder"><div className="sales-slide-heading"><span className="sales-kicker">CUSTOMER QUOTE</span><h2>Build the offer in front of the customer.</h2><p>Select a one-time service or membership. This creates a sales estimate for the D2D lead; final pricing can still be adjusted based on condition and add-ons.</p></div><div className="sales-quote-toggle"><button type="button" className={offerType==='service'?'active':''} onClick={()=>setOfferType('service')}><Sparkles/>One-Time Service</button><button type="button" className={offerType==='membership'?'active':''} onClick={()=>setOfferType('membership')}><Crown/>Membership</button></div>
           {offerType==='service'?<div className="sales-quote-options"><label><span>Service</span><select value={serviceIndex} onChange={e=>setServiceIndex(Number(e.target.value))}>{PACKAGES.map((p,i)=><option value={i} key={p.name}>{p.name} — {money(p.price)}+</option>)}</select></label><label><span>Vehicle</span><select value={vehicleIndex} onChange={e=>setVehicleIndex(Number(e.target.value))}>{VEHICLE_SIZES.map((v,i)=><option value={i} key={v.name}>{v.name}{v.extra?` +${money(v.extra)}`:''}</option>)}</select></label></div>:<div className="sales-quote-plan-picker">{MEMBERSHIPS.map((m,i)=><button type="button" className={i===membershipIndex?'active':''} key={m.name} onClick={()=>setMembershipIndex(i)}><span>{m.name}</span><strong>{money(m.price)}<small>/mo</small></strong><em>{m.desc}</em></button>)}</div>}
         </section>
-        <aside className="sales-quote-summary"><span className="sales-kicker">TODAY'S RECOMMENDATION</span><h3>{currentOffer.name}</h3><strong>{money(currentOffer.amount)}<small>{currentOffer.type==='membership'?'/month':' estimated'}</small></strong><p>{currentOffer.detail}</p><div className="sales-quote-includes">{(currentOffer.type==='service'?PACKAGES[serviceIndex].features:MEMBERSHIPS[membershipIndex].features).slice(0,6).map(f=><span key={f}><Check/>{f}</span>)}</div><button type="button" className="sales-use-offer" onClick={chooseOffer}><Target/>{slots.length?'Pick a live time':'Use This Offer for Lead'}</button><button type="button" className="sales-back-presentation" onClick={()=>setMode('presentation')}><ArrowLeft/>Back to Presentation</button><small>Final service price may change for vehicle size, condition or add-ons. Membership enrollment terms are confirmed before purchase.</small></aside>
+        <aside className="sales-quote-summary"><span className="sales-kicker">TODAY'S RECOMMENDATION</span><h3>{currentOffer.name}</h3><strong>{money(currentOffer.amount)}<small>{currentOffer.type==='membership'?'/month':' estimated'}</small></strong><p>{currentOffer.detail}</p><div className="sales-quote-includes">{(currentOffer.type==='service'?pkg.features:membership.features).slice(0,6).map(f=><span key={f}><Check/>{f}</span>)}</div><button type="button" className="sales-use-offer" onClick={chooseOffer}><Target/>{slots.length?'Pick a live time':'Use This Offer for Lead'}</button><button type="button" className="sales-back-presentation" onClick={()=>setMode('presentation')}><ArrowLeft/>Back to Presentation</button><small>Final service price may change for vehicle size, condition or add-ons. Membership enrollment terms are confirmed before purchase.</small></aside>
       </div>}
       {mode==='book'&&<div className="sales-quote-mode sales-book-mode">
         <section className="sales-quote-builder">

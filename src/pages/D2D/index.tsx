@@ -87,9 +87,10 @@ export default function D2DPortal(){
   const load=async()=>{
     if(!user)return;
     setBusy(true);
+    try{
     const {data:emp}=await supabase.from('employees').select('*').eq('user_id',user.id).maybeSingle();
     setEmployee(emp);
-    if(!emp){setBusy(false);return;}
+    if(!emp)return;
     const [l,t,s,ti,g,r,a]=await Promise.all([
       supabase.from('leads').select('*').eq('assigned_employee_id',emp.id).order('created_at',{ascending:false}),
       supabase.from('lead_territories').select('*').eq('assigned_employee_id',emp.id).eq('status','active').order('priority',{ascending:false}),
@@ -109,7 +110,7 @@ export default function D2DPortal(){
       else {const cached=loadTerritoryDoors(ids);setDoors(cached)}
     }else setDoors([]);
     if(r.data?.id){const rs=await supabase.from('territory_route_stops').select('*').eq('route_id',r.data.id).order('stop_order');setRouteDoorIds((rs.data??[]).filter(x=>x.status!=='completed').map(x=>x.door_id));}
-    setBusy(false);
+    }catch(err){console.warn('D2D workspace load failed',err)}finally{setBusy(false)}
   };
   useEffect(()=>{load()},[user]);
   const [packetOpened,setPacketOpened]=useState(false);

@@ -704,7 +704,7 @@ function ArchivedPage({ onOpenJob }: { onOpenJob?: (id: string) => void }) {
       <Kpis items={[
         { label: 'Completed', value: String(done.length) },
         { label: 'Collected', value: money(done.filter((j) => j.payment === 'paid').reduce((s, j) => s + j.price, 0)) },
-        { label: 'Photos', value: String(done.reduce((s, j) => s + j.photos.length, 0)) },
+        { label: 'Photos', value: String(done.reduce((s, j) => s + (j.photos?.length || 0), 0)) },
         { label: 'History', value: String(os.jobs.length) },
       ]} />
       <div className="nsos-card">

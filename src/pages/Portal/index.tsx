@@ -9,7 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { signOut } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { Appointment, Payment, Subscription } from '@/lib/supabase';
-import { money, calcSavings, PACKAGES, ADD_ONS, VEHICLE_SIZES, MEMBERSHIPS } from '@/lib/data';
+import { money, calcSavings, PACKAGES, ADD_ONS, VEHICLE_SIZES, MEMBERSHIPS, prettyLabel } from '@/lib/data';
 import { sendCommunication } from '@/lib/communications';
 import EmployeeAvatar from '@/components/EmployeeAvatar';
 import WorkspaceGate from '@/components/WorkspaceGate';
@@ -17,7 +17,7 @@ import { BRAND_LOGO } from '@/lib/brand';
 
 type Tab = 'dashboard' | 'appointments' | 'subscription' | 'billing';
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status }: { status?: string | null }) {
   const colors: Record<string, string> = {
     pending: 'badge-yellow',
     confirmed: 'badge-blue',
@@ -27,7 +27,8 @@ function StatusBadge({ status }: { status: string }) {
     active: 'badge-green',
     paused: 'badge-yellow',
   };
-  return <span className={`status-badge ${colors[status] ?? 'badge-gray'}`}>{status.replace('_', ' ')}</span>;
+  const safe = status || 'unknown';
+  return <span className={`status-badge ${colors[safe] ?? 'badge-gray'}`}>{prettyLabel(safe)}</span>;
 }
 
 function AppointmentProgress({appointment,compact=false}:{appointment:Appointment;compact?:boolean}){
@@ -106,15 +107,20 @@ const [timesLoading, setTimesLoading] = useState(false);
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const [apts, pays, subs] = await Promise.all([
-        supabase.from('appointments').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
-        supabase.from('payments').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
-        supabase.from('subscriptions').select('*').eq('user_id', user.id).eq('status', 'active').maybeSingle(),
-      ]);
-      setAppointments(apts.data ?? []);
-      setPayments(pays.data ?? []);
-      setSubscription(subs.data ?? null);
-      setDataLoading(false);
+      try {
+        const [apts, pays, subs] = await Promise.all([
+          supabase.from('appointments').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
+          supabase.from('payments').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
+          supabase.from('subscriptions').select('*').eq('user_id', user.id).eq('status', 'active').maybeSingle(),
+        ]);
+        setAppointments((apts.data ?? []).map((a: Appointment) => ({ ...a, add_ons: Array.isArray(a.add_ons) ? a.add_ons : [] })));
+        setPayments(pays.data ?? []);
+        setSubscription(subs.data ?? null);
+      } catch (err) {
+        console.warn('Customer portal load failed', err);
+      } finally {
+        setDataLoading(false);
+      }
     })();
   }, [user]);
 
@@ -552,8 +558,8 @@ const [timesLoading, setTimesLoading] = useState(false);
                         <div className="apt-icon"><Car size={20} /></div>
                         <div className="apt-info">
                           <h4>{apt.service_name}</h4>
-                          {apt.add_ons.length > 0 && (
-                            <p className="apt-addons">+ {apt.add_ons.join(', ')}</p>
+                          {(apt.add_ons?.length ?? 0) > 0 && (
+                            <p className="apt-addons">+ {(apt.add_ons || []).join(', ')}</p>
                           )}
                           {apt.vehicle_info && <p className="apt-vehicle">{apt.vehicle_info}</p>}
                           {apt.scheduled_at && (
