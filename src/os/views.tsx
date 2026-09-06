@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
-  Bell, CalendarClock, CalendarDays, Check, ChevronRight, Clock3, CreditCard, DollarSign, GripVertical, MapPin, Navigation, Plus, Search, Send, Smartphone, Trash2, Users,
+  Bell, CalendarClock, CalendarDays, Check, ChevronRight, Clock3, CreditCard, DollarSign, GripVertical, MapPin, MessageCircle, Navigation, Plus, Search, Send, Smartphone, Target, Trash2, Users,
 } from 'lucide-react';
 import AddEmployeeForm from '@/components/AddEmployeeForm';
 import { channelLabel, COMM_GROUPS, COMM_VARIABLES, fillTemplate, SAMPLE_VARS } from '@/lib/communicationCatalog';
@@ -12,7 +12,8 @@ import {
 } from './demoData';
 import { useOs } from './osStore';
 
-export function Avatar({ initials, hue, size = 40 }: { initials: string; hue: string; size?: number }) {
+export function Avatar({ initials, hue, size = 40, photo }: { initials: string; hue: string; size?: number; photo?: string }) {
+  if (photo) return <img className="nsos-avatar" src={photo} alt="" style={{ width: size, height: size }} />;
   return <span className="nsos-avatar" style={{ width: size, height: size, background: hue, fontSize: size * 0.32 }}>{initials}</span>;
 }
 
@@ -22,10 +23,8 @@ function jobOpen(j: OsJob) {
 function jobUnassigned(j: OsJob) {
   return !j.detailer || j.detailer === 'Unassigned';
 }
-function jobBadge(status: JobStatus) {
-  if (status === 'completed') return 'green';
-  if (status === 'en_route' || status === 'arrived' || status === 'in_progress') return 'yellow';
-  return 'blue';
+function statusClass(status: JobStatus) {
+  return `status-badge st-${status}`;
 }
 function jobClock(time: string) {
   return time.includes('·') ? time.split('·')[1].trim() : time;
@@ -85,14 +84,16 @@ type OwnerDashProps = {
   onOpenTeam?: () => void;
   onOpenSchedule?: () => void;
   onOpenDispatch?: () => void;
+  onOpenMessages?: () => void;
 };
 
 export function OwnerDashboard({
-  onOpenJob, onOpenPayments, onOpenPipeline, onNewAppointment, onNewCustomer, onNewLead, onNewEmployee, onOpenTeam, onOpenSchedule, onOpenDispatch,
+  onOpenJob, onOpenPayments, onOpenPipeline, onNewAppointment, onNewCustomer, onNewLead, onNewEmployee, onOpenTeam, onOpenSchedule, onOpenDispatch, onOpenMessages,
 }: OwnerDashProps) {
-  const { jobs, payments, leads, employees, customers } = useOs();
+  const { jobs, payments, leads, employees } = useOs();
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+  const ownerName = employees.find((e) => e.role === 'owner')?.name.split(' ')[0] || 'Jordan';
   const today = jobs.filter((j) => j.time.includes('Today') && jobOpen(j));
   const scheduledRev = today.reduce((s, j) => s + j.price, 0);
   const collected = payments.filter((p) => p.status === 'succeeded').reduce((s, p) => s + p.amount, 0);
@@ -101,18 +102,19 @@ export function OwnerDashboard({
   const avgTicket = jobs.length ? Math.round(jobs.reduce((s, j) => s + j.price, 0) / jobs.length) : 0;
   const activeTeam = employees.filter((e) => e.status === 'active');
   const activeDetailers = employees.filter((e) => e.status === 'active' && e.role === 'detailer').length;
-  const unassigned = jobs.filter((j) => jobOpen(j) && jobUnassigned(j)).length;
+  const unassigned = jobs.filter((j) => jobOpen(j) && jobUnassigned(j));
+  const unpaid = jobs.filter((j) => j.payment === 'due' && j.status !== 'scheduled');
+  const hotLeads = leads.filter((l) => l.temp === 'hot' && l.status !== 'sold' && l.status !== 'dnk');
   const pending = jobs.filter((j) => j.status === 'scheduled').length;
-  const qc = jobs.filter((j) => j.status === 'in_progress').length;
   const next = today[0] || jobs.find(jobOpen);
   const d2d = leads.filter((l) => l.status !== 'dnk' && l.status !== 'sold').length;
   const assigned = jobs.filter((j) => jobOpen(j) && !jobUnassigned(j)).length;
-  const attention = [
-    ['Unassigned jobs', unassigned, 'Jobs need a technician', onOpenDispatch] as const,
-    ['Pending bookings', pending, 'Awaiting customer confirmation', onOpenSchedule] as const,
-    ['QC queue', qc, 'Jobs waiting for quality review', onOpenDispatch] as const,
-    ['Cancellations (30d)', 0, 'Review lost appointments', onOpenPayments] as const,
-  ];
+  const exceptions = [
+    unassigned.length ? { n: unassigned.length, title: 'Unassigned jobs', sub: 'Need a technician', go: onOpenDispatch, hot: true } : null,
+    unpaid.length ? { n: unpaid.length, title: 'Unpaid invoices', sub: 'Collect before the van leaves', go: onOpenPayments, hot: true } : null,
+    hotLeads.length ? { n: hotLeads.length, title: 'Hot leads', sub: 'Ready to book from the map', go: onOpenPipeline, hot: true } : null,
+    pending ? { n: pending, title: 'Pending bookings', sub: 'Awaiting confirmation', go: onOpenSchedule, hot: false } : null,
+  ].filter(Boolean) as { n: number; title: string; sub: string; go?: () => void; hot: boolean }[];
   const days = revenueDays.map((d) => ({ label: d.d, rev: d.v }));
 
   return (
@@ -120,21 +122,39 @@ export function OwnerDashboard({
       <div className="owner-command-head">
         <div>
           <span className="eyebrow">OWNER / COMMAND CENTER</span>
-          <h2>{greeting}, <em>North Splash</em></h2>
-          <p>Here’s what needs your attention today.</p>
+          <h2>{greeting}, <em>{ownerName}</em></h2>
+          <p>Exceptions first. Then the numbers. Then the run.</p>
         </div>
-        <div className="owner-command-actions">
-          <button className="btn-primary" onClick={onNewAppointment}><Plus size={15} /> Appointment</button>
-          <button className="btn-outline" onClick={onNewCustomer}><Plus size={15} /> Customer</button>
-          <button className="btn-outline" onClick={onNewLead}><Plus size={15} /> Lead</button>
-          <button className="btn-outline" onClick={onNewEmployee}><Plus size={15} /> Employee</button>
+        <div className="nsos-quick">
+          <button type="button" onClick={onNewLead}><Target size={16} />New Lead</button>
+          <button type="button" onClick={onNewAppointment}><Plus size={16} />Book</button>
+          <button type="button" onClick={onOpenDispatch}><CalendarClock size={16} />Assign</button>
+          <button type="button" onClick={onOpenMessages}><MessageCircle size={16} />Message</button>
         </div>
       </div>
 
+      <div className="nsos-alerts">
+        {exceptions.length === 0 && <div className="ns-empty">Nothing needs you right now. The board is clean.</div>}
+        {exceptions.map((item) => (
+          <button className={`nsos-alert ${item.hot ? 'hot' : ''}`} key={item.title} onClick={item.go}>
+            <em>{item.n}</em>
+            <span><b>{item.title}</b><small>{item.sub}</small></span>
+            <ChevronRight size={16} />
+          </button>
+        ))}
+      </div>
+
+      <div className="owner-kpis-v17">
+        <StripeKpi label="Revenue" value={money(week)} />
+        <StripeKpi label="Jobs completed" value={String(completed.length)} />
+        <StripeKpi label="New leads" value={String(leads.filter((l) => l.status !== 'dnk').length)} />
+        <StripeKpi label="Avg job value" value={money(avgTicket)} />
+      </div>
+
       <section className="owner-glance-v17">
-        <div><CalendarClock /><span><b>{today.length}</b><small>Jobs Scheduled</small></span></div>
-        <div><DollarSign /><span><b>{money(scheduledRev)}</b><small>Revenue Scheduled</small></span></div>
-        <div><Users /><span><b>{activeDetailers}</b><small>Detailers Active</small></span></div>
+        <div><CalendarClock /><span><b>{today.length}</b><small>Jobs today</small></span></div>
+        <div><DollarSign /><span><b>{money(scheduledRev)}</b><small>Booked today</small></span></div>
+        <div><Users /><span><b>{activeDetailers}</b><small>Detailers active</small></span></div>
         <div>
           <Clock3 />
           <span>
@@ -144,15 +164,29 @@ export function OwnerDashboard({
         </div>
       </section>
 
-      <div className="owner-kpis-v17">
-        <StripeKpi label="Revenue (30d)" value={money(week)} />
-        <StripeKpi label="Booked Today" value={money(scheduledRev)} />
-        <StripeKpi label="Avg Ticket" value={money(avgTicket)} />
-        <StripeKpi label="Jobs (30d)" value={String(jobs.length)} />
-        <StripeKpi label="Customers" value={String(customers.length)} />
-      </div>
-
       <div className="owner-command-grid-v17">
+        <section className="phase-panel owner-schedule-v17">
+          <div className="phase-panel-head">
+            <div><span className="eyebrow">TODAY'S SCHEDULE</span><h3>{today.length} jobs</h3></div>
+            <button className="btn-outline btn-sm" onClick={onOpenSchedule}>View all</button>
+          </div>
+          {today.slice(0, 6).map((j) => {
+            const tech = employees.find((e) => e.name === j.detailer);
+            return (
+              <button className="owner-job-v17" key={j.id} onClick={() => onOpenJob?.(j.id)}>
+                <time>{jobClock(j.time)}</time>
+                <span><b>{j.customer}</b><small>{j.vehicle || 'Vehicle not added'}</small></span>
+                <span><b>{j.service}</b><small>{money(j.price)}</small></span>
+                <span>
+                  {tech ? <Avatar initials={tech.initials} hue={tech.hue} photo={tech.photo} size={24} /> : null}
+                  <small>{j.detailer || 'Unassigned'}</small>
+                  <b className={statusClass(j.status)}>{j.status.replaceAll('_', ' ')}</b>
+                </span>
+              </button>
+            );
+          })}
+          {!today.length && <div className="ns-empty">No appointments today. Your next scheduled job will appear here.</div>}
+        </section>
         <section className="phase-panel owner-revenue-v17">
           <div className="phase-panel-head">
             <div><span className="eyebrow">REVENUE OVERVIEW</span><h3>{money(week)}</h3></div>
@@ -165,53 +199,23 @@ export function OwnerDashboard({
             <div><small>Days shown</small><b>{days.length}</b></div>
           </div>
         </section>
-        <section className="phase-panel owner-schedule-v17">
-          <div className="phase-panel-head">
-            <div><span className="eyebrow">TODAY'S SCHEDULE</span><h3>{today.length} jobs</h3></div>
-            <button className="btn-outline btn-sm" onClick={onOpenSchedule}>View all</button>
-          </div>
-          {today.slice(0, 6).map((j) => (
-            <button className="owner-job-v17" key={j.id} onClick={() => onOpenJob?.(j.id)}>
-              <time>{jobClock(j.time)}</time>
-              <span><b>{j.customer}</b><small>{j.vehicle || 'Vehicle not added'}</small></span>
-              <span><b>{j.service}</b><small>{money(j.price)}</small></span>
-              <span>
-                <small>{j.detailer || 'Unassigned'}</small>
-                <b className={`status-badge badge-${jobBadge(j.status)}`}>{j.status.replaceAll('_', ' ')}</b>
-              </span>
-            </button>
-          ))}
-          {!today.length && <div className="ns-empty">No appointments today. Your next scheduled job will appear here.</div>}
-        </section>
         <section className="phase-panel owner-attention-v17">
-          <div className="phase-panel-head"><div><span className="eyebrow">ATTENTION</span><h3>Needs action</h3></div></div>
-          {attention.map(([name, value, desc, go]) => (
-            <button className="owner-attention-row" key={name} onClick={go}>
-              <span className={value ? 'hot' : 'quiet'}>{value}</span>
-              <div><b>{name}</b><small>{value ? desc : 'Nothing waiting right now'}</small></div>
-              <strong>{value}</strong>
-              <ChevronRight size={16} />
-            </button>
-          ))}
-        </section>
-      </div>
-
-      <div className="owner-bottom-v17 v20-owner-bottom">
-        <section className="phase-panel v20-team-panel">
-          <div className="phase-panel-head">
-            <div><span className="eyebrow">TEAM STATUS</span><h3>{activeTeam.length} active team members</h3></div>
-            <button className="btn-outline btn-sm" onClick={onOpenTeam}>View team</button>
+          <div className="phase-panel-head"><div><span className="eyebrow">TEAM</span><h3>{activeTeam.length} active</h3></div>
+            <button className="btn-outline btn-sm" onClick={onOpenTeam}>Directory</button>
           </div>
           <div className="v20-team-list">
             {activeTeam.slice(0, 5).map((e) => (
               <div key={e.id}>
-                <span className="v20-mini-avatar">{e.initials}</span>
-                <span><b>{e.name}</b><small>{e.title} · {e.status}</small></span>
+                <span className="v20-mini-avatar">{e.photo ? <img src={e.photo} alt="" /> : e.initials}</span>
+                <span><b>{e.name}</b><small>{e.title}</small></span>
                 <i className={e.status === 'active' ? 'online' : ''} />
               </div>
             ))}
           </div>
         </section>
+      </div>
+
+      <div className="owner-bottom-v17 v20-owner-bottom">
         <section className="phase-panel v20-pipeline-panel">
           <div className="phase-panel-head"><div><span className="eyebrow">SALES PIPELINE</span><h3>Booking flow</h3></div></div>
           <div className="v20-stage-flow">
@@ -220,7 +224,6 @@ export function OwnerDashboard({
             <div><span>Assigned</span><b>{assigned}</b></div><i />
             <div><span>Completed</span><b>{completed.length}</b></div>
           </div>
-          <div className="v20-health-bar"><i style={{ width: `${jobs.length ? Math.min(100, (completed.length / jobs.length) * 100) : 0}%` }} /></div>
           <button className="btn-outline btn-sm" style={{ marginTop: 14 }} onClick={onOpenPipeline}>Open pipeline</button>
         </section>
         <section className="phase-panel v20-health-panel">
@@ -229,7 +232,16 @@ export function OwnerDashboard({
             <div><b>{money(collected)}</b><small>Revenue</small></div>
             <div><b>{completed.length}</b><small>Completed</small></div>
             <div><b>{money(avgTicket)}</b><small>Avg ticket</small></div>
-            <div><b>0</b><small>Cancellations</small></div>
+            <div><b>{unpaid.length}</b><small>Unpaid</small></div>
+          </div>
+        </section>
+        <section className="phase-panel">
+          <div className="phase-panel-head"><div><span className="eyebrow">QUICK CREATE</span><h3>Fewer clicks</h3></div></div>
+          <div className="nsos-actions">
+            <button className="nsos-btn" onClick={onNewAppointment}>Book job</button>
+            <button className="nsos-btn ghost" onClick={onNewCustomer}>Customer</button>
+            <button className="nsos-btn ghost" onClick={onNewEmployee}>Hire</button>
+            <button className="nsos-btn ghost" onClick={onOpenPayments}>Collect</button>
           </div>
         </section>
       </div>
@@ -316,7 +328,7 @@ export function PeopleHome({ employees, onOpen, onHire }: { employees: OsEmploye
         {rows.map((e) => (
           <button className="data-table-row nsos-dir-row" key={e.id} onClick={() => onOpen(e.id)}>
             <span className="dt-cell dt-name">
-              <Avatar initials={e.initials} hue={e.hue} size={36} />
+              <Avatar initials={e.initials} hue={e.hue} photo={e.photo} size={36} />
               <span><strong>{e.name}</strong><small>{e.title} · {e.location}</small></span>
             </span>
             <span className="dt-cell" data-label="Role"><strong>{e.department}</strong><small>{e.role.replaceAll('_', ' ')}</small></span>
@@ -342,7 +354,7 @@ export function PeopleProfile({ employee }: { employee: OsEmployee }) {
   return (
     <div>
       <div style={{ display: 'flex', gap: 14, alignItems: 'center', marginBottom: 16 }}>
-        <Avatar initials={employee.initials} hue={employee.hue} size={64} />
+        <Avatar initials={employee.initials} hue={employee.hue} photo={employee.photo} size={64} />
         <div style={{ flex: 1 }}>
           <span className="nsos-eyebrow">{employee.department}</span>
           <h2>{employee.name}</h2>
@@ -617,7 +629,7 @@ export function DispatchView({ onOpen }: { onOpen?: (id: string) => void }) {
     >
       <div className="nsos-st-job-top">
         <span>{jobClock(j.time)}</span>
-        <b className={`status-badge badge-${jobBadge(j.status)}`}>{j.status.replaceAll('_', ' ')}</b>
+        <b className={statusClass(j.status)}>{j.status.replaceAll('_', ' ')}</b>
       </div>
       <strong>{j.customer}</strong>
       <small>{j.service} · {money(j.price)}</small>
@@ -651,7 +663,7 @@ export function DispatchView({ onOpen }: { onOpen?: (id: string) => void }) {
           return (
             <section className="dispatch-column nsos-st-col" key={c.id} onDragOver={(e) => e.preventDefault()} onDrop={drop(c.name)}>
               <h3>
-                <Avatar initials={c.initials} hue={c.hue} size={28} />
+                <Avatar initials={c.initials} hue={c.hue} photo={c.photo} size={28} />
                 <span>{c.name}</span>
                 <small>{mine.length} open</small>
                 <i className={inField ? 'online' : ''} />
@@ -839,7 +851,7 @@ export function CustomersView({ onOpenJob }: { onOpenJob?: (id: string) => void 
         <div className="nsos-search" style={{ marginBottom: 10 }}><Search size={14} /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search records" /></div>
         {rows.map((c) => (
           <button className={`nsos-row ${c.id === customer.id ? 'active' : ''}`} key={c.id} onClick={() => setId(c.id)}>
-            <Avatar initials={c.name.split(' ').map((p) => p[0]).join('').slice(0, 2)} hue="#7c6a4a" />
+            <Avatar initials={c.name.split(' ').map((p) => p[0]).join('').slice(0, 2)} hue="#7c6a4a" photo={c.photo} />
             <span><strong>{c.name}</strong><small>{c.vehicle}</small></span>
             {c.member && <span className="nsos-pill gold">member</span>}
           </button>
@@ -950,6 +962,7 @@ export function JobDetail({ job }: { job: OsJob }) {
   return (
     <div>
       <div className="nsos-card">
+        {(job.photos || [])[0] && <img className="nsos-hero-photo" src={job.photos[0].src} alt={job.vehicle} />}
         <span className="nsos-eyebrow">{job.time}</span>
         <h2>{job.service}</h2>
         <p style={{ color: 'var(--os-muted)' }}>{job.customer} · {job.vehicle}</p>

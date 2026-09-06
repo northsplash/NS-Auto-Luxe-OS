@@ -12,6 +12,7 @@ export type OsEmployee = {
   phone: string;
   initials: string;
   hue: string;
+  photo?: string;
   pay_type: string;
   hourly_rate: number;
   annual_salary: number;
@@ -144,6 +145,7 @@ export type OsCustomer = {
   address: string;
   member: boolean;
   notes: OsNote[];
+  photo?: string;
 };
 
 export type OsSettings = {
@@ -174,13 +176,15 @@ const docs = (done: number): OsDocument[] => {
   }));
 };
 
+const P = (id: string) => `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&h=160&w=160`;
+
 export const seedEmployees: OsEmployee[] = [
-  { id: 'e1', name: 'Jordan Miles', title: 'Owner / Field Operator', role: 'owner', department: 'Ownership', status: 'active', email: 'jordan@northsplash.com', phone: '330-555-0100', initials: 'JM', hue: '#c8a96a', pay_type: 'custom', hourly_rate: 0, annual_salary: 0, weekly_base: 0, commission_rate: 0, per_job_rate: 0, pay_schedule: 'monthly', hours_week: 48, onboarding: 100, location: 'Raleigh', documents: docs(5), availability: fieldAvail() },
-  { id: 'e2', name: 'Avery Chen', title: 'Operations Administrator', role: 'admin', department: 'Operations', status: 'active', email: 'avery@northsplash.com', phone: '330-555-0101', initials: 'AC', hue: '#7c6a4a', pay_type: 'salary', hourly_rate: 0, annual_salary: 62000, weekly_base: 0, commission_rate: 0, per_job_rate: 0, pay_schedule: 'biweekly', hours_week: 40, onboarding: 100, location: 'Raleigh', documents: docs(5), availability: officeAvail() },
-  { id: 'e3', name: 'Marcus Hale', title: 'Lead Mobile Detailer', role: 'detailer', department: 'Detailing', status: 'active', email: 'marcus@northsplash.com', phone: '330-555-0102', initials: 'MH', hue: '#3d5a4c', pay_type: 'hourly', hourly_rate: 22, annual_salary: 0, weekly_base: 0, commission_rate: 0, per_job_rate: 35, pay_schedule: 'weekly', hours_week: 38, onboarding: 100, location: 'Cary', documents: docs(5), availability: fieldAvail() },
-  { id: 'e4', name: 'Sofia Reyes', title: 'D2D Closer', role: 'd2d_agent', department: 'Sales', status: 'active', email: 'sofia@northsplash.com', phone: '330-555-0103', initials: 'SR', hue: '#5c3d5a', pay_type: 'base_commission', hourly_rate: 0, annual_salary: 0, weekly_base: 350, commission_rate: 12.5, per_job_rate: 0, pay_schedule: 'weekly', hours_week: 32, onboarding: 80, location: 'Durham', documents: docs(4), availability: fieldAvail() },
-  { id: 'e5', name: 'Noah Patel', title: 'Crew Manager', role: 'manager', department: 'Operations', status: 'active', email: 'noah@northsplash.com', phone: '330-555-0104', initials: 'NP', hue: '#3d4a5c', pay_type: 'hourly_plus_commission', hourly_rate: 24, annual_salary: 0, weekly_base: 0, commission_rate: 3, per_job_rate: 0, pay_schedule: 'weekly', hours_week: 42, onboarding: 100, location: 'Raleigh', documents: docs(5), availability: fieldAvail() },
-  { id: 'e6', name: 'Elena Ward', title: 'Client Experience Admin', role: 'office', department: 'Customer Care', status: 'leave', email: 'elena@northsplash.com', phone: '330-555-0105', initials: 'EW', hue: '#6a4a3d', pay_type: 'salary_plus_commission', hourly_rate: 0, annual_salary: 54000, weekly_base: 0, commission_rate: 2, per_job_rate: 0, pay_schedule: 'biweekly', hours_week: 0, onboarding: 60, location: 'Remote', documents: docs(3), availability: officeAvail() },
+  { id: 'e1', name: 'Jordan Miles', title: 'Owner / Field Operator', role: 'owner', department: 'Ownership', status: 'active', email: 'jordan@northsplash.com', phone: '330-555-0100', initials: 'JM', hue: '#c8a96a', photo: P('2379005'), pay_type: 'custom', hourly_rate: 0, annual_salary: 0, weekly_base: 0, commission_rate: 0, per_job_rate: 0, pay_schedule: 'monthly', hours_week: 48, onboarding: 100, location: 'Raleigh', documents: docs(5), availability: fieldAvail() },
+  { id: 'e2', name: 'Avery Chen', title: 'Operations Administrator', role: 'admin', department: 'Operations', status: 'active', email: 'avery@northsplash.com', phone: '330-555-0101', initials: 'AC', hue: '#7c6a4a', photo: P('1181686'), pay_type: 'salary', hourly_rate: 0, annual_salary: 62000, weekly_base: 0, commission_rate: 0, per_job_rate: 0, pay_schedule: 'biweekly', hours_week: 40, onboarding: 100, location: 'Raleigh', documents: docs(5), availability: officeAvail() },
+  { id: 'e3', name: 'Marcus Hale', title: 'Lead Mobile Detailer', role: 'detailer', department: 'Detailing', status: 'active', email: 'marcus@northsplash.com', phone: '330-555-0102', initials: 'MH', hue: '#3d5a4c', photo: P('1681010'), pay_type: 'hourly', hourly_rate: 22, annual_salary: 0, weekly_base: 0, commission_rate: 0, per_job_rate: 35, pay_schedule: 'weekly', hours_week: 38, onboarding: 100, location: 'Cary', documents: docs(5), availability: fieldAvail() },
+  { id: 'e4', name: 'Sofia Reyes', title: 'D2D Closer', role: 'd2d_agent', department: 'Sales', status: 'active', email: 'sofia@northsplash.com', phone: '330-555-0103', initials: 'SR', hue: '#5c3d5a', photo: P('774909'), pay_type: 'base_commission', hourly_rate: 0, annual_salary: 0, weekly_base: 350, commission_rate: 12.5, per_job_rate: 0, pay_schedule: 'weekly', hours_week: 32, onboarding: 80, location: 'Durham', documents: docs(4), availability: fieldAvail() },
+  { id: 'e5', name: 'Noah Patel', title: 'Crew Manager', role: 'manager', department: 'Operations', status: 'active', email: 'noah@northsplash.com', phone: '330-555-0104', initials: 'NP', hue: '#3d4a5c', photo: P('1516680'), pay_type: 'hourly_plus_commission', hourly_rate: 24, annual_salary: 0, weekly_base: 0, commission_rate: 3, per_job_rate: 0, pay_schedule: 'weekly', hours_week: 42, onboarding: 100, location: 'Raleigh', documents: docs(5), availability: fieldAvail() },
+  { id: 'e6', name: 'Elena Ward', title: 'Client Experience Admin', role: 'office', department: 'Customer Care', status: 'leave', email: 'elena@northsplash.com', phone: '330-555-0105', initials: 'EW', hue: '#6a4a3d', photo: P('415829'), pay_type: 'salary_plus_commission', hourly_rate: 0, annual_salary: 54000, weekly_base: 0, commission_rate: 2, per_job_rate: 0, pay_schedule: 'biweekly', hours_week: 0, onboarding: 60, location: 'Remote', documents: docs(3), availability: officeAvail() },
 ];
 
 export const seedJobs: OsJob[] = [
@@ -346,11 +350,11 @@ export const seedActivity: OsActivity[] = [
 ];
 
 export const seedCustomers: OsCustomer[] = [
-  { id: 'cu1', name: 'Matthew Renner', email: 'matthew@renner.co', phone: '919-555-2210', vehicle: '2022 BMW 330i', address: '412 Oakwood Ave, Raleigh', member: false, notes: [{ id: uid(), at: 'Yesterday', author: 'Avery Chen', body: 'Prefers morning windows. Gate code 4412.' }] },
-  { id: 'cu2', name: 'Priya Shah', email: 'priya.shah@email.com', phone: '919-555-8831', vehicle: '2024 Porsche Macan', address: '88 Fayetteville St, Raleigh', member: true, notes: [] },
-  { id: 'cu3', name: 'James Cole', email: 'james.cole@email.com', phone: '919-555-0199', vehicle: '2021 Tesla Model Y', address: '19 Cameron Village', member: false, notes: [] },
-  { id: 'cu4', name: 'Hannah Brooks', email: 'hannah@brooks.family', phone: '919-555-4402', vehicle: '2019 Mercedes C300', address: 'Cary · Preston Village', member: false, notes: [] },
-  { id: 'cu5', name: 'Luis Ortega', email: 'luis.ortega@email.com', phone: '919-555-7720', vehicle: '2023 Audi Q5', address: 'Durham · Trinity Park', member: true, notes: [{ id: uid(), at: 'Yesterday', author: 'Marcus Hale', body: 'Rebook in 30 days. Loved interior.' }] },
+  { id: 'cu1', name: 'Matthew Renner', email: 'matthew@renner.co', phone: '919-555-2210', vehicle: '2022 BMW 330i', address: '412 Oakwood Ave, Raleigh', member: false, photo: P('220453'), notes: [{ id: uid(), at: 'Yesterday', author: 'Avery Chen', body: 'Prefers morning windows. Gate code 4412.' }] },
+  { id: 'cu2', name: 'Priya Shah', email: 'priya.shah@email.com', phone: '919-555-8831', vehicle: '2024 Porsche Macan', address: '88 Fayetteville St, Raleigh', member: true, photo: P('1239291'), notes: [] },
+  { id: 'cu3', name: 'James Cole', email: 'james.cole@email.com', phone: '919-555-0199', vehicle: '2021 Tesla Model Y', address: '19 Cameron Village', member: false, photo: P('614810'), notes: [] },
+  { id: 'cu4', name: 'Hannah Brooks', email: 'hannah@brooks.family', phone: '919-555-4402', vehicle: '2019 Mercedes C300', address: 'Cary · Preston Village', member: false, photo: P('733872'), notes: [] },
+  { id: 'cu5', name: 'Luis Ortega', email: 'luis.ortega@email.com', phone: '919-555-7720', vehicle: '2023 Audi Q5', address: 'Durham · Trinity Park', member: true, photo: P('91227'), notes: [{ id: uid(), at: 'Yesterday', author: 'Marcus Hale', body: 'Rebook in 30 days. Loved interior.' }] },
 ];
 
 export const seedSettings: OsSettings = {

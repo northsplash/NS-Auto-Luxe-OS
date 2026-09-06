@@ -16,6 +16,7 @@ import {
 } from './views';
 import TeamMessagesView from './TeamMessagesView';
 import './os.css';
+import './cream-os.css';
 
 export type OsTab =
   | 'dashboard' | 'command_center' | 'owner_growth' | 'owner_profits' | 'payment_test'
@@ -180,6 +181,8 @@ class OsErrorBoundary extends Component<{ children: ReactNode; onReset?: () => v
   }
 }
 
+type WorkMode = 'owner' | 'd2d' | 'detailer';
+
 function WorkspacePage({ tab, children, action }: { tab: OsTab; children: ReactNode; action?: ReactNode }) {
   if (tab === 'command_center' || tab === 'dashboard') return <>{children}</>;
   const meta = PAGE[tab];
@@ -220,6 +223,20 @@ function OsShell() {
   const [hirePreset, setHirePreset] = useState<Partial<EmployeeDraft> | undefined>();
   const [peopleId, setPeopleId] = useState<string | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
+  const [newWorkOpen, setNewWorkOpen] = useState(false);
+  const [ready, setReady] = useState(false);
+  const [mode, setMode] = useState<WorkMode>(() => {
+    try { return (sessionStorage.getItem('ns-os-mode') as WorkMode) || 'owner'; } catch { return 'owner'; }
+  });
+
+  useEffect(() => {
+    const t = window.setTimeout(() => setReady(true), 220);
+    return () => window.clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    try { sessionStorage.setItem('ns-os-mode', mode); } catch { /* ignore */ }
+  }, [mode]);
 
   useEffect(() => {
     try { sessionStorage.setItem('ns-os-tab', tab); } catch { /* ignore */ }
@@ -250,6 +267,7 @@ function OsShell() {
     setSidebarOpen(false);
     setMoreOpen(false);
     setMobileActionsOpen(false);
+    setNewWorkOpen(false);
     setPeopleId(null);
     setJobId(null);
   };
@@ -268,13 +286,18 @@ function OsShell() {
     setPeopleId(emp.id);
   };
 
+  const homeTab: OsTab = mode === 'd2d' ? 'sales' : mode === 'detailer' ? 'jobs' : 'command_center';
   const currentWorkspace = WORKSPACES.find((w) => w.items.includes(tab)) ?? WORKSPACES[4];
   const currentNav = nav(tab);
-  const phoneHome = ['dashboard', 'command_center', 'owner_growth', 'owner_profits', 'payment_test'].includes(tab);
+  const phoneHome = mode === 'd2d'
+    ? ['sales', 'leads', 'territories'].includes(tab)
+    : mode === 'detailer'
+      ? ['jobs', 'dispatch', 'job_assignments'].includes(tab)
+      : ['dashboard', 'command_center', 'owner_growth', 'owner_profits', 'payment_test'].includes(tab);
   const phoneChat = tab === 'messages';
-  const phoneJobs = ['jobs', 'dispatch', 'job_assignments'].includes(tab);
-  const phoneLeads = ['sales', 'leads', 'territories'].includes(tab);
-  const phoneMore = moreOpen || !(phoneHome || phoneChat || phoneJobs || phoneLeads);
+  const phoneCal = ['appointments', 'schedule', 'availability', 'staff_schedule'].includes(tab);
+  const phoneTeam = tab === 'employees';
+  const phoneMore = moreOpen || !(phoneHome || phoneChat || phoneCal || phoneTeam);
   const person = os.employees.find((e) => e.id === peopleId);
   const job = os.jobs.find((j) => j.id === jobId);
   const activeEmployees = os.employees.filter((e) => e.status === 'active');
@@ -319,6 +342,8 @@ function OsShell() {
   const commandPages = NAV.filter((n) => n.label.toLowerCase().includes(q)).slice(0, 8);
   const commandPeople = os.employees.filter((e) => `${e.name} ${e.title}`.toLowerCase().includes(q)).slice(0, 5);
   const commandJobs = os.jobs.filter((j) => `${j.customer} ${j.service}`.toLowerCase().includes(q)).slice(0, 5);
+  const commandCustomers = os.customers.filter((c) => `${c.name} ${c.vehicle}`.toLowerCase().includes(q)).slice(0, 4);
+  const commandLeads = os.leads.filter((l) => `${l.name} ${l.address}`.toLowerCase().includes(q)).slice(0, 4);
 
   const inner = (() => {
     if (tab === 'messages') return null;
@@ -357,6 +382,7 @@ function OsShell() {
           onOpenTeam={() => go('employees')}
           onOpenSchedule={() => go('appointments')}
           onOpenDispatch={() => go('dispatch')}
+          onOpenMessages={() => go('messages')}
         />
       );
     }
@@ -371,7 +397,7 @@ function OsShell() {
   ) : undefined;
 
   return (
-    <div className={`portal-layout nsos-admin-preview admin-os os-tab-${tab}${moreOpen ? ' os-more-open' : ''}`}>
+    <div className={`portal-layout nsos-admin-preview admin-os nsos-cream os-tab-${tab}${moreOpen ? ' os-more-open' : ''} os-mode-${mode}`}>
       <aside className={`portal-sidebar admin-sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <div className="sidebar-header">
           <Link to="/" className="sidebar-brand" onClick={() => go('command_center')}>
@@ -412,8 +438,8 @@ function OsShell() {
           <div className="owner-field-switch-v26">
             <span>WORK MODE</span>
             <div>
-              <Link to="/d2d" className="owner-field-mode-btn"><Target size={16} /><strong>D2D</strong><small>Sell / canvass</small></Link>
-              <Link to="/employee" className="owner-field-mode-btn"><Car size={16} /><strong>Detail</strong><small>Run jobs</small></Link>
+              <button type="button" className="owner-field-mode-btn" onClick={() => { setMode('d2d'); go('sales'); }}><Target size={16} /><strong>D2D</strong><small>Sell / canvass</small></button>
+              <button type="button" className="owner-field-mode-btn" onClick={() => { setMode('detailer'); go('jobs'); }}><Car size={16} /><strong>Detail</strong><small>Run jobs</small></button>
             </div>
           </div>
           <Link to="/portal" className="sidebar-item"><UserCheck size={18} /> Customer View</Link>
@@ -434,7 +460,7 @@ function OsShell() {
               <Search size={16} /><span>Search workspace</span><kbd>⌘ K</kbd>
             </button>
             <button className="btn-outline btn-sm os-manage-data desktop-top-action" onClick={() => setDataOpen(true)}><Trash2 size={15} /> <span>Manage data</span></button>
-            <button className="btn-primary btn-sm desktop-top-action" onClick={() => go('appointments')}><Plus size={15} /><span>+ New work</span></button>
+            <button className="btn-primary btn-sm desktop-top-action" onClick={() => setNewWorkOpen(true)}><Plus size={15} /><span>+ New work</span></button>
             <button className={`os-mobile-actions-trigger ${mobileActionsOpen ? 'active' : ''}`} aria-label="More workspace actions" aria-expanded={mobileActionsOpen} onClick={() => setMobileActionsOpen((v) => !v)}>
               <MoreHorizontal size={20} />
             </button>
@@ -443,7 +469,7 @@ function OsShell() {
                 <button onClick={() => navigate('/d2d')}><Target size={16} /><span>Switch to D2D mode</span></button>
                 <button onClick={() => navigate('/employee')}><Car size={16} /><span>Switch to Detailer mode</span></button>
                 <button onClick={() => { setDataOpen(true); setMobileActionsOpen(false); }}><Trash2 size={16} /><span>Manage data</span></button>
-                <button onClick={() => go('appointments')}><Plus size={16} /><span>New work</span></button>
+                <button onClick={() => { setNewWorkOpen(true); setMobileActionsOpen(false); }}><Plus size={16} /><span>New work</span></button>
               </div>
             )}
           </div>
@@ -483,7 +509,17 @@ function OsShell() {
                     <Calendar size={16} /><span>{j.customer}</span><small>{j.service}</small>
                   </button>
                 ))}
-                {q && !commandPages.length && !commandPeople.length && !commandJobs.length && <p className="empty-text">Nothing matches.</p>}
+                {commandCustomers.map((c) => (
+                  <button key={c.id} onClick={() => { go('customers'); setCommandOpen(false); }}>
+                    <Users size={16} /><span>{c.name}</span><small>{c.vehicle}</small>
+                  </button>
+                ))}
+                {commandLeads.map((l) => (
+                  <button key={l.id} onClick={() => { go('sales'); setCommandOpen(false); }}>
+                    <Target size={16} /><span>{l.name}</span><small>{l.address} · {l.status}</small>
+                  </button>
+                ))}
+                {q && !commandPages.length && !commandPeople.length && !commandJobs.length && !commandCustomers.length && !commandLeads.length && <p className="empty-text">Nothing matches.</p>}
               </div>
             </div>
           </div>
@@ -513,7 +549,12 @@ function OsShell() {
         )}
 
         <div className="portal-content">
-          {!['messages', 'dashboard', 'command_center', 'sales'].includes(tab) && (
+          {!ready && (
+            <div className="nsos-skel" aria-hidden>
+              <i style={{ height: 48 }} /><i /><i style={{ height: 140 }} /><i /><i />
+            </div>
+          )}
+          {ready && !['messages', 'dashboard', 'command_center', 'sales', 'dispatch', 'jobs'].includes(tab) && (
             <section className="os-workspace-pulse" aria-label={`${currentWorkspace.label} snapshot`}>
               {workspacePulse.map(({ label, value, Icon }) => (
                 <div className="os-pulse-metric" key={label}>
@@ -524,6 +565,7 @@ function OsShell() {
             </section>
           )}
 
+          {ready && (
           <OsErrorBoundary onReset={() => go('messages')}>
             {tab === 'messages' ? (
               <WorkspacePage tab="messages">
@@ -538,14 +580,15 @@ function OsShell() {
               </WorkspacePage>
             )}
           </OsErrorBoundary>
+          )}
         </div>
       </main>
 
       <nav className="os-mobile-bottom-nav mobile-app-nav-v25" aria-label="Mobile workspace navigation">
-        <button type="button" className={!moreOpen && phoneHome ? 'active' : ''} onClick={() => go('command_center')}><LayoutDashboard size={19} /><span>Home</span></button>
+        <button type="button" className={!moreOpen && phoneHome ? 'active' : ''} onClick={() => go(homeTab)}><LayoutDashboard size={19} /><span>Home</span></button>
         <button type="button" className={!moreOpen && phoneChat ? 'active' : ''} onClick={() => go('messages')}><MessageCircle size={19} /><span>Chat</span></button>
-        <button type="button" className={!moreOpen && phoneJobs ? 'active' : ''} onClick={() => go('jobs')}><BriefcaseBusiness size={19} /><span>Jobs</span></button>
-        <button type="button" className={!moreOpen && phoneLeads ? 'active' : ''} onClick={() => go('sales')}><Target size={19} /><span>Map</span></button>
+        <button type="button" className={!moreOpen && phoneCal ? 'active' : ''} onClick={() => go('appointments')}><Calendar size={19} /><span>Calendar</span></button>
+        <button type="button" className={!moreOpen && phoneTeam ? 'active' : ''} onClick={() => go('employees')}><Users size={19} /><span>Team</span></button>
         <button type="button" className={phoneMore ? 'active' : ''} onClick={() => { setSidebarOpen(false); setMobileActionsOpen(false); setMoreOpen((v) => !v); }}><MoreHorizontal size={19} /><span>More</span></button>
       </nav>
       {moreOpen && (
@@ -580,9 +623,38 @@ function OsShell() {
                 );
               })}
             </div>
+            <div className="os-more-sheet-label">Switch mode</div>
+            <div className="os-mode-row">
+              <button className={mode === 'owner' ? 'active' : ''} onClick={() => { setMode('owner'); go('command_center'); }}><strong>Owner</strong><small>Command</small></button>
+              <button className={mode === 'd2d' ? 'active' : ''} onClick={() => { setMode('d2d'); go('sales'); }}><strong>D2D</strong><small>Canvass</small></button>
+              <button className={mode === 'detailer' ? 'active' : ''} onClick={() => { setMode('detailer'); go('jobs'); }}><strong>Detailer</strong><small>Run jobs</small></button>
+            </div>
             <div className="os-more-sheet-modes">
-              <Link to="/d2d" className="owner-field-mode-btn" onClick={() => setMoreOpen(false)}><Target size={16} /><strong>D2D</strong><small>Sell / canvass</small></Link>
-              <Link to="/employee" className="owner-field-mode-btn" onClick={() => setMoreOpen(false)}><Car size={16} /><strong>Detail</strong><small>Run jobs</small></Link>
+              <Link to="/d2d" className="owner-field-mode-btn" onClick={() => setMoreOpen(false)}><Target size={16} /><strong>D2D portal</strong><small>Field canvas</small></Link>
+              <Link to="/employee" className="owner-field-mode-btn" onClick={() => setMoreOpen(false)}><Car size={16} /><strong>Detail portal</strong><small>Job list</small></Link>
+            </div>
+          </div>
+        </div>
+      )}
+      {newWorkOpen && (
+        <div className="os-sheet-backdrop" onClick={() => setNewWorkOpen(false)}>
+          <div className="os-sheet" role="dialog" aria-label="Quick actions" onClick={(e) => e.stopPropagation()}>
+            <h3>One-tap actions</h3>
+            <div className="os-sheet-list">
+              <button onClick={() => go('sales')}><Target size={16} /> New lead</button>
+              <button onClick={() => go('appointments')}><Calendar size={16} /> Book job</button>
+              <button onClick={() => go('dispatch')}><ListChecks size={16} /> Assign</button>
+              <button onClick={() => {
+                const nextJob = os.jobs.find((j) => j.status === 'confirmed' || j.status === 'scheduled');
+                if (nextJob) { os.setJobStatus(nextJob.id, 'en_route'); openJob(nextJob.id); }
+                setNewWorkOpen(false);
+              }}><Car size={16} /> En route</button>
+              <button onClick={() => {
+                const live = os.jobs.find((j) => j.status === 'in_progress' || j.status === 'arrived' || j.status === 'en_route');
+                if (live) { os.setJobStatus(live.id, 'completed'); openJob(live.id); }
+                setNewWorkOpen(false);
+              }}><CheckCircle2 size={16} /> Complete</button>
+              <button onClick={() => go('payments')}><CreditCard size={16} /> Collect payment</button>
             </div>
           </div>
         </div>

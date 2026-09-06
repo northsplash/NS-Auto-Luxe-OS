@@ -1,6 +1,6 @@
 # North Splash Auto Luxe OS
 
-Field-service operating system for North Splash Auto Luxe. One dark, Stripe-like product — not 15 tools stitched together.
+Field-service operating system for North Splash Auto Luxe. One cream-luxury OS — Stripe hierarchy, SalesRabbit D2D, ServiceTitan dispatch — not 15 tools stitched together.
 
 `/` and `/os` open the Admin OS. D2D canvassing is `/d2d`. The detailer portal is `/employee`. Sign-in stays at `/login`.
 
@@ -17,7 +17,7 @@ The app serves at `http://127.0.0.1:43127`. Demo state lives in this browser (`l
 
 ## How it is modeled
 
-Visual language is **Stripe** everywhere: dark surfaces, tight spacing, strong KPI hierarchy, restrained gold, simple charts.
+Visual language is **cream luxury**: ivory cards, espresso sidebar, tight type, 14px radius, gold only for primary actions, KPIs, and active states. Home is role-based (Owner / D2D / Detailer). Command Center leads with exceptions. Phones use a 5-button bar: Home / Chat / Calendar / Team / More, with bottom sheets instead of desktop popups.
 
 Workflows follow the product that already does that job well:
 

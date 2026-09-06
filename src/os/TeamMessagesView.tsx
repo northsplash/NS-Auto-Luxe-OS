@@ -6,7 +6,8 @@ import {
 import type { OsChat } from './demoData';
 import { useOs } from './osStore';
 
-function Avatar({ initials, hue, size = 34 }: { initials: string; hue: string; size?: number }) {
+function Avatar({ initials, hue, size = 34, photo }: { initials: string; hue: string; size?: number; photo?: string }) {
+  if (photo) return <img className="nsos-avatar message-avatar employee-message-avatar" src={photo} alt="" style={{ width: size, height: size }} />;
   return <span className="nsos-avatar message-avatar employee-message-avatar" style={{ width: size, height: size, background: hue, fontSize: size * 0.32 }}>{initials}</span>;
 }
 
@@ -204,7 +205,7 @@ export default function TeamMessagesView() {
                   <div key={m.id} className="message-entry-wrap">
                     <article className={`${m.mine ? 'message-bubble mine' : 'message-bubble'} ${grouped ? 'grouped' : ''}`}>
                       {!grouped ? (
-                        <Avatar initials={employee?.initials || initials(m.from)} hue={employee?.hue || '#c8a96a'} size={34} />
+                        <Avatar initials={employee?.initials || initials(m.from)} hue={employee?.hue || '#c8a96a'} photo={employee?.photo} size={34} />
                       ) : (
                         <div className="message-avatar-spacer"><span>{m.at}</span></div>
                       )}
@@ -278,7 +279,7 @@ export default function TeamMessagesView() {
                 const emp = os.employees.find((e) => e.name.toLowerCase() === name.toLowerCase());
                 return (
                   <div key={name}>
-                    <Avatar initials={emp?.initials || initials(name)} hue={emp?.hue || '#c8a96a'} size={32} />
+                    <Avatar initials={emp?.initials || initials(name)} hue={emp?.hue || '#c8a96a'} photo={emp?.photo} size={32} />
                     <div><strong>{name}</strong><small>Recently active</small></div>
                   </div>
                 );
