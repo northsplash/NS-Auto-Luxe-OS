@@ -63,10 +63,11 @@ The two cores: **SalesRabbit** for territory maps, pins, knocks, and canvassing;
 - Square payments, Gusto hiring pipeline, Stripe settings
 - Teams-style messaging (Chat / Teams filters, composer, company channel). Send shows an error instead of failing silently.
 - Gusto hiring: Convert / Hire seeds the onboarding packet and opens the hire’s profile.
+- New-hire academy: Door-to-door (SalesRabbit playbook) and Detailing (Housecall Pro + Uber live status) with quizzes. Opening **People → Training** applies the modules and assigns them by role. New hires also get the academy when they are hired.
 
 ## Apply the hire packet in Supabase
 
-After pulling, run `supabase/migrations/20260906120000_v29_employee_onboarding_profiles.sql` on the live project (or `supabase db push`). The Owner UI still saves last-four tax/deposit into `onboarding_tasks` if that table is not applied yet. Full SSNs are never stored.
+After pulling, run `supabase/migrations/20260906120000_v29_employee_onboarding_profiles.sql` and `supabase/migrations/20260906140000_v30_new_hire_academy.sql` on the live project (or `supabase db push`). The Owner UI still saves last-four tax/deposit into `onboarding_tasks` if that table is not applied yet. Full SSNs are never stored. The Training tab also upserts academy lessons if the SQL has not been applied yet.
 - Phones: Home / Chat / Calendar / Team / More. Tablets use split map/list, chat, and dispatch.
 
 ## Supabase

@@ -1,4 +1,5 @@
 import { supabase, type Employee } from '@/lib/supabase';
+import { assignAcademyForEmployee, courseIdsForEmployee, D2D_ACADEMY_ID, DETAIL_ACADEMY_ID } from '@/lib/trainingAcademy';
 
 export const ONBOARDING_STEPS = ['identity', 'tax', 'pay', 'work', 'emergency'] as const;
 export type OnboardingStepId = (typeof ONBOARDING_STEPS)[number];
@@ -189,12 +190,13 @@ export const DEFAULT_HIRE_TASKS: Array<{ title: string; description: string; cat
 ];
 
 export async function seedHireOnboarding(employee: Employee, role?: string) {
+  const hire = { ...employee, role: role || employee.role } as Employee;
   await supabase.from('employees').update({ onboarding_status: 'in_progress' }).eq('id', employee.id);
-  const extra = role === 'd2d_agent'
-    ? [{ title: 'Review territory workflow', description: 'House statuses, Do Not Knock, routing, and lead follow-up.', category: 'd2d' }]
-    : role === 'detailer'
-      ? [{ title: 'Review job workflow', description: 'Inspection, photos, checklist, QC, and completion standards.', category: 'detailer' }]
-      : [];
+  const academyIds = courseIdsForEmployee(hire);
+  const extra = [
+    ...(academyIds.includes(D2D_ACADEMY_ID) ? [{ title: 'Complete door-to-door academy', description: 'Map, knock colors, door script, and next house. Pass the quiz before you canvass live.', category: 'd2d' }] : []),
+    ...(academyIds.includes(DETAIL_ACADEMY_ID) ? [{ title: 'Complete detailing academy', description: 'Job packet, live status, photos, checklist, and QC. Pass the quiz before you run jobs solo.', category: 'detailer' }] : []),
+  ];
   for (const task of [...DEFAULT_HIRE_TASKS, ...extra]) {
     const existing = await supabase.from('onboarding_tasks').select('id').eq('employee_id', employee.id).eq('title', task.title).maybeSingle();
     if (!existing.data) {
@@ -208,6 +210,7 @@ export async function seedHireOnboarding(employee: Employee, role?: string) {
       });
     }
   }
+  try { await assignAcademyForEmployee(hire); } catch (err) { console.warn('Academy assign skipped', err); }
 }
 
 export type OnboardingTask = {

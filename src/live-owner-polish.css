@@ -383,3 +383,67 @@
   .owner-jump-nav-v29 { overflow-x: auto; flex-wrap: nowrap; }
   .message-rail-filters { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
+
+.nsos-cream .training-dashboard,
+.nsos-cream .training-course-view,
+.nsos-cream .training-lesson,
+.nsos-cream .quiz-question,
+.nsos-cream .training-card,
+.nsos-cream .training-summary > div {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  border-color: #eadfd3 !important;
+}
+.nsos-cream .training-card:hover { border-color: #d4b36a !important; background: #f6ead4 !important; }
+.nsos-cream .training-summary { grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.nsos-cream .training-summary > div { border-radius: 12px; padding: 12px; }
+.nsos-cream .training-summary span { color: #8a7d6e; font-size: 11px; }
+.nsos-cream .training-summary strong { font-size: 22px; display: block; }
+.nsos-cream .training-course-hero {
+  background: #1c1814 !important;
+  color: #f6f1e8 !important;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 22px;
+  border-radius: 0;
+}
+.nsos-cream .training-lesson { display: grid; grid-template-columns: 36px 1fr; gap: 12px; padding: 14px; }
+.nsos-cream .training-lesson p { margin: 8px 0 0; color: #3d3832; white-space: pre-wrap; line-height: 1.5; font-size: 14px; }
+.nsos-cream .training-step {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: #1c1814 !important; color: #f6f1e8 !important;
+  font-size: 12px; font-weight: 700;
+}
+.nsos-cream .quiz-options label { background: #f6efe8 !important; color: #1c1814 !important; border-radius: 10px; padding: 10px 12px; }
+.academy-hire-banner {
+  display: flex; gap: 12px; align-items: flex-start;
+  background: #f6ead4; border: 1px solid #e4d0a8; border-radius: 14px;
+  padding: 12px 14px; margin-bottom: 14px; color: #1c1814;
+}
+.academy-hire-banner strong { display: block; }
+.academy-hire-banner span { font-size: 13px; color: #6f675e; }
+.academy-knock-legend {
+  display: flex; flex-wrap: wrap; gap: 8px 12px;
+  padding: 12px 16px 0; font-size: 11px; color: #6f675e;
+}
+.academy-knock-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.academy-knock-legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.academy-status-demo { margin: 12px 16px 0; }
+.academy-result { margin: 12px 16px; padding: 10px 12px; border-radius: 10px; font-weight: 650; }
+.academy-result.pass { background: #e8f0e6; color: #2f5d32; }
+.academy-result.retry { background: #f8e6e2; color: #8a3b32; }
+.academy-course-v30 { display: grid; gap: 0; padding-bottom: 16px; }
+.academy-course-v30 > .btn-outline { margin: 0 0 12px; width: fit-content; }
+.academy-course-v30 > .btn-primary { margin: 8px 16px 16px; }
+.training-admin-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.nsos-cream .training-card { text-align: left; display: grid; grid-template-columns: 44px 1fr 20px; gap: 10px; align-items: start; cursor: pointer; }
+.nsos-cream .training-card h3 { margin: 4px 0; font-size: 16px; }
+.nsos-cream .training-card p { margin: 0; font-size: 13px; color: #6f675e; }
+.nsos-cream .training-meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; font-size: 12px; color: #8a7d6e; }
+.nsos-cream .training-card-icon { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: #f6ead4 !important; color: #7a5a1e !important; }
+
+@media (max-width: 760px) {
+  .nsos-cream .training-summary { grid-template-columns: 1fr 1fr; }
+}
