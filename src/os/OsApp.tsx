@@ -529,6 +529,11 @@ function OsShell() {
           <button className="sidebar-toggle" onClick={() => setSidebarOpen(true)}><Menu size={20} /></button>
           <div className="topbar-title"><span>{currentWorkspace.label}</span><h1>{currentNav?.label}</h1></div>
           <div className="os-topbar-actions">
+            {mode !== 'owner' && (
+              <button type="button" className="portal-switch-topbar" onClick={() => switchMode('owner')} aria-label="Back to Owner portal">
+                <ShieldCheck size={16} /><span>Owner</span>
+              </button>
+            )}
             <button className="os-command-trigger" aria-label="Search workspace" onClick={() => { setMoreOpen(false); setCommandOpen(true); }}>
               <Search size={16} /><span>Search workspace</span><kbd>⌘ K</kbd>
             </button>
@@ -546,6 +551,12 @@ function OsShell() {
           </div>
           <div className="os-view-context"><span className="os-live-dot" />{mode === 'owner' ? 'Owner portal' : mode === 'd2d' ? 'D2D field' : mode === 'detailer' ? 'Detailer' : 'Admin'}</div>
         </div>
+        <nav className="portal-switch-rail" aria-label="Switch portal">
+          <button type="button" className={mode === 'owner' ? 'active' : ''} onClick={() => switchMode('owner')}><ShieldCheck size={14} />Owner</button>
+          <button type="button" className={mode === 'd2d' ? 'active' : ''} onClick={() => switchMode('d2d')}><Target size={14} />D2D</button>
+          <button type="button" className={mode === 'detailer' ? 'active' : ''} onClick={() => switchMode('detailer')}><Car size={14} />Detail</button>
+          <button type="button" className={mode === 'admin' ? 'active' : ''} onClick={() => switchMode('admin')}><Settings2 size={14} />Admin</button>
+        </nav>
         <div className="os-phone-subnav" aria-label="Workspace pages">
           {currentWorkspace.items.map((id) => {
             const item = nav(id);

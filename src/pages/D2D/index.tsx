@@ -30,6 +30,7 @@ import {
 import { sendCommunication } from '@/lib/communications';
 import EmployeeAvatar from '@/components/EmployeeAvatar';
 import WorkspaceGate from '@/components/WorkspaceGate';
+import { BackToOwnerBanner, PortalSwitchGrid, PortalSwitchRail, TopbarOwnerLink, canSwitchLivePortals } from '@/components/PortalSwitch';
 import { BRAND_LOGO } from '@/lib/brand';
 import { ServiceMenuSelect } from '@/components/DetailSelfPicker';
 
@@ -431,10 +432,12 @@ export default function D2DPortal(){
       <div className="sidebar-header"><Link to="/" className="sidebar-brand"><img className="portal-brand-logo" src={BRAND_LOGO} alt="North Splash Auto Luxe"/><div><strong>D2D SALES</strong><small>NORTH SPLASH</small></div></Link><button className="sidebar-close" onClick={()=>setSidebar(false)}><X size={18}/></button></div>
       <div className="sidebar-user"><EmployeeAvatar employee={employee} size="md" editable onUploaded={url=>setEmployee(p=>p?{...p,avatar_url:url}:p)} className="sidebar-avatar"/><div><p>{employee.name}</p><span>Level {employee.employment_level||1} · {employee.commission_rate}%</span></div></div>
       <nav className="sidebar-nav">{[['field','Field Work'],['performance','Results'],['account','My Account']].map(([id,label])=><div className="nav-group" key={id}><button className="nav-group-title" onClick={()=>setGroups(p=>Object.fromEntries(Object.keys(p).map(k=>[k,k===id?!p[id]:false])))}>{label}<ChevronDown size={14} className={groups[id]?'nav-chevron-open':''}/></button>{groups[id]&&nav.filter(n=>n[3]===id).map(([tid,l,Icon])=><button key={tid} className={`sidebar-item ${tab===tid?'sidebar-active':''}`} onClick={()=>{setTab(tid);setSidebar(false)}}><Icon size={18}/>{l}{tid==='onboarding'&&employee.onboarding_status&&employee.onboarding_status!=='complete'&&<span className="nav-count">1</span>}{tid==='followups'&&dueFollowups.length>0&&<span className="nav-count">{dueFollowups.length}</span>}</button>)}</div>)}</nav>
-      <div className="sidebar-footer"><div className={`connection-pill ${online?'online':'offline'}`}>{online?'Online':'Offline'}{offlineCount>0&&` · ${offlineCount} queued`}</div><button className="sidebar-item sidebar-signout" onClick={logout}><LogOut size={18}/>Sign Out</button></div>
+      <div className="sidebar-footer"><PortalSwitchGrid allow={canSwitchLivePortals(profile?.portal_role)}/><div className={`connection-pill ${online?'online':'offline'}`}>{online?'Online':'Offline'}{offlineCount>0&&` · ${offlineCount} queued`}</div><button className="sidebar-item sidebar-signout" onClick={logout}><LogOut size={18}/>Sign Out</button></div>
     </aside>
     {sidebar&&<div className="sidebar-backdrop" onClick={()=>setSidebar(false)}/>}<main id="portal-workspace" className="portal-main" tabIndex={-1}>
-      <div className="portal-topbar"><button className="sidebar-toggle" onClick={()=>setSidebar(true)}><Menu size={20}/></button><div className="topbar-title"><h1>{nav.find(n=>n[0]===tab)?.[1]}</h1><span>{territories.find(t=>t.id===selectedTerritory)?.name||'No territory assigned'}</span></div><div className="topbar-actions">{offlineCount>0&&<button className="btn-outline" onClick={syncOffline}><RefreshCw size={15}/> Sync {offlineCount}</button>}</div></div>
+      <div className="portal-topbar"><button className="sidebar-toggle" onClick={()=>setSidebar(true)}><Menu size={20}/></button><div className="topbar-title"><h1>{nav.find(n=>n[0]===tab)?.[1]}</h1><span>{territories.find(t=>t.id===selectedTerritory)?.name||'No territory assigned'}</span></div><div className="topbar-actions"><TopbarOwnerLink allow={canSwitchLivePortals(profile?.portal_role)}/>{offlineCount>0&&<button className="btn-outline" onClick={syncOffline}><RefreshCw size={15}/> Sync {offlineCount}</button>}</div></div>
+      <PortalSwitchRail allow={canSwitchLivePortals(profile?.portal_role)}/>
+      <BackToOwnerBanner allow={canSwitchLivePortals(profile?.portal_role)}/>
       <div className="portal-content">
         {employee.onboarding_status&&employee.onboarding_status!=='complete'&&tab!=='onboarding'&&<button type="button" className="portal-notice" onClick={()=>setTab('onboarding')}><ClipboardCheck size={17}/><div><strong>Finish your hire packet</strong><span>Headshot, legal name, tax last-4, deposit last-4, and I-9.</span></div><small>Open</small></button>}
         {tab==='onboarding'&&<div className="tab-content v2-page"><EmployeeOnboardingTab employee={employee} audience="self" onUpdated={setEmployee} onOpenTraining={()=>setTab('training')}/></div>}

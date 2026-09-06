@@ -39,6 +39,7 @@ import ClientPhotosSection from '@/components/ClientPhotosSection';
 import WorkspaceGate from '@/components/WorkspaceGate';
 import TeamMessaging from '@/components/TeamMessaging';
 import AdminDataManager from '@/components/AdminDataManager';
+import { PortalSwitchGrid, PortalSwitchRail } from '@/components/PortalSwitch';
 
 type AdminTab =
   | 'dashboard'
@@ -649,7 +650,7 @@ const handleDeleteAvailability = async (id: string) => {
         </nav>
 
         <div className="sidebar-footer">
-          {ownerMode&&<div className="owner-field-switch-v26"><span>WORK MODE</span><div><Link to="/d2d" className="owner-field-mode-btn"><Target size={16}/><strong>D2D</strong><small>Sell / canvass</small></Link><Link to="/employee" className="owner-field-mode-btn"><Car size={16}/><strong>Detail</strong><small>Run jobs</small></Link></div></div>}
+          {ownerMode && <PortalSwitchGrid allow />}
           <Link to="/portal" className="sidebar-item"><Eye size={18} /> Customer View</Link>
           <a href={siteUrl} className="sidebar-item"><Globe size={18} /> View Site</a>
           <button className="sidebar-item sidebar-signout" onClick={handleSignOut}><LogOut size={18} /> Sign Out</button>
@@ -668,11 +669,15 @@ const handleDeleteAvailability = async (id: string) => {
             <button className="btn-primary btn-sm desktop-top-action" onClick={()=>setTab('appointments')}><Plus size={15}/><span>New work</span></button>
             <button className={`os-mobile-actions-trigger ${mobileActionsOpen?'active':''}`} aria-label="More workspace actions" aria-expanded={mobileActionsOpen} onClick={()=>setMobileActionsOpen(v=>!v)}><MoreHorizontal size={20}/></button>
             {mobileActionsOpen&&<div className="os-mobile-actions-menu">
-              {ownerMode&&<><button onClick={()=>navigate('/d2d')}><Target size={16}/><span>Switch to D2D mode</span></button><button onClick={()=>navigate('/employee')}><Car size={16}/><span>Switch to Detailer mode</span></button></>}
+              {ownerMode&&<><button onClick={()=>navigate('/d2d')}><Target size={16}/><span>Switch to D2D</span></button><button onClick={()=>navigate('/employee')}><Car size={16}/><span>Switch to Detail</span></button><button onClick={()=>navigate('/manager')}><Users size={16}/><span>Switch to Manager</span></button></>}
               <button onClick={()=>{setDataManagerOpen(true);setMobileActionsOpen(false)}}><Trash2 size={16}/><span>Manage data</span></button>
               <button onClick={()=>{setTab('appointments');setMobileActionsOpen(false)}}><Plus size={16}/><span>New work</span></button>
             </div>}
           </div>
+        </div>
+        {ownerMode && <PortalSwitchRail allow />}
+        <div className="os-phone-subnav" aria-label="Workspace pages">
+          {currentWorkspace.items.map(id=>{const item=navItems.find(n=>n.id===id);if(!item)return null;return <button key={id} type="button" className={tab===id?'active':''} onClick={()=>setTab(id)}>{item.label}</button>})}
         </div>
         <div className="os-secondary-nav">
           <div className="os-secondary-nav-scroll">

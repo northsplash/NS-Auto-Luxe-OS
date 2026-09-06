@@ -2,7 +2,9 @@
 
 Field-service operating system for North Splash Auto Luxe. One cream-luxury OS — Stripe hierarchy, SalesRabbit D2D, ServiceTitan dispatch — not 15 tools stitched together.
 
-`/` and `/owner` open the live Owner portal (Supabase team, jobs, and cash). `/os` is the demo cream OS with sample data. D2D canvassing is `/d2d`. The detailer portal is `/employee`. Sign-in stays at `/login`.
+`/` and `/owner` open the live Owner portal (Supabase team, jobs, and cash). `/os` is the demo cream OS with sample data. D2D canvassing is `/d2d`. The detailer portal is `/employee`. Manager dispatch is `/manager`. Sign-in stays at `/login`.
+
+Owners can move between Owner, D2D, Detail, and Manager from the sidebar, the tablet portal chips, or **Back to Owner** on field screens. Tablets (about 721–1180px) use an overlay menu and a dedicated workspace scroller so the page pans instead of locking behind nested overflow.
 
 ## Run locally
 
