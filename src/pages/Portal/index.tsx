@@ -401,7 +401,7 @@ const [timesLoading, setTimesLoading] = useState(false);
       {sidebarOpen && <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} />}
 
       {/* Main */}
-      <main className="portal-main">
+      <main id="portal-workspace" className="portal-main" tabIndex={-1}>
         <div className="portal-topbar">
           <button className="sidebar-toggle" onClick={() => setSidebarOpen(true)}><Menu size={20} /></button>
           <div className="topbar-title">
@@ -822,6 +822,13 @@ const [timesLoading, setTimesLoading] = useState(false);
           </div>
         </div>
       )}
+        <nav className="os-mobile-bottom-nav mobile-app-nav-v25" aria-label="Customer navigation">
+          {navItems.map(({ id, label, Icon }) => (
+            <button key={id} className={tab === id ? 'active' : ''} onClick={() => setTab(id)}>
+              <Icon size={20} /><span>{label === 'My Appointments' ? 'Jobs' : label === 'Billing & Savings' ? 'Billing' : label}</span>
+            </button>
+          ))}
+        </nav>
     </div>
   );
 }

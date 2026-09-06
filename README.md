@@ -69,7 +69,7 @@ The two cores: **SalesRabbit** for territory maps, pins, knocks, and canvassing;
 ## Apply the hire packet in Supabase
 
 After pulling, run `supabase/migrations/20260906120000_v29_employee_onboarding_profiles.sql`, `supabase/migrations/20260906140000_v30_new_hire_academy.sql`, and `supabase/migrations/20260906150000_v31_client_photos.sql` on the live project (or `supabase db push`). The Owner UI still saves last-four tax/deposit into `onboarding_tasks` if that table is not applied yet. Full SSNs are never stored. The Training tab also upserts academy lessons if the SQL has not been applied yet. Client photo imports still land in storage and a local fallback if `client_photos` is not applied yet.
-- Phones: Home / Chat / Calendar / Team / More. Tablets use split map/list, chat, and dispatch.
+- Device shells: phone (≤720) uses the cream bottom bar; tablet (721–1180) uses hamburger + overlay menu + bottom bar; web (≥1181) keeps a persistent sidebar and hides the bar. Hard-refresh after deploy.
 
 ## Supabase
 

@@ -476,7 +476,7 @@ export default function D2DPortal(){
         {tab==='training'&&<div className="tab-content"><TrainingPortal employee={employee}/></div>}
       </div>
     </main>
-    <nav className="mobile-app-nav-v25" aria-label="D2D mobile navigation">
+    <nav className="os-mobile-bottom-nav mobile-app-nav-v25" aria-label="D2D mobile navigation">
       {[['territory','Territory',MapPin],['leads','Leads',Target],['calendar','Calendar',CalendarDays],['messages','Chat',MessageCircle],['performance','More',BarChart3]].map(([id,label,Icon]:any)=><button key={id} className={tab===id?'active':''} onClick={()=>setTab(id as Tab)}><Icon size={20}/><span>{label}</span>{id==='leads'&&dueFollowups.length>0&&<b>{dueFollowups.length}</b>}</button>)}
     </nav>
 
