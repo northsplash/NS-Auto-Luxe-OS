@@ -696,7 +696,7 @@ const handleDeleteAvailability = async (id: string) => {
         </div>
         {ownerMode && <PortalSwitchRail allow />}
         <div className="os-phone-subnav" aria-label="Workspace pages">
-          {currentWorkspace.items.map(id=>{const item=navItems.find(n=>n.id===id);if(!item)return null;return <button key={id} type="button" className={tab===id?'active':''} onClick={()=>setTab(id)}>{item.label}</button>})}
+          {currentWorkspace.items.map(id=>{const item=navItems.find(n=>n.id===id);if(!item)return null;return <button key={id} type="button" className={tab===id?'active':''} onClick={()=>setTab(id)}>{id==='command_center'||id==='dashboard'?'Home':id==='payment_test'?'Pay test':item.label}</button>})}
         </div>
         <div className="os-secondary-nav">
           <div className="os-secondary-nav-scroll">

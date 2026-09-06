@@ -575,7 +575,7 @@ function OsShell() {
           {currentWorkspace.items.map((id) => {
             const item = nav(id);
             if (!item) return null;
-            return <button key={id} type="button" className={tab === id ? 'active' : ''} onClick={() => go(id)}>{TAB_SHORT[id] || item.label}</button>;
+            return <button key={id} type="button" className={tab === id ? 'active' : ''} onClick={() => go(id)}>{id === 'command_center' || id === 'dashboard' ? 'Home' : id === 'payment_test' ? 'Pay test' : (TAB_SHORT[id] || item.label)}</button>;
           })}
         </div>
         {mode !== 'owner' && (
