@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   Archive, Bell, BriefcaseBusiness, Calendar, CalendarClock, Camera, Car, CheckCircle2, ClipboardCheck,
   Clock3, CreditCard, DollarSign, FileText, Gauge, Globe, LayoutDashboard, ListChecks, LogOut, Mail,
-  Menu, MessageCircle, MoreHorizontal, PackageSearch, Plus, ScrollText, Search, Settings2, ShieldCheck,
+  Menu, MessageCircle, MoreHorizontal, PackageSearch, Plus, ScrollText, Search, Settings2, ShieldCheck, ChevronDown,
   Target, Trash2, TrendingUp, UserCheck, Users, Wrench, X,
 } from 'lucide-react';
 import type { EmployeeDraft } from '@/lib/rolePresets';
@@ -474,12 +474,26 @@ function OsShell() {
             const active = currentWorkspace.id === w.id;
             return (
               <div key={w.id} className={`os-workspace-block ${active ? 'open' : ''}`}>
-                <button type="button" className={`os-workspace-button ${active ? 'active' : ''}`} onClick={() => { if (!active) go(lastByWorkspace[w.id] || w.items[0]); }}>
+                <button
+                  type="button"
+                  className={`os-workspace-button ${active ? 'active' : ''}`}
+                  aria-expanded={active}
+                  onClick={() => {
+                    if (active) return;
+                    const next = lastByWorkspace[w.id] || w.items[0];
+                    setTab(resolveTab(next));
+                    setPeopleId(null);
+                    setJobId(null);
+                    setMoreOpen(false);
+                    setNewWorkOpen(false);
+                  }}
+                >
                   <span className="os-workspace-icon"><w.Icon size={18} /></span>
                   <span>{w.label}</span>
+                  <ChevronDown size={14} className="os-workspace-chevron" />
                 </button>
                 {active && (
-                  <div className="os-workspace-children">
+                  <div className="os-workspace-children" role="group" aria-label={`${w.label} pages`}>
                     {w.items.map((id) => {
                       const item = nav(id);
                       if (!item) return null;

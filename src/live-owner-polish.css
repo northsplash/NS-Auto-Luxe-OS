@@ -4862,3 +4862,52 @@
 @media (min-width: 1181px) {
   .portal-switch-rail { display: none !important; }
 }
+
+/* Last-wins: workspace dropdown of dedicated pages on espresso rail. */
+.portal-layout.nsos-cream .os-workspace-block { display: grid; gap: 2px; }
+.portal-layout.nsos-cream .os-workspace-button {
+  grid-template-columns: 36px minmax(0, 1fr) 18px !important;
+}
+.portal-layout.nsos-cream .os-workspace-chevron {
+  color: #8a8178 !important;
+  justify-self: end;
+  transition: transform .18s ease;
+}
+.portal-layout.nsos-cream .os-workspace-block.open .os-workspace-chevron {
+  transform: rotate(180deg);
+  color: #e8c96a !important;
+}
+.portal-layout.nsos-cream .os-workspace-children {
+  display: grid;
+  gap: 2px;
+  padding: 0 8px 8px 42px;
+}
+.portal-layout.nsos-cream .os-workspace-children button {
+  text-align: left;
+  border: 0;
+  background: transparent;
+  color: #c9bfb2 !important;
+  -webkit-text-fill-color: #c9bfb2 !important;
+  font-size: 12px !important;
+  font-weight: 600;
+  min-height: 36px;
+  border-radius: 8px;
+  padding: 0 10px;
+  width: 100%;
+}
+.portal-layout.nsos-cream .os-workspace-children button:hover {
+  background: rgba(255, 253, 248, .06);
+  color: #f6f1e8 !important;
+  -webkit-text-fill-color: #f6f1e8 !important;
+}
+.portal-layout.nsos-cream .os-workspace-children button.active {
+  color: #e8c96a !important;
+  -webkit-text-fill-color: #e8c96a !important;
+  background: rgba(184, 137, 58, .16) !important;
+}
+@media (max-width: 1180px) {
+  .portal-layout.nsos-cream .os-workspace-children button {
+    min-height: 44px;
+    font-size: 13px !important;
+  }
+}

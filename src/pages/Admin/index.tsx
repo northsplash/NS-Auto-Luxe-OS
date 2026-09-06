@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Calendar, CreditCard, UserCheck, Car,
   TrendingUp, BarChart2, LogOut, Menu, X, Plus, Trash2,
-  Eye, DollarSign, Activity, ChevronUp, Globe, Archive,
+  Eye, DollarSign, Activity, ChevronDown, ChevronUp, Globe, Archive,
   BriefcaseBusiness, CalendarClock, Clock3, PackageSearch, Settings2,
   Target, MapPinned, ListChecks, Wrench, FileText, ShieldCheck, Bell,
   ClipboardCheck, ScrollText, UserCog, Gauge, MessageCircle, Search, MoreHorizontal, CheckCircle2, Mail, Phone, Camera
@@ -127,6 +127,7 @@ export default function Admin() {
   const [commandQuery,setCommandQuery]=useState('');
   const [dataManagerOpen,setDataManagerOpen]=useState(false);
   const [mobileActionsOpen,setMobileActionsOpen]=useState(false);
+  const [lastByWorkspace,setLastByWorkspace]=useState<Partial<Record<string,AdminTab>>>({});
 
   const [customers, setCustomers] = useState<Profile[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -554,6 +555,11 @@ const handleDeleteAvailability = async (id: string) => {
   const workspaces = ownerMode ? ownerWorkspaces : adminWorkspaces;
   const workspaceForTab=(id:AdminTab)=>workspaces.find(w=>w.items.includes(id))??workspaces[0];
   const currentWorkspace=workspaceForTab(tab);
+  useEffect(()=>{
+    const ws=workspaces.find(w=>w.items.includes(tab));
+    if(!ws)return;
+    setLastByWorkspace(prev=>prev[ws.id]===tab?prev:{...prev,[ws.id]:tab});
+  },[tab,ownerMode]);
   const upcomingAppointments = appointments.filter(a=>a.scheduled_at && new Date(a.scheduled_at).getTime()>=Date.now() && !['cancelled','completed'].includes(a.status)).length;
   const unassignedJobs = appointments.filter(a=>!a.assigned_employee_id && !['cancelled','completed'].includes(a.status)).length;
   const activeEmployees = employees.filter(e=>e.status==='active').length;
@@ -639,11 +645,24 @@ const handleDeleteAvailability = async (id: string) => {
           <div className="os-sidebar-section-label">WORKSPACES</div>
           {workspaces.map(w=>{
             const active=currentWorkspace.id===w.id;
-            return <button key={w.id} className={`os-workspace-button ${active?'active':''}`} onClick={()=>{setTab(w.items[0]);setSidebarOpen(false)}}>
-              <span className="os-workspace-icon"><w.Icon size={18}/></span>
-              <span>{w.label}</span>
-              <small>{w.items.length}</small>
-            </button>
+            return (
+              <div key={w.id} className={`os-workspace-block ${active?'open':''}`}>
+                <button type="button" className={`os-workspace-button ${active?'active':''}`} aria-expanded={active} onClick={()=>{ if(!active) setTab(lastByWorkspace[w.id]||w.items[0]); }}>
+                  <span className="os-workspace-icon"><w.Icon size={18}/></span>
+                  <span>{w.label}</span>
+                  <ChevronDown size={14} className="os-workspace-chevron"/>
+                </button>
+                {active && (
+                  <div className="os-workspace-children" role="group" aria-label={`${w.label} pages`}>
+                    {w.items.map(id=>{
+                      const item=navItems.find(n=>n.id===id);
+                      if(!item)return null;
+                      return <button key={id} type="button" className={tab===id?'active':''} onClick={()=>{setTab(id);setSidebarOpen(false)}}>{item.label}</button>;
+                    })}
+                  </div>
+                )}
+              </div>
+            );
           })}
           <div className="os-sidebar-section-label os-sidebar-section-gap">PINNED</div>
           {(['command_center','appointments','leads'] as AdminTab[]).map(id=>{const item=navItems.find(n=>n.id===id);if(!item)return null;const {Icon,label}=item;return <button key={id} className={`os-pinned-link ${tab===id?'active':''}`} onClick={()=>{setTab(id);setSidebarOpen(false)}}><Icon size={16}/><span>{label}</span></button>})}

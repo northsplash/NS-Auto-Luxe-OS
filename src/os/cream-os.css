@@ -903,6 +903,15 @@ html.nsos-active #root {
   color: #e8c96a;
   background: rgba(184, 137, 58, .16);
 }
+.os-workspace-chevron {
+  color: #8a8178;
+  justify-self: end;
+  transition: transform .18s ease;
+}
+.os-workspace-block.open .os-workspace-chevron {
+  transform: rotate(180deg);
+  color: #e8c96a;
+}
 .os-mode-grid {
   display: grid !important;
   grid-template-columns: 1fr 1fr !important;
