@@ -3454,6 +3454,8 @@
 .portal-layout.nsos-cream .portal-main textarea,
 .portal-layout.nsos-cream .portal-main .search-box,
 .portal-layout.nsos-cream .portal-main .message-search,
+.portal-layout.nsos-cream .portal-main .nsos-search,
+.portal-layout.nsos-cream .portal-main .nsos-select,
 .portal-layout.nsos-cream .workspace-search {
   background: #fffdf8 !important;
   color: #1c1814 !important;

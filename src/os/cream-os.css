@@ -207,7 +207,7 @@ html.nsos-active #root {
 .nsos-cream .nsos-select,
 .nsos-cream .nsos-search {
   color-scheme: light !important;
-  background: #fff !important;
+  background: #fffdf8 !important;
   color: var(--ns-ink) !important;
   -webkit-text-fill-color: var(--ns-ink) !important;
   border: 1px solid var(--ns-line) !important;
