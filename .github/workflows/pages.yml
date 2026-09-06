@@ -33,6 +33,7 @@ jobs:
           set -euo pipefail
           touch dist/.nojekyll
           cp dist/index.html dist/404.html
+          cp "$GITHUB_WORKSPACE/vercel.gh-pages.json" dist/vercel.json
           cd dist
           git init
           git checkout -b gh-pages
