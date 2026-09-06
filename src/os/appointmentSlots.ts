@@ -14,7 +14,7 @@ const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
 
 function jobTakesSlot(job: OsJob, dayWord: string, weekday: Weekday, time: string) {
   if (job.status === 'completed') return false;
-  const stamp = job.time.toLowerCase();
+  const stamp = String(job.time || '').toLowerCase();
   const hour = time.replace(' AM', '').replace(' PM', '');
   const sameTime = stamp.includes(hour.toLowerCase()) || stamp.includes(time.toLowerCase());
   if (!sameTime) return false;
@@ -30,7 +30,7 @@ export function liveOpenSlots(jobs: OsJob[], employees: OsEmployee[], count = 10
     date.setDate(start.getDate() + d);
     const weekday = DAY_NAMES[date.getDay()] as Weekday;
     if (weekday === 'Sun') continue;
-    const available = techs.filter((e) => e.availability[weekday]);
+    const available = techs.filter((e) => e.availability?.[weekday]);
     if (!available.length) continue;
     const dateLabel = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
     const dayWord = d === 0 ? 'Today' : d === 1 ? 'Tomorrow' : weekday;

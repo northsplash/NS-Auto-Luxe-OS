@@ -222,7 +222,7 @@ export default function TeamMessaging({employee,employees=[],portalKind='employe
     setNewName('');setNewMembers([]);setShowCreate(false);await loadChannels();setActiveId(data.id);
   };
   const mine=(m:Message)=>m.sender_user_id===user?.id;
-  const messageEmployee=(m:Message)=>directory.find(e=>e.id===m.sender_employee_id)||directory.find(e=>e.name.toLowerCase()===m.sender_name.toLowerCase());
+  const messageEmployee=(m:Message)=>directory.find(e=>e.id===m.sender_employee_id)||directory.find(e=>String(e.name||'').toLowerCase()===String(m.sender_name||'').toLowerCase());
 
   const channelButton=(c:Channel)=>{const meta=channelMeta[c.id]||{};return <button key={c.id} className={activeId===c.id?'message-channel active':'message-channel'} onClick={()=>{setActiveId(c.id);setMobileThreadOpen(true)}}>
     <span className="message-channel-icon">{channelIcon(c)}</span>

@@ -310,7 +310,7 @@ export default function TeamMessagesView() {
             <header><strong>Active here</strong><span>{recentAuthors.length || 1}</span></header>
             <div className="message-people-stack">
               {(recentAuthors.length ? recentAuthors : ['North Splash Admin']).map((name) => {
-                const emp = os.employees.find((e) => e.name.toLowerCase() === name.toLowerCase());
+                const emp = os.employees.find((e) => String(e.name || '').toLowerCase() === String(name || '').toLowerCase());
                 return (
                   <div key={name}>
                     <Avatar initials={emp?.initials || initials(name)} hue={emp?.hue || '#c8a96a'} photo={emp?.photo} size={32} />

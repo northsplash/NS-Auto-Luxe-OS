@@ -1397,11 +1397,9 @@ html.nsos-active #root {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum" 1;
 }
-.nsos-cream .nsos-col,
-.nsos-cream .phase-panel,
-.nsos-cream .owner-job-v17 {
+.nsos-cream .nsos-col {
   content-visibility: auto;
-  contain-intrinsic-size: 120px;
+  contain-intrinsic-size: 180px;
 }
 .nsos-cream .nsos-kanban {
   gap: 12px;

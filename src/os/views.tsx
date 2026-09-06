@@ -582,7 +582,7 @@ export function PeopleProfile({ employee }: { employee: OsEmployee }) {
       )}
       {tab === 'activity' && (
         <div className="nsos-card">
-          {os.activity.filter((a) => a.text.includes(firstWord(employee.name))).slice(0, 8).map((a) => (
+          {os.activity.filter((a) => String(a.text || '').includes(firstWord(employee.name))).slice(0, 8).map((a) => (
             <div key={a.id} style={{ fontSize: 13, padding: '8px 0', borderBottom: '1px solid var(--os-line)' }}>{a.at} · {a.text}</div>
           ))}
           {os.jobs.filter((j) => j.detailer === employee.name).map((j) => (
@@ -1752,7 +1752,7 @@ export function OmniSearch({
     ...os.leads.filter((l) => `${l.name} ${l.address}`.toLowerCase().includes(query)).map((l) => ({ id: l.id, kind: 'lead' as const, title: l.name, sub: l.address })),
     ...os.chats.filter((c) => String(c.name || '').toLowerCase().includes(query)).map((c) => ({ id: c.id, kind: 'chat' as const, title: c.name, sub: c.preview })),
     ...(['home', 'schedule', 'dispatch', 'payments', 'hire', 'comms', 'settings'] as const)
-      .filter((id) => id.includes(query) || TITLES_SAFE[id].includes(query))
+      .filter((id) => id.includes(query) || String(TITLES_SAFE[id] || '').includes(query))
       .map((id) => ({ id, kind: 'view' as const, title: id, sub: 'Workspace' })),
   ].slice(0, 8);
   return (

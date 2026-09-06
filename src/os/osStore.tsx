@@ -4,7 +4,7 @@ import { channelLabel, fillTemplate } from '@/lib/communicationCatalog';
 import type { EmployeeDraft } from '@/lib/rolePresets';
 import { firstWord, money, prettyLabel } from '@/lib/data';
 import {
-  clockNow, defaultTemplates, initialsOf, normalizeChat, normalizeEmployee, normalizeJob, normalizeLead,
+  clockNow, defaultTemplates, initialsOf, normalizeActivity, normalizeChat, normalizeEmployee, normalizeJob, normalizeLead,
   seedActivity, seedCandidates, seedChats, seedCustomers, seedEmployees, seedJobs, seedLeads,
   seedPayments, seedSettings, seedShifts, seedTimeOff, uid, emptyOnboarding,
   type JobDraft, type JobStatus, type LeadStatus, type OsActivity, type OsCandidate, type OsChat,
@@ -65,7 +65,7 @@ function migrate(data: Partial<OsSnapshot>): OsSnapshot {
     }),
     shifts: data.shifts?.length ? data.shifts : base.shifts,
     timeOff: data.timeOff?.length ? data.timeOff : base.timeOff,
-    activity: data.activity?.length ? data.activity : base.activity,
+    activity: (data.activity?.length ? data.activity : base.activity).map((a) => normalizeActivity(a)),
     customers: data.customers?.length ? data.customers : base.customers,
     settings: { ...base.settings, ...(data.settings || {}) },
   };

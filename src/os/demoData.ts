@@ -560,6 +560,15 @@ export function normalizeChat(c: Partial<OsChat> & { id?: string; name?: string 
   };
 }
 
+export function normalizeActivity(a: Partial<OsActivity> & { id?: string }): OsActivity {
+  return {
+    id: a.id || uid(),
+    at: String(a.at || ''),
+    text: String(a.text || ''),
+    kind: a.kind === 'pay' || a.kind === 'hire' || a.kind === 'comms' || a.kind === 'sales' ? a.kind : 'ops',
+  };
+}
+
 export function normalizeLead(l: Partial<OsLead> & { id?: string; name?: string }): OsLead {
   const merged = {
     id: l.id || uid(),
