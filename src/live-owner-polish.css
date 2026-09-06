@@ -5647,15 +5647,15 @@ html, body, #root {
   .auth-page .auth-card {
     min-height: 0 !important;
     width: 100% !important;
-    max-width: 560px;
+    max-width: none !important;
     margin: 0 auto;
     border-left: 0 !important;
-    padding: 24px 22px calc(28px + env(safe-area-inset-bottom)) !important;
+    padding: 28px 24px calc(28px + env(safe-area-inset-bottom)) !important;
   }
   .auth-page .auth-portals {
     grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
     width: 100%;
-    max-width: 520px;
+    max-width: none;
   }
   .auth-page .auth-portals span {
     min-width: 0 !important;
@@ -5752,6 +5752,11 @@ html, body, #root {
     overflow-y: auto !important;
     padding: 12px 14px calc(88px + env(safe-area-inset-bottom)) !important;
   }
+  .portal-layout.nsos-cream .desktop-top-action,
+  .portal-layout.nsos-cream .os-manage-data,
+  .portal-layout.nsos-cream .os-topbar-actions .btn-primary {
+    display: none !important;
+  }
   .portal-layout.nsos-cream .os-mobile-bottom-nav.mobile-app-nav-v25 {
     display: grid !important;
     grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
@@ -5798,9 +5803,6 @@ html, body, #root {
   .portal-layout.nsos-cream .owner-glance-v17,
   .portal-layout.nsos-cream .stripe-balances {
     grid-template-columns: 1fr 1fr !important;
-  }
-  .auth-page .auth-portals {
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
   }
   .route-error-actions-v27,
   .workspace-gate-actions {
