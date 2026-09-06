@@ -4,12 +4,13 @@ import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { signIn, signUp } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { portalPath } from '@/lib/permissions';
+import { BRAND_LOGO } from '@/lib/brand';
+import AuthShell from '@/components/AuthShell';
 
 const SITE_URL=(import.meta.env.VITE_SITE_URL||'https://www.northsplash.com').replace(/\/$/,'');
 
 export default function Login() {
   const [searchParams] = useSearchParams();
-  const siteUrl = (import.meta.env.VITE_SITE_URL || 'https://www.northsplash.com').replace(/\/$/, '');
   const [mode, setMode] = useState<'signin' | 'signup'>(() => searchParams.get('mode') === 'signup' ? 'signup' : 'signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -25,6 +26,8 @@ export default function Login() {
       void import('@/pages/Admin');
       void import('@/pages/Manager');
       void import('@/pages/Employee');
+      void import('@/pages/D2D');
+      void import('@/pages/Portal');
     }, 400);
     return () => window.clearTimeout(timer);
   }, []);
@@ -65,100 +68,87 @@ export default function Login() {
   };
 
   return (
-    <div className="auth-page nsos-cream">
-      <a className="skip-to-workspace" href="#auth-form">Skip to sign in</a>
-      <div className="auth-bg">
-        <img src="https://images.pexels.com/photos/27968215/pexels-photo-27968215.jpeg?auto=compress&cs=tinysrgb&h=650&w=940" alt="" />
-        <div className="auth-bg-overlay" />
-        <div className="auth-bg-copy">
-          <span>NORTH SPLASH AUTO LUXE</span>
-          <p>One workspace for Owner, D2D, Detail, and customers.</p>
+    <AuthShell skipLabel="Skip to sign in">
+      <a href={SITE_URL} className="auth-back"><ArrowLeft size={16} /> Back to site</a>
+      <div className="auth-brand">
+        <img className="auth-brand-logo" src={BRAND_LOGO} alt="North Splash Auto Luxe" />
+        <div>
+          <strong>NORTH SPLASH</strong>
+          <small>AUTO LUXE OS</small>
         </div>
       </div>
 
-      <div className="auth-card">
-        <a href={SITE_URL} className="auth-back"><ArrowLeft size={16} /> Back to site</a>
+      <div className="auth-tabs">
+        <button className={mode === 'signin' ? 'auth-tab active' : 'auth-tab'} onClick={() => { setMode('signin'); setError(''); }}>
+          Sign In
+        </button>
+        <button className={mode === 'signup' ? 'auth-tab active' : 'auth-tab'} onClick={() => { setMode('signup'); setError(''); }}>
+          Create Account
+        </button>
+      </div>
 
-        <div className="auth-brand">
-          <img className="auth-brand-logo" src={`${import.meta.env.BASE_URL}ns-auto-luxe-logo.svg`} alt="North Splash Auto Luxe" />
-          <div>
-            <strong>NORTH SPLASH</strong>
-            <small>AUTO LUXE OS</small>
-          </div>
-        </div>
+      <h2 className="auth-title">
+        {mode === 'signin' ? 'Welcome back.' : 'Create your account.'}
+      </h2>
+      <p className="auth-sub">
+        {mode === 'signin'
+          ? 'Sign in to Owner, D2D, Detail, Manager, or the customer portal.'
+          : 'Customer accounts keep appointments, membership, and visit history in one place.'}
+      </p>
 
-        <div className="auth-tabs">
-          <button className={mode === 'signin' ? 'auth-tab active' : 'auth-tab'} onClick={() => { setMode('signin'); setError(''); }}>
-            Sign In
-          </button>
-          <button className={mode === 'signup' ? 'auth-tab active' : 'auth-tab'} onClick={() => { setMode('signup'); setError(''); }}>
-            Create Account
-          </button>
-        </div>
-
-        <h2 className="auth-title">
-          {mode === 'signin' ? 'Welcome back.' : 'Create your account.'}
-        </h2>
-        <p className="auth-sub">
-          {mode === 'signin'
-            ? 'Sign in to Owner, D2D, Detail, Manager, or the customer portal.'
-            : 'Customer accounts keep appointments, membership, and visit history in one place.'}
-        </p>
-
-        <form id="auth-form" className="auth-form" onSubmit={handleSubmit}>
-          {mode === 'signup' && (
-            <>
-              <div className="auth-field">
-                <label>Full Name</label>
-                <input required autoComplete="name" placeholder="Your full name" value={name} onChange={e => setName(e.target.value)} />
-              </div>
-              <div className="auth-field">
-                <label>Phone Number</label>
-                <input type="tel" autoComplete="tel" placeholder="330-000-0000" value={phone} onChange={e => setPhone(e.target.value)} />
-              </div>
-            </>
-          )}
-          <div className="auth-field">
-            <label>Email Address</label>
-            <input required type="email" autoComplete="email" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)} />
-          </div>
-          <div className="auth-field">
-            <label>Password</label>
-            <div className="pw-wrap">
-              <input
-                required
-                type={showPw ? 'text' : 'password'}
-                autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-                placeholder={mode === 'signup' ? 'Create a password' : 'Your password'}
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                minLength={6}
-              />
-              <button type="button" onClick={() => setShowPw(!showPw)}>
-                {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
+      <form id="auth-form" className="auth-form" onSubmit={handleSubmit}>
+        {mode === 'signup' && (
+          <>
+            <div className="auth-field">
+              <label>Full Name</label>
+              <input required autoComplete="name" placeholder="Your full name" value={name} onChange={e => setName(e.target.value)} />
             </div>
+            <div className="auth-field">
+              <label>Phone Number</label>
+              <input type="tel" autoComplete="tel" placeholder="330-000-0000" value={phone} onChange={e => setPhone(e.target.value)} />
+            </div>
+          </>
+        )}
+        <div className="auth-field">
+          <label>Email Address</label>
+          <input required type="email" autoComplete="email" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)} />
+        </div>
+        <div className="auth-field">
+          <label>Password</label>
+          <div className="pw-wrap">
+            <input
+              required
+              type={showPw ? 'text' : 'password'}
+              autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+              placeholder={mode === 'signup' ? 'Create a password' : 'Your password'}
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              minLength={6}
+            />
+            <button type="button" onClick={() => setShowPw(!showPw)}>
+              {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
           </div>
-         
-          {mode === 'signin' && (
-  <Link to="/forgot-password">Forgot password?</Link>
-)}
+        </div>
 
-          {error && <div className="auth-error">{error}</div>}
+        {mode === 'signin' && (
+          <Link to="/forgot-password">Forgot password?</Link>
+        )}
 
-          <button type="submit" className="btn-primary btn-full btn-lg" disabled={loading} aria-busy={loading}>
-            {loading ? 'Please wait…' : mode === 'signin' ? 'Sign in' : 'Create account'}
-          </button>
-        </form>
+        {error && <div className="auth-error">{error}</div>}
 
-        <p className="auth-switch">
-          {mode === 'signin' ? "Don't have an account? " : 'Already have an account? '}
-          <button onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setError(''); }}>
-            {mode === 'signin' ? 'Create one' : 'Sign in'}
-          </button>
-        </p>
-        <p className="auth-switch"><Link to="/os">Open North Splash OS</Link></p>
-      </div>
-    </div>
+        <button type="submit" className="btn-primary btn-full btn-lg" disabled={loading} aria-busy={loading}>
+          {loading ? 'Please wait…' : mode === 'signin' ? 'Sign in' : 'Create account'}
+        </button>
+      </form>
+
+      <p className="auth-switch">
+        {mode === 'signin' ? "Don't have an account? " : 'Already have an account? '}
+        <button onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setError(''); }}>
+          {mode === 'signin' ? 'Create one' : 'Sign in'}
+        </button>
+      </p>
+      <p className="auth-switch"><Link to="/os">Open North Splash OS</Link></p>
+    </AuthShell>
   );
 }

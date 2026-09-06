@@ -16,6 +16,7 @@ export default function WorkspaceGate({
 }) {
   return (
     <div className="workspace-gate nsos-cream">
+      <span className="eyebrow">North Splash Auto Luxe</span>
       <img className="auth-brand-logo" src={BRAND_LOGO} alt="North Splash Auto Luxe" />
       {busy && <div className="portal-spinner" aria-hidden />}
       <strong>{title}</strong>

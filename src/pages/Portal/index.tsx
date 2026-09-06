@@ -9,9 +9,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { signOut } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { Appointment, Payment, Subscription } from '@/lib/supabase';
-import { money, calcSavings, ADD_ONS, VEHICLE_SIZES, MEMBERSHIPS, prettyLabel } from '@/lib/data';
+import { money, calcSavings, ADD_ONS, VEHICLE_SIZES, MEMBERSHIPS, prettyLabel, firstWord } from '@/lib/data';
 import { packageForSelf, type DetailFamily, type DetailSelf } from '@/lib/detailCatalog';
 import DetailSelfPicker from '@/components/DetailSelfPicker';
+import PortalPageHead from '@/components/PortalPageHead';
 import { sendCommunication } from '@/lib/communications';
 import EmployeeAvatar from '@/components/EmployeeAvatar';
 import WorkspaceGate from '@/components/WorkspaceGate';
@@ -371,9 +372,15 @@ const [timesLoading, setTimesLoading] = useState(false);
   if (loading || !user) {
     return <WorkspaceGate busy title="Opening customer portal" body="Loading your appointments and membership." />;
   }
+  if (dataLoading) {
+    return <WorkspaceGate busy title="Loading your visits" body="Appointments, membership, and billing for this vehicle." />;
+  }
+
+  const firstName = firstWord(profile?.full_name || '', 'there');
 
   return (
     <div className="portal-layout nsos-cream customer-os">
+      <a className="skip-to-workspace" href="#portal-workspace">Skip to workspace</a>
       {/* Sidebar */}
       <aside className={`portal-sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <div className="sidebar-header">
@@ -423,6 +430,7 @@ const [timesLoading, setTimesLoading] = useState(false);
           <button className="sidebar-toggle" onClick={() => setSidebarOpen(true)}><Menu size={20} /></button>
           <div className="topbar-title">
             <h1>{navItems.find(n => n.id === tab)?.label}</h1>
+            <span>{upcomingAppointment ? upcomingAppointment.service_name : 'Book Exterior, Interior, or Full vehicle'}</span>
           </div>
           <button className="btn-primary topbar-book" onClick={() => setShowBook(true)}>
             <Plus size={16} /> Book Service
@@ -436,8 +444,9 @@ const [timesLoading, setTimesLoading] = useState(false);
             <div className="dashboard-grid">
               <div className="dash-welcome">
                 <div>
-                  <h2>Welcome back, {profile?.full_name?.split(' ')[0] ?? 'there'}.</h2>
-                  <p>Here's an overview of your vehicle's care history.</p>
+                  <span className="eyebrow">Your vehicle</span>
+                  <h2>Welcome back, {firstName}.</h2>
+                  <p>Book Exterior, Interior, or Full vehicle — Essential, Signature, or Elite — then track the visit live.</p>
                 </div>
                 <button className="btn-primary" onClick={() => setShowBook(true)}>
                   <Plus size={16} /> Schedule a Detail
@@ -502,8 +511,8 @@ const [timesLoading, setTimesLoading] = useState(false);
                 ) : (
                   <div className="empty-state">
                     <Sparkles size={32} />
-                    <p>No upcoming appointments.</p>
-                    <button className="btn-primary" onClick={() => setShowBook(true)}>Book Now</button>
+                    <p>No upcoming appointments. Pick a self and we will confirm the window.</p>
+                    <button className="btn-primary" onClick={() => setShowBook(true)}>Book a self</button>
                   </div>
                 )}
               </div>
@@ -527,7 +536,7 @@ const [timesLoading, setTimesLoading] = useState(false);
                 ) : (
                   <div className="empty-state">
                     <Star size={32} />
-                    <p>No active membership.</p>
+                    <p>No active membership. Monthly plans keep Signature visits on the calendar.</p>
                     <button className="btn-outline" onClick={() => setTab('subscription')}>Explore Plans</button>
                   </div>
                 )}
@@ -538,22 +547,22 @@ const [timesLoading, setTimesLoading] = useState(false);
           {/* APPOINTMENTS */}
           {tab === 'appointments' && (
             <div className="tab-content">
-              <div className="tab-header">
-                <div>
-                  <h2>Your Appointments</h2>
-                  <p>{appointments.length} total service{appointments.length !== 1 ? 's' : ''}</p>
-                </div>
+              <PortalPageHead
+                kicker="Visits"
+                title="Your appointments"
+                lead={appointments.length ? `${appointments.length} service${appointments.length !== 1 ? 's' : ''} on file — live status from booked through complete.` : 'Book your first Exterior, Interior, or Full-vehicle self.'}
+              >
                 <button className="btn-primary" onClick={() => setShowBook(true)}>
                   <Plus size={16} /> New Appointment
                 </button>
-              </div>
+              </PortalPageHead>
 
               {appointments.length === 0 ? (
                 <div className="empty-page">
                   <Calendar size={48} />
                   <h3>No appointments yet</h3>
-                  <p>Book your first Luxe service to get started.</p>
-                  <button className="btn-primary" onClick={() => setShowBook(true)}>Book Now</button>
+                  <p>Choose Exterior, Interior, or Full vehicle — then Essential, Signature, or Elite.</p>
+                  <button className="btn-primary" onClick={() => setShowBook(true)}>Book a self</button>
                 </div>
               ) : (
                 <div className="apt-list">
@@ -594,7 +603,11 @@ const [timesLoading, setTimesLoading] = useState(false);
           {/* SUBSCRIPTION */}
           {tab === 'subscription' && (
             <div className="tab-content">
-              <h2>Membership Plans</h2>
+              <PortalPageHead
+                kicker="Membership"
+                title="Membership plans"
+                lead="Keep Signature visits on a monthly cadence. Switch or cancel any time."
+              />
               {subscription && (
                 <div className="current-plan-banner">
                   <div>
@@ -650,8 +663,11 @@ const [timesLoading, setTimesLoading] = useState(false);
           {/* BILLING */}
           {tab === 'billing' && (
             <div className="tab-content">
-              <h2>Billing & Savings</h2>
-              <p className="tab-sub">Track what you've invested in your vehicle's care — and how much it's protecting your investment.</p>
+              <PortalPageHead
+                kicker="Care"
+                title="Billing & savings"
+                lead="Track what you have invested in this vehicle — and the protection that comes with it."
+              />
 
               {/* Savings Hero */}
               <div className="billing-savings-card">
@@ -736,7 +752,10 @@ const [timesLoading, setTimesLoading] = useState(false);
         <div className="modal-overlay" onClick={() => setShowBook(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Book a Service</h3>
+              <div>
+                <span className="eyebrow">Book a self</span>
+                <h3>Schedule a detail</h3>
+              </div>
               <button onClick={() => setShowBook(false)}><X size={20} /></button>
             </div>
             {bookDone ? (

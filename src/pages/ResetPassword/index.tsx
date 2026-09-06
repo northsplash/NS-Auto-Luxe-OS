@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import AuthShell from '@/components/AuthShell';
+import { BRAND_LOGO } from '@/lib/brand';
 
 export default function ResetPassword() {
   const [password, setPassword] = useState('');
@@ -35,59 +37,54 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="auth-page nsos-cream">
-      <a className="skip-to-workspace" href="#auth-form">Skip to password form</a>
-      <div className="auth-card">
-        <Link to="/login" className="auth-back"><ArrowLeft size={16} /> Back to sign in</Link>
-        <div className="auth-brand">
-          <img className="auth-brand-logo" src={`${import.meta.env.BASE_URL}ns-auto-luxe-logo.svg`} alt="North Splash Auto Luxe" />
-          <div>
-            <strong>NORTH SPLASH</strong>
-            <small>AUTO LUXE OS</small>
-          </div>
+    <AuthShell skipLabel="Skip to password form" headline="Choose a new password, then sign back in to your portal.">
+      <Link to="/login" className="auth-back"><ArrowLeft size={16} /> Back to sign in</Link>
+      <div className="auth-brand">
+        <img className="auth-brand-logo" src={BRAND_LOGO} alt="North Splash Auto Luxe" />
+        <div>
+          <strong>NORTH SPLASH</strong>
+          <small>AUTO LUXE OS</small>
         </div>
-        <h2 className="auth-title">Create a new password</h2>
-        <p className="auth-sub">Use at least 8 characters. You will sign in with this password next.</p>
-
-        <form id="auth-form" className="auth-form" onSubmit={handleSubmit}>
-          <div className="auth-field">
-            <label>New Password</label>
-
-            <input
-              required
-              type="password"
-              autoComplete="new-password"
-              minLength={8}
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-            />
-          </div>
-
-          <div className="auth-field">
-            <label>Confirm Password</label>
-
-            <input
-              required
-              type="password"
-              autoComplete="new-password"
-              minLength={8}
-              value={confirmPassword}
-              onChange={e => setConfirmPassword(e.target.value)}
-            />
-          </div>
-
-          {error && <div className="auth-error">{error}</div>}
-
-          <button
-            type="submit"
-            className="btn-primary btn-full btn-lg"
-            disabled={loading}
-            aria-busy={loading}
-          >
-            {loading ? 'Updating…' : 'Update password'}
-          </button>
-        </form>
       </div>
-    </div>
+      <h2 className="auth-title">Create a new password</h2>
+      <p className="auth-sub">Use at least 8 characters. You will sign in with this password next.</p>
+
+      <form id="auth-form" className="auth-form" onSubmit={handleSubmit}>
+        <div className="auth-field">
+          <label>New Password</label>
+          <input
+            required
+            type="password"
+            autoComplete="new-password"
+            minLength={8}
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+          />
+        </div>
+
+        <div className="auth-field">
+          <label>Confirm Password</label>
+          <input
+            required
+            type="password"
+            autoComplete="new-password"
+            minLength={8}
+            value={confirmPassword}
+            onChange={e => setConfirmPassword(e.target.value)}
+          />
+        </div>
+
+        {error && <div className="auth-error">{error}</div>}
+
+        <button
+          type="submit"
+          className="btn-primary btn-full btn-lg"
+          disabled={loading}
+          aria-busy={loading}
+        >
+          {loading ? 'Updating…' : 'Update password'}
+        </button>
+      </form>
+    </AuthShell>
   );
 }

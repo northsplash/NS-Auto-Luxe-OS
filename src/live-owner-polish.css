@@ -4135,3 +4135,158 @@
   -webkit-text-fill-color: #b45444 !important;
   border-color: #efcfc8 !important;
 }
+
+/* V47 — every live portal (auth, customer, D2D, Detail, Manager) shares Owner cream. */
+.auth-page .auth-portals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
+.auth-page .auth-portals span {
+  display: grid;
+  gap: 2px;
+  min-width: 86px;
+  padding: 10px 12px;
+  border: 1px solid rgba(232, 201, 106, .35);
+  border-radius: 12px;
+  background: rgba(28, 24, 20, .35);
+  backdrop-filter: blur(8px);
+}
+.auth-page .auth-portals strong {
+  color: #f6f1e8 !important;
+  -webkit-text-fill-color: #f6f1e8 !important;
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.auth-page .auth-portals small {
+  color: #e8c96a !important;
+  -webkit-text-fill-color: #e8c96a !important;
+  font-size: 10px;
+}
+.workspace-gate .eyebrow {
+  color: #b8893a !important;
+  -webkit-text-fill-color: #b8893a !important;
+  letter-spacing: .16em;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.workspace-gate .auth-brand-logo {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  margin: 0 auto;
+}
+
+.portal-layout.nsos-cream .dash-welcome .eyebrow {
+  color: #e8c96a !important;
+  -webkit-text-fill-color: #e8c96a !important;
+}
+.portal-layout.nsos-cream .dash-welcome h2 {
+  color: #f6f1e8 !important;
+  -webkit-text-fill-color: #f6f1e8 !important;
+}
+.portal-layout.nsos-cream .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+.portal-layout.nsos-cream .modal-header h3 {
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  margin: 4px 0 0;
+}
+.portal-layout.nsos-cream .modal,
+.portal-layout.nsos-cream .modal-form,
+.portal-layout.nsos-cream .plan-card,
+.portal-layout.nsos-cream .followup-card,
+.portal-layout.nsos-cream .next-job-card,
+.portal-layout.nsos-cream .assigned-job-card,
+.portal-layout.nsos-cream .employee-welcome,
+.portal-layout.nsos-cream .employee-clock-badge,
+.portal-layout.nsos-cream .timeclock-hero,
+.portal-layout.nsos-cream .pay-hero,
+.portal-layout.nsos-cream .clock-card,
+.portal-layout.nsos-cream .timeoff-form,
+.portal-layout.nsos-cream .dispatch-v2-column,
+.portal-layout.nsos-cream .dispatch-v2-job,
+.portal-layout.nsos-cream .team-status-card,
+.portal-layout.nsos-cream .manager-job-row,
+.portal-layout.nsos-cream .manager-line,
+.portal-layout.nsos-cream .d2d-command-territory,
+.portal-layout.nsos-cream .d2d-command-next,
+.portal-layout.nsos-cream .d2d-map-shell,
+.portal-layout.nsos-cream .d2d-presentation-launch,
+.portal-layout.nsos-cream .route-hero {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  border-color: #e4d9cc !important;
+}
+.portal-layout.nsos-cream .employee-welcome h2,
+.portal-layout.nsos-cream .next-job-card h3,
+.portal-layout.nsos-cream .assigned-job-card h3,
+.portal-layout.nsos-cream .timeclock-hero h2,
+.portal-layout.nsos-cream .pay-hero h2,
+.portal-layout.nsos-cream .clock-card h2,
+.portal-layout.nsos-cream .route-hero h2,
+.portal-layout.nsos-cream .followup-card h3,
+.portal-layout.nsos-cream .manager-job-row strong,
+.portal-layout.nsos-cream .d2d-command-territory strong,
+.portal-layout.nsos-cream .d2d-command-next strong {
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .dash-stat-icon,
+.portal-layout.nsos-cream .manager-hero svg,
+.portal-layout.nsos-cream .employee-clock-badge svg,
+.portal-layout.nsos-cream .timeclock-icon,
+.portal-layout.nsos-cream .d2d-command-territory svg,
+.portal-layout.nsos-cream .d2d-command-next svg {
+  color: #b8893a !important;
+}
+.portal-layout.nsos-cream .employee-clock-badge.active,
+.portal-layout.nsos-cream .timeclock-icon.active,
+.portal-layout.nsos-cream .clock-status.active {
+  background: #1c1814 !important;
+  color: #f6f1e8 !important;
+  -webkit-text-fill-color: #f6f1e8 !important;
+  border-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .employee-clock-badge.active strong,
+.portal-layout.nsos-cream .clock-status.active span {
+  color: #f6f1e8 !important;
+  -webkit-text-fill-color: #f6f1e8 !important;
+}
+.portal-layout.nsos-cream .employee-clock-badge.active svg,
+.portal-layout.nsos-cream .timeclock-icon.active,
+.portal-layout.nsos-cream .clock-status.active svg {
+  color: #e8c96a !important;
+}
+.portal-layout.nsos-cream .ns-empty strong {
+  display: block;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  font-size: 16px;
+  margin-bottom: 6px;
+}
+.portal-layout.nsos-cream .ns-empty p {
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+  margin: 0 auto;
+  max-width: 420px;
+}
+.portal-layout.nsos-cream.customer-os .topbar-book {
+  background: #1c1814 !important;
+  color: #f6f1e8 !important;
+  -webkit-text-fill-color: #f6f1e8 !important;
+  border-color: #1c1814 !important;
+}
+
+@media (max-width: 720px) {
+  .auth-page .auth-portals span { min-width: 72px; padding: 8px 10px; }
+  .auth-page .auth-portals { justify-content: flex-start; }
+}
