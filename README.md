@@ -18,7 +18,7 @@ The app serves at `http://127.0.0.1:43127`. Demo state lives in this browser (`l
 ## Public URLs
 
 - GitHub Pages (updates on every push to `main`): https://northsplash.github.io/NS-Auto-Luxe-OS/?tab=dashboard
-- Vercel: import this GitHub repo in Vercel. `vercel.json` already rewrites the SPA. Add `northsplash.com` or `app.northsplash.com` as the project domain, then point DNS to Vercel. This repository cannot change northsplash.com DNS by itself.
+- Vercel: import **this GitHub repo**, production branch **`main`** (not `gh-pages`). `vercel.json` runs `npm ci --include=dev` then `npm run build` into `dist`. `gh-pages` is a static snapshot for GitHub Pages only — it has no Vite, so a Vercel build of that branch fails with `vite: command not found`. Add `northsplash.com` or `app.northsplash.com` as the project domain, then point DNS to Vercel. This repository cannot change northsplash.com DNS by itself.
 
 Open **Owner → Dashboard**. Each push to `main` rebuilds GitHub Pages.
 

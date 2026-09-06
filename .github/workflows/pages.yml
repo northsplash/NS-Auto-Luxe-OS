@@ -5,10 +5,11 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Deploy by pushing the built site to the gh-pages branch.
+# That matches the repo Pages source (branch: gh-pages) and avoids the
+# github-pages environment, which currently blocks deployments from main.
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
   group: pages
@@ -16,9 +17,6 @@ concurrency:
 
 jobs:
   deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -30,9 +28,16 @@ jobs:
       - run: npm run build
         env:
           GITHUB_PAGES: 'true'
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
-      - id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Publish dist to gh-pages
+        run: |
+          set -euo pipefail
+          touch dist/.nojekyll
+          cp dist/index.html dist/404.html
+          cd dist
+          git init
+          git checkout -b gh-pages
+          git add -A
+          git -c user.name='github-actions' -c user.email='github-actions[bot]@users.noreply.github.com' commit -m "Publish GitHub Pages"
+          git push --force "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages:gh-pages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
