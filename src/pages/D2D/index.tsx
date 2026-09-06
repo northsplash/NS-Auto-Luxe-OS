@@ -9,6 +9,7 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { signOut } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
+import { fetchTerritoryHouses, mapOsmHouses } from '@/lib/territoryHouses';
 import type {
   Appointment, D2DDailyGoal, Employee, Lead, LeadTerritory, SalesRecord, TerritoryDoor,
   TerritoryDoorHistory, TerritoryRoute, TimeEntry,
@@ -175,30 +176,17 @@ export default function D2DPortal(){
     setDiscoveringHouses(true);setHouseDiscoveryError('');
     try{
       const lats=points.map(p=>p[0]),lngs=points.map(p=>p[1]);
-      const {data,error}=await supabase.functions.invoke('territory-house-search',{body:{
-        south:Math.min(...lats),west:Math.min(...lngs),north:Math.max(...lats),east:Math.max(...lngs),points
-      }});
-      if(error)throw error;
-      if(!data?.success)throw new Error(data?.error||'Unable to discover houses.');
-      const blocked=new Set(['commercial','industrial','warehouse','retail','office','school','hospital','church','civic','public','government','garage','garages','shed']);
-      const elements=(data.elements??[]).filter((e:any)=>{
-        const building=String(e?.tags?.building||'').toLowerCase();
-        return !building||!blocked.has(building);
+      const elements=await fetchTerritoryHouses({
+        south:Math.min(...lats),west:Math.min(...lngs),north:Math.max(...lats),east:Math.max(...lngs),points,residentialOnly:true,
       });
+      const houses=mapOsmHouses(elements,points,{residentialOnly:true});
       const existing=doors.filter(d=>d.territory_id===territoryId);
       const seen=new Set(existing.map((d:any)=>String(d.source||'')));
       const rows:any[]=[];
-      for(const e of elements){
-        const lat=Number(e.lat??e.center?.lat),lng=Number(e.lon??e.center?.lon);
-        if(!Number.isFinite(lat)||!Number.isFinite(lng))continue;
-        const tags=e.tags??{};
-        const source=`osm:${e.type}:${e.id}`;
-        if(seen.has(source)||existing.some(d=>Math.abs(Number(d.latitude)-lat)<.000012&&Math.abs(Number(d.longitude)-lng)<.000012))continue;
-        seen.add(source);
-        const house=String(tags['addr:housenumber']||'').trim();
-        const street=String(tags['addr:street']||'').trim();
-        const address=[house,street].filter(Boolean).join(' ')||null;
-        rows.push({territory_id:territoryId,latitude:lat,longitude:lng,address,house_number:house||null,street_name:street||null,status:'unworked',source});
+      for(const house of houses){
+        if(seen.has(house.source)||existing.some(d=>Math.abs(Number(d.latitude)-house.lat)<.000012&&Math.abs(Number(d.longitude)-house.lng)<.000012))continue;
+        seen.add(house.source);
+        rows.push({territory_id:territoryId,latitude:house.lat,longitude:house.lng,address:house.address,house_number:house.house_number,street_name:house.street_name,status:'unworked',source:house.source});
       }
       for(let i=0;i<rows.length;i+=250){
         const {error:insertError}=await supabase.from('territory_doors').insert(rows.slice(i,i+250));

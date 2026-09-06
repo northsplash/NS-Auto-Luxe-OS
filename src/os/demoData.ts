@@ -292,6 +292,9 @@ export const seedLeads: OsLead[] = [
   { id: 'l4', name: 'The Carters', address: '901 Lakeview', status: 'new', rep: 'Unassigned', value: 275, temp: 'cold', phone: '919-555-1004', x: 34, y: 64, notes: '', activity: [] },
   { id: 'l5', name: 'Mina Park', address: '3 Magnolia', status: 'sold', rep: 'Sofia Reyes', value: 650, temp: 'hot', phone: '919-555-1005', x: 72, y: 24, notes: 'Ceramic close. Booked next week.', activity: [{ id: uid(), at: 'Yesterday', author: 'Sofia Reyes', body: 'Closed ceramic. Sent to dispatch.' }] },
   { id: 'l6', name: 'Do not knock', address: '77 Pine', status: 'dnk', rep: 'Sofia Reyes', value: 0, temp: 'cold', phone: '', x: 18, y: 72, notes: 'Homeowner requested DNK.', activity: [{ id: uid(), at: 'Mon', author: 'Sofia Reyes', body: 'Marked do-not-knock.' }] },
+  { id: 'l7', name: 'The Nguyens', address: '12 Magnolia', status: 'knocked', rep: 'Unassigned', value: 275, temp: 'warm', phone: '919-555-1007', x: 80, y: 42, notes: '', activity: [] },
+  { id: 'l8', name: 'Willow house', address: '8 Willow Dr', status: 'new', rep: 'Unassigned', value: 175, temp: 'cold', phone: '', x: 88, y: 58, notes: '', activity: [] },
+  { id: 'l9', name: 'Unknown door', address: '102 Maple St', status: 'new', rep: 'Unassigned', value: 275, temp: 'cold', phone: '', x: 28, y: 46, notes: '', activity: [] },
 ];
 
 export const seedChats: OsChat[] = [

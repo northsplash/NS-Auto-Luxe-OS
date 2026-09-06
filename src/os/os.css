@@ -1224,6 +1224,36 @@ html.nsos-active #root {
   border-right: 1px dashed rgba(255,255,255,.08);
 }
 .nsos-pin.dnk { background: #d46a5a; }
+.nsos-territories { display: grid; gap: 12px; }
+.nsos-territory-actions { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: center; }
+.nsos-territory-links { display: flex; gap: 8px; flex-wrap: wrap; }
+.nsos-territory-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.nsos-territory-card {
+  display: grid; gap: 10px; text-align: left; padding: 12px;
+  background: var(--os-card); border: 1px solid var(--os-line); border-radius: 14px;
+}
+.nsos-territory-card.selected { border-color: var(--os-gold); box-shadow: 0 0 0 1px var(--os-gold); }
+.nsos-territory-card-main {
+  display: grid; grid-template-columns: 10px 1fr auto; gap: 10px; align-items: start;
+  width: 100%; background: transparent; border: 0; padding: 0; color: inherit; text-align: left; cursor: pointer;
+}
+.nsos-territory-card-main i { width: 10px; height: 10px; border-radius: 50%; margin-top: 6px; }
+.nsos-territory-card-main strong { display: block; font-size: 15px; }
+.nsos-territory-card-main small, .nsos-territory-card-main span { color: var(--os-muted); font-size: 12px; }
+.nsos-street-board { display: grid; gap: 6px; }
+.nsos-street-row {
+  width: 100%; display: grid; grid-template-columns: 10px 1fr auto; gap: 10px; align-items: center;
+  text-align: left; background: transparent; border: 0; border-radius: 10px; padding: 8px; color: inherit; cursor: pointer;
+}
+.nsos-street-row i { width: 8px; height: 8px; border-radius: 50%; }
+.nsos-street-row strong { display: block; font-size: 13px; }
+.nsos-street-row small { color: var(--os-muted); font-size: 12px; }
+.nsos-street-row.active-row, .nsos-territory-card-main:hover { background: rgba(200,169,106,.08); }
+.nsos-pin.zone-west { box-shadow: 0 0 0 3px rgba(122,162,212,.55); }
+.nsos-pin.zone-central { box-shadow: 0 0 0 3px rgba(200,169,106,.55); }
+.nsos-pin.zone-east { box-shadow: 0 0 0 3px rgba(212,106,90,.55); }
+.nsos-pin.street-hit { transform: rotate(-45deg) scale(1.35); }
+.nsos-map-empty { position: absolute; inset: auto 16px 16px; }
 .nsos-sr-side { display: grid; gap: 10px; min-width: 0; }
 .nsos-sr-knocks { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 12px; }
 .nsos-sr-doors { display: grid; gap: 0; }
@@ -1313,6 +1343,7 @@ html.nsos-active #root {
   }
   .nsos-dir-row .dt-cell:nth-child(n+3) { display: none; }
   .nsos-live-route { grid-template-columns: 1fr; }
+  .nsos-territory-cards { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 860px) {

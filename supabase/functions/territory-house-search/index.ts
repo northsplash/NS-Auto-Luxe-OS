@@ -10,12 +10,13 @@ const endpoints = [
   'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
 ];
 
-function inside(point: [number, number], polygon: [number, number][]) {
-  const [y, x] = point; let hit = false;
-  for (let i=0,j=polygon.length-1;i<polygon.length;j=i++) {
-    const [yi,xi]=polygon[i], [yj,xj]=polygon[j];
-    const cross=((xi>x)!=(xj>x)) && (y < (yj-yi)*(x-xi)/((xj-xi)||1e-12)+yi);
-    if(cross) hit=!hit;
+function inside(lat: number, lng: number, polygon: [number, number][]) {
+  let hit = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const yi = polygon[i][0], xi = polygon[i][1];
+    const yj = polygon[j][0], xj = polygon[j][1];
+    const cross = ((yi > lat) !== (yj > lat)) && (lng < (xj - xi) * (lat - yi) / ((yj - yi) || 1e-12) + xi);
+    if (cross) hit = !hit;
   }
   return hit;
 }
@@ -26,7 +27,7 @@ Deno.serve(async (req) => {
     const { south, west, north, east, points=[] } = await req.json();
     if (![south,west,north,east].every(Number.isFinite)) throw new Error('Invalid territory bounds.');
     const area=(north-south)*(east-west);
-    if(area<=0 || area>0.08) throw new Error('Territory is too large. Draw a smaller neighborhood area.');
+    if(area<=0 || area>0.15) throw new Error('Territory is too large. Draw a smaller neighborhood area.');
     const q=`[out:json][timeout:18];(way["building"](${south},${west},${north},${east});node["addr:housenumber"](${south},${west},${north},${east}););out center tags;`;
     let last='House discovery providers are busy.';
     for(const url of endpoints){
@@ -39,7 +40,7 @@ Deno.serve(async (req) => {
         const elements=(json.elements||[]).filter((e:any)=>{
           const lat=Number(e.lat??e.center?.lat), lon=Number(e.lon??e.center?.lon);
           if(!Number.isFinite(lat)||!Number.isFinite(lon)) return false;
-          return poly.length<3 || inside([lat,lon],poly);
+          return poly.length<3 || inside(lat,lon,poly);
         });
         return new Response(JSON.stringify({success:true,elements,provider:url}),{headers:{...corsHeaders,'content-type':'application/json'}});
       }catch(e){last=e instanceof Error?e.message:String(e)}

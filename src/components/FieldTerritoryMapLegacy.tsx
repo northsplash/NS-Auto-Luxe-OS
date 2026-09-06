@@ -1,39 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { Lead, LeadTerritory } from '@/lib/supabase';
 import { doorStatus } from '@/lib/fieldOps';
+import type { FieldTerritoryMapProps } from './FieldTerritoryMap.types';
 
-type Door = {
-  id?: string;
-  latitude: number;
-  longitude: number;
-  address?: string | null;
-  status?: string;
-  territory_id?: string | null;
-  lead_id?: string | null;
-  do_not_knock?: boolean;
-};
-
-type Props = {
-  territories: LeadTerritory[];
-  leads?: Lead[];
-  doors?: Door[];
-  editable?: boolean;
-  selectedTerritoryId?: string;
-  initialPolygon?: [number, number][];
-  onPolygonChange?: (points: [number, number][]) => void;
-  onDoorClick?: (door: Door) => void;
-  onMapClick?: (lat: number, lng: number) => void;
-  onTerritoryClick?: (territory: LeadTerritory) => void;
-  liveLocation?: { latitude: number; longitude: number; accuracy?: number | null } | null;
-  routeDoorIds?: string[];
-  activeDoorId?: string | null;
-  statusFilter?: string[];
-  showDoorLabels?: boolean;
-  className?: string;
-  autoFit?: boolean;
-  mobileGestureLock?: boolean;
-  fieldMode?: boolean;
-};
+type Props = FieldTerritoryMapProps;
 
 const LEAFLET_CSS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
 const LEAFLET_JS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';

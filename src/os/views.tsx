@@ -910,6 +910,164 @@ export function DispatchView({ onOpen }: { onOpen?: (id: string) => void }) {
   );
 }
 
+const TERRITORY_ZONES = [
+  { id: 'west', name: 'West Shore', color: '#7aa2d4' },
+  { id: 'central', name: 'Central Corridor', color: '#c8a96a' },
+  { id: 'east', name: 'East Ridge', color: '#d46a5a' },
+] as const;
+type TerritoryZoneId = (typeof TERRITORY_ZONES)[number]['id'];
+const TERRITORY_REPS_KEY = 'nsos-territory-reps';
+
+function zoneOf(x: number): TerritoryZoneId {
+  if (x < 33) return 'west';
+  if (x < 66) return 'central';
+  return 'east';
+}
+function streetOf(address: string) {
+  return String(address || '').replace(/^\s*\d+[A-Za-z-]*\s+/, '').replace(/,.*/, '').trim() || address || 'Unnamed street';
+}
+function readTerritoryReps(): Record<string, string> {
+  try { return JSON.parse(localStorage.getItem(TERRITORY_REPS_KEY) || '{}'); } catch { return {}; }
+}
+
+export function TerritoriesView({ onMap, onPipeline }: { onMap?: () => void; onPipeline?: () => void }) {
+  const os = useOs();
+  const [zone, setZone] = useState<TerritoryZoneId | 'all'>('all');
+  const [street, setStreet] = useState('');
+  const [active, setActive] = useState<string | null>(os.leads[0]?.id || null);
+  const [reps, setReps] = useState<Record<string, string>>(readTerritoryReps);
+  const lead = os.leads.find((l) => l.id === active) || os.leads[0];
+  const d2dReps = ['Unassigned', ...os.employees.filter((e) => e.role === 'd2d_agent' || e.role === 'owner').map((e) => e.name)];
+  const pinClass = (status: LeadStatus) => {
+    if (status === 'sold' || status === 'appointment') return 'hot';
+    if (status === 'interested') return 'warm';
+    if (status === 'dnk') return 'dnk';
+    return 'cold';
+  };
+  const inZone = (x: number) => zone === 'all' || zoneOf(x) === zone;
+  const pins = os.leads.filter((l) => inZone(l.x) && (!street || streetOf(l.address) === street));
+  const boards = TERRITORY_ZONES.map((z) => {
+    const doors = os.leads.filter((l) => zoneOf(l.x) === z.id);
+    const streets = [...new Set(doors.map((l) => streetOf(l.address)))];
+    const worked = doors.filter((l) => l.status !== 'new').length;
+    const sold = doors.filter((l) => l.status === 'sold').length;
+    const assigned = reps[z.id] || (doors.find((l) => l.rep && l.rep !== 'Unassigned')?.rep) || 'Unassigned';
+    return { ...z, doors, streets, worked, sold, assigned };
+  });
+  const streetRows = [...new Map(
+    (zone === 'all' ? os.leads : os.leads.filter((l) => zoneOf(l.x) === zone)).map((l) => {
+      const name = streetOf(l.address);
+      return [name, { name, zone: zoneOf(l.x), doors: os.leads.filter((x) => streetOf(x.address) === name) }] as const;
+    }),
+  ).values()].sort((a, b) => a.name.localeCompare(b.name));
+  const assignZone = (id: TerritoryZoneId, name: string) => {
+    const next = { ...reps, [id]: name };
+    setReps(next);
+    try { localStorage.setItem(TERRITORY_REPS_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+    os.leads.filter((l) => zoneOf(l.x) === id).forEach((l) => os.assignLead(l.id, name));
+  };
+  const selectedZone = TERRITORY_ZONES.find((z) => z.id === (lead ? zoneOf(lead.x) : zone));
+  return (
+    <div className="nsos-territories" aria-label="Territories">
+      <div className="nsos-sr-kpis">
+        <div className="nsos-kpi"><span>Neighborhoods</span><strong>{TERRITORY_ZONES.length}</strong></div>
+        <div className="nsos-kpi"><span>Streets</span><strong>{streetRows.length}</strong></div>
+        <div className="nsos-kpi"><span>Doors</span><strong>{os.leads.length}</strong></div>
+        <div className="nsos-kpi"><span>Assigned</span><strong>{boards.filter((z) => z.assigned !== 'Unassigned').length}</strong></div>
+      </div>
+      <div className="nsos-territory-actions">
+        <div className="nsos-tabs">
+          {([['all', 'All areas'], ['west', 'West Shore'], ['central', 'Central Corridor'], ['east', 'East Ridge']] as const).map(([id, label]) => (
+            <button key={id} type="button" className={zone === id ? 'active' : ''} onClick={() => { setZone(id); setStreet(''); }}>{label}</button>
+          ))}
+        </div>
+        <div className="nsos-territory-links">
+          <button type="button" className="nsos-btn ghost" onClick={() => onMap?.()}>Knock map</button>
+          <button type="button" className="nsos-btn ghost" onClick={() => onPipeline?.()}>Pipeline</button>
+        </div>
+      </div>
+      <div className="nsos-territory-cards">
+        {boards.map((z) => (
+          <article
+            key={z.id}
+            className={`nsos-territory-card ${zone === z.id ? 'selected' : ''}`}
+          >
+            <button type="button" className="nsos-territory-card-main" onClick={() => { setZone(z.id); setStreet(''); }}>
+              <i style={{ background: z.color }} />
+              <div>
+                <strong>{z.name}</strong>
+                <small>{z.streets.length} streets · {z.doors.length} doors</small>
+              </div>
+              <span>{z.worked} worked · {z.sold} sold</span>
+            </button>
+            <label className="nsos-field">
+              Rep
+              <select value={z.assigned} onChange={(e) => assignZone(z.id, e.target.value)}>
+                {d2dReps.map((n) => <option key={n}>{n}</option>)}
+              </select>
+            </label>
+          </article>
+        ))}
+      </div>
+      <div className="nsos-sr-layout nsos-territory-layout">
+        <div className="nsos-sr-map-wrap">
+          <div className="nsos-sr-legend">
+            {TERRITORY_ZONES.map((z) => <span key={z.id}><i style={{ background: z.color }} /> {z.name}</span>)}
+          </div>
+          <div className="nsos-map nsos-sr-map nsos-territory-map">
+            <div className="nsos-sr-zones" aria-hidden>
+              <b>West Shore</b><b>Central Corridor</b><b>East Ridge</b>
+            </div>
+            {pins.map((l) => (
+              <button
+                key={l.id}
+                className={`nsos-pin ${pinClass(l.status)} zone-${zoneOf(l.x)} ${l.id === lead?.id ? 'selected' : ''} ${street && streetOf(l.address) === street ? 'street-hit' : ''}`}
+                style={{ left: `${l.x}%`, top: `${l.y}%` }}
+                title={`${l.name} · ${l.address} · ${TERRITORY_ZONES.find((z) => z.id === zoneOf(l.x))?.name}`}
+                onClick={() => { setActive(l.id); setZone(zoneOf(l.x)); }}
+              />
+            ))}
+            {!pins.length && <div className="nsos-empty nsos-map-empty">No doors in this neighborhood yet.</div>}
+          </div>
+        </div>
+        <aside className="nsos-sr-side">
+          {lead && (
+            <div className="nsos-card nsos-sr-card">
+              <span className="nsos-eyebrow">{selectedZone?.name || 'Territory'} · {streetOf(lead.address)}</span>
+              <h3>{lead.name}</h3>
+              <p style={{ color: 'var(--os-muted)' }}>{lead.address} · {lead.phone || 'No phone'} · {money(lead.value)}</p>
+              <p style={{ color: 'var(--os-muted)', fontSize: 13 }}>{lead.rep} · {lead.status === 'knocked' ? 'not home' : lead.status}</p>
+              <button type="button" className="nsos-btn" style={{ width: '100%', justifyContent: 'center' }} onClick={() => onMap?.()}>Open on knock map</button>
+            </div>
+          )}
+          <div className="nsos-card nsos-street-board">
+            <span className="nsos-eyebrow">Streets</span>
+            {streetRows.length ? streetRows.map((row) => {
+              const meta = TERRITORY_ZONES.find((z) => z.id === row.zone);
+              const worked = row.doors.filter((l) => l.status !== 'new').length;
+              return (
+                <button
+                  key={row.name}
+                  type="button"
+                  className={`nsos-street-row ${street === row.name ? 'active-row' : ''}`}
+                  onClick={() => { setStreet(row.name); setZone(row.zone); setActive(row.doors[0]?.id || null); }}
+                >
+                  <i style={{ background: meta?.color }} />
+                  <div>
+                    <strong>{row.name}</strong>
+                    <small>{meta?.name} · {worked}/{row.doors.length} worked</small>
+                  </div>
+                  <span className="nsos-pill blue">{row.doors.length}</span>
+                </button>
+              );
+            }) : <div className="nsos-empty">No streets in this area yet. Log a door from the knock map.</div>}
+          </div>
+        </aside>
+      </div>
+    </div>
+  );
+}
+
 export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => void; onPipeline?: () => void }) {
   const os = useOs();
   const [active, setActive] = useState<string | null>(os.leads[0]?.id || null);

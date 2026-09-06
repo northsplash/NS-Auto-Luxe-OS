@@ -12,7 +12,7 @@ import { OsProvider, useOs } from './osStore';
 import {
   CalendarView, CommsView, CustomersView, D2DView, DispatchView, HireModal, HireView, JobDetail,
   JobsHome, OwnerDashboard, PaymentsView, PeopleHome, PeopleProfile, PipelineView, ReportsView, ScheduleView,
-  SettingsView,
+  SettingsView, TerritoriesView,
 } from './views';
 import TeamMessagesView from './TeamMessagesView';
 import { DEMO_BOARD_TABS, DemoWorkspacePage, type DemoBoardTab } from './WorkspacePages';
@@ -109,7 +109,7 @@ const PAGE: Record<OsTab, [string, string, string]> = {
   payment_test: ['Finance', 'Pay test', 'Collect, refund, and retry from the ledger.'],
   sales: ['Sales', 'Map', 'Pins, knocks, and book-the-door from the neighborhood map.'],
   leads: ['Sales', 'Pipeline', 'Stages, activity, and rep ownership on one board.'],
-  territories: ['Sales', 'Streets', 'Canvass pins grouped by neighborhood.'],
+  territories: ['Sales', 'Territories', 'Neighborhoods, streets, and assigned canvass reps.'],
   marketing: ['Customers', 'Campaigns', 'Retention and booking campaigns tied to the same households.'],
   retention: ['Customers', 'Follow-up', '30-day and 90-day “time for your next detail?”.'],
   customers: ['Customers', 'Directory', 'Household, vehicle, timeline, notes, and communications.'],
@@ -146,7 +146,7 @@ const PAGE: Record<OsTab, [string, string, string]> = {
 
 const TAB_SHORT: Record<OsTab, string> = {
   dashboard: 'Command Center', command_center: 'Command Center', owner_growth: 'Growth', owner_profits: 'Profits', payment_test: 'Payment Test',
-  sales: 'Map', leads: 'Pipeline', territories: 'Streets', marketing: 'Campaigns', retention: 'Follow-up',
+  sales: 'Map', leads: 'Pipeline', territories: 'Territories', marketing: 'Campaigns', retention: 'Follow-up',
   customers: 'Directory', crm: 'Records', client_photos: 'Photos', appointments: 'Calendar', schedule: 'Windows', availability: 'Slots', archived: 'History', fleet: 'Fleets',
   jobs: 'Jobs', dispatch: 'Board', job_assignments: 'Assign', inventory: 'Stock', equipment: 'Assets', tasks: 'Tasks', documents: 'Files', notifications: 'Alerts', purchasing: 'Buy', incidents: 'Issues', approvals: 'Approvals',
   employees: 'Team', staff_schedule: 'Schedule', recruiting: 'Hiring', messages: 'Chat', crews: 'Crews', timeclock: 'Clock', time_off: 'Time off', payroll_approval: 'Timesheets', training: 'Training',
@@ -403,7 +403,8 @@ function OsShell() {
     }
     if (tab === 'staff_schedule') return <ScheduleView />;
     if (tab === 'dispatch' || tab === 'job_assignments') return <DispatchView onOpen={openJob} />;
-    if (tab === 'sales' || tab === 'territories') return <D2DView onBook={openJob} onPipeline={() => go('leads')} />;
+    if (tab === 'sales') return <D2DView onBook={openJob} onPipeline={() => go('leads')} />;
+    if (tab === 'territories') return <TerritoriesView onMap={() => go('sales')} onPipeline={() => go('leads')} />;
     if (tab === 'leads') return <PipelineView onBook={openJob} />;
     if (tab === 'customers' || tab === 'crm') return <CustomersView onOpenJob={openJob} />;
     if (tab === 'appointments' || tab === 'schedule') {

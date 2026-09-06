@@ -8,6 +8,7 @@ import {
 import { supabase } from '@/lib/supabase';
 import { firstWord, isSettledPayment, money, prettyLabel, trendLabel } from '@/lib/data';
 import { localDateKey, percent, sameLocalDay } from '@/lib/fieldOps';
+import { fetchTerritoryHouses, parseBbox, pointInPolygon } from '@/lib/territoryHouses';
 import type { Appointment, Employee, LeadTerritory, Profile, TerritoryDoor } from '@/lib/supabase';
 import OwnerLeadPipeline from '@/components/OwnerLeadPipeline';
 import WorkspaceHero from '@/components/WorkspaceHero';
@@ -102,11 +103,7 @@ function DetailerDrill({stats,jobs}:{stats:any;jobs:Appointment[]}){return <><di
 
 
 async function fetchTerritoryHouseData(bbox:string,points?:[number,number][]){
-  const [south,west,north,east]=bbox.split(',').map(Number);
-  const {data,error}=await supabase.functions.invoke('territory-house-search',{body:{south,west,north,east,points}});
-  if(error) throw new Error(error.message || 'Unable to reach the house discovery service.');
-  if(!data?.success) throw new Error(data?.error || 'Unable to discover houses in this area.');
-  return Array.isArray(data.elements) ? data.elements : [];
+  return fetchTerritoryHouses({...parseBbox(bbox),points});
 }
 
 function TerritoryCenter({employees}:{employees:Employee[]}){
@@ -120,13 +117,22 @@ function TerritoryCenter({employees}:{employees:Employee[]}){
   const [preview,setPreview]=useState<{houses:number;streets:number;streetNames:string[];properties:{address:string|null;latitude:number;longitude:number;status:string;source:string}[]}|null>(null);
   const [streetViewHouse,setStreetViewHouse]=useState<any>(null);
   const [previewBusy,setPreviewBusy]=useState(false);
+  const [loadError,setLoadError]=useState('');
 
   const load=async()=>{
-    const [t,d]=await Promise.all([
-      supabase.from('lead_territories').select('*').order('priority',{ascending:false}).order('name'),
-      supabase.from('territory_doors').select('*').order('created_at',{ascending:false}).limit(10000),
-    ]);
-    setTerritories((t.data??[]) as LeadTerritory[]);setDoors((d.data??[]) as TerritoryDoor[]);
+    try {
+      const [t,d]=await Promise.all([
+        supabase.from('lead_territories').select('*').order('priority',{ascending:false}).order('name'),
+        supabase.from('territory_doors').select('*').order('created_at',{ascending:false}).limit(10000),
+      ]);
+      if(t.error) throw t.error;
+      if(d.error) throw d.error;
+      setTerritories((t.data??[]) as LeadTerritory[]);
+      setDoors((d.data??[]) as TerritoryDoor[]);
+      setLoadError('');
+    } catch (err:any) {
+      setLoadError(err?.message || 'Unable to load territories.');
+    }
   };
   useEffect(()=>{load()},[]);
   const selectedTerritory=territories.find(t=>t.id===selected);
@@ -170,6 +176,7 @@ function TerritoryCenter({employees}:{employees:Employee[]}){
       tab="territories"
       action={<button className="btn-primary territory-new-btn" onClick={beginNew}><Plus size={16}/>New Territory</button>}
     />
+    {loadError && <div className="d2d-house-discovery error">{loadError}<button type="button" onClick={()=>load()}>Try again</button></div>}
 
     <div className="territory-workspace-summary territory-summary-v13">
       <div><span>Selected area</span><strong>{currentHouseCount}</strong><small>{preview?'houses discovered':'mapped houses inside boundary'}</small></div>
@@ -257,6 +264,7 @@ function TerritoryCenter({employees}:{employees:Employee[]}){
         <div className="territory-mini-kpis"><span><b>{s.total}</b> houses</span><span><b>{s.pct}%</b> worked</span><span><b>{s.sold}</b> sold</span></div>
         <div className="mini-progress"><i style={{width:`${s.pct}%`}}/></div>
       </button>})}
+      {!visible.length && !loadError && <div className="empty-text">No territories yet. Draw a neighborhood on the map to start.</div>}
     </div>
   </div>;
 }
@@ -433,5 +441,3 @@ function polygonOverlap(a:[number,number][],b:[number,number][]) {
   for(let i=0;i<a.length;i++)for(let j=0;j<b.length;j++)if(intersects(a[i],a[(i+1)%a.length],b[j],b[(j+1)%b.length]))return true;
   return false;
 }
-
-function pointInPolygon(lat:number,lng:number,polygon:number[][]){let inside=false;for(let i=0,j=polygon.length-1;i<polygon.length;j=i++){const yi=polygon[i][0],xi=polygon[i][1],yj=polygon[j][0],xj=polygon[j][1];const intersect=((yi>lat)!==(yj>lat))&&(lng<(xj-xi)*(lat-yi)/(yj-yi||1e-12)+xi);if(intersect)inside=!inside}return inside}

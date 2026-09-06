@@ -5,7 +5,7 @@ import type { FieldDoor, FieldTerritoryMapProps } from './FieldTerritoryMap.type
 
 type MarkerLike = { setMap?: (map: any) => void };
 
-type Props = FieldTerritoryMapProps;
+type Props = FieldTerritoryMapProps & { onUnavailable?: () => void };
 
 const ROADMAP_STYLES = [
   { elementType: 'geometry', stylers: [{ color: '#f4f1e8' }] },
@@ -37,6 +37,7 @@ export default function FieldTerritoryMapModern({
   initialPolygon = [], onPolygonChange, onDoorClick, onMapClick, onTerritoryClick,
   liveLocation, routeDoorIds = [], activeDoorId, statusFilter = [], showDoorLabels = false,
   className = '', autoFit = true, mobileGestureLock = true, fieldMode = false,
+  onUnavailable,
 }: Props) {
   const wrap = useRef<HTMLDivElement | null>(null);
   const el = useRef<HTMLDivElement | null>(null);
@@ -95,7 +96,11 @@ export default function FieldTerritoryMapModern({
         } else onMapClick?.(lat, lng);
       });
       setReady(true);
-    }).catch(err => setEngineError(googleMapsErrorMessage(err)));
+    }).catch(err => {
+      if (cancelled) return;
+      if (onUnavailable) onUnavailable();
+      else setEngineError(googleMapsErrorMessage(err));
+    });
     return () => {
       cancelled = true;
       clearAll();
