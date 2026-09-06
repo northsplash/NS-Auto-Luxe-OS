@@ -173,7 +173,7 @@ export default function EnterpriseSuite({ section, employees, setEmployees, appo
   useEffect(() => { load(); }, []);
 
   const empName = (id?: string | null) => employees.find(e => e.id === id)?.name ?? 'Unassigned';
-  const customerName = (id: string) => profiles.find(p => p.id === id)?.full_name ?? profiles.find(p => p.id === id)?.email ?? 'Customer';
+  const customerName = (id?: string | null) => profiles.find(p => p.id === id)?.full_name ?? profiles.find(p => p.id === id)?.email ?? 'Customer';
 
   const leadMetrics = useMemo(() => {
     const sold = leads.filter(l => l.status === 'sold');

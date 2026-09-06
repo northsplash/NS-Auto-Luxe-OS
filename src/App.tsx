@@ -5,12 +5,12 @@ const Login=lazy(()=>import('@/pages/Login')); const Portal=lazy(()=>import('@/p
 const ForgotPassword=lazy(()=>import('@/pages/ForgotPassword')); const ResetPassword=lazy(()=>import('@/pages/ResetPassword'));
 const ManagerPortal=lazy(()=>import('@/pages/Manager')); const EmployeePortal=lazy(()=>import('@/pages/Employee')); const D2DPortal=lazy(()=>import('@/pages/D2D'));
 function Loader(){return <div className="route-loader"><div className="route-loader-mark">NS</div><div><strong>North Splash OS</strong><span>Opening workspace…</span></div></div>}
-class RouteErrorBoundary extends Component<{children:ReactNode},{failed:boolean}> {
-  state={failed:false};
-  static getDerivedStateFromError(){return {failed:true}}
+class RouteErrorBoundary extends Component<{children:ReactNode},{failed:boolean;message:string}> {
+  state={failed:false,message:''};
+  static getDerivedStateFromError(error:Error){return {failed:true,message:error?.message||'Render error'}}
   componentDidCatch(error:Error,info:ErrorInfo){console.error('North Splash route error',error,info)}
   render(){
-    if(this.state.failed)return <div className="route-error-v27"><div className="route-error-card-v27"><div className="route-error-mark-v27">NS</div><span className="eyebrow">NORTH SPLASH OS</span><h2>This workspace hit an error</h2><p>The OS caught the error instead of showing a blank screen. Reload the workspace. If it repeats, send the first red browser-console error.</p><div className="route-error-actions-v27"><button onClick={()=>window.location.reload()} className="btn-primary">Reload Workspace</button><button onClick={()=>{this.setState({failed:false});window.history.back()}} className="btn-outline">Go Back</button></div></div></div>;
+    if(this.state.failed)return <div className="route-error-v27"><div className="route-error-card-v27"><div className="route-error-mark-v27">NS</div><span className="eyebrow">NORTH SPLASH OS</span><h2>This workspace hit an error</h2><p>The OS caught the error instead of showing a blank screen. Reload the workspace. If it repeats, send the first red browser-console error.</p>{this.state.message&&<p className="empty-text" style={{marginTop:8}}>{this.state.message}</p>}<div className="route-error-actions-v27"><button onClick={()=>window.location.reload()} className="btn-primary">Reload Workspace</button><button onClick={()=>{this.setState({failed:false,message:''});window.history.back()}} className="btn-outline">Go Back</button></div></div></div>;
     return this.props.children;
   }
 }

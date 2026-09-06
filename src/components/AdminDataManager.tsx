@@ -8,7 +8,7 @@ export type DataManagerSection =
   | 'territories'|'tasks'|'equipment'|'documents'|'reports'|'permissions'|'notifications'|'time_off'
   | 'payroll_approval'|'audit'|'payments'|'visitors'|'command_center'|'crm'|'dispatch'|'crews'|'fleet'
   | 'locations'|'marketing'|'automations'|'approvals'|'incidents'|'training'|'purchasing'|'communications'
-  | 'messages'|'retention'|'continuity'|'client_photos';
+  | 'messages'|'retention'|'continuity'|'client_photos'|'owner_growth'|'owner_profits'|'payment_test';
 
 type TableDef={table:string;label:string;description:string;protected?:boolean;archive?:boolean};
 
@@ -58,6 +58,9 @@ const SECTIONS:Record<DataManagerSection,TableDef[]>={
   continuity:[{table:'audit_logs',label:'Audit history',description:'Protected system history',protected:true}],
   audit:[{table:'audit_logs',label:'Audit history',description:'Protected system history',protected:true}],
   visitors:[{table:'site_visits',label:'Site visits',description:'Site analytics events'}],
+  owner_growth:[{table:'appointments',label:'Appointments',description:'Growth planner source jobs'},{table:'leads',label:'Leads',description:'Pipeline used in growth planning'}],
+  owner_profits:[{table:'payments',label:'Payments',description:'Profit tracker source payments',protected:true},{table:'sales_records',label:'Sales records',description:'Attributed sales',protected:true}],
+  payment_test:[{table:'payments',label:'Payments',description:'Payment test records',protected:true}],
 };
 
 function labelOf(row:any){

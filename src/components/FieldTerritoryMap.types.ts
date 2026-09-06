@@ -9,6 +9,7 @@ export type FieldDoor = {
   territory_id?: string | null;
   lead_id?: string | null;
   do_not_knock?: boolean;
+  source?: string | null;
 };
 
 export type FieldTerritoryMapProps = {

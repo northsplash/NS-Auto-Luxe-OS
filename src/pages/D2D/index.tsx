@@ -163,7 +163,7 @@ export default function D2DPortal(){
     if(!territoryId||discoveringHouses)return;
     const territory=territories.find(t=>t.id===territoryId);
     const raw=(territory?.polygon_geojson as any)?.coordinates?.[0]??[];
-    const points=raw.map((p:number[])=>[Number(p[1]),Number(p[0])] as [number,number]).filter((p:[number,number])=>Number.isFinite(p[0])&&Number.isFinite(p[1]));
+    const points: [number, number][] = (raw as number[][]).map((pair) => [Number(pair[1]), Number(pair[0])] as [number, number]).filter((p) => Number.isFinite(p[0]) && Number.isFinite(p[1]));
     if(points.length<3){setHouseDiscoveryError('This territory needs a saved boundary before houses can be loaded.');return;}
     if(!force&&doors.some(d=>d.territory_id===territoryId))return;
     setDiscoveringHouses(true);setHouseDiscoveryError('');
@@ -263,7 +263,7 @@ export default function D2DPortal(){
   };
 
   const pickMapPoint=async(lat:number,lng:number)=>{
-    setManual(true);setSelectedDoor({latitude:lat,longitude:lng,territory_id:null});setHistory([]);setForm({...emptyForm(),address:'Locating address…'});
+    setManual(true);setSelectedDoor({latitude:lat,longitude:lng,territory_id:undefined});setHistory([]);setForm({...emptyForm(),address:'Locating address…'});
     const geo=await lookupAddress(lat,lng);setForm(p=>({...p,address:geo?.address||''}));
   };
 
@@ -370,7 +370,7 @@ export default function D2DPortal(){
     if(candidates[0])setTimeout(()=>pickDoor(candidates[0]),80);
   };
 
-  const manualLead=()=>{setManual(true);setSelectedDoor({territory_id:null,latitude:live?.latitude,longitude:live?.longitude});setHistory([]);setForm(emptyForm())};
+  const manualLead=()=>{setManual(true);setSelectedDoor({territory_id:undefined,latitude:live?.latitude,longitude:live?.longitude});setHistory([]);setForm(emptyForm())};
   const useCurrentLocation=()=>navigator.geolocation?.getCurrentPosition(async p=>{const lat=p.coords.latitude,lng=p.coords.longitude;setSelectedDoor(d=>({...d,latitude:lat,longitude:lng}));window.dispatchEvent(new CustomEvent('northsplash:center-map',{detail:{latitude:lat,longitude:lng,zoom:19}}));const geo=await lookupAddress(lat,lng);if(geo?.address)setForm(f=>({...f,address:geo.address}))},()=>alert('Allow location access to pin this lead.'),{enableHighAccuracy:true,timeout:15000,maximumAge:5000});
 
   const clock=async()=>{if(!employee)return;if(openEntry){const pos=await getPosition();const {data,error}=await supabase.from('time_entries').update({clock_out:new Date().toISOString(),clock_out_latitude:pos?.latitude??null,clock_out_longitude:pos?.longitude??null}).eq('id',openEntry.id).select().single();if(error)return alert(error.message);setTimes(p=>p.map(t=>t.id===openEntry.id?data:t));}
@@ -421,7 +421,7 @@ export default function D2DPortal(){
   const useSalesOffer=(offer:{type:'service'|'membership';name:string;amount:number;detail:string})=>{
     setForm(f=>({...f,service_interest:offer.name,estimated_value:String(offer.amount),notes:[f.notes,offer.type==='membership'?`Membership interest: ${offer.name} at ${money(offer.amount)}/mo`:`Presented ${offer.name} estimate at ${money(offer.amount)}`].filter(Boolean).join('\n')}));
     setPitchOpen(false);
-    if(!selectedDoor&&!manual){setManual(true);setSelectedDoor({territory_id:selectedTerritory||null,latitude:live?.latitude,longitude:live?.longitude});}
+    if(!selectedDoor&&!manual){setManual(true);setSelectedDoor({territory_id:selectedTerritory||undefined,latitude:live?.latitude,longitude:live?.longitude});}
   };
   const logPresentationEvent=(event:string,detail:Record<string,unknown>={})=>{
     if(!employee)return;

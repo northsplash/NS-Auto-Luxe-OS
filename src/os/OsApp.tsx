@@ -161,9 +161,9 @@ function nav(id: OsTab) {
   return NAV.find((n) => n.id === id);
 }
 
-class OsErrorBoundary extends Component<{ children: ReactNode; onReset?: () => void }, { failed: boolean }> {
-  state = { failed: false };
-  static getDerivedStateFromError() { return { failed: true }; }
+class OsErrorBoundary extends Component<{ children: ReactNode; onReset?: () => void }, { failed: boolean; message: string }> {
+  state = { failed: false, message: '' };
+  static getDerivedStateFromError(error: Error) { return { failed: true, message: error?.message || 'View error' }; }
   componentDidCatch(error: Error, info: ErrorInfo) { console.error('North Splash OS view error', error, info); }
   render() {
     if (this.state.failed) {
@@ -171,7 +171,8 @@ class OsErrorBoundary extends Component<{ children: ReactNode; onReset?: () => v
         <div className="nsos-card" style={{ margin: 20 }}>
           <h2>This workspace hit a snag</h2>
           <p style={{ color: 'var(--os-muted)', margin: '8px 0 14px' }}>The rest of the OS is still running. Reset this view instead of reloading the whole app.</p>
-          <button className="nsos-btn" onClick={() => { this.setState({ failed: false }); this.props.onReset?.(); }}>Back to Team Messages</button>
+          {this.state.message && <p className="empty-text">{this.state.message}</p>}
+          <button className="nsos-btn" onClick={() => { this.setState({ failed: false, message: '' }); this.props.onReset?.(); }}>Back to Team Messages</button>
         </div>
       );
     }
@@ -603,7 +604,7 @@ function OsShell() {
             </section>
           )}
 
-          <OsErrorBoundary onReset={() => go('messages')}>
+          <OsErrorBoundary key={tab} onReset={() => go('messages')}>
             {tab === 'messages' ? (
               <WorkspacePage tab="messages">
                 <TeamMessagesView />

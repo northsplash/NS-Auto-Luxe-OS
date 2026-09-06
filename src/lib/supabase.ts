@@ -181,6 +181,7 @@ export type TimeEntry = {
   status: string;
   notes: string | null;
   created_at: string;
+  is_late?: boolean;
 };
 
 export type SalesRecord = {
@@ -247,7 +248,7 @@ export type LeadTerritory = {
 export type TerritoryDoor = { id:string; territory_id:string; lead_id:string|null; address:string|null; latitude:number; longitude:number; status:string; last_visited_at:string|null; last_employee_id:string|null; notes:string|null; source:string; created_at:string; updated_at:string; normalized_address?:string|null; street_name?:string|null; house_number?:string|null; city?:string|null; state?:string|null; postal_code?:string|null; do_not_knock?:boolean; first_visited_at?:string|null; visit_count?:number; next_follow_up_at?:string|null; customer_id?:string|null; last_route_id?:string|null; };
 
 export type Lead = {
-  id: string; assigned_employee_id: string | null; territory_id: string | null; territory_door_id?: string | null; archived_at?: string|null; archive_reason?: string|null; cooldown_until?: string|null; reactivation_status?: string|null; reactivated_at?: string|null; contact_attempt_count?: number; last_outcome?: string|null; lead_temperature?: string|null; lead_score?: number; previous_rep_employee_id?: string|null; customer_name: string | null; address: string | null; city: string | null; state: string | null; postal_code: string | null; phone: string | null; email: string | null; latitude: number | null; longitude: number | null; status: string; source: string; next_action?: string|null; next_action_at?: string|null; priority?: number; service_interest: string | null; vehicle_info: string | null; estimated_value: number; actual_sale_amount: number; follow_up_at: string | null; appointment_id: string | null; notes: string | null; last_contacted_at: string | null; created_at: string; updated_at: string;
+  id: string; assigned_employee_id: string | null; territory_id: string | null; territory_door_id?: string | null; archived_at?: string|null; archive_reason?: string|null; cooldown_until?: string|null; reactivation_status?: string|null; reactivated_at?: string|null; contact_attempt_count?: number; last_outcome?: string|null; lead_temperature?: string|null; lead_score?: number; previous_rep_employee_id?: string|null; customer_name: string | null; address: string | null; city: string | null; state: string | null; postal_code: string | null; phone: string | null; email: string | null; latitude: number | null; longitude: number | null; status: string; source: string; next_action?: string|null; next_action_at?: string|null; priority?: number; service_interest: string | null; vehicle_info: string | null; estimated_value: number; actual_sale_amount: number; follow_up_at: string | null; appointment_id: string | null; notes: string | null; last_contacted_at: string | null; created_at: string; updated_at: string; converted_customer_id?: string | null;
 };
 
 export type LeadActivity = { id: string; lead_id: string; employee_id: string | null; activity_type: string; previous_status: string | null; new_status: string | null; notes: string | null; created_at: string; };

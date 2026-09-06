@@ -1051,7 +1051,7 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
                   <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="What happened at the door?" />
                 </label>
               </form>
-              {lead.activity.slice(0, 4).map((a) => (
+              {(lead.activity || []).slice(0, 4).map((a) => (
                 <div key={a.id} style={{ fontSize: 12, color: 'var(--os-muted)', padding: '6px 0', borderTop: '1px solid var(--os-line)' }}>{a.at} · {a.author} · {a.body}</div>
               ))}
               <button className="nsos-btn" style={{ marginTop: 10, width: '100%', justifyContent: 'center' }} onClick={() => setPane('pitch')}>Pitch & book a window</button>
@@ -1178,7 +1178,7 @@ export function CustomersView({ onOpenJob }: { onOpenJob?: (id: string) => void 
         {pays.map((p) => (
           <div key={p.id} className="nsos-job"><span>{p.at} · {p.method}</span><b>{money(p.amount)}</b></div>
         ))}
-        {customer.notes.map((n) => (
+        {(customer.notes || []).map((n) => (
           <div key={n.id} style={{ fontSize: 13, padding: '8px 0', borderTop: '1px solid var(--os-line)' }}>{n.at} · {n.author}: {n.body}</div>
         ))}
         <form onSubmit={(e) => { e.preventDefault(); if (!note.trim()) return; os.addCustomerNote(customer.id, note.trim()); setNote(''); }}>
@@ -1410,7 +1410,7 @@ export function PaymentsView() {
 
 export function ReportsView() {
   const os = useOs();
-  const max = Math.max(...revenueDays.map((d) => d.v));
+  const max = Math.max(1, ...revenueDays.map((d) => d.v));
   const gross = os.jobs.reduce((s, j) => s + (j.payment === 'refunded' ? 0 : j.price), 0);
   const labor = os.employees.reduce((s, e) => s + (e.hourly_rate * e.hours_week || e.annual_salary / 52), 0);
   const close = Math.round((os.leads.filter((l) => l.status === 'sold').length / Math.max(1, os.leads.length)) * 100);
