@@ -37,7 +37,7 @@ function StatusBadge({ status }: { status?: string | null }) {
 function AppointmentProgress({appointment,compact=false}:{appointment:Appointment;compact?:boolean}){
   const field=String(appointment.field_status||'').toLowerCase();
   const status=String(appointment.status||'').toLowerCase();
-  const stage=status==='completed'||field==='completed'||field==='finished'?4:field==='started'||status==='in_progress'||field==='arrived'?3:field==='en_route'?2:appointment.assigned_employee_id?1:0;
+  const stage=status==='completed'||field==='completed'||field==='finished'?4:field==='started'||status==='in_progress'?3:field==='en_route'||field==='arrived'?2:appointment.assigned_employee_id?1:0;
   const steps=['Booked','Assigned','En route','In service','Done'];
   return <div className={`customer-job-progress-v25 ${compact?'compact':''}`} aria-label={`Appointment progress: ${steps[stage]}`}><div className="customer-progress-track-v25"><i style={{width:`${stage/4*100}%`}}/></div><div className="customer-progress-steps-v25">{steps.map((label,i)=><span key={label} className={i<=stage?'done':''}><b>{i<stage?'✓':i+1}</b><small>{label}</small></span>)}</div></div>
 }

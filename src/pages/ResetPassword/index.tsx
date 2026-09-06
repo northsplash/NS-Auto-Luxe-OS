@@ -23,40 +23,42 @@ export default function ResetPassword() {
     }
 
     setLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password,
+      });
 
-    const { error } = await supabase.auth.updateUser({
-      password,
-    });
-
-    if (error) {
-      setError(error.message);
-      setLoading(false);
-      return;
-    }
-
-    const { data: { session: first } } = await supabase.auth.getSession();
-    let session = first;
-    if (!session?.user) {
-      await new Promise((resolve) => window.setTimeout(resolve, 400));
-      const again = await supabase.auth.getSession();
-      session = again.data.session;
-    }
-    if (session?.user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('portal_role, role, is_active')
-        .eq('id', session.user.id)
-        .maybeSingle();
-      if (profile?.is_active === false) {
-        navigate('/login', { state: { notice: 'Password saved. This account is disabled — ask an owner to restore it.' } });
+      if (error) {
+        setError(error.message);
         return;
       }
-      const destination = profile?.portal_role === 'owner'
-        ? '/owner'
-        : profile?.role === 'admin' ? '/admin' : portalPath(profile?.portal_role);
-      navigate(destination);
-    } else {
-      navigate('/login', { state: { notice: 'Password saved. Sign in to open your portal.' } });
+
+      const { data: { session: first } } = await supabase.auth.getSession();
+      let session = first;
+      if (!session?.user) {
+        await new Promise((resolve) => window.setTimeout(resolve, 400));
+        const again = await supabase.auth.getSession();
+        session = again.data.session;
+      }
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('portal_role, role, is_active')
+          .eq('id', session.user.id)
+          .maybeSingle();
+        if (profile?.is_active === false) {
+          navigate('/login', { state: { notice: 'Password saved. This account is disabled — ask an owner to restore it.' } });
+          return;
+        }
+        const destination = profile?.portal_role === 'owner'
+          ? '/owner'
+          : profile?.role === 'admin' ? '/admin' : portalPath(profile?.portal_role);
+        navigate(destination);
+      } else {
+        navigate('/login', { state: { notice: 'Password saved. Sign in to open your portal.' } });
+      }
+    } finally {
+      setLoading(false);
     }
   };
 

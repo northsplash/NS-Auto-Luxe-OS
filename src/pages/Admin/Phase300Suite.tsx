@@ -17,6 +17,7 @@ import { applyNewHireAcademy, ACADEMY_COURSES } from '@/lib/trainingAcademy';
 import { canCollectJob } from '@/lib/collectPayment';
 import { hiredCrew } from '@/lib/ownerFieldMode';
 import { setOwnerBoardFilter } from '@/lib/ownerJump';
+import { isOnboardingOpen } from '@/lib/onboarding';
 
 const FieldTerritoryMap = lazy(() => import('@/components/FieldTerritoryMap'));
 const TerritoryStreetView = lazy(() => import('@/components/TerritoryStreetView'));
@@ -360,13 +361,18 @@ function CommandCenter({employees,appointments,customers,payments,onNavigate,own
  const avgTicket=completed.length?completed.reduce((n,a)=>n+Number(a.price||0),0)/completed.length:0;
  const activeTeam=employees.filter(e=>e.status==='active');
  const crew=hiredCrew(employees);
- const packetOpen=(e:Employee)=>{const st=String(e.onboarding_status||'').toLowerCase();return Boolean(st)&&!['complete','completed','done'].includes(st)};
+ const packetOpen=(e:Employee)=>isOnboardingOpen(e.onboarding_status);
  const unassigned=appointments.filter(a=>!a.assigned_employee_id&&!['completed','cancelled'].includes(a.status)).length;
  const pending=appointments.filter(a=>a.status==='pending'||a.status==='scheduled').length;
  const qc=appointments.filter(a=>a.qc_status==='pending'||a.qc_status==='qc').length;
  const unpaid=appointments.filter(a=>canCollectJob(a));
  const packets=employees.filter(packetOpen).length;
- const inField=appointments.filter(a=>['en_route','in_progress','in_field','on_site'].includes(String(a.status||''))).length;
+ const inField=appointments.filter(a=>{
+  const field=String(a.field_status||'').toLowerCase();
+  const status=String(a.status||'').toLowerCase();
+  const live=['en_route','arrived','started','in_progress','in_field','on_site'];
+  return live.includes(field)||live.includes(status);
+ }).length;
  const assigned=appointments.filter(a=>a.assigned_employee_id&&!['completed','cancelled'].includes(a.status)).length;
  const d2d=appointments.filter(a=>a.source_channel==='d2d').length;
  const days=[...Array(7)].map((_,i)=>{const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()-(6-i));const k=localDateKey(d);const rev=payments.filter(p=>isSettledPayment(p.status)&&localDateKey(p.created_at)===k).reduce((n,p)=>n+Number(p.amount||0),0);return{label:d.toLocaleDateString('en-US',{weekday:'short'}),rev}});

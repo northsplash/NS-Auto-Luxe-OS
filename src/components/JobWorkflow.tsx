@@ -57,7 +57,15 @@ export default function JobWorkflow({appointment,employee,onUpdate,onClose}:{app
     checklistSeedInFlight.add(job.id);
     void load().finally(()=>checklistSeedInFlight.delete(job.id));
   },[job.id,job.service_name,job.package_name]);
-  useEffect(()=>{if(!job.started_at||job.completed_at)return;const update=()=>setElapsed(Math.max(0,Date.now()-new Date(job.started_at!).getTime()));update();const id=setInterval(update,1000);return()=>clearInterval(id)},[job.started_at,job.completed_at]);
+  useEffect(()=>{
+    if(!job.started_at)return;
+    const end=job.finished_at||job.completed_at;
+    const update=()=>setElapsed(Math.max(0,(end?new Date(end).getTime():Date.now())-new Date(job.started_at!).getTime()));
+    update();
+    if(end)return;
+    const id=setInterval(update,1000);
+    return()=>clearInterval(id);
+  },[job.started_at,job.completed_at,job.finished_at]);
   const completedRequired=checklist.filter(c=>c.required).every(c=>c.completed);const beforeCount=media.filter(m=>m.media_type==='before').length;const afterCount=media.filter(m=>m.media_type==='after').length;
   const canFinish=completedRequired&&(!job.before_photos_required||beforeCount>0)&&(!job.after_photos_required||afterCount>0);
   const setStatus=async(status:string)=>{setBusy(true);if(status==='finished'&&!canFinish){setBusy(false);return alert('Complete required checklist items and required before/after photos first.')}const patch:any={field_status:status};if(status==='en_route')patch.en_route_at=new Date().toISOString();if(status==='arrived')patch.arrived_at=new Date().toISOString();if(status==='started'){patch.started_at=job.started_at||new Date().toISOString();patch.status='in_progress';}if(status==='finished'){patch.finished_at=new Date().toISOString();patch.qc_status='pending';}const {data,error}=await supabase.from('appointments').update(patch).eq('id',job.id).select().single();if(error){setBusy(false);return alert(error.message)}setJob(data);onUpdate(data);setBusy(false);const event=status==='en_route'?'detailer_en_route':status==='arrived'?'detailer_arrived':status==='started'?'job_started':null;if(event&&job.customer_email){sendCommunication(event,{appointment_id:job.id,recipient_email:job.customer_email,variables:{customer_name:job.customer_name||'Customer',employee_name:employee.name,service_name:job.service_name,service_address:job.service_address||''}}).catch(console.warn)};if(status==='started')setTimeout(load,350)};

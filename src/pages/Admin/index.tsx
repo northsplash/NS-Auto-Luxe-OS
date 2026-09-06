@@ -31,11 +31,10 @@ import EmployeeProfileDrawer from '@/components/EmployeeProfileDrawer';
 import OwnerOnboardingQueue from '@/components/OwnerOnboardingQueue';
 import AddEmployeeForm from '@/components/AddEmployeeForm';
 import { emptyEmployeeDraft, type EmployeeDraft } from '@/lib/rolePresets';
-import { seedHireOnboarding } from '@/lib/onboarding';
-import { ensureOwnerFieldEmployee } from '@/lib/ownerFieldMode';
+import { seedHireOnboarding, isOnboardingOpen } from '@/lib/onboarding';
+import { ensureOwnerFieldEmployee, isOwnerFieldEmployee } from '@/lib/ownerFieldMode';
 import { employeeCanD2D, employeeCanDetail } from '@/lib/workCapabilities';
 import { readOwnerHomeCache, writeOwnerHomeCache } from '@/lib/ownerHomeCache';
-import { isOwnerFieldEmployee } from '@/lib/ownerFieldMode';
 import { inviteEmployeeLogin, portalRoleFromPosition } from '@/lib/inviteHire';
 import WorkspaceHero from '@/components/WorkspaceHero';
 import ClientPhotosSection from '@/components/ClientPhotosSection';
@@ -320,7 +319,7 @@ const [availabilityForm, setAvailabilityForm] = useState({
 
   const detailers = employees.filter(employeeCanDetail);
   const d2dAgents = employees.filter(employeeCanD2D);
-  const waitingAccess = employees.filter((e) => !isOwnerFieldEmployee(e) && e.email && (!e.user_id || (e.onboarding_status && e.onboarding_status !== 'complete')));
+  const waitingAccess = employees.filter((e) => !isOwnerFieldEmployee(e) && e.email && (!e.user_id || isOnboardingOpen(e.onboarding_status)));
   const resendAccess = async (emp: Employee) => {
     const { data, error } = await inviteEmployeeLogin(emp.id, portalRoleFromPosition(emp.role));
     if (error || data?.error) return alert(error?.message || data.error);
@@ -604,10 +603,7 @@ const handleDeleteAvailability = async (id: string) => {
   const activeEmployees = employees.filter(e=>e.status==='active').length;
   const completedJobs = appointments.filter(a=>a.status==='completed').length;
   const avgTicketAll = completedJobs ? appointments.filter(a=>a.status==='completed').reduce((n,a)=>n+Number(a.price||0),0)/completedJobs : 0;
-  const openHirePackets = employees.filter(e => {
-    const st = String(e.onboarding_status || '').toLowerCase();
-    return Boolean(st) && !['complete', 'completed', 'done'].includes(st);
-  }).length;
+  const openHirePackets = employees.filter(e => isOnboardingOpen(e.onboarding_status)).length;
   const jobsTodayCount = appointments.filter(a => sameLocalDay(a.scheduled_at) || sameLocalDay(a.completed_at) || sameLocalDay(a.finished_at)).length;
   const workspacePulse = currentWorkspace.id==='owner' ? [
     {label:'Jobs today',value:String(jobsTodayCount),Icon:CalendarClock},
@@ -1356,7 +1352,7 @@ const handleDeleteAvailability = async (id: string) => {
                 <button className="btn-primary" onClick={() => setShowEmpForm(true)}><Plus size={16}/>Add member</button>
               </div>
               <OwnerOnboardingQueue employees={employees} onOpen={(hire)=>{setProfileInitialTab('onboarding');setSelectedEmployeeId(hire.id)}} />
-              {waitingAccess.length>0&&<section className="waiting-access-strip"><div><span className="eyebrow">Waiting on password</span><h3>{waitingAccess.length} hire{waitingAccess.length===1?'':'s'} still need to open their portal</h3></div><div className="waiting-access-list">{waitingAccess.slice(0,8).map(e=><div key={e.id}><EmployeeAvatar employee={e} size="sm"/><span><b>{e.name}</b><small>{e.email} · {e.user_id?'Packet / first sign-in':'Invite not linked'}</small></span><button type="button" className="btn-outline btn-sm" onClick={()=>void resendAccess(e)}>Resend invite</button></div>)}</div></section>}
+              {waitingAccess.length>0&&<section className="waiting-access-strip"><div><span className="eyebrow">{waitingAccess.some(e=>!e.user_id)?'Waiting on invite':'Waiting on access'}</span><h3>{waitingAccess.length} hire{waitingAccess.length===1?'':'s'} still need a login or first sign-in</h3></div><div className="waiting-access-list">{waitingAccess.slice(0,8).map(e=><div key={e.id}><EmployeeAvatar employee={e} size="sm"/><span><b>{e.name}</b><small>{e.email} · {e.user_id?'Packet / first sign-in':'Invite not linked'}</small></span><button type="button" className="btn-outline btn-sm" onClick={()=>void resendAccess(e)}>Resend invite</button></div>)}</div></section>}
               <div className="team-directory-groups">
                 {[
                   {title:'Leadership',roles:['owner','admin','manager']},
@@ -1364,7 +1360,7 @@ const handleDeleteAvailability = async (id: string) => {
                   {title:'Detailing',roles:['detailer']},
                   {title:'Office & ops',roles:['office','finance','recruiter','employee','custom']},
                   {title:'Everyone else',roles:[] as string[]},
-                ].map(group=>{const listed=['owner','admin','manager','d2d_agent','detailer','office','finance','recruiter','employee','custom'];const people=employees.filter(e=>(group.roles.length?group.roles.includes(e.role):!listed.includes(e.role))&&(!teamQuery||[e.name,e.title,e.email,e.role].filter(Boolean).join(' ').toLowerCase().includes(teamQuery.toLowerCase())));if(!people.length)return null;return <section key={group.title} className="team-directory-section"><div className="team-directory-heading"><h3>{group.title}</h3><span>{people.length}</span></div><div className="team-portrait-grid">{people.map(e=><button className="team-portrait-card" key={e.id} onClick={()=>{setProfileInitialTab(e.onboarding_status&&e.onboarding_status!=='complete'?'onboarding':'overview');setSelectedEmployeeId(e.id)}}><EmployeeAvatar employee={e} size="xl"/><span className={`team-presence ${e.status==='active'?'online':''}`}/><strong>{e.title||prettyLabel(e.role)}</strong><h4>{e.name}</h4><small>{e.onboarding_status&&e.onboarding_status!=='complete'?'Onboarding packet':e.status==='active'?'Active':'Inactive'} · Level {e.employment_level??1}</small></button>)}</div></section>})}
+                ].map(group=>{const listed=['owner','admin','manager','d2d_agent','detailer','office','finance','recruiter','employee','custom'];const people=employees.filter(e=>(group.roles.length?group.roles.includes(e.role):!listed.includes(e.role))&&(!teamQuery||[e.name,e.title,e.email,e.role].filter(Boolean).join(' ').toLowerCase().includes(teamQuery.toLowerCase())));if(!people.length)return null;return <section key={group.title} className="team-directory-section"><div className="team-directory-heading"><h3>{group.title}</h3><span>{people.length}</span></div><div className="team-portrait-grid">{people.map(e=><button className="team-portrait-card" key={e.id} onClick={()=>{setProfileInitialTab(isOnboardingOpen(e.onboarding_status)?'onboarding':'overview');setSelectedEmployeeId(e.id)}}><EmployeeAvatar employee={e} size="xl"/><span className={`team-presence ${e.status==='active'?'online':''}`}/><strong>{e.title||prettyLabel(e.role)}</strong><h4>{e.name}</h4><small>{isOnboardingOpen(e.onboarding_status)?'Onboarding packet':e.status==='active'?'Active':'Inactive'} · Level {e.employment_level??1}</small></button>)}</div></section>})}
                 {!employees.length&&<div className="v19-premium-empty"><Users size={28}/><h3>No team members yet</h3><p>Add your first employee to start scheduling, messaging, training and dispatch.</p></div>}
                 {employees.length>0&&!employees.some(e=>!teamQuery||[e.name,e.title,e.email,e.role].filter(Boolean).join(' ').toLowerCase().includes(teamQuery.toLowerCase()))&&<div className="v19-premium-empty"><Users size={28}/><h3>No matches</h3><p>Try a different name or role.</p></div>}
               </div>
@@ -1391,7 +1387,8 @@ const handleDeleteAvailability = async (id: string) => {
                   {payments.map(p => {
                     const apt=appointments.find(a=>a.id===p.appointment_id);
                     const desc=(p.description||'').toLowerCase();
-                    const source=apt?.source_channel||(desc.includes('cash')?'cash':desc.includes('check')?'check':p.payment_method)||'—';
+                    const collected=desc.includes('cash')?'cash':desc.includes('check')?'check':desc.includes('card')?'card':'';
+                    const source=collected||p.payment_method||apt?.source_channel||'—';
                     return (
                     <div key={p.id} className="data-table-row">
                       <span className="dt-cell">{p.description ?? 'Service'}</span>

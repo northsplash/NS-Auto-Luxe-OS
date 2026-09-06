@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ClipboardCheck } from 'lucide-react';
 import EmployeeAvatar from '@/components/EmployeeAvatar';
-import { loadOnboardingSummaries, type OnboardingSummary } from '@/lib/onboarding';
+import { loadOnboardingSummaries, isOnboardingOpen, type OnboardingSummary } from '@/lib/onboarding';
 import { prettyLabel } from '@/lib/data';
 import type { Employee } from '@/lib/supabase';
 
@@ -11,7 +11,7 @@ type Props = {
 };
 
 export default function OwnerOnboardingQueue({ employees, onOpen }: Props) {
-  const open = employees.filter((e) => e.onboarding_status && e.onboarding_status !== 'complete');
+  const open = employees.filter((e) => isOnboardingOpen(e.onboarding_status));
   const [summaries, setSummaries] = useState<OnboardingSummary[]>([]);
 
   useEffect(() => {

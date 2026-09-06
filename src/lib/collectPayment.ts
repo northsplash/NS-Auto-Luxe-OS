@@ -16,8 +16,10 @@ export function isJobFinished(job?: Pick<Appointment, 'field_status' | 'status' 
   return field === 'finished' || status === 'finished' || status === 'completed' || Boolean(job.finished_at);
 }
 
-export function canCollectJob(job?: Pick<Appointment, 'field_status' | 'status' | 'payment_status' | 'finished_at'> | null) {
-  if (!job || isJobPaid(job)) return false;
+export function canCollectJob(job?: Pick<Appointment, 'field_status' | 'status' | 'payment_status' | 'finished_at' | 'archived'> | null) {
+  if (!job || isJobPaid(job) || job.archived) return false;
+  const status = String(job.status || '').toLowerCase();
+  if (status === 'cancelled' || status === 'no_show') return false;
   return isJobFinished(job);
 }
 

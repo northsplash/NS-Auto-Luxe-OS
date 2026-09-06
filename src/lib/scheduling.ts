@@ -3,7 +3,7 @@ import type { Appointment, Employee } from '@/lib/supabase';
 export const SLOT_MINUTES = 30;
 export const JOB_STATUSES = ['scheduled','confirmed','en_route','arrived','in_progress','completed','cancelled','no_show'] as const;
 export const JOB_STATUS_LABELS: Record<string,string> = {
-  pending:'Scheduled', scheduled:'Scheduled', confirmed:'Confirmed', en_route:'En Route', arrived:'Arrived', in_progress:'In Progress', completed:'Completed', cancelled:'Cancelled', no_show:'No Show'
+  pending:'Scheduled', scheduled:'Scheduled', confirmed:'Confirmed', en_route:'En Route', arrived:'Arrived', started:'In Progress', in_progress:'In Progress', finished:'Finished', completed:'Completed', cancelled:'Cancelled', no_show:'No Show'
 };
 
 export function roundToSlot(date: Date, step=SLOT_MINUTES){

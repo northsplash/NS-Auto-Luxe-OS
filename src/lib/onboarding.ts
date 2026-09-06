@@ -92,6 +92,11 @@ export function onboardingStatusLabel(percent: number) {
   return 'not_started';
 }
 
+export function isOnboardingOpen(status?: string | null) {
+  const st = String(status || '').toLowerCase();
+  return Boolean(st) && !['complete', 'completed', 'done'].includes(st);
+}
+
 function fromRow(row: Record<string, unknown>): OnboardingPacket {
   const steps = (row.steps && typeof row.steps === 'object') ? row.steps as Record<string, boolean> : {};
   return {

@@ -33,6 +33,7 @@ import WorkspaceGate from '@/components/WorkspaceGate';
 import { BackToOwnerBanner, PortalSwitchGrid, PortalSwitchRail, TopbarOwnerLink, canSwitchLivePortals } from '@/components/PortalSwitch';
 import { BRAND_LOGO } from '@/lib/brand';
 import { ServiceMenuSelect } from '@/components/DetailSelfPicker';
+import { isOnboardingOpen } from '@/lib/onboarding';
 
 type Tab='territory'|'route'|'leads'|'calendar'|'followups'|'presentation'|'messages'|'performance'|'timeclock'|'training'|'onboarding';
 type LiveLocation={latitude:number;longitude:number;accuracy?:number|null};
@@ -126,7 +127,7 @@ export default function D2DPortal(){
   const [packetOpened,setPacketOpened]=useState(false);
   useEffect(()=>{
     if(packetOpened||!employee)return;
-    if(employee.onboarding_status&&employee.onboarding_status!=='complete'){setTab('onboarding');setPacketOpened(true);setGroups(p=>({...p,account:true}))}
+    if(isOnboardingOpen(employee.onboarding_status)){setTab('onboarding');setPacketOpened(true);setGroups(p=>({...p,account:true}))}
   },[employee,packetOpened]);
   useEffect(()=>{
     if(!employee)return;
@@ -282,13 +283,38 @@ export default function D2DPortal(){
   const syncOffline=async()=>{
     if(!employee||!navigator.onLine)return;const q=loadOffline();if(!q.length)return;
     const remaining:OfflineAction[]=[];
-    for(const item of q){try{if(item.type==='save_lead'){const {error}=await supabase.from('leads').upsert(item.payload,{onConflict:'id'});if(error)throw error}else if(item.type==='door_status'){const {error}=await supabase.from('territory_doors').update(item.payload.patch).eq('id',item.payload.id);if(error)throw error}else if(item.type==='create_appointment'){const {data,error}=await supabase.from('appointments').insert(item.payload).select('id').maybeSingle();if(error)throw error;if(data?.id&&item.payload.lead_id)await supabase.from('leads').update({status:'appointment_set',appointment_id:data.id}).eq('id',item.payload.lead_id)}}catch{remaining.push(item)}}
+    for(const item of q){
+      try{
+        if(item.type==='save_lead'){
+          const {error}=await supabase.from('leads').upsert(item.payload,{onConflict:'id'});
+          if(error)throw error;
+        }else if(item.type==='door_status'){
+          const {error}=await supabase.from('territory_doors').update(item.payload.patch).eq('id',item.payload.id);
+          if(error)throw error;
+        }else if(item.type==='create_appointment'){
+          const leadId=item.payload.lead_id as string|undefined;
+          if(leadId){
+            const existingLead=await supabase.from('leads').select('appointment_id').eq('id',leadId).maybeSingle();
+            if(existingLead.data?.appointment_id)continue;
+            const existingAppt=await supabase.from('appointments').select('id').eq('lead_id',leadId).limit(1).maybeSingle();
+            if(existingAppt.data?.id){
+              await supabase.from('leads').update({status:'appointment_set',appointment_id:existingAppt.data.id}).eq('id',leadId);
+              continue;
+            }
+          }
+          const {data,error}=await supabase.from('appointments').insert(item.payload).select('id').maybeSingle();
+          if(error)throw error;
+          if(data?.id&&leadId)await supabase.from('leads').update({status:'appointment_set',appointment_id:data.id}).eq('id',leadId);
+        }
+      }catch{remaining.push(item)}
+    }
     localStorage.setItem(OFFLINE_KEY,JSON.stringify(remaining));setOfflineCount(remaining.length);if(remaining.length!==q.length)await load();
   };
 
   const saveLead=async(e?:React.FormEvent,forcedStatus?:string):Promise<boolean>=>{
     e?.preventDefault();if(!employee||!selectedDoor)return false;setSaving(true);
     const nextStatus=forcedStatus||form.status||'unworked';
+    if(nextStatus==='appointment_set'&&!form.appointment_at){setSaving(false);alert('Set the appointment time before saving. Dispatch needs a window.');return false;}
     const duplicates=await checkDuplicate();
     const protectedDuplicate=duplicates?.find((x:any)=>x.status==='do_not_knock'||(x.cooldown_until&&new Date(x.cooldown_until)>new Date()));
     if(protectedDuplicate){setSaving(false);alert(protectedDuplicate.status==='do_not_knock'?'This address/contact is permanently Do Not Knock.':'This lead is in the 6-month archive cooldown and cannot be reused yet.');return false;}
@@ -353,7 +379,7 @@ export default function D2DPortal(){
 
   const startRoute=async()=>{
     if(!employee||!selectedTerritory)return;
-    if(employee.onboarding_status&&employee.onboarding_status!=='complete'){setTab('onboarding');return;}
+    if(isOnboardingOpen(employee.onboarding_status)){setTab('onboarding');return;}
     const available=territoryDoors.filter(d=>!d.do_not_knock&&['unworked','no_answer','revisit','follow_up'].includes(d.status||'unworked'));
     if(!available.length)return alert('No eligible houses remain in this territory.');
     const start=live||{latitude:Number(territories.find(t=>t.id===selectedTerritory)?.center_lat||available[0].latitude),longitude:Number(territories.find(t=>t.id===selectedTerritory)?.center_lng||available[0].longitude)};
@@ -440,7 +466,7 @@ export default function D2DPortal(){
     <aside className={`portal-sidebar ${sidebar?'sidebar-open':''}`}>
       <div className="sidebar-header"><Link to="/" className="sidebar-brand"><img className="portal-brand-logo" src={BRAND_LOGO} alt="North Splash Auto Luxe"/><div><strong>D2D SALES</strong><small>NORTH SPLASH</small></div></Link><button className="sidebar-close" onClick={()=>setSidebar(false)}><X size={18}/></button></div>
       <div className="sidebar-user"><EmployeeAvatar employee={employee} size="md" editable onUploaded={url=>setEmployee(p=>p?{...p,avatar_url:url}:p)} className="sidebar-avatar"/><div><p>{employee.name}</p><span>Level {employee.employment_level||1} · {employee.commission_rate}%</span></div></div>
-      <nav className="sidebar-nav">{[['field','Field Work'],['performance','Results'],['account','My Account']].map(([id,label])=><div className="nav-group" key={id}><button className="nav-group-title" onClick={()=>setGroups(p=>Object.fromEntries(Object.keys(p).map(k=>[k,k===id?!p[id]:false])))}>{label}<ChevronDown size={14} className={groups[id]?'nav-chevron-open':''}/></button>{groups[id]&&nav.filter(n=>n[3]===id).map(([tid,l,Icon])=><button key={tid} className={`sidebar-item ${tab===tid?'sidebar-active':''}`} onClick={()=>{setTab(tid);setSidebar(false)}}><Icon size={18}/>{l}{tid==='onboarding'&&employee.onboarding_status&&employee.onboarding_status!=='complete'&&<span className="nav-count">1</span>}{tid==='followups'&&dueFollowups.length>0&&<span className="nav-count">{dueFollowups.length}</span>}</button>)}</div>)}</nav>
+      <nav className="sidebar-nav">{[['field','Field Work'],['performance','Results'],['account','My Account']].map(([id,label])=><div className="nav-group" key={id}><button className="nav-group-title" onClick={()=>setGroups(p=>Object.fromEntries(Object.keys(p).map(k=>[k,k===id?!p[id]:false])))}>{label}<ChevronDown size={14} className={groups[id]?'nav-chevron-open':''}/></button>{groups[id]&&nav.filter(n=>n[3]===id).map(([tid,l,Icon])=><button key={tid} className={`sidebar-item ${tab===tid?'sidebar-active':''}`} onClick={()=>{setTab(tid);setSidebar(false)}}><Icon size={18}/>{l}{tid==='onboarding'&&isOnboardingOpen(employee.onboarding_status)&&<span className="nav-count">1</span>}{tid==='followups'&&dueFollowups.length>0&&<span className="nav-count">{dueFollowups.length}</span>}</button>)}</div>)}</nav>
       <div className="sidebar-footer"><PortalSwitchGrid allow={canSwitchLivePortals(profile?.portal_role)}/><div className={`connection-pill ${online?'online':'offline'}`}>{online?'Online':'Offline'}{offlineCount>0&&` · ${offlineCount} queued`}</div><button className="sidebar-item sidebar-signout" onClick={logout}><LogOut size={18}/>Sign Out</button></div>
     </aside>
     {sidebar&&<div className="sidebar-backdrop" onClick={()=>setSidebar(false)}/>}<main id="portal-workspace" className="portal-main" tabIndex={-1}>
@@ -449,7 +475,7 @@ export default function D2DPortal(){
       <BackToOwnerBanner allow={canSwitchLivePortals(profile?.portal_role)}/>
       <div className="portal-content">
         {(!online||offlineCount>0)&&<div className={`d2d-offline-banner ${online?'queued':'down'}`}><WifiOff size={16}/><div><strong>{online?`${offlineCount} knock${offlineCount===1?'':'s'} queued`:'Working offline'}</strong><span>{online?'Sync when the connection is solid.':'Knocks save on this phone until you are back online.'}</span></div>{online&&offlineCount>0&&<button type="button" className="btn-primary" onClick={()=>void syncOffline()}>Sync now</button>}</div>}
-        {employee.onboarding_status&&employee.onboarding_status!=='complete'&&tab!=='onboarding'&&<button type="button" className="portal-notice" onClick={()=>setTab('onboarding')}><ClipboardCheck size={17}/><div><strong>Finish your hire packet</strong><span>Headshot, legal name, tax last-4, deposit last-4, and I-9.</span></div><small>Open</small></button>}
+        {isOnboardingOpen(employee.onboarding_status)&&tab!=='onboarding'&&<button type="button" className="portal-notice" onClick={()=>setTab('onboarding')}><ClipboardCheck size={17}/><div><strong>Finish your hire packet</strong><span>Headshot, legal name, tax last-4, deposit last-4, and I-9.</span></div><small>Open</small></button>}
         {tab==='onboarding'&&<div className="tab-content v2-page"><EmployeeOnboardingTab employee={employee} audience="self" onUpdated={setEmployee} onOpenTraining={()=>setTab('training')}/></div>}
         {tab==='territory'&&<div className="tab-content d2d-field-page v2-page">
           <div className="v2-page-head"><div><span className="eyebrow">SalesRabbit</span><h2>Work your territory</h2><p>Map, pins, knock colors, and the next door. Tap a house, log the outcome, then move to the next best stop.</p></div><div className="v2-head-actions"><button className="btn-outline" onClick={manualLead}><Plus size={15}/> Outside Territory Lead</button><button className="btn-primary" onClick={nextBest}><Target size={15}/> Next Best House</button></div></div>

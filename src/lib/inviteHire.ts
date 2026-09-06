@@ -85,7 +85,7 @@ export function hireInviteMessage(
     return `Hired ${name}. Invite did not send: ${fail}. Send it from People → Permissions.`;
   }
   if (data?.action_link) {
-    return `Hired ${name}. Email did not send — copy this setup link for ${email}:\n${data.action_link}`;
+    return `Hired ${name}. Email did not send — copy the setup link for ${email}.`;
   }
   if (data?.emailed) {
     return `Hired ${name}. Invite emailed to ${email}. They set a password and land in ${dest}.`;
