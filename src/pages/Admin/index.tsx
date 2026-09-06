@@ -311,6 +311,30 @@ const [availabilityForm, setAvailabilityForm] = useState({
     return () => { supabase.removeChannel(channel); };
   }, [hasWorkspaceAccess]);
 
+  const adminWorkspaces = [
+    {id:'home',label:'Home',Icon:LayoutDashboard,items:['dashboard','command_center'] as AdminTab[]},
+    {id:'sales',label:'Sales',Icon:Target,items:['sales','leads','territories','marketing','retention'] as AdminTab[]},
+    {id:'customers',label:'Customers',Icon:Users,items:['customers','crm','client_photos','appointments','schedule','availability','archived','fleet'] as AdminTab[]},
+    {id:'operations',label:'Operations',Icon:ListChecks,items:['dispatch','job_assignments','inventory','equipment','tasks','documents','notifications','purchasing','incidents','approvals'] as AdminTab[]},
+    {id:'people',label:'People',Icon:UserCheck,items:['employees','crews','recruiting','messages','staff_schedule','timeclock','time_off','payroll_approval','training'] as AdminTab[]},
+    {id:'finance',label:'Finance',Icon:DollarSign,items:['finance','payments','reports','pay_settings'] as AdminTab[]},
+    {id:'admin',label:'Admin',Icon:Settings2,items:['permissions','communications','automations','locations','continuity','audit','visitors'] as AdminTab[]},
+  ];
+  // Owners sit above Admin operationally: the Owner workspace adds owner-only planning/payment tools,
+  // then exposes every Admin workspace instead of a reduced subset.
+  const ownerWorkspaces = [
+    {id:'owner',label:'Owner',Icon:ShieldCheck,items:['command_center','owner_growth','owner_profits','payment_test'] as AdminTab[]},
+    ...adminWorkspaces.filter(workspace => workspace.id !== 'home'),
+  ];
+  const workspaces = ownerMode ? ownerWorkspaces : adminWorkspaces;
+  // Keep this hook above the WorkspaceGate returns. Calling it after those
+  // gates changes the hook count once data loads and throws React error #310.
+  useEffect(()=>{
+    const ws=workspaces.find(w=>w.items.includes(tab));
+    if(!ws)return;
+    setLastByWorkspace(prev=>prev[ws.id]===tab?prev:{...prev,[ws.id]:tab});
+  },[tab,ownerMode]);
+
   const totalRevenue = payments.filter(p => isSettledPayment(p.status)).reduce((s, p) => s + p.amount, 0);
   const monthRevenue = payments.filter(p => {
     const d = new Date(p.created_at);
@@ -588,29 +612,8 @@ const handleDeleteAvailability = async (id: string) => {
     { id: 'visitors' as AdminTab, label: 'Site Visitors', Icon: Globe },
   ];
 
-  const adminWorkspaces = [
-    {id:'home',label:'Home',Icon:LayoutDashboard,items:['dashboard','command_center'] as AdminTab[]},
-    {id:'sales',label:'Sales',Icon:Target,items:['sales','leads','territories','marketing','retention'] as AdminTab[]},
-    {id:'customers',label:'Customers',Icon:Users,items:['customers','crm','client_photos','appointments','schedule','availability','archived','fleet'] as AdminTab[]},
-    {id:'operations',label:'Operations',Icon:ListChecks,items:['dispatch','job_assignments','inventory','equipment','tasks','documents','notifications','purchasing','incidents','approvals'] as AdminTab[]},
-    {id:'people',label:'People',Icon:UserCheck,items:['employees','crews','recruiting','messages','staff_schedule','timeclock','time_off','payroll_approval','training'] as AdminTab[]},
-    {id:'finance',label:'Finance',Icon:DollarSign,items:['finance','payments','reports','pay_settings'] as AdminTab[]},
-    {id:'admin',label:'Admin',Icon:Settings2,items:['permissions','communications','automations','locations','continuity','audit','visitors'] as AdminTab[]},
-  ];
-  // Owners sit above Admin operationally: the Owner workspace adds owner-only planning/payment tools,
-  // then exposes every Admin workspace instead of a reduced subset.
-  const ownerWorkspaces = [
-    {id:'owner',label:'Owner',Icon:ShieldCheck,items:['command_center','owner_growth','owner_profits','payment_test'] as AdminTab[]},
-    ...adminWorkspaces.filter(workspace => workspace.id !== 'home'),
-  ];
-  const workspaces = ownerMode ? ownerWorkspaces : adminWorkspaces;
   const workspaceForTab=(id:AdminTab)=>workspaces.find(w=>w.items.includes(id))??workspaces[0];
   const currentWorkspace=workspaceForTab(tab);
-  useEffect(()=>{
-    const ws=workspaces.find(w=>w.items.includes(tab));
-    if(!ws)return;
-    setLastByWorkspace(prev=>prev[ws.id]===tab?prev:{...prev,[ws.id]:tab});
-  },[tab,ownerMode]);
   const upcomingAppointments = appointments.filter(a=>a.scheduled_at && new Date(a.scheduled_at).getTime()>=Date.now() && !['cancelled','completed'].includes(a.status)).length;
   const unassignedJobs = appointments.filter(a=>!a.assigned_employee_id && !['cancelled','completed'].includes(a.status)).length;
   const activeEmployees = employees.filter(e=>e.status==='active').length;
