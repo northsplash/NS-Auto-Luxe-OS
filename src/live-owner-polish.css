@@ -1449,7 +1449,7 @@
     z-index: 1200;
     height: calc(56px + env(safe-area-inset-bottom));
     padding: 4px 8px env(safe-area-inset-bottom);
-    background: rgba(255, 253, 248, .97) !important;
+    background: #efe8dc !important;
     border-top: 1px solid #eadfd3 !important;
     box-shadow: none !important;
     border-radius: 0 !important;
@@ -1543,7 +1543,7 @@
     z-index: 1200;
     height: calc(56px + env(safe-area-inset-bottom));
     padding: 2px 4px env(safe-area-inset-bottom);
-    background: rgba(255, 253, 248, .98) !important;
+    background: #efe8dc !important;
     border-top: 1px solid #eadfd3 !important;
     border-radius: 0 !important;
     box-shadow: none !important;
@@ -2714,7 +2714,7 @@
 
 /* V26/V27 leftovers: lead workspace, pay rules, crew roster, profile drawer. */
 .portal-layout.nsos-cream .os-secondary-nav {
-  background: rgba(255, 253, 248, .96) !important;
+  background: #efe8dc !important;
   border-bottom: 1px solid #eadfd3 !important;
   color: #1c1814 !important;
 }
@@ -3099,7 +3099,7 @@
 .portal-layout.nsos-cream.employee-os .portal-topbar,
 .portal-layout.nsos-cream.manager-os .portal-topbar,
 .portal-layout.nsos-cream.customer-os .portal-topbar {
-  background: rgba(255, 253, 248, .96) !important;
+  background: #efe8dc !important;
   color: #1c1814 !important;
   border-bottom-color: #eadfd3 !important;
 }
@@ -3290,7 +3290,7 @@
   .portal-layout.nsos-cream.nsos-admin-preview .os-mobile-bottom-nav.mobile-app-nav-v25 {
     display: grid !important;
     grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
-    background: rgba(255, 253, 248, .98) !important;
+    background: #efe8dc !important;
     border-top: 1px solid #eadfd3 !important;
     border-radius: 0 !important;
     box-shadow: none !important;
@@ -3320,7 +3320,7 @@
   .portal-layout.nsos-cream.nsos-admin-preview .os-more-sheet-pins button,
   .portal-layout.nsos-cream .os-more-sheet-grid button,
   .portal-layout.nsos-cream .os-more-sheet-pins button {
-    background: #fff !important;
+    background: #fffdf8 !important;
     color: #1c1814 !important;
     -webkit-text-fill-color: #1c1814 !important;
     border-color: #e4d9cc !important;
@@ -3333,6 +3333,8 @@
   }
   .portal-layout.nsos-cream.os-tab-messages .portal-content {
     padding: 0 0 calc(72px + env(safe-area-inset-bottom)) !important;
+    width: 100% !important;
+    max-width: none !important;
   }
   .portal-layout.nsos-cream.os-tab-messages .os-phone-subnav {
     padding: 8px 12px 8px !important;
@@ -3407,4 +3409,163 @@
   }
   .auth-page .auth-bg-copy p { font-size: 18px !important; }
   .auth-page .auth-card { padding: 20px 18px calc(24px + env(safe-area-inset-bottom)) !important; }
+}
+
+/* Even-color lock: canvas chrome, paper cards, sunken heads, espresso primaries.
+   Do not remap --ns-white (would ink the espresso sidebar). */
+.portal-layout.nsos-cream,
+.portal-layout.nsos-cream.nsos-admin-preview {
+  background: #efe8dc !important;
+}
+.portal-layout.nsos-cream .portal-main,
+.portal-layout.nsos-cream .portal-content,
+.portal-layout.nsos-cream.nsos-admin-preview .portal-main,
+.portal-layout.nsos-cream.nsos-admin-preview .portal-content {
+  background: #efe8dc !important;
+  color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .portal-topbar,
+.portal-layout.nsos-cream.nsos-admin-preview .portal-topbar,
+.portal-layout.nsos-cream .os-secondary-nav,
+.portal-layout.nsos-cream.nsos-admin-preview .os-secondary-nav,
+.portal-layout.nsos-cream .os-phone-subnav,
+.portal-layout.nsos-cream .os-mobile-bottom-nav,
+.portal-layout.nsos-cream .os-mobile-bottom-nav.mobile-app-nav-v25,
+.portal-layout.nsos-cream.nsos-admin-preview .os-mobile-bottom-nav.mobile-app-nav-v25 {
+  background: #efe8dc !important;
+  border-color: #eadfd3 !important;
+  color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .os-command-trigger,
+.portal-layout.nsos-cream .portal-main .os-command-trigger,
+.portal-layout.nsos-cream.nsos-admin-preview .os-command-trigger {
+  background: #fffdf8 !important;
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+  border: 1px solid #e4d9cc !important;
+}
+.portal-layout.nsos-cream .os-command-trigger kbd {
+  background: #f4efe8 !important;
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+}
+
+.portal-layout.nsos-cream .portal-main .admin-card,
+.portal-layout.nsos-cream .portal-main .admin-stat,
+.portal-layout.nsos-cream .portal-main .phase-panel,
+.portal-layout.nsos-cream .portal-main .phase-kpi,
+.portal-layout.nsos-cream .portal-main .v2-card,
+.portal-layout.nsos-cream .portal-main .btn-outline,
+.portal-layout.nsos-cream .nsos-btn.ghost,
+.portal-layout.nsos-cream .owner-jump-nav-v29 a,
+.portal-layout.nsos-cream .owner-jump-nav-v29 button:not(.active),
+.portal-layout.nsos-cream .os-phone-subnav button:not(.active),
+.portal-layout.nsos-cream .nsos-stripe-dash .admin-stat {
+  background: #fffdf8 !important;
+}
+
+.portal-layout.nsos-cream .portal-main .data-table,
+.portal-layout.nsos-cream .portal-main .nsos-dir,
+.portal-layout.nsos-cream.nsos-admin-preview .nsos-dir,
+.portal-layout.nsos-cream .portal-main .lead-command-table,
+.portal-layout.nsos-cream .portal-main .data-table-row,
+.portal-layout.nsos-cream .portal-main .nsos-dir-row {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  border-color: #e4d9cc !important;
+}
+.portal-layout.nsos-cream .portal-main .data-table-head,
+.portal-layout.nsos-cream .portal-main .nsos-dir-head,
+.portal-layout.nsos-cream .portal-main .lead-command-head,
+.portal-layout.nsos-cream .portal-content .data-table-head,
+.portal-layout.nsos-cream .portal-content .data-manager-list-head,
+.portal-layout.nsos-cream .portal-content thead,
+.portal-layout.nsos-cream .portal-content th,
+.portal-layout.nsos-cream.nsos-admin-preview .nsos-dir-head {
+  background: #f4efe8 !important;
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+  border-color: #eadfd3 !important;
+}
+.portal-layout.nsos-cream .portal-main .nsos-dir-row:hover,
+.portal-layout.nsos-cream .portal-main .data-table-row:hover {
+  background: #f7f1ea !important;
+}
+
+.portal-layout.nsos-cream .portal-main .btn-primary,
+.portal-layout.nsos-cream .nsos-btn:not(.ghost),
+.portal-layout.nsos-cream.nsos-admin-preview .portal-main .btn-primary {
+  background: #1c1814 !important;
+  color: #f6f1e8 !important;
+  -webkit-text-fill-color: #f6f1e8 !important;
+  border-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .portal-main .btn-primary *,
+.portal-layout.nsos-cream .nsos-btn:not(.ghost) * {
+  color: #f6f1e8 !important;
+  -webkit-text-fill-color: #f6f1e8 !important;
+}
+.portal-layout.nsos-cream .portal-main .btn-primary:hover,
+.portal-layout.nsos-cream .nsos-btn:not(.ghost):hover {
+  background: #2a241e !important;
+}
+
+.portal-layout.nsos-cream .cashflow-bar-bg {
+  background: #f4efe8 !important;
+  border-color: #e4d9cc !important;
+}
+.portal-layout.nsos-cream .cashflow-bar-fill {
+  background: linear-gradient(180deg, #d4af37, #b8893a) !important;
+  min-height: 12px;
+}
+
+.portal-layout.nsos-cream .os-more-sheet,
+.portal-layout.nsos-cream.nsos-admin-preview .os-more-sheet,
+.portal-layout.nsos-cream .os-command-palette,
+.portal-layout.nsos-cream .os-sheet {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  border-color: #eadfd3 !important;
+}
+.portal-layout.nsos-cream .os-more-sheet-grid button,
+.portal-layout.nsos-cream .os-more-sheet-pins button,
+.portal-layout.nsos-cream.nsos-admin-preview .os-more-sheet-grid button,
+.portal-layout.nsos-cream.nsos-admin-preview .os-more-sheet-pins button {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  border-color: #e4d9cc !important;
+}
+.portal-layout.nsos-cream .os-more-sheet-grid button.active,
+.portal-layout.nsos-cream.nsos-admin-preview .os-more-sheet-grid button.active {
+  background: #1c1814 !important;
+  color: #f6f1e8 !important;
+  -webkit-text-fill-color: #f6f1e8 !important;
+}
+
+.portal-layout.nsos-cream.nsos-admin-preview .team-messaging.messaging-v6,
+.portal-layout.nsos-cream .team-messaging.messaging-os,
+.portal-layout.nsos-cream .team-messaging.messaging-v6 {
+  background: #fffdf8 !important;
+  border-color: #e4d9cc !important;
+  color: #1c1814 !important;
+}
+
+@media (min-width: 1181px) {
+  .portal-layout.nsos-cream,
+  .portal-layout.nsos-cream.nsos-admin-preview {
+    grid-template-columns: 272px minmax(0, 1fr) !important;
+  }
+  .portal-layout.nsos-cream .portal-sidebar,
+  .portal-layout.nsos-cream.nsos-admin-preview .portal-sidebar {
+    width: 272px !important;
+    min-width: 272px !important;
+    max-width: 272px !important;
+    position: relative !important;
+    left: auto !important;
+  }
+  .portal-layout.nsos-cream .portal-main {
+    margin-left: 0 !important;
+  }
 }

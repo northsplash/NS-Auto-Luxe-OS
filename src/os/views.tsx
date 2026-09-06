@@ -342,7 +342,7 @@ export function OwnerStripeDashboard({
             <div className="cashflow-bar-wrap" key={m.label}>
               <div className="cashflow-amount">{money(m.revenue)}</div>
               <div className="cashflow-bar-bg">
-                <div className="cashflow-bar-fill" style={{ height: `${Math.max(8, (m.revenue / maxRevenue) * 100)}%` }} />
+                <div className="cashflow-bar-fill" style={{ height: `${Math.max(12, (m.revenue / maxRevenue) * 100)}%` }} />
               </div>
               <div className="cashflow-label">{m.label}</div>
             </div>
