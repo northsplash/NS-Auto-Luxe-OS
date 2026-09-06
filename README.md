@@ -52,13 +52,14 @@ The two cores: **SalesRabbit** for territory maps, pins, knocks, and canvassing;
 
 ## What you can do in this slice
 
-- Owner Dashboard: six KPIs, monthly cash flow, recent appointments, and team overview (Stripe layout)
+- Owner Dashboard: Stripe-style balances (gross volume, this month, pending, avg. ticket), cash flow, recent appointments, and team overview
 - Owner Command Center with glance KPIs, exceptions, today’s schedule, and booking flow
-- Rippling-style people directory and Gusto-style onboarding packet (headshot, legal name, tax last-four, deposit, I-9)
+- Rippling-style people directory (search) and Gusto-style onboarding packet (headshot, legal name, tax last-four, deposit, I-9)
+- Deputy staff schedule: Sunday–Saturday week grid per person, plus shift editor
 - ServiceTitan dispatch: unassigned rail, tech columns, drag-to-assign
 - SalesRabbit D2D: tall map, West / Central / East areas, knock outcomes, door list, book-the-door
-- HubSpot pipeline and customer records
-- Jobber appointments (week strip + day board) and job detail with Uber-style live status
+- HubSpot pipeline and customer records (search, last job, spend)
+- Jobber appointments (stage filters, customer, address) and job detail with Uber-style live status stepper
 - Square payments, Gusto hiring pipeline, Stripe settings
 - Teams-style messaging (Chat / Teams filters, composer, company channel). Send shows an error instead of failing silently.
 - Gusto hiring: Convert / Hire seeds the onboarding packet and opens the hire’s profile.

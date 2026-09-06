@@ -1,5 +1,5 @@
 
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import {
   BriefcaseBusiness, CalendarDays, Clock3, DollarSign, PackageSearch,
   Plus, Save, Trash2, TrendingUp, UserPlus, Users, WalletCards, Trophy, Target, BarChart3, CircleDollarSign
@@ -15,6 +15,7 @@ import EmployeeAvatar from '@/components/EmployeeAvatar';
 import CompensationRuleBuilder from '@/components/CompensationRuleBuilder';
 import { compensationSummary, estimateCustomRulePay } from '@/lib/compensation';
 import { employeeCanD2D } from '@/lib/workCapabilities';
+import WorkspaceHero from '@/components/WorkspaceHero';
 
 export type BusinessSection =
   | 'recruiting'
@@ -49,13 +50,8 @@ const formatTime = (time?: string | null) => {
 
 const dateInput = (d = new Date()) => d.toISOString().slice(0, 10);
 
-function SectionHeader({ title, subtitle, action }: { title: string; subtitle: string; action?: React.ReactNode }) {
-  return (
-    <div className="tab-header">
-      <div><h2>{title}</h2><p>{subtitle}</p></div>
-      {action}
-    </div>
-  );
+function SectionHeader({ tab, action }: { tab: string; action?: React.ReactNode }) {
+  return <WorkspaceHero tab={tab} actions={action} />;
 }
 
 
@@ -342,7 +338,7 @@ export default function BusinessSuite({ section, employees, setEmployees, comple
     const stages = RECRUITING_STAGES.filter(([id]) => !['archived', 'rejected', 'withdrawn', 'no_show'].includes(id));
     return (
       <div className="tab-content business-suite">
-        <SectionHeader title="Hiring" subtitle="Gusto-style pipeline: screen → offer → hire. Convert opens the onboarding packet (headshot, legal name, tax last-4, deposit last-4, I-9)." />
+        <SectionHeader tab="recruiting" />
         <div className="ops-kpi-row">
           <div><strong>{candidates.filter(c => !['rejected','withdrawn','archived'].includes(c.stage)).length}</strong><span>Active Candidates</span></div>
           <div><strong>{candidates.filter(c => c.stage === 'background_check').length}</strong><span>Background Checks</span></div>
@@ -407,7 +403,7 @@ export default function BusinessSuite({ section, employees, setEmployees, comple
     const upcoming = shifts.filter(s => s.shift_date >= dateInput()).slice(0, 80);
     return (
       <div className="tab-content business-suite">
-        <SectionHeader title="Employee Scheduling" subtitle="Create and change employee hours without a separate scheduling app." />
+        <SectionHeader tab="staff_schedule" />
         <div className="admin-two-col ops-align-start">
           <form className="admin-card ops-form" onSubmit={addShift}>
             <div className="admin-card-header"><h3><CalendarDays size={18}/> {editingShiftId ? 'Edit Shift' : 'Add Shift'}</h3></div>
@@ -420,6 +416,19 @@ export default function BusinessSuite({ section, employees, setEmployees, comple
           </form>
           <div className="admin-card"><div className="admin-card-header"><h3>Team Snapshot</h3></div><div className="recruit-pipeline"><div><strong>{employees.filter(e=>e.status==='active').length}</strong><span>Active Staff</span></div><div><strong>{upcoming.length}</strong><span>Upcoming Shifts</span></div><div><strong>{upcoming.filter(s=>s.shift_date===dateInput()).length}</strong><span>Today</span></div></div></div>
         </div>
+        <div className="admin-card deputy-week-wrap">
+          <div className="admin-card-header"><h3>This week</h3><span>Sunday–Saturday · tap a cell to edit</span></div>
+          <div className="deputy-week">
+            <div className="deputy-head">Team</div>
+            {Array.from({length:7},(_,i)=>{const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-d.getDay()+i);const key=dateInput(d);const today=dateInput();return <div key={key} className={`deputy-head ${key===today?'is-today':''}`}><strong>{d.toLocaleDateString('en-US',{weekday:'short'})}</strong><div>{d.getDate()}</div></div>})}
+            {employees.filter(e=>e.status!=='inactive').map(e=>(
+              <Fragment key={e.id}>
+                <div className="deputy-name"><strong>{e.name}</strong><small>{roleLabel(e.role)}</small></div>
+                {Array.from({length:7},(_,i)=>{const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-d.getDay()+i);const key=dateInput(d);const cells=shifts.filter(s=>s.employee_id===e.id&&s.shift_date===key);return <div className="deputy-cell" key={`${e.id}-${key}`}>{cells.map(s=><button type="button" key={s.id} className={`deputy-chip ${s.status!=='scheduled'?s.status:''}`} onClick={()=>{setEditingShiftId(s.id);setShiftForm({employee_id:s.employee_id,shift_date:s.shift_date,start_time:(s.start_time||'09:00').slice(0,5),end_time:(s.end_time||'17:00').slice(0,5),status:s.status,notes:s.notes||''});window.scrollTo({top:0,behavior:'smooth'});}}>{s.status==='scheduled'?`${formatTime(s.start_time)} – ${formatTime(s.end_time)}`:s.status.toUpperCase()}</button>)}{!cells.length&&<button type="button" className="deputy-chip off" onClick={()=>{setEditingShiftId(null);setShiftForm(p=>({...p,employee_id:e.id,shift_date:key,status:'scheduled'}));window.scrollTo({top:0,behavior:'smooth'});}}>+ Add</button>}</div>})}
+              </Fragment>
+            ))}
+          </div>
+        </div>
         <div className="admin-card"><div className="admin-card-header"><h3>Upcoming Schedule</h3></div><div className="ops-list">{upcoming.map(s=><div className="ops-list-row" key={s.id}><div className="ops-primary"><strong>{employeeName(s.employee_id)}</strong><span>{new Date(`${s.shift_date}T12:00:00`).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</span></div><div><span className="ops-label">Hours</span><strong>{s.status==='scheduled'?`${formatTime(s.start_time)} – ${formatTime(s.end_time)}`:s.status.toUpperCase()}</strong></div><div><span className="ops-label">Notes</span><span>{s.notes||'—'}</span></div><div className="ops-actions"><button className="btn-sm btn-outline" onClick={()=>{setEditingShiftId(s.id);setShiftForm({employee_id:s.employee_id,shift_date:s.shift_date,start_time:(s.start_time||'09:00').slice(0,5),end_time:(s.end_time||'17:00').slice(0,5),status:s.status,notes:s.notes||''});window.scrollTo({top:0,behavior:'smooth'});}}>Edit Hours</button><button className="btn-sm btn-outline" onClick={async()=>{await supabase.from('employee_shifts').delete().eq('id',s.id);setShifts(p=>p.filter(x=>x.id!==s.id));}}><Trash2 size={13}/> Remove</button></div></div>)}{upcoming.length===0&&<p className="empty-text">No shifts scheduled.</p>}</div></div>
       </div>
     );
@@ -428,7 +437,7 @@ export default function BusinessSuite({ section, employees, setEmployees, comple
   if (section === 'timeclock') {
     return (
       <div className="tab-content business-suite">
-        <SectionHeader title="Time Clock & Timesheets" subtitle="Track hours worked and use them in payroll estimates." />
+        <SectionHeader tab="timeclock" />
         <div className="admin-two-col ops-align-start">
           <form className="admin-card ops-form" onSubmit={addTimeEntry}><div className="admin-card-header"><h3><Clock3 size={18}/> Add Time Entry</h3></div><div className="form-group"><label>Employee</label><select value={timeForm.employee_id} onChange={e=>setTimeForm(p=>({...p,employee_id:e.target.value}))}>{employees.map(e=><option key={e.id} value={e.id}>{e.name}</option>)}</select></div><div className="form-row"><div className="form-group"><label>Clock In</label><input type="datetime-local" required value={timeForm.clock_in} onChange={e=>setTimeForm(p=>({...p,clock_in:e.target.value}))}/></div><div className="form-group"><label>Clock Out</label><input type="datetime-local" value={timeForm.clock_out} onChange={e=>setTimeForm(p=>({...p,clock_out:e.target.value}))}/></div></div><div className="form-group"><label>Unpaid Break (minutes)</label><input type="number" min="0" value={timeForm.break_minutes} onChange={e=>setTimeForm(p=>({...p,break_minutes:Number(e.target.value)}))}/></div><div className="form-group"><label>Notes</label><textarea rows={2} value={timeForm.notes} onChange={e=>setTimeForm(p=>({...p,notes:e.target.value}))}/></div><button className="btn-primary btn-full">Save Time Entry</button></form>
           <div className="admin-card"><div className="admin-card-header"><h3>Current Week</h3></div><div className="payroll-mini-grid">{employees.slice(0,8).map(e=>{const x=employeeIncome(e,startOfWeek);return <div key={e.id}><strong>{e.name}</strong><span>{x.hours.toFixed(1)} hrs</span><b>{money(Math.round(x.total))}</b></div>})}</div></div>
@@ -462,7 +471,7 @@ export default function BusinessSuite({ section, employees, setEmployees, comple
 
     return (
       <div className="tab-content business-suite v19-sales-workspace">
-        <SectionHeader title="D2D Sales" subtitle="Track door-to-door performance, log appointments, and close more deals." />
+        <SectionHeader tab="sales" />
         <div className="v19-kpi-grid v20-five-kpis">
           <div className="v19-kpi"><span className="v19-kpi-icon"><DollarSign size={20}/></span><div><strong>{money(salesTotal)}</strong><span>Completed Sales</span><small>Collected completed sales</small></div></div>
           <div className="v19-kpi"><span className="v19-kpi-icon"><Target size={20}/></span><div><strong>{completed.length}</strong><span>Deals Closed</span><small>{sales.length} total records</small></div></div>
@@ -493,13 +502,13 @@ export default function BusinessSuite({ section, employees, setEmployees, comple
   if (section === 'inventory') {
     const low = inventory.filter(i=>Number(i.quantity)<=Number(i.reorder_level));
     const value = inventory.reduce((s,i)=>s+Number(i.quantity)*Number(i.unit_cost),0);
-    return <div className="tab-content business-suite"><SectionHeader title="Inventory" subtitle="Track chemicals, towels, coating, tools, and reorder levels."/><div className="ops-kpi-row"><div><strong>{inventory.length}</strong><span>Items</span></div><div><strong>{low.length}</strong><span>Low Stock</span></div><div><strong>{money(Math.round(value))}</strong><span>Inventory Value</span></div></div><div className="admin-two-col ops-align-start"><form className="admin-card ops-form" onSubmit={addInventory}><div className="admin-card-header"><h3><PackageSearch size={18}/> Add Inventory</h3></div><div className="form-group"><label>Item</label><input required value={inventoryForm.name} onChange={e=>setInventoryForm(p=>({...p,name:e.target.value}))}/></div><div className="form-row"><div className="form-group"><label>Category</label><input value={inventoryForm.category} onChange={e=>setInventoryForm(p=>({...p,category:e.target.value}))}/></div><div className="form-group"><label>Supplier</label><input value={inventoryForm.supplier} onChange={e=>setInventoryForm(p=>({...p,supplier:e.target.value}))}/></div></div><div className="form-row"><div className="form-group"><label>Quantity</label><input type="number" step="0.1" value={inventoryForm.quantity} onChange={e=>setInventoryForm(p=>({...p,quantity:Number(e.target.value)}))}/></div><div className="form-group"><label>Reorder At</label><input type="number" step="0.1" value={inventoryForm.reorder_level} onChange={e=>setInventoryForm(p=>({...p,reorder_level:Number(e.target.value)}))}/></div></div><div className="form-group"><label>Unit Cost</label><input type="number" step="0.01" value={inventoryForm.unit_cost} onChange={e=>setInventoryForm(p=>({...p,unit_cost:Number(e.target.value)}))}/></div><button className="btn-primary btn-full">Add Item</button></form><div className="admin-card"><div className="admin-card-header"><h3>Low Stock Alerts</h3></div>{low.map(i=><div className="admin-row" key={i.id}><div className="admin-row-main"><strong>{i.name}</strong><span>Reorder at {i.reorder_level}</span></div><div className="admin-row-right"><strong>{i.quantity}</strong></div></div>)}{!low.length&&<p className="empty-text">No low-stock items.</p>}</div></div><div className="admin-card"><div className="ops-list">{inventory.map(i=><div className="ops-list-row" key={i.id}><div className="ops-primary"><strong>{i.name}</strong><span>{i.category} · {i.supplier||'No supplier'}</span></div><div><span className="ops-label">Qty</span><input className="ops-inline-input" type="number" step="0.1" value={i.quantity} onChange={e=>setInventory(p=>p.map(x=>x.id===i.id?{...x,quantity:Number(e.target.value)}:x))} onBlur={async e=>{await supabase.from('inventory_items').update({quantity:Number(e.target.value),updated_at:new Date().toISOString()}).eq('id',i.id)}}/></div><div><span className="ops-label">Unit Cost</span><strong>{money(Number(i.unit_cost))}</strong></div><div className="ops-actions"><button className="btn-sm btn-outline" onClick={async()=>{await supabase.from('inventory_items').delete().eq('id',i.id);setInventory(p=>p.filter(x=>x.id!==i.id));}}><Trash2 size={13}/></button></div></div>)}</div></div></div>;
+    return <div className="tab-content business-suite"><SectionHeader tab="inventory"/><div className="ops-kpi-row"><div><strong>{inventory.length}</strong><span>Items</span></div><div><strong>{low.length}</strong><span>Low Stock</span></div><div><strong>{money(Math.round(value))}</strong><span>Inventory Value</span></div></div><div className="admin-two-col ops-align-start"><form className="admin-card ops-form" onSubmit={addInventory}><div className="admin-card-header"><h3><PackageSearch size={18}/> Add Inventory</h3></div><div className="form-group"><label>Item</label><input required value={inventoryForm.name} onChange={e=>setInventoryForm(p=>({...p,name:e.target.value}))}/></div><div className="form-row"><div className="form-group"><label>Category</label><input value={inventoryForm.category} onChange={e=>setInventoryForm(p=>({...p,category:e.target.value}))}/></div><div className="form-group"><label>Supplier</label><input value={inventoryForm.supplier} onChange={e=>setInventoryForm(p=>({...p,supplier:e.target.value}))}/></div></div><div className="form-row"><div className="form-group"><label>Quantity</label><input type="number" step="0.1" value={inventoryForm.quantity} onChange={e=>setInventoryForm(p=>({...p,quantity:Number(e.target.value)}))}/></div><div className="form-group"><label>Reorder At</label><input type="number" step="0.1" value={inventoryForm.reorder_level} onChange={e=>setInventoryForm(p=>({...p,reorder_level:Number(e.target.value)}))}/></div></div><div className="form-group"><label>Unit Cost</label><input type="number" step="0.01" value={inventoryForm.unit_cost} onChange={e=>setInventoryForm(p=>({...p,unit_cost:Number(e.target.value)}))}/></div><button className="btn-primary btn-full">Add Item</button></form><div className="admin-card"><div className="admin-card-header"><h3>Low Stock Alerts</h3></div>{low.map(i=><div className="admin-row" key={i.id}><div className="admin-row-main"><strong>{i.name}</strong><span>Reorder at {i.reorder_level}</span></div><div className="admin-row-right"><strong>{i.quantity}</strong></div></div>)}{!low.length&&<p className="empty-text">No low-stock items.</p>}</div></div><div className="admin-card"><div className="ops-list">{inventory.map(i=><div className="ops-list-row" key={i.id}><div className="ops-primary"><strong>{i.name}</strong><span>{i.category} · {i.supplier||'No supplier'}</span></div><div><span className="ops-label">Qty</span><input className="ops-inline-input" type="number" step="0.1" value={i.quantity} onChange={e=>setInventory(p=>p.map(x=>x.id===i.id?{...x,quantity:Number(e.target.value)}:x))} onBlur={async e=>{await supabase.from('inventory_items').update({quantity:Number(e.target.value),updated_at:new Date().toISOString()}).eq('id',i.id)}}/></div><div><span className="ops-label">Unit Cost</span><strong>{money(Number(i.unit_cost))}</strong></div><div className="ops-actions"><button className="btn-sm btn-outline" onClick={async()=>{await supabase.from('inventory_items').delete().eq('id',i.id);setInventory(p=>p.filter(x=>x.id!==i.id));}}><Trash2 size={13}/></button></div></div>)}</div></div></div>;
   }
 
   if (section === 'pay_settings') {
     const selectedEmp=employees.find(e=>e.id===compEmployeeId);
     return <div className="tab-content business-suite pay-command-v25">
-      <SectionHeader title="Compensation Studio" subtitle="Custom job titles and flexible pay for every role — hourly, salary, commission, per-job or mixed."/>
+      <SectionHeader tab="pay_settings"/>
       <div className="pay-command-kpis"><div><span>Team Members</span><strong>{employees.length}</strong><small>Total records</small></div><div><span>Hourly</span><strong>{employees.filter(e=>(e.pay_type||'hourly')==='hourly').length}</strong><small>Time based</small></div><div><span>Commission</span><strong>{employees.filter(e=>['base_commission','commission_only'].includes(e.pay_type||'')).length}</strong><small>Sales based</small></div><div><span>Custom</span><strong>{employees.filter(e=>(e.pay_type||'')==='custom').length}</strong><small>Mixed structures</small></div></div>
       <div className="pay-command-layout"><section className="admin-card pay-directory-v25"><div className="admin-card-header"><div><span className="eyebrow">EMPLOYEE PAY</span><h3>Individual Compensation</h3></div><span>{employees.length} people</span></div><div className="pay-employee-list-v25">{employees.map(e=><button key={e.id} className={compEmployeeId===e.id?'active':''} onClick={()=>openCompensation(e)}><EmployeeAvatar employee={e} size="sm"/><span><strong>{e.name}</strong><small>{e.title||roleLabel(e.role)} · {e.department||'North Splash'}</small></span><em>{compensationLabel(e)}</em></button>)}</div></section>
       <section className="admin-card pay-editor-v25">{selectedEmp?<><div className="admin-card-header"><div><span className="eyebrow">COMPENSATION PROFILE</span><h3>{selectedEmp.name}</h3></div><EmployeeAvatar employee={selectedEmp} size="md"/></div><div className="form-row"><div className="form-group"><label>Custom Job Title</label><input value={String(compDraft.title||'')} onChange={e=>setCompDraft(p=>({...p,title:e.target.value}))}/></div><div className="form-group"><label>Department</label><input value={String(compDraft.department||'')} onChange={e=>setCompDraft(p=>({...p,department:e.target.value}))}/></div></div><div className="form-row"><div className="form-group"><label>Pay Structure</label><select value={String(compDraft.pay_type||'hourly')} onChange={e=>setCompDraft(p=>({...p,pay_type:e.target.value}))}><option value="hourly">Hourly</option><option value="salary">Salary</option><option value="base_commission">Base + Commission</option><option value="commission_only">Commission Only</option><option value="per_job">Per Job</option><option value="custom">Custom / Mixed</option></select></div><div className="form-group"><label>Pay Schedule</label><select value={String(compDraft.pay_schedule||'weekly')} onChange={e=>setCompDraft(p=>({...p,pay_schedule:e.target.value}))}><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="semimonthly">Twice Monthly</option><option value="monthly">Monthly</option></select></div></div>
@@ -518,7 +527,7 @@ export default function BusinessSuite({ section, employees, setEmployees, comple
   // FINANCE / PAYROLL
   return (
     <div className="tab-content business-suite">
-      <SectionHeader title="Finance & Payroll" subtitle="Estimated employee income, company value, labor cost, expenses, and operating profit." />
+      <SectionHeader tab="finance" />
       <div className="ops-kpi-row"><div><strong>{money(Math.round(payrollWeek))}</strong><span>Est. Payroll This Week</span></div><div><strong>{money(Math.round(payrollMonth))}</strong><span>Est. Payroll This Month</span></div><div><strong>{money(Math.round(monthExpenses))}</strong><span>Expenses This Month</span></div><div className={estimatedMonthProfit>=0?'ops-positive':'ops-negative'}><strong>{money(Math.round(estimatedMonthProfit))}</strong><span>Est. Operating Profit</span></div></div>
       <div className="v20-finance-analytics"><section className="admin-card"><div className="admin-card-header"><h3><BarChart3 size={18}/> Monthly Cost Mix</h3><span className="v19-card-kicker">LIVE EXPENSES</span></div><div className="v20-expense-bars">{expenseByCategory.length?expenseByCategory.slice(0,7).map(([label,value])=><div key={label}><span>{label}</span><i><b style={{width:`${Math.max(4,value/maxExpenseCategory*100)}%`}}/></i><strong>{money(value)}</strong></div>):<div className="v20-dark-empty">No expenses recorded this month.</div>}</div></section><section className="admin-card v20-finance-health"><div className="admin-card-header"><h3><CircleDollarSign size={18}/> Operating Snapshot</h3><span className="v19-card-kicker">THIS MONTH</span></div><div className="v20-finance-ring" style={{'--progress':`${completedRevenue?Math.max(0,Math.min(100,(estimatedMonthProfit/completedRevenue)*100)):0}%`} as React.CSSProperties}><div><strong>{completedRevenue?`${Math.round((estimatedMonthProfit/completedRevenue)*100)}%`:'0%'}</strong><small>margin*</small></div></div><div className="v20-finance-legend"><div><span>Collected revenue</span><strong>{money(completedRevenue)}</strong></div><div><span>Payroll estimate</span><strong>{money(payrollMonth)}</strong></div><div><span>Other expenses</span><strong>{money(monthExpenses)}</strong></div></div><small>*Operational estimate before taxes/filing adjustments.</small></section></div>
       <div className="admin-two-col ops-align-start">

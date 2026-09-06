@@ -31,6 +31,7 @@ import { emptyEmployeeDraft, type EmployeeDraft } from '@/lib/rolePresets';
 import { seedHireOnboarding } from '@/lib/onboarding';
 import { ensureOwnerFieldEmployee } from '@/lib/ownerFieldMode';
 import { employeeCanD2D, employeeCanDetail } from '@/lib/workCapabilities';
+import WorkspaceHero from '@/components/WorkspaceHero';
 
 type AdminTab =
   | 'dashboard'
@@ -124,6 +125,9 @@ export default function Admin() {
   const [visitorRange,setVisitorRange]=useState<'1h'|'6h'|'12h'|'24h'|'3d'|'7d'|'14d'|'30d'|'90d'|'6m'|'1y'>('24h');
   const [selectedEmployeeId,setSelectedEmployeeId]=useState('');
   const [profileInitialTab,setProfileInitialTab]=useState<'onboarding'|'overview'|undefined>(undefined);
+  const [customerQuery,setCustomerQuery]=useState('');
+  const [appointmentStage,setAppointmentStage]=useState<'all'|'upcoming'|'confirmed'|'in_progress'|'completed'>('all');
+  const [teamQuery,setTeamQuery]=useState('');
   const [dataLoading, setDataLoading] = useState(true);
   const [teamCalendarEmployee,setTeamCalendarEmployee]=useState('');
   const [availability, setAvailability] = useState<any[]>([]);
@@ -425,24 +429,24 @@ const handleDeleteAvailability = async (id: string) => {
   }
 
   const navItems = [
-    { id: 'dashboard' as AdminTab, label: 'Dashboard', Icon: LayoutDashboard },
+    { id: 'dashboard' as AdminTab, label: 'Overview', Icon: LayoutDashboard },
     { id: 'customers' as AdminTab, label: 'Customers', Icon: Users },
     { id: 'appointments' as AdminTab, label: 'Appointments', Icon: Calendar },
-    { id: 'schedule' as AdminTab, label: 'Customer Schedule', Icon: CalendarClock },
+    { id: 'schedule' as AdminTab, label: 'Calendar', Icon: CalendarClock },
     { id: 'availability' as AdminTab, label: 'Availability', Icon: Calendar },
-    { id: 'archived' as AdminTab, label: 'Archived Details', Icon: Archive },
-    { id: 'recruiting' as AdminTab, label: 'Recruiting', Icon: BriefcaseBusiness },
+    { id: 'archived' as AdminTab, label: 'Archived jobs', Icon: Archive },
+    { id: 'recruiting' as AdminTab, label: 'Hiring', Icon: BriefcaseBusiness },
     { id: 'employees' as AdminTab, label: 'Team', Icon: UserCheck },
-    { id: 'staff_schedule' as AdminTab, label: 'Employee Schedule', Icon: CalendarClock },
+    { id: 'staff_schedule' as AdminTab, label: 'Staff schedule', Icon: CalendarClock },
     { id: 'timeclock' as AdminTab, label: 'Time Clock', Icon: Clock3 },
     { id: 'payroll_approval' as AdminTab, label: 'Timesheet Approval', Icon: ClipboardCheck },
     { id: 'job_assignments' as AdminTab, label: 'Job Assignment', Icon: ListChecks },
-    { id: 'sales' as AdminTab, label: 'D2D Sales', Icon: TrendingUp },
-    { id: 'leads' as AdminTab, label: 'Leads Tracker', Icon: Target },
+    { id: 'sales' as AdminTab, label: 'Door to door', Icon: TrendingUp },
+    { id: 'leads' as AdminTab, label: 'Leads', Icon: Target },
     { id: 'territories' as AdminTab, label: 'Territories', Icon: MapPinned },
     { id: 'finance' as AdminTab, label: 'Finance & Payroll', Icon: DollarSign },
     ...(ownerMode ? [{ id: 'owner_growth' as AdminTab, label: 'Growth Planner', Icon: Target }, { id: 'owner_profits' as AdminTab, label: 'Profit Tracker', Icon: TrendingUp }, { id: 'payment_test' as AdminTab, label: '1¢ Payment Test', Icon: CreditCard }] : []),
-    { id: 'reports' as AdminTab, label: 'Reports & Analytics', Icon: Gauge },
+    { id: 'reports' as AdminTab, label: 'Reports', Icon: Gauge },
     { id: 'inventory' as AdminTab, label: 'Inventory', Icon: PackageSearch },
     { id: 'equipment' as AdminTab, label: 'Equipment & Assets', Icon: Wrench },
     { id: 'tasks' as AdminTab, label: 'Tasks & Operations', Icon: ListChecks },
@@ -450,11 +454,11 @@ const handleDeleteAvailability = async (id: string) => {
     { id: 'documents' as AdminTab, label: 'Document Vault', Icon: FileText },
     { id: 'notifications' as AdminTab, label: 'Notifications', Icon: Bell },
     { id: 'pay_settings' as AdminTab, label: 'Pay Structure', Icon: Settings2 },
-    { id: 'permissions' as AdminTab, label: 'Portal Permissions', Icon: ShieldCheck },
+    { id: 'permissions' as AdminTab, label: 'Permissions', Icon: ShieldCheck },
     { id: 'audit' as AdminTab, label: 'Audit Log', Icon: ScrollText },
-    { id: 'command_center' as AdminTab, label: 'Command Center', Icon: Gauge },
-    { id: 'crm' as AdminTab, label: 'Customer CRM', Icon: Users },
-    { id: 'dispatch' as AdminTab, label: 'Dispatch Board', Icon: CalendarClock },
+    { id: 'command_center' as AdminTab, label: 'Home', Icon: Gauge },
+    { id: 'crm' as AdminTab, label: 'CRM', Icon: Users },
+    { id: 'dispatch' as AdminTab, label: 'Dispatch', Icon: CalendarClock },
     { id: 'crews' as AdminTab, label: 'Crew Command', Icon: Users },
     { id: 'fleet' as AdminTab, label: 'Fleet Accounts', Icon: Car },
     { id: 'locations' as AdminTab, label: 'Locations', Icon: Globe },
@@ -465,7 +469,7 @@ const handleDeleteAvailability = async (id: string) => {
     { id: 'training' as AdminTab, label: 'Training', Icon: FileText },
     { id: 'purchasing' as AdminTab, label: 'Purchasing', Icon: PackageSearch },
     { id: 'communications' as AdminTab, label: 'Communications', Icon: Bell },
-    { id: 'messages' as AdminTab, label: 'Team Messages', Icon: MessageCircle },
+    { id: 'messages' as AdminTab, label: 'Messages', Icon: MessageCircle },
     { id: 'retention' as AdminTab, label: 'Retention', Icon: Target },
     { id: 'continuity' as AdminTab, label: 'Backups & Exports', Icon: Archive },
     { id: 'payments' as AdminTab, label: 'Payments', Icon: CreditCard },
@@ -619,21 +623,27 @@ const handleDeleteAvailability = async (id: string) => {
         {dataManagerOpen&&<AdminDataManager section={tab} label={navItems.find(n=>n.id===tab)?.label||'Workspace'} onClose={()=>setDataManagerOpen(false)}/>}
 
         <div className="portal-content">
-          {!['command_center','dashboard','sales'].includes(tab) && <section className="os-workspace-pulse" aria-label={`${currentWorkspace.label} workspace overview`}>
-            <div className="os-pulse-intro"><span>{currentWorkspace.label.toUpperCase()} WORKSPACE</span><strong>{navItems.find(n=>n.id===tab)?.label}</strong><small>Live operational snapshot</small></div>
-            {workspacePulse.map(({label,value,Icon})=><div className="os-pulse-metric" key={label}><i><Icon size={16}/></i><span><strong>{value}</strong><small>{label}</small></span></div>)}
-          </section>}
+          {![
+            'command_center','crm','dispatch','crews','leads','territories','training','communications','automations',
+            'recruiting','staff_schedule','timeclock','finance','sales','inventory','pay_settings',
+            'job_assignments','tasks','equipment','documents','reports','permissions','notifications','time_off','payroll_approval','audit',
+            'fleet','locations','marketing','approvals','incidents','purchasing','retention','continuity',
+            'owner_growth','owner_profits','payment_test','schedule',
+          ].includes(tab) && (
+            <WorkspaceHero
+              tab={tab === 'employees' ? 'team' : tab}
+              metrics={workspacePulse.slice(0, 4).map(({label, value}) => ({label, value}))}
+            />
+          )}
 
-          {/* DASHBOARD */}
+          {/* DASHBOARD — Stripe Overview */}
           {tab === 'dashboard' && (
             <div className="admin-dashboard">
-              <div className="admin-stats-row">
-                <StatCard label="Total Revenue" value={money(totalRevenue)} icon={DollarSign} color="stat-gold" />
-                <StatCard label="This Month" value={money(monthRevenue)} icon={TrendingUp} color="stat-green" />
-                <StatCard label="Customers" value={String(customers.length)} icon={Users} />
-                <StatCard label="Appointments" value={String(appointments.length)} icon={Calendar} />
-                <StatCard label="Team Members" value={String(employees.length)} icon={UserCheck} />
-                <StatCard label="Site Visits (30d)" value={String(visits.filter(v=>new Date(v.visited_at).getTime()>=Date.now()-30*86400000).length)} icon={Activity} />
+              <div className="stripe-balances">
+                <article><span>Gross volume</span><strong>{money(totalRevenue)}</strong><small>All collected payments</small></article>
+                <article><span>This month</span><strong>{money(monthRevenue)}</strong><small>Completed this calendar month</small></article>
+                <article><span>Pending</span><strong>{money(payments.filter(p=>p.status!=='completed').reduce((s,p)=>s+Number(p.amount||0),0))}</strong><small>{payments.filter(p=>p.status!=='completed').length} open charges</small></article>
+                <article><span>Avg. ticket</span><strong>{completedJobs ? money(Math.round(avgTicketAll)) : '$0'}</strong><small>{completedJobs} completed jobs</small></article>
               </div>
 
               {/* Cashflow Chart */}
@@ -736,18 +746,29 @@ const handleDeleteAvailability = async (id: string) => {
             </div>
           )}
 
-          {/* CUSTOMERS */}
+          {/* CUSTOMERS — HubSpot */}
           {tab === 'customers' && (
             <div className="tab-content">
-              <div className="tab-header">
-                <div><h2>Customers</h2><p>{customers.length} registered · {Array.from(new Set(appointments.filter(a=>!a.user_id&&a.customer_email).map(a=>a.customer_email))).length} guest booking contacts</p></div>
+              <div className="hubspot-toolbar">
+                <input
+                  type="search"
+                  placeholder="Search name, email, or phone"
+                  value={customerQuery}
+                  onChange={e=>setCustomerQuery(e.target.value)}
+                  aria-label="Search customers"
+                />
+                <span>{customers.length} companies · {Array.from(new Set(appointments.filter(a=>!a.user_id&&a.customer_email).map(a=>a.customer_email))).length} guest contacts</span>
               </div>
               <div className="admin-card">
                 <div className="data-table customer-table-v21">
                   <div className="data-table-head">
-                    <span>Name</span><span>Email</span><span>Joined</span><span>Status</span><span>Actions</span>
+                    <span>Name</span><span>Email</span><span>Last job</span><span>Spend</span><span>Status</span><span>Actions</span>
                   </div>
-                  {customers.map(c => (
+                  {customers.filter(c=>!customerQuery||[c.full_name,c.email,c.phone].filter(Boolean).join(' ').toLowerCase().includes(customerQuery.toLowerCase())).map(c => {
+                    const jobs=appointments.filter(a=>a.user_id===c.id);
+                    const last=jobs.filter(a=>a.scheduled_at).sort((a,b)=>+new Date(b.scheduled_at!)-+new Date(a.scheduled_at!))[0];
+                    const spend=jobs.filter(a=>a.status==='completed').reduce((s,a)=>s+Number(a.price||0),0);
+                    return (
                     <div key={c.id} className="data-table-row">
                       <div className="dt-cell dt-name">
                         <EmployeeAvatar profileId={c.id} name={c.full_name||c.email||'Customer'} avatarUrl={c.avatar_url} size="sm" className="dt-avatar v23-profile-avatar"/>
@@ -757,68 +778,77 @@ const handleDeleteAvailability = async (id: string) => {
                         </div>
                       </div>
                       <span className="dt-cell">{c.email ?? '—'}</span>
-                      <span className="dt-cell">{new Date(c.created_at).toLocaleDateString()}</span>
+                      <span className="dt-cell">{last?.service_name ? `${last.service_name} · ${new Date(last.scheduled_at!).toLocaleDateString()}` : '—'}</span>
+                      <span className="dt-cell"><strong>{money(spend)}</strong></span>
                       <span className="dt-cell"><StatusBadge status="active" /></span>
                       <span className="dt-cell dt-actions"><button className="icon-danger" title="Permanently delete customer" onClick={()=>handleDeleteCustomer(c)}><Trash2 size={14}/></button></span>
                     </div>
-                  ))}
-                  {Array.from(new Map<string,Appointment>(appointments.filter(a=>!a.user_id&&(a.customer_email||a.customer_name)).map(a=>[String(a.customer_email||a.customer_phone||a.customer_name),a] as [string,Appointment])).values()).map(a => (
+                  )})}
+                  {Array.from(new Map<string,Appointment>(appointments.filter(a=>!a.user_id&&(a.customer_email||a.customer_name)).map(a=>[String(a.customer_email||a.customer_phone||a.customer_name),a] as [string,Appointment])).values()).filter(a=>!customerQuery||[a.customer_name,a.customer_email,a.customer_phone].filter(Boolean).join(' ').toLowerCase().includes(customerQuery.toLowerCase())).map(a => (
                     <div key={`guest-${a.id}`} className="data-table-row guest-customer-row">
                       <div className="dt-cell dt-name"><div className="dt-avatar">{(a.customer_name||a.customer_email||'G')[0].toUpperCase()}</div><div><strong>{a.customer_name||'Guest customer'}</strong>{a.customer_phone&&<span>{a.customer_phone}</span>}</div></div>
                       <span className="dt-cell">{a.customer_email||'—'}</span>
-                      <span className="dt-cell">{new Date(a.created_at).toLocaleDateString()}</span>
+                      <span className="dt-cell">{a.service_name} · {a.scheduled_at?new Date(a.scheduled_at).toLocaleDateString():'unscheduled'}</span>
+                      <span className="dt-cell">{money(Number(a.price||0))}</span>
                       <span className="dt-cell"><span className="status-badge badge-yellow">booking contact</span></span>
                       <span className="dt-cell dt-actions"><button className="icon-danger" title="Delete guest/test contact" onClick={()=>handleDeleteGuest(a)}><Trash2 size={14}/></button></span>
                     </div>
                   ))}
-                  {customers.length === 0 && appointments.every(a=>a.user_id) && <p className="empty-text">No customers yet.</p>}
+                  {customers.length === 0 && appointments.every(a=>a.user_id) && <p className="empty-text">No customers yet. New bookings will appear here.</p>}
                 </div>
               </div>
             </div>
           )}
 
-          {/* APPOINTMENTS */}
+          {/* APPOINTMENTS — Jobber */}
           {tab === 'appointments' && (
             <div className="tab-content">
-              <div className="tab-header">
-                <div><h2>All Appointments</h2><p>{appointments.length} total</p></div>
+              <div className="jobber-stage-bar" role="tablist" aria-label="Appointment stage">
+                {([
+                  ['all','All'],
+                  ['upcoming','Upcoming'],
+                  ['confirmed','Confirmed'],
+                  ['in_progress','In progress'],
+                  ['completed','Completed'],
+                ] as const).map(([id,label])=> (
+                  <button key={id} type="button" className={appointmentStage===id?'active':''} onClick={()=>setAppointmentStage(id)}>{label}</button>
+                ))}
               </div>
               <div className="admin-card">
                 <div className="data-table">
                   <div className="data-table-head">
-                    <span>Service</span><span>Price</span><span>Status</span><span>Date</span><span>Actions</span>
+                    <span>Customer</span><span>Job</span><span>When</span><span>Stage</span><span>Total</span><span>Actions</span>
                   </div>
                   {appointments
-  .filter(a => !a.archived)
-  .map(a => (
-                    <div key={a.id} className="data-table-row">
+                    .filter(a => !a.archived)
+                    .filter(a => {
+                      if (appointmentStage==='all') return true;
+                      if (appointmentStage==='upcoming') return !['completed','cancelled'].includes(a.status) && (!a.scheduled_at || new Date(a.scheduled_at).getTime()>=Date.now()-6*3600000);
+                      if (appointmentStage==='in_progress') return ['en_route','arrived','in_progress'].includes(a.status) || ['en_route','arrived','started'].includes(a.field_status||'');
+                      return a.status===appointmentStage;
+                    })
+                    .map(a => (
+                    <div key={a.id} className="data-table-row jobber-appt-row">
                       <div className="dt-cell dt-service">
-                        <strong>{a.service_name}</strong>
-                        {(a.add_ons?.length ?? 0) > 0 && <span>+{a.add_ons!.length} add-on{a.add_ons!.length > 1 ? 's' : ''}</span>}
+                        <strong>{a.customer_name || customers.find(c=>c.id===a.user_id)?.full_name || 'Customer'}</strong>
+                        <span className="dt-sub">{a.service_address || a.customer_phone || a.customer_email || 'Address pending'}</span>
                       </div>
+                      <div className="dt-cell">
+                        <strong>{a.service_name}</strong>
+                        {(a.add_ons?.length ?? 0) > 0 && <span className="dt-sub">+{a.add_ons!.length} add-on{a.add_ons!.length > 1 ? 's' : ''}</span>}
+                      </div>
+                      <span className="dt-cell">
+                        {a.scheduled_at
+                          ? new Date(a.scheduled_at).toLocaleString('en-US', { weekday:'short', month:'short', day:'numeric', hour:'numeric', minute:'2-digit' })
+                          : 'Unscheduled'}
+                      </span>
+                      <span className="dt-cell"><StatusBadge status={a.field_status || a.status} /></span>
                       <span className="dt-cell"><strong>{money(a.price)}</strong></span>
-                      <span className="dt-cell"><StatusBadge status={a.status} /></span>
-<span className="dt-cell">
-  {a.scheduled_at
-    ? new Date(a.scheduled_at).toLocaleString('en-US', {
-        month: 'numeric',
-        day: 'numeric',
-        year: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-      })
-    : 'Not scheduled'}
-</span>                      <div className="dt-cell dt-actions">
+                      <div className="dt-cell dt-actions">
                         {a.status !== 'completed' && a.status !== 'cancelled' && (
                           <>
                             <button className="btn-sm btn-outline" onClick={() => handleUpdateAptStatus(a.id, 'confirmed')}>Confirm</button>
-                            <button
-  className="btn-sm btn-outline"
-  onClick={() => handleUpdateAptStatus(a.id, 'cancelled')}
->
-  Decline
-</button>
-
+                            <button className="btn-sm btn-outline" onClick={() => handleUpdateAptStatus(a.id, 'cancelled')}>Decline</button>
                             <button className="btn-sm btn-outline" onClick={() => handleArchiveAppointment(a.id)}>Archive</button>
                             <button className="btn-sm btn-primary" onClick={() => handleUpdateAptStatus(a.id, 'completed')}>Complete</button>
                             <button className="icon-danger" title="Permanently delete appointment" onClick={()=>handleDeleteAppointment(a.id)}><Trash2 size={14}/></button>
@@ -827,7 +857,7 @@ const handleDeleteAvailability = async (id: string) => {
                       </div>
                     </div>
                   ))}
-                  {appointments.length === 0 && <p className="empty-text">No appointments yet.</p>}
+                  {appointments.filter(a=>!a.archived).length === 0 && <p className="empty-text">No appointments yet. New bookings from the site and D2D land here.</p>}
                 </div>
               </div>
             </div>
@@ -836,13 +866,6 @@ const handleDeleteAvailability = async (id: string) => {
 {/* ARCHIVED DETAILS */}
 {tab === 'archived' && (
   <div className="tab-content">
-    <div className="tab-header">
-      <div>
-        <h2>Archived Details</h2>
-        <p>Past or cleared appointments are stored here.</p>
-      </div>
-    </div>
-
     <div className="admin-card">
       {appointments.filter(a => a.archived).length === 0 ? (
         <p className="empty-text">
@@ -913,13 +936,6 @@ const handleDeleteAvailability = async (id: string) => {
 {/* AVAILABILITY */}
 {tab === 'availability' && (
   <div className="tab-content">
-    <div className="tab-header">
-      <div>
-        <h2>Booking Availability</h2>
-        <p>Choose when customers are allowed to book appointments.</p>
-      </div>
-    </div>
-
     <form
       onSubmit={handleSaveAvailability}
       style={{
@@ -1171,17 +1187,16 @@ const handleDeleteAvailability = async (id: string) => {
 
           {tab === 'messages' && (
             <div className="tab-content v2-page">
-              <div className="v2-page-head"><div><span className="eyebrow">INTERNAL COMMUNICATION</span><h2>Team Messages</h2><p>Company, role, crew and private group messaging in one workspace.</p></div></div>
               <TeamMessaging employees={employees} employee={employees.find(e=>e.user_id===user?.id)||null} portalKind="admin" />
             </div>
           )}
 
-          {/* EMPLOYEES */}
+          {/* EMPLOYEES — Rippling + Gusto */}
           {tab === 'employees' && (
             <div className="tab-content team-directory-v21">
-              <div className="tab-header">
-                <div><span className="eyebrow">PEOPLE DIRECTORY</span><h2>Team</h2><p>{employees.length} people · click a profile for contact, schedule, pay and activity details.</p></div>
-                <button className="btn-primary" onClick={() => setShowEmpForm(true)}><Plus size={16}/>Add Member</button>
+              <div className="rippling-search">
+                <input type="search" placeholder="Search people, title, or role" value={teamQuery} onChange={e=>setTeamQuery(e.target.value)} aria-label="Search team" />
+                <button className="btn-primary" onClick={() => setShowEmpForm(true)}><Plus size={16}/>Add member</button>
               </div>
               <div className="team-directory-groups">
                 {[
@@ -1189,29 +1204,26 @@ const handleDeleteAvailability = async (id: string) => {
                   {title:'D2D Sales',roles:['d2d_agent']},
                   {title:'Detailing',roles:['detailer']},
                   {title:'Other Team',roles:['employee','admin']},
-                ].map(group=>{const people=employees.filter(e=>group.roles.includes(e.role));if(!people.length)return null;return <section key={group.title} className="team-directory-section"><div className="team-directory-heading"><h3>{group.title}</h3><span>{people.length}</span></div><div className="team-portrait-grid">{people.map(e=><button className="team-portrait-card" key={e.id} onClick={()=>{setProfileInitialTab(e.onboarding_status&&e.onboarding_status!=='complete'?'onboarding':'overview');setSelectedEmployeeId(e.id)}}><EmployeeAvatar employee={e} size="xl"/><span className={`team-presence ${e.status==='active'?'online':''}`}/><strong>{e.title||e.role.replaceAll('_',' ')}</strong><h4>{e.name}</h4><small>{e.onboarding_status&&e.onboarding_status!=='complete'?'Onboarding packet':e.status==='active'?'Active':'Inactive'} · Level {e.employment_level??1}</small></button>)}</div></section>})}
+                ].map(group=>{const people=employees.filter(e=>group.roles.includes(e.role)&&(!teamQuery||[e.name,e.title,e.email,e.role].filter(Boolean).join(' ').toLowerCase().includes(teamQuery.toLowerCase())));if(!people.length)return null;return <section key={group.title} className="team-directory-section"><div className="team-directory-heading"><h3>{group.title}</h3><span>{people.length}</span></div><div className="team-portrait-grid">{people.map(e=><button className="team-portrait-card" key={e.id} onClick={()=>{setProfileInitialTab(e.onboarding_status&&e.onboarding_status!=='complete'?'onboarding':'overview');setSelectedEmployeeId(e.id)}}><EmployeeAvatar employee={e} size="xl"/><span className={`team-presence ${e.status==='active'?'online':''}`}/><strong>{e.title||e.role.replaceAll('_',' ')}</strong><h4>{e.name}</h4><small>{e.onboarding_status&&e.onboarding_status!=='complete'?'Onboarding packet':e.status==='active'?'Active':'Inactive'} · Level {e.employment_level??1}</small></button>)}</div></section>})}
                 {!employees.length&&<div className="v19-premium-empty"><Users size={28}/><h3>No team members yet</h3><p>Add your first employee to start scheduling, messaging, training and dispatch.</p></div>}
+                {employees.length>0&&!employees.some(e=>!teamQuery||[e.name,e.title,e.email,e.role].filter(Boolean).join(' ').toLowerCase().includes(teamQuery.toLowerCase()))&&<div className="v19-premium-empty"><Users size={28}/><h3>No matches</h3><p>Try a different name or role.</p></div>}
               </div>
               {selectedEmployeeId&&(()=>{const e=employees.find(x=>x.id===selectedEmployeeId);if(!e)return null;return <EmployeeProfileDrawer employee={e} employees={employees} appointments={appointments} initialTab={profileInitialTab} onClose={()=>{setSelectedEmployeeId('');setProfileInitialTab(undefined)}} onOpenCalendar={id=>{setTeamCalendarEmployee(id);setSelectedEmployeeId('');setTab('schedule')}} onOpenMessages={()=>{setSelectedEmployeeId('');setTab('messages')}} onDelete={handleDeleteEmployee} onUpdated={updated=>setEmployees(p=>p.map(x=>x.id===updated.id?updated:x))}/>})()}
             </div>
           )}
 
-          {/* PAYMENTS */}
+          {/* PAYMENTS — Square */}
           {tab === 'payments' && (
             <div className="tab-content">
-              <div className="tab-header">
-                <div><h2>Payments & Cash Flow</h2></div>
-              </div>
-
-              <div className="admin-stats-row">
-                <StatCard label="Total Revenue" value={money(totalRevenue)} icon={DollarSign} color="stat-gold" />
-                <StatCard label="This Month" value={money(monthRevenue)} icon={TrendingUp} color="stat-green" />
-                <StatCard label="Transactions" value={String(payments.length)} icon={CreditCard} />
-                <StatCard label="Avg. Ticket" value={payments.length > 0 ? money(Math.round(totalRevenue / payments.length)) : '$0'} icon={BarChart2} />
+              <div className="stripe-balances square-pay-kpis">
+                <article><span>Today’s sales</span><strong>{money(payments.filter(p=>p.status==='completed'&&new Date(p.created_at).toDateString()===new Date().toDateString()).reduce((s,p)=>s+Number(p.amount||0),0))}</strong><small>Collected today</small></article>
+                <article><span>This month</span><strong>{money(monthRevenue)}</strong><small>Completed charges</small></article>
+                <article><span>Deposits pending</span><strong>{money(payments.filter(p=>p.status!=='completed').reduce((s,p)=>s+Number(p.amount||0),0))}</strong><small>Not yet settled</small></article>
+                <article><span>Average ticket</span><strong>{payments.filter(p=>p.status==='completed').length ? money(Math.round(totalRevenue / payments.filter(p=>p.status==='completed').length)) : '$0'}</strong><small>{payments.length} transactions</small></article>
               </div>
 
               <div className="admin-card">
-                <div className="admin-card-header"><h3>Transaction History</h3></div>
+                <div className="admin-card-header"><h3>Transactions</h3></div>
                 <div className="data-table">
                   <div className="data-table-head">
                     <span>Description</span><span>Amount</span><span>Method</span><span>Status</span><span>Date</span>
@@ -1220,12 +1232,12 @@ const handleDeleteAvailability = async (id: string) => {
                     <div key={p.id} className="data-table-row">
                       <span className="dt-cell">{p.description ?? 'Service'}</span>
                       <span className="dt-cell"><strong>{money(p.amount)}</strong></span>
-                      <span className="dt-cell">{p.payment_method}</span>
+                      <span className="dt-cell">{p.payment_method || 'Card'}</span>
                       <span className="dt-cell"><StatusBadge status={p.status} /></span>
                       <span className="dt-cell">{new Date(p.created_at).toLocaleDateString()}</span>
                     </div>
                   ))}
-                  {payments.length === 0 && <p className="empty-text">No payments recorded yet.</p>}
+                  {payments.length === 0 && <p className="empty-text">No payments recorded yet. Completed jobs and Square charges land here.</p>}
                 </div>
               </div>
             </div>

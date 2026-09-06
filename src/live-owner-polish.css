@@ -193,6 +193,189 @@
   background: #efe8dc !important;
 }
 
+.ws-hero {
+  width: min(calc(100% - 42px), 1680px);
+  margin: 18px auto 8px;
+  display: grid;
+  gap: 14px;
+  padding: 4px 0 12px;
+  border-bottom: 1px solid #eadfd3;
+}
+.ws-hero-kicker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #8a7d6e;
+}
+.ws-hero-modeled {
+  font-weight: 650;
+  letter-spacing: .02em;
+  text-transform: none;
+  color: #b8893a;
+  background: #f6ead4;
+  border-radius: 999px;
+  padding: 3px 9px;
+}
+.ws-hero-title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 750;
+  letter-spacing: -.02em;
+  color: #1c1814;
+}
+.ws-hero-lead {
+  margin: 6px 0 0;
+  max-width: 52rem;
+  color: #6f675e;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.ws-hero-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.ws-hero-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+.ws-hero-metrics div {
+  background: #fffdf8;
+  border: 1px solid #eadfd3;
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+.ws-hero-metrics dt { font-size: 11px; color: #8a7d6e; }
+.ws-hero-metrics dd { margin: 2px 0 0; font-size: 18px; font-weight: 750; color: #1c1814; }
+
+.stripe-balances {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0 0 18px;
+}
+.stripe-balances article {
+  background: #fffdf8;
+  border: 1px solid #eadfd3;
+  border-radius: 14px;
+  padding: 16px 18px;
+  display: grid;
+  gap: 4px;
+}
+.stripe-balances span { font-size: 12px; color: #8a7d6e; }
+.stripe-balances strong { font-size: 26px; letter-spacing: -.03em; color: #1c1814; }
+.stripe-balances small { color: #6f675e; font-size: 12px; }
+
+.hubspot-toolbar,
+.jobber-stage-bar,
+.rippling-search {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 0 0 14px;
+}
+.hubspot-toolbar input,
+.rippling-search input {
+  min-width: min(100%, 280px);
+  flex: 1;
+  border: 1px solid #e4d9cc;
+  background: #fffdf8;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+}
+.jobber-stage-bar button {
+  border: 1px solid #e4d9cc;
+  background: #fffdf8;
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.jobber-stage-bar button.active {
+  background: #1c1814;
+  color: #f6f1e8;
+  border-color: #1c1814;
+}
+.jobber-appt-row .dt-sub { display: block; font-size: 12px; color: #6f675e; }
+
+.square-pay-kpis { margin-bottom: 16px; }
+
+.deputy-week-wrap { overflow-x: auto; }
+.deputy-week {
+  min-width: 920px;
+  display: grid;
+  grid-template-columns: 168px repeat(7, minmax(110px, 1fr));
+  gap: 6px;
+}
+.deputy-week .deputy-head,
+.deputy-week .deputy-name,
+.deputy-week .deputy-cell {
+  border: 1px solid #eadfd3;
+  border-radius: 10px;
+  background: #fffdf8;
+  padding: 8px;
+  min-height: 64px;
+}
+.deputy-week .deputy-head {
+  text-align: center;
+  font-size: 11px;
+  color: #8a7d6e;
+  min-height: auto;
+}
+.deputy-week .deputy-head.is-today { border-color: #b8893a; color: #1c1814; }
+.deputy-week .deputy-name { display: flex; flex-direction: column; gap: 2px; justify-content: center; }
+.deputy-week .deputy-name small { color: #8a7d6e; }
+.deputy-week .deputy-chip {
+  display: block;
+  font-size: 11px;
+  font-weight: 650;
+  background: #1c1814;
+  color: #f6f1e8;
+  border-radius: 8px;
+  padding: 6px 7px;
+  margin-bottom: 4px;
+}
+.deputy-week .deputy-chip.off { background: #eadfd3; color: #6f675e; }
+.deputy-week .deputy-chip.pto { background: #f6ead4; color: #7a5a1e; }
+
+.uber-live-tracker {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  margin: 0 0 14px;
+}
+.uber-live-tracker div {
+  position: relative;
+  background: #fffdf8;
+  border: 1px solid #eadfd3;
+  border-radius: 12px;
+  padding: 10px 8px 10px 12px;
+  font-size: 12px;
+  color: #8a7d6e;
+}
+.uber-live-tracker div b { display: block; color: #1c1814; font-size: 13px; }
+.uber-live-tracker div.done { border-color: #1c1814; background: #1c1814; color: #d4b36a; }
+.uber-live-tracker div.done b { color: #f6f1e8; }
+.uber-live-tracker div.current { border-color: #b8893a; background: #f6ead4; color: #7a5a1e; }
+.uber-live-tracker div.current b { color: #1c1814; }
+
+@media (max-width: 960px) {
+  .stripe-balances { grid-template-columns: 1fr 1fr; }
+  .uber-live-tracker { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 760px) {
+  .ws-hero { width: 100%; margin: 12px 0 4px; padding: 0 13px 12px; }
+  .stripe-balances { grid-template-columns: 1fr; }
+  .ws-hero-title { font-size: 22px; }
+}
+
 @media (max-width: 760px) {
   .calendar-day-strip-v29 { overflow-x: auto; display: flex; }
   .calendar-day-strip-v29 button { min-width: 64px; }

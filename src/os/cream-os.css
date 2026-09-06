@@ -369,6 +369,7 @@ html.nsos-active #root {
   .nsos-cream .os-desktop-subnav,
   .nsos-cream .os-secondary-nav { display: none !important; }
   .nsos-cream .os-workspace-pulse { display: none !important; }
+  .nsos-cream .ws-hero { display: grid !important; }
   .nsos-cream .os-mobile-actions-trigger,
   .nsos-cream .os-mobile-actions-menu { display: none !important; }
   .nsos-cream .portal-topbar {
