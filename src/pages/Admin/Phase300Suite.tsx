@@ -6,7 +6,7 @@ import {
   Archive, ArchiveRestore, ExternalLink, Eye, Smartphone, Send, Receipt, RefreshCw, MessageSquare, UserRound
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { firstWord, money, prettyLabel, trendLabel } from '@/lib/data';
+import { firstWord, isSettledPayment, money, prettyLabel, trendLabel } from '@/lib/data';
 import { DOOR_STATUSES, doorStatus, localDateKey, percent, sameLocalDay } from '@/lib/fieldOps';
 import type { Appointment, Employee, Lead, LeadTerritory, Profile, TerritoryDoor } from '@/lib/supabase';
 import WorkspaceHero from '@/components/WorkspaceHero';
@@ -387,54 +387,97 @@ function OwnerRevenueChart({days}:{days:{label:string;rev:number}[]}){
   {pts.map(([x,y],i)=><circle key={days[i].label} cx={x} cy={y} r="4" className="v20-chart-point"><title>{days[i].label}: {money(days[i].rev)}</title></circle>)}
  </svg><div className="v20-chart-labels">{days.map(d=><span key={d.label}><b>{d.label}</b><small>{money(d.rev)}</small></span>)}</div></div>
 }
-function MiniAvatar({name}:{name:string}){const initials=name.split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase()||'NS';return <span className="v20-mini-avatar">{initials}</span>}
+function MiniAvatar({name}:{name:string}){const initials=String(name||'').split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase()||'NS';return <span className="v20-mini-avatar">{initials}</span>}
 
 function CommandCenter({employees,appointments,customers,payments,onNavigate,ownerName}:{employees:Employee[];appointments:Appointment[];customers:Profile[];payments:any[];onNavigate?:(view:string)=>void;ownerName?:string}){
- const now=Date.now(),monthAgo=now-30*86400000;
- const jobs=appointments.filter(a=>sameLocalDay(a.scheduled_at)&&a.status!=='cancelled').sort((a,b)=>+new Date(a.scheduled_at!)-+new Date(b.scheduled_at!));
- const collected=payments.filter(p=>p.status==='completed').reduce((s,p)=>s+Number(p.amount||0),0);
- const monthCollected=payments.filter(p=>p.status==='completed'&&new Date(p.created_at).getTime()>=monthAgo).reduce((s,p)=>s+Number(p.amount||0),0);
- const priorCollected=payments.filter(p=>p.status==='completed'&&new Date(p.created_at).getTime()>=monthAgo-30*86400000&&new Date(p.created_at).getTime()<monthAgo).reduce((s,p)=>s+Number(p.amount||0),0);
+ const [leadSnap,setLeadSnap]=useState({hot:0,neu:0,open:0});
+ useEffect(()=>{let live=true;supabase.from('leads').select('id,status').limit(2500).then(({data})=>{if(!live)return;const rows=data??[];const closed=new Set(['sold','lost','not_interested','do_not_knock','existing_customer']);setLeadSnap({hot:rows.filter(l=>['interested','estimate','estimate_sent','appointment_set','follow_up'].includes(String(l.status||''))).length,neu:rows.filter(l=>l.status==='new'||l.status==='unworked').length,open:rows.filter(l=>!closed.has(String(l.status||''))).length})});return()=>{live=false}},[]);
+ const now=Date.now();
+ const yesterday=new Date();yesterday.setDate(yesterday.getDate()-1);
+ const jobs=appointments.filter(a=>sameLocalDay(a.scheduled_at)&&a.status!=='cancelled').sort((a,b)=>+new Date(a.scheduled_at||0)-+new Date(b.scheduled_at||0));
+ const collected=payments.filter(p=>isSettledPayment(p.status)).reduce((s,p)=>s+Number(p.amount||0),0);
+ const todayCollected=payments.filter(p=>isSettledPayment(p.status)&&sameLocalDay(p.created_at)).reduce((s,p)=>s+Number(p.amount||0),0);
+ const earlierCollected=payments.filter(p=>isSettledPayment(p.status)&&sameLocalDay(p.created_at,yesterday)).reduce((s,p)=>s+Number(p.amount||0),0);
  const scheduled=jobs.reduce((s,j)=>s+Number(j.price||0),0);
- const completed30=appointments.filter(a=>a.status==='completed'&&new Date(a.completed_at||a.created_at).getTime()>=monthAgo);
- const priorCompleted=appointments.filter(a=>a.status==='completed'&&new Date(a.completed_at||a.created_at).getTime()>=monthAgo-30*86400000&&new Date(a.completed_at||a.created_at).getTime()<monthAgo).length;
- const avgTicket=completed30.length?completed30.reduce((n,a)=>n+Number(a.price||0),0)/completed30.length:0;
- const cancel30=appointments.filter(a=>a.status==='cancelled'&&new Date(a.created_at).getTime()>=monthAgo).length;
- const activeTeam=employees.filter(e=>e.status==='active').length, activeDetailers=employees.filter(e=>e.status==='active'&&e.role==='detailer').length;
- const unassigned=appointments.filter(a=>!a.assigned_employee_id&&!['completed','cancelled'].includes(a.status)).length,pending=appointments.filter(a=>a.status==='pending'||a.status==='scheduled').length,qc=appointments.filter(a=>a.qc_status==='pending'||a.qc_status==='qc').length;
- const attention=[['Unassigned jobs',unassigned,'Jobs need to be assigned'],['Pending bookings',pending,'Awaiting customer confirmation'],['QC queue',qc,'Jobs waiting for quality review'],['Cancellations (30d)',cancel30,'Review lost appointments']] as const;
- const days=[...Array(7)].map((_,i)=>{const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()-(6-i));const k=localDateKey(d);const rev=payments.filter(p=>p.status==='completed'&&localDateKey(p.created_at)===k).reduce((n,p)=>n+Number(p.amount||0),0);return{label:d.toLocaleDateString('en-US',{weekday:'short'}),rev}});
+ const completed=appointments.filter(a=>a.status==='completed');
+ const completedToday=completed.filter(a=>sameLocalDay(a.completed_at||a.finished_at||a.scheduled_at));
+ const avgTicket=completed.length?completed.reduce((n,a)=>n+Number(a.price||0),0)/completed.length:0;
+ const activeTeam=employees.filter(e=>e.status==='active');
+ const packetOpen=(e:Employee)=>{const st=String(e.onboarding_status||'').toLowerCase();return Boolean(st)&&!['complete','completed','done'].includes(st)};
+ const unassigned=appointments.filter(a=>!a.assigned_employee_id&&!['completed','cancelled'].includes(a.status)).length;
+ const pending=appointments.filter(a=>a.status==='pending'||a.status==='scheduled').length;
+ const qc=appointments.filter(a=>a.qc_status==='pending'||a.qc_status==='qc').length;
+ const unpaid=appointments.filter(a=>{if(a.status==='cancelled')return false;const pay=String(a.payment_status||'').toLowerCase();if(['paid','succeeded','completed','settled'].includes(pay))return false;return pay==='unpaid'||pay==='due'||pay==='failed'||(a.status==='completed'&&!pay)});
+ const packets=employees.filter(packetOpen).length;
+ const inField=appointments.filter(a=>['en_route','in_progress','in_field','on_site'].includes(String(a.status||''))).length;
+ const assigned=appointments.filter(a=>a.assigned_employee_id&&!['completed','cancelled'].includes(a.status)).length;
+ const d2d=appointments.filter(a=>a.source_channel==='d2d').length;
+ const days=[...Array(7)].map((_,i)=>{const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()-(6-i));const k=localDateKey(d);const rev=payments.filter(p=>isSettledPayment(p.status)&&localDateKey(p.created_at)===k).reduce((n,p)=>n+Number(p.amount||0),0);return{label:d.toLocaleDateString('en-US',{weekday:'short'}),rev}});
  const next=jobs.find(j=>new Date(j.scheduled_at||0).getTime()>=now)||jobs[0];
  const go=(view:string)=>{if(onNavigate){onNavigate(view);return;}const u=new URL(window.location.href);u.searchParams.set('view',view);window.history.pushState({},'',u.toString())};
  const hour=new Date().getHours(),greeting=hour<12?'Good morning':hour<18?'Good afternoon':'Good evening';
  const name=firstWord(ownerName,'there');
+ const exceptions=[
+  unassigned?{n:unassigned,title:'Unassigned jobs',sub:'Need a technician',view:'dispatch',hot:true}:null,
+  unpaid.length?{n:unpaid.length,title:'Unpaid invoices',sub:'Collect before the van leaves',view:'payments',hot:true}:null,
+  leadSnap.hot?{n:leadSnap.hot,title:'Hot leads',sub:'Ready to book from the map',view:'leads',hot:true}:null,
+  packets?{n:packets,title:'Open hire packets',sub:'Finish identity, tax, or deposit',view:'employees',hot:true}:null,
+  pending?{n:pending,title:'Pending bookings',sub:'Awaiting confirmation',view:'appointments',hot:false}:null,
+  qc?{n:qc,title:'QC queue',sub:'Jobs waiting for quality review',view:'dispatch',hot:false}:null,
+ ].filter(Boolean) as {n:number;title:string;sub:string;view:string;hot:boolean}[];
+ const teamRows=[...activeTeam].sort((a,b)=>{
+  const ao=packetOpen(a)?0:1;
+  const bo=packetOpen(b)?0:1;
+  return ao-bo;
+ }).slice(0,6);
  return <div className="tab-content phase300 v2-page owner-command-v17">
    <a className="skip-to-workspace in-page" href="#owner-schedule">Skip to today’s schedule</a>
-   <div className="owner-command-head"><div><span className="eyebrow">Owner dashboard</span><h2>{greeting}, <em>{name}</em></h2><p>Balances, today’s work, and the next action.</p></div><div className="owner-command-actions"><button className="btn-primary" onClick={()=>go('appointments')}><Plus size={15}/> Appointment</button><button className="btn-outline" onClick={()=>go('customers')}><Plus size={15}/> Customer</button><button className="btn-outline" onClick={()=>go('leads')}><Plus size={15}/> Lead</button><button className="btn-outline" onClick={()=>go('employees')}><Plus size={15}/> Employee</button></div></div>
-   <div className="stripe-balances">
-     <article><span>Gross volume</span><strong>{money(collected)}</strong><small>Lifetime collected</small></article>
-     <article><span>Last 30 days</span><strong>{money(monthCollected)}</strong><small>Settled payments</small></article>
-     <article><span>Booked today</span><strong>{money(scheduled)}</strong><small>{jobs.length} jobs on the board</small></article>
-     <article><span>Avg. ticket</span><strong>{money(avgTicket)}</strong><small>{completed30.length} completed jobs</small></article>
+   <div className="owner-command-head">
+     <div>
+       <span className="eyebrow">OWNER / COMMAND CENTER</span>
+       <h2>{greeting}, <em>{name}</em></h2>
+       <p>Exceptions first. Then the numbers. Then the run.</p>
+     </div>
+     <div className="nsos-quick">
+       <button type="button" onClick={()=>go('leads')}><Target size={16}/>New Lead</button>
+       <button type="button" onClick={()=>go('appointments')}><Plus size={16}/>Book</button>
+       <button type="button" onClick={()=>go('dispatch')}><CalendarClock size={16}/>Assign</button>
+       <button type="button" onClick={()=>go('messages')}><MessageSquare size={16}/>Message</button>
+     </div>
    </div>
-   <nav className="owner-jump-nav-v29" aria-label="Jump on this page">
-     <a href="#owner-glance">Today</a>
-     <a href="#owner-schedule">Schedule</a>
-     <a href="#owner-attention">Needs action</a>
-     <a href="#owner-team">Team</a>
-     <button type="button" onClick={()=>go('messages')}>Messages</button>
-     <button type="button" onClick={()=>go('leads')}>Leads</button>
-     <button type="button" onClick={()=>go('schedule')}>Calendar</button>
-     <button type="button" onClick={()=>go('recruiting')}>Hiring</button>
+   <nav className="nsos-owner-jump" aria-label="Jump to owner sections">
+     <a href="#owner-exceptions">Needs you</a>
+     <a href="#owner-schedule">Today</a>
+     <a href="#owner-revenue">Revenue</a>
+     <a href="#owner-pipeline">Pipeline</a>
+     <button type="button" onClick={()=>go('schedule')}>Open calendar</button>
+     <button type="button" onClick={()=>go('employees')}>Open team</button>
    </nav>
-   <section id="owner-glance" className="owner-glance-v17"><div><CalendarClock/><span><b>{jobs.length}</b><small>Jobs Scheduled</small></span></div><div><DollarSign/><span><b>{money(scheduled)}</b><small>Revenue Scheduled</small></span></div><div><Users/><span><b>{activeDetailers}</b><small>Detailers Active</small></span></div><div><Clock3/><span><b>{next?time(next.scheduled_at):'—'}</b><small>{next?`${next.service_name} · ${next.service_address||next.customer_name||'Customer'}`:'No next job'}</small></span></div></section>
-   <div className="owner-kpis-v17"><KPI label="Revenue (30d)" value={money(monthCollected)} detail={trendLabel(monthCollected, priorCollected)}/><KPI label="Booked Today" value={money(scheduled)} detail={`${jobs.length} on the board`}/><KPI label="Avg Ticket" value={money(avgTicket)} detail={`${completed30.length} completed`}/><KPI label="Jobs (30d)" value={String(completed30.length)} detail={trendLabel(completed30.length, priorCompleted)}/><KPI label="Customers" value={String(customers.length)}/></div>
-   <div className="owner-command-grid-v17">
-    <section className="phase-panel owner-revenue-v17"><div className="phase-panel-head"><div><span className="eyebrow">REVENUE OVERVIEW</span><h3>{money(monthCollected)}</h3></div><small>Last 30 days</small></div><OwnerRevenueChart days={days}/><div className="owner-mini-metrics"><div><small>Lifetime collected</small><b>{money(collected)}</b></div><div><small>Avg ticket</small><b>{money(avgTicket)}</b></div><div><small>Days shown</small><b>7</b></div></div></section>
-    <section id="owner-schedule" className="phase-panel owner-schedule-v17"><div className="phase-panel-head"><div><span className="eyebrow">TODAY'S SCHEDULE</span><h3>{jobs.length} jobs</h3></div><button className="btn-outline btn-sm" onClick={()=>go('schedule')}>View all</button></div>{jobs.slice(0,6).map(j=><button className="owner-job-v17" key={j.id} onClick={()=>go('dispatch')}><time>{time(j.scheduled_at)}</time><span><b>{j.customer_name||j.service_address||'Customer'}</b><small>{j.vehicle_info||'Vehicle not added'}</small></span><span><b>{j.service_name}</b><small>{money(Number(j.price||0))}</small></span><span><small>{j.assigned_employee_id?employees.find(e=>e.id===j.assigned_employee_id)?.name||'Assigned':'Unassigned'}</small><b className={`status-badge badge-${j.status==='completed'?'green':j.status==='cancelled'?'red':'blue'}`}>{humanStatus(j.status)}</b></span></button>)}{!jobs.length&&<div className="ns-empty">No appointments today. Your next scheduled job will appear here.</div>}</section>
-    <section id="owner-attention" className="phase-panel owner-attention-v17"><div className="phase-panel-head"><div><span className="eyebrow">ATTENTION</span><h3>Needs action</h3></div></div>{attention.map(([name,value,desc])=><button className="owner-attention-row" key={name} onClick={()=>go(name.includes('Unassigned')?'dispatch':name.includes('Pending')?'appointments':name.includes('QC')?'dispatch':'reports')}><span className={value?'hot':'quiet'}>{value}</span><div><b>{name}</b><small>{value?desc:'Nothing waiting right now'}</small></div><strong>{value}</strong><ChevronRight size={16}/></button>)}</section>
+   <div className="nsos-alerts" id="owner-exceptions">
+     {exceptions.length===0&&<div className="ns-empty">Nothing needs you right now. The board is clean.</div>}
+     {exceptions.map(item=><button className={`nsos-alert ${item.hot?'hot':''}`} key={item.title} onClick={()=>go(item.view)}><em>{item.n}</em><span><b>{item.title}</b><small>{item.sub}</small></span><ChevronRight size={16}/></button>)}
    </div>
-   <div className="owner-bottom-v17 v20-owner-bottom"><section id="owner-team" className="phase-panel v20-team-panel"><div className="phase-panel-head"><div><span className="eyebrow">TEAM STATUS</span><h3>{activeTeam} active team members</h3></div><button className="btn-outline btn-sm" onClick={()=>go('employees')}>View team</button></div><div className="v20-team-list">{employees.filter(e=>e.status==='active').slice(0,5).map(e=><div key={e.id}><EmployeeAvatar employee={e} size="sm" className="v23-team-avatar"/><span><b>{e.name}</b><small>{humanStatus(e.role)} · {e.status||'active'}</small></span><i className={e.status==='active'?'online':''}/></div>)}{!activeTeam&&<div className="v20-dark-empty">No active employees yet.</div>}</div></section><section className="phase-panel v20-pipeline-panel"><div className="phase-panel-head"><div><span className="eyebrow">SALES PIPELINE</span><h3>Booking flow</h3></div></div><div className="v20-stage-flow"><div><span>D2D</span><b>{appointments.filter(a=>a.source_channel==='d2d').length}</b></div><i/><div><span>Pending</span><b>{pending}</b></div><i/><div><span>Assigned</span><b>{appointments.filter(a=>a.assigned_employee_id&&!['completed','cancelled'].includes(a.status)).length}</b></div><i/><div><span>Completed</span><b>{completed30.length}</b></div></div><div className="v20-health-bar"><i style={{width:`${appointments.length?Math.min(100,completed30.length/appointments.length*100):0}%`}}/></div></section><section className="phase-panel v20-health-panel"><div className="phase-panel-head"><div><span className="eyebrow">BUSINESS HEALTH</span><h3>30-day snapshot</h3></div></div><div className="owner-summary-cells"><div><b>{money(monthCollected)}</b><small>Revenue</small></div><div><b>{completed30.length}</b><small>Completed</small></div><div><b>{money(avgTicket)}</b><small>Avg ticket</small></div><div><b>{cancel30}</b><small>Cancellations</small></div></div></section></div>
+   <div className="owner-kpis-v17">
+     <KPI label="Collected" value={money(collected)} detail={trendLabel(todayCollected,earlierCollected)}/>
+     <KPI label="Jobs completed" value={String(completedToday.length)} detail={completedToday.length?`${completedToday.length} today`:'None finished today'}/>
+     <KPI label="New leads" value={String(leadSnap.neu)} detail={leadSnap.open?`${leadSnap.open} open in pipeline`:undefined}/>
+     <KPI label="Avg completed job" value={money(avgTicket)} detail={`${completed.length} completed`}/>
+   </div>
+   <section id="owner-glance" className="owner-glance-v17">
+     <div><CalendarClock/><span><b>{jobs.length}</b><small>Jobs today</small></span></div>
+     <div><DollarSign/><span><b>{money(scheduled)}</b><small>Booked today</small></span></div>
+     <div><Users/><span><b>{customers.length}</b><small>Customers</small></span></div>
+     <div><Clock3/><span><b>{next?time(next.scheduled_at):'—'}</b><small>{next?`${next.service_name} · ${next.customer_name||next.service_address||'Customer'}`:'No next job'}</small></span></div>
+   </section>
+   <div className="owner-command-grid-v17">
+    <section id="owner-schedule" className="phase-panel owner-schedule-v17"><div className="phase-panel-head"><div><span className="eyebrow">TODAY'S SCHEDULE</span><h3>{jobs.length} jobs</h3></div><button className="btn-outline btn-sm" onClick={()=>go('schedule')}>View all</button></div>{jobs.slice(0,6).map(j=><button className="owner-job-v17" key={j.id} onClick={()=>go('dispatch')}><time>{time(j.scheduled_at)}</time><span><b>{j.customer_name||j.service_address||'Customer'}</b><small>{j.vehicle_info||'Vehicle not added'}</small></span><span><b>{j.service_name}</b><small>{money(Number(j.price||0))}</small></span><span><small>{j.assigned_employee_id?employees.find(e=>e.id===j.assigned_employee_id)?.name||'Assigned':'Unassigned'}</small><b className={`status-badge badge-${j.status==='completed'?'green':j.status==='cancelled'?'red':'blue'}`}>{humanStatus(j.status)}</b></span></button>)}{!jobs.length&&<div className="ns-empty">No appointments today. Your next scheduled job will appear here.</div>}</section>
+    <section id="owner-revenue" className="phase-panel owner-revenue-v17"><div className="phase-panel-head"><div><span className="eyebrow">COLLECTED</span><h3>{money(collected)}</h3></div><small>Settled payments on the board</small></div><OwnerRevenueChart days={days}/><div className="owner-mini-metrics"><div><small>Today</small><b>{money(todayCollected)}</b></div><div><small>Avg ticket</small><b>{money(avgTicket)}</b></div><div><small>Days shown</small><b>7</b></div></div></section>
+   </div>
+   <div className="owner-bottom-v17 v20-owner-bottom">
+     <section id="owner-pipeline" className="phase-panel v20-pipeline-panel"><div className="phase-panel-head"><div><span className="eyebrow">SALES PIPELINE</span><h3>Booking flow</h3></div></div><div className="v20-stage-flow"><div><span>D2D</span><b>{d2d||leadSnap.open}</b></div><i/><div><span>Pending</span><b>{pending}</b></div><i/><div><span>Assigned</span><b>{assigned}</b></div><i/><div><span>Completed</span><b>{completedToday.length}</b></div></div><button className="btn-outline btn-sm" style={{marginTop:14}} onClick={()=>go('leads')}>Open pipeline</button></section>
+     <section id="owner-team" className="phase-panel v20-team-panel"><div className="phase-panel-head"><div><span className="eyebrow">TEAM STATUS</span><h3>{activeTeam.length} active</h3></div><button className="btn-outline btn-sm" onClick={()=>go('employees')}>Directory</button></div><div className="v20-team-list">{teamRows.map(e=><button type="button" key={e.id} onClick={()=>go('employees')}><EmployeeAvatar employee={e} size="sm" className="v23-team-avatar"/><span><b>{e.name}</b><small>{packetOpen(e)?'Onboarding packet':humanStatus(e.role)}</small></span><i className={packetOpen(e)?'packet':e.status==='active'?'online':''}/></button>)}{!activeTeam.length&&<div className="v20-dark-empty">No active employees yet.</div>}</div></section>
+     <section className="phase-panel v20-health-panel"><div className="phase-panel-head"><div><span className="eyebrow">BUSINESS HEALTH</span><h3>On the board</h3></div></div><div className="owner-summary-cells nsos-health-cells"><div><b>{money(collected)}</b><small>Collected</small></div><div><b>{inField}</b><small>In the field</small></div><div><b>{money(avgTicket)}</b><small>Avg ticket</small></div><div><b>{unpaid.length}</b><small>Unpaid</small></div></div></section>
+   </div>
  </div>;
 }
 

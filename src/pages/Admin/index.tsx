@@ -12,7 +12,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { signOut } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { Profile, Appointment, Payment, Employee } from '@/lib/supabase';
-import { money, prettyLabel } from '@/lib/data';
+import { isSettledPayment, money, prettyLabel } from '@/lib/data';
+import { sameLocalDay } from '@/lib/fieldOps';
 import { sendCommunication } from '@/lib/communications';
 import type { BusinessSection } from './BusinessSuite';
 import type { EnterpriseSection } from './EnterpriseSuite';
@@ -113,7 +114,10 @@ export default function Admin() {
   const [tab, setTab] = useState<AdminTab>(() => {
     const params = new URLSearchParams(window.location.search);
     const initial = params.get('view') || params.get('tab');
-    if (initial) return initial as AdminTab;
+    if (initial) {
+      if (ownerMode && initial === 'dashboard') return 'command_center';
+      return initial as AdminTab;
+    }
     const path = window.location.pathname.replace(/\/$/, '') || '/';
     return (path === '/' || path.startsWith('/owner') ? 'command_center' : 'dashboard') as AdminTab;
   });
@@ -158,10 +162,14 @@ const [availabilityForm, setAvailabilityForm] = useState({
 
   useEffect(() => {
     const url = new URL(window.location.href);
-    if (tab === 'dashboard') url.searchParams.delete('view');
+    if (tab === 'dashboard' || (ownerMode && tab === 'command_center')) url.searchParams.delete('view');
     else url.searchParams.set('view', tab);
     window.history.replaceState({}, '', url);
-  }, [tab]);
+  }, [tab, ownerMode]);
+
+  useEffect(() => {
+    if (ownerMode && tab === 'dashboard') setTab('command_center');
+  }, [ownerMode, tab]);
 
   useEffect(()=>{
     const handler=(e:KeyboardEvent)=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();setCommandOpen(true)}};
@@ -260,11 +268,11 @@ const [availabilityForm, setAvailabilityForm] = useState({
     return () => { supabase.removeChannel(channel); };
   }, [hasWorkspaceAccess]);
 
-  const totalRevenue = payments.filter(p => p.status === 'completed').reduce((s, p) => s + p.amount, 0);
+  const totalRevenue = payments.filter(p => isSettledPayment(p.status)).reduce((s, p) => s + p.amount, 0);
   const monthRevenue = payments.filter(p => {
     const d = new Date(p.created_at);
     const now = new Date();
-    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear() && p.status === 'completed';
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear() && isSettledPayment(p.status);
   }).reduce((s, p) => s + p.amount, 0);
 
   const detailers = employees.filter(employeeCanDetail);
@@ -465,7 +473,7 @@ const handleDeleteAvailability = async (id: string) => {
     { id: 'leads' as AdminTab, label: 'Leads', Icon: Target },
     { id: 'territories' as AdminTab, label: 'Territories', Icon: MapPinned },
     { id: 'finance' as AdminTab, label: 'Finance & Payroll', Icon: DollarSign },
-    ...(ownerMode ? [{ id: 'owner_growth' as AdminTab, label: 'Growth Planner', Icon: Target }, { id: 'owner_profits' as AdminTab, label: 'Profit Tracker', Icon: TrendingUp }, { id: 'payment_test' as AdminTab, label: '1¢ Payment Test', Icon: CreditCard }] : []),
+    ...(ownerMode ? [{ id: 'owner_growth' as AdminTab, label: 'Growth', Icon: Target }, { id: 'owner_profits' as AdminTab, label: 'Profits', Icon: TrendingUp }, { id: 'payment_test' as AdminTab, label: 'Payment Test', Icon: CreditCard }] : []),
     { id: 'reports' as AdminTab, label: 'Reports', Icon: Gauge },
     { id: 'inventory' as AdminTab, label: 'Inventory', Icon: PackageSearch },
     { id: 'equipment' as AdminTab, label: 'Equipment & Assets', Icon: Wrench },
@@ -476,7 +484,7 @@ const handleDeleteAvailability = async (id: string) => {
     { id: 'pay_settings' as AdminTab, label: 'Pay Structure', Icon: Settings2 },
     { id: 'permissions' as AdminTab, label: 'Permissions', Icon: ShieldCheck },
     { id: 'audit' as AdminTab, label: 'Audit Log', Icon: ScrollText },
-    { id: 'command_center' as AdminTab, label: 'Home', Icon: Gauge },
+    { id: 'command_center' as AdminTab, label: 'Command Center', Icon: Gauge },
     { id: 'crm' as AdminTab, label: 'CRM', Icon: Users },
     { id: 'client_photos' as AdminTab, label: 'Client photos', Icon: Camera },
     { id: 'dispatch' as AdminTab, label: 'Dispatch', Icon: CalendarClock },
@@ -509,7 +517,7 @@ const handleDeleteAvailability = async (id: string) => {
   // Owners sit above Admin operationally: the Owner workspace adds owner-only planning/payment tools,
   // then exposes every Admin workspace instead of a reduced subset.
   const ownerWorkspaces = [
-    {id:'owner',label:'Owner',Icon:ShieldCheck,items:['command_center','dashboard','owner_growth','owner_profits','payment_test'] as AdminTab[]},
+    {id:'owner',label:'Owner',Icon:ShieldCheck,items:['command_center','owner_growth','owner_profits','payment_test'] as AdminTab[]},
     ...adminWorkspaces.filter(workspace => workspace.id !== 'home'),
   ];
   const workspaces = ownerMode ? ownerWorkspaces : adminWorkspaces;
@@ -520,7 +528,17 @@ const handleDeleteAvailability = async (id: string) => {
   const activeEmployees = employees.filter(e=>e.status==='active').length;
   const completedJobs = appointments.filter(a=>a.status==='completed').length;
   const avgTicketAll = completedJobs ? appointments.filter(a=>a.status==='completed').reduce((n,a)=>n+Number(a.price||0),0)/completedJobs : 0;
-  const workspacePulse = currentWorkspace.id==='sales' ? [
+  const openHirePackets = employees.filter(e => {
+    const st = String(e.onboarding_status || '').toLowerCase();
+    return Boolean(st) && !['complete', 'completed', 'done'].includes(st);
+  }).length;
+  const jobsTodayCount = appointments.filter(a => sameLocalDay(a.scheduled_at) || sameLocalDay(a.completed_at) || sameLocalDay(a.finished_at)).length;
+  const workspacePulse = currentWorkspace.id==='owner' ? [
+    {label:'Jobs today',value:String(jobsTodayCount),Icon:CalendarClock},
+    {label:'Unassigned',value:String(unassignedJobs),Icon:ShieldCheck},
+    {label:'Open packets',value:String(openHirePackets),Icon:UserCheck},
+    {label:'This month',value:money(monthRevenue),Icon:DollarSign},
+  ] : currentWorkspace.id==='sales' ? [
     {label:'D2D Reps',value:String(d2dAgents.length),Icon:Target},
     {label:'Open Appointments',value:String(upcomingAppointments),Icon:CalendarClock},
     {label:'Customers',value:String(customers.length),Icon:Users},
@@ -561,7 +579,7 @@ const handleDeleteAvailability = async (id: string) => {
       const label = d.toLocaleDateString('en-US', { month: 'short' });
       const revenue = payments.filter(p => {
         const pd = new Date(p.created_at);
-        return pd.getMonth() === d.getMonth() && pd.getFullYear() === d.getFullYear() && p.status === 'completed';
+        return pd.getMonth() === d.getMonth() && pd.getFullYear() === d.getFullYear() && isSettledPayment(p.status);
       }).reduce((s, p) => s + p.amount, 0);
       months.push({ label, revenue });
     }
@@ -635,7 +653,7 @@ const handleDeleteAvailability = async (id: string) => {
         {commandOpen&&<div className="os-command-backdrop" onClick={()=>setCommandOpen(false)}><div className="os-command-palette" onClick={e=>e.stopPropagation()}>
           <div className="os-command-input"><Search size={18}/><input autoFocus placeholder="Search pages, customers, appointments or employees…" value={commandQuery} onChange={e=>setCommandQuery(e.target.value)}/><button onClick={()=>setCommandOpen(false)}>ESC</button></div>
           <div className="os-command-results">
-            {navItems.filter(n=>n.label.toLowerCase().includes(commandQuery.toLowerCase())).slice(0,8).map(n=><button key={n.id} onClick={()=>{setTab(n.id);setCommandOpen(false);setCommandQuery('')}}><n.Icon size={16}/><span>{n.label}</span><small>Open workspace</small></button>)}
+            {navItems.filter(n=>!(ownerMode&&n.id==='dashboard')&&n.label.toLowerCase().includes(commandQuery.toLowerCase())).slice(0,8).map(n=><button key={n.id} onClick={()=>{setTab(n.id);setCommandOpen(false);setCommandQuery('')}}><n.Icon size={16}/><span>{n.label}</span><small>Open workspace</small></button>)}
             {customers.filter(c=>[c.full_name,c.email,c.phone].filter(Boolean).join(' ').toLowerCase().includes(commandQuery.toLowerCase())).slice(0,5).map(c=><button key={c.id} onClick={()=>{setTab('crm');setCommandOpen(false)}}><Users size={16}/><span>{c.full_name||c.email||'Customer'}</span><small>{c.email||c.phone||'Customer'}</small></button>)}
             {employees.filter(e=>[e.name,e.email,e.role].filter(Boolean).join(' ').toLowerCase().includes(commandQuery.toLowerCase())).slice(0,5).map(e=><button key={e.id} onClick={()=>{setTab('employees');setCommandOpen(false)}}><UserCheck size={16}/><span>{e.name}</span><small>{e.role}</small></button>)}
           </div>
@@ -657,8 +675,8 @@ const handleDeleteAvailability = async (id: string) => {
             />
           )}
 
-          {/* DASHBOARD — Stripe Overview */}
-          {tab === 'dashboard' && (
+          {/* DASHBOARD — Stripe Overview (admin Home only; owners use Command Center) */}
+          {tab === 'dashboard' && !ownerMode && (
             <div className="admin-dashboard">
               <div className="stripe-balances">
                 <article><span>Gross volume</span><strong>{money(totalRevenue)}</strong><small>All collected payments</small></article>

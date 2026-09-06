@@ -3665,6 +3665,82 @@
   appearance: none !important;
   background-color: #fffdf8 !important;
 }
+
+/* Owner Command Center: cream must beat portal-v2 dark buttons */
+.portal-layout.nsos-cream .portal-main .nsos-quick button {
+  background: #fffdf8 !important;
+  border: 1px solid #e4d9cc !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .portal-main .nsos-quick button svg {
+  color: #b8893a !important;
+}
+.portal-layout.nsos-cream .portal-main .nsos-alert {
+  background: #fffdf8 !important;
+  border: 1px solid #e4d9cc !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .portal-main .nsos-alert.hot {
+  background: #fbf4f1 !important;
+  border-color: #e0b4a8 !important;
+}
+.portal-layout.nsos-cream .portal-main .nsos-alert b {
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .portal-main .nsos-alert small {
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+}
+.portal-layout.nsos-cream .portal-main .nsos-alert em {
+  color: #b45444 !important;
+  -webkit-text-fill-color: #b45444 !important;
+  font-style: normal !important;
+}
+.portal-layout.nsos-cream .portal-main .nsos-owner-jump a,
+.portal-layout.nsos-cream .portal-main .nsos-owner-jump button {
+  background: #fffdf8 !important;
+  border: 1px solid #e4d9cc !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .portal-main .v20-team-list button {
+  display: grid !important;
+  grid-template-columns: 34px minmax(0, 1fr) 10px !important;
+  align-items: center !important;
+  gap: 9px !important;
+  width: 100% !important;
+  padding: 8px 0 !important;
+  border: 0 !important;
+  border-bottom: 1px solid #e4d9cc !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  text-align: left !important;
+}
+.portal-layout.nsos-cream .portal-main .v20-team-list button:last-child {
+  border-bottom: 0 !important;
+}
+.portal-layout.nsos-cream .portal-main .v20-team-list button b {
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .portal-main .v20-team-list button small {
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+}
+.portal-layout.nsos-cream .portal-main .v20-team-list i.packet {
+  background: #b8893a !important;
+  box-shadow: 0 0 8px rgba(184, 137, 58, .45) !important;
+}
+.portal-layout.nsos-cream .portal-main .v20-dark-empty {
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+  background: transparent !important;
+}
 @media (max-width: 1180px) {
   .portal-layout.nsos-cream .portal-main::after {
     background-size: min(72vw, 320px) auto !important;

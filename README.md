@@ -22,7 +22,7 @@ The app serves at `http://127.0.0.1:43127`. Demo state lives in this browser (`l
 
 `vercel.json` runs `npm ci --include=dev` then `npm run build` into `dist`, SPA-rewrites every route to `index.html`, and turns off Vercel builds for `gh-pages`. `gh-pages` is a static snapshot for GitHub Pages only — it has no Vite, so a Vercel build of that branch fails with `vite: command not found`. Add `northsplash.com` or `app.northsplash.com` as the project domain, then point DNS to Vercel. This repository cannot change northsplash.com DNS by itself.
 
-Open **Owner → Dashboard**. Each push to `main` rebuilds Vercel and GitHub Pages. Hard-refresh once after a deploy so the service worker drops the previous shell.
+Open **Owner → Command Center**. Each push to `main` rebuilds Vercel and GitHub Pages. Hard-refresh once after a deploy so the service worker drops the previous shell.
 
 ## How it is modeled
 
@@ -54,8 +54,8 @@ The two cores: **SalesRabbit** for territory maps, pins, knocks, and canvassing;
 
 ## What you can do in this slice
 
-- Owner Dashboard: Stripe-style balances (gross volume, this month, pending, avg. ticket), cash flow, recent appointments, and team overview
-- Owner Command Center with glance KPIs, exceptions, today’s schedule, and booking flow
+- Owner Command Center (home): exceptions first, then collected / jobs / leads, then today’s run, pipeline, and team
+- Admin Overview: Stripe-style balances (gross volume, this month, pending, avg. ticket), cash flow, recent appointments, and team overview
 - Rippling-style people directory (search) and Gusto-style onboarding packet (headshot, legal name, tax last-four, deposit, I-9)
 - Deputy staff schedule: Sunday–Saturday week grid per person, plus shift editor
 - ServiceTitan dispatch: unassigned rail, tech columns, drag-to-assign

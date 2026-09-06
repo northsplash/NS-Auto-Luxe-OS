@@ -142,7 +142,8 @@ export function firstWord(value?: string | null, fallback = '') {
 }
 
 export function isSettledPayment(status?: string | null) {
-  return status === 'completed' || status === 'succeeded';
+  const s = String(status || '').toLowerCase();
+  return s === 'completed' || s === 'succeeded' || s === 'paid' || s === 'settled';
 }
 
 export function trendLabel(current: number, previous: number) {
