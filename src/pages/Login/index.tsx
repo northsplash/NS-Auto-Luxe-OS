@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { portalPath } from '@/lib/permissions';
 import { BRAND_LOGO } from '@/lib/brand';
 import AuthShell from '@/components/AuthShell';
+import { applyCustomerReferral, stashPendingReferral } from '@/lib/referrals';
 
 const SITE_URL=(import.meta.env.VITE_SITE_URL||'https://www.northsplash.com').replace(/\/$/,'');
 
@@ -23,6 +24,8 @@ export default function Login() {
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [wasReferred, setWasReferred] = useState(false);
+  const [referrerContact, setReferrerContact] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -60,8 +63,16 @@ export default function Login() {
 
   navigate(destination);
 } else {
-        const created = await signUp(email, password, name, phone);
-        if (created.session) await supabase.functions.invoke('claim-customer-history').catch(() => null);
+        const contact = wasReferred ? referrerContact.trim() : '';
+        if (wasReferred && !contact) {
+          throw new Error('Enter the phone or email of the person who referred you.');
+        }
+        const created = await signUp(email, password, name, phone, contact);
+        if (contact) stashPendingReferral(contact);
+        if (created.session) {
+          await supabase.functions.invoke('claim-customer-history').catch(() => null);
+          if (contact) await applyCustomerReferral(contact).catch(() => null);
+        }
         navigate('/portal');
       }
     } catch (err: any) {
@@ -110,6 +121,29 @@ export default function Login() {
             <div className="auth-field">
               <label>Phone Number</label>
               <input type="tel" autoComplete="tel" placeholder="330-000-0000" value={phone} onChange={e => setPhone(e.target.value)} />
+            </div>
+            <div className="auth-referral">
+              <label className="auth-referral-toggle">
+                <input
+                  type="checkbox"
+                  checked={wasReferred}
+                  onChange={e => setWasReferred(e.target.checked)}
+                />
+                Were you referred by someone at North Splash?
+              </label>
+              {wasReferred && (
+                <div className="auth-field">
+                  <label>Their phone or email</label>
+                  <input
+                    required
+                    autoComplete="off"
+                    placeholder="friend@email.com or 330-000-0000"
+                    value={referrerContact}
+                    onChange={e => setReferrerContact(e.target.value)}
+                  />
+                  <small>If they already have a customer account, you both get $20 toward the next visit.</small>
+                </div>
+              )}
             </div>
           </>
         )}

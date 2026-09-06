@@ -19,6 +19,8 @@ export type Profile = {
   is_active?: boolean;
   vehicle_info: string | null;
   avatar_url?: string | null;
+  account_credit?: number | null;
+  referred_by?: string | null;
   created_at: string;
 };
 

@@ -5,8 +5,10 @@ export async function signUp(
   email: string,
   password: string,
   fullName: string,
-  phone: string
+  phone: string,
+  referrerContact = '',
 ) {
+  const contact = referrerContact.trim();
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -14,6 +16,8 @@ export async function signUp(
       data: {
         full_name: fullName,
         phone,
+        referred: Boolean(contact),
+        referrer_contact: contact,
       },
     },
   });

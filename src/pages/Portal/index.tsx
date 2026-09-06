@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Calendar, CreditCard, Star, Plus, LogOut,
   TrendingUp, Shield, Clock, CheckCircle, ChevronRight, Menu, X,
-  Car, Sparkles, ArrowUp
+  Car, Sparkles, ArrowUp, Gift
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { signOut } from '@/lib/auth';
@@ -17,6 +17,15 @@ import { sendCommunication } from '@/lib/communications';
 import EmployeeAvatar from '@/components/EmployeeAvatar';
 import WorkspaceGate from '@/components/WorkspaceGate';
 import { BRAND_LOGO } from '@/lib/brand';
+import { getProfile } from '@/lib/auth';
+import {
+  applyCustomerReferral,
+  referralContactFromUser,
+  spendAccountCredit,
+  stashPendingReferral,
+  takePendingReferral,
+  REFERRAL_CREDIT,
+} from '@/lib/referrals';
 
 type Tab = 'dashboard' | 'appointments' | 'subscription' | 'billing';
 
@@ -106,10 +115,35 @@ const [timesLoading, setTimesLoading] = useState(false);
   const [lastBook, setLastBook] = useState<{ name: string; when: string; price: number; addOns: string } | null>(null);
   const [subscribeBusy, setSubscribeBusy] = useState(false);
   const [subscribeNotice, setSubscribeNotice] = useState('');
+  const [accountCredit, setAccountCredit] = useState(0);
+  const [referralNotice, setReferralNotice] = useState('');
 
   useEffect(() => {
     if (!loading && !user) navigate('/login', { replace: true });
   }, [user, loading, navigate]);
+
+  useEffect(() => {
+    setAccountCredit(Number(profile?.account_credit || 0));
+  }, [profile?.account_credit]);
+
+  useEffect(() => {
+    if (!user) return;
+    const pending = takePendingReferral() || referralContactFromUser(user);
+    if (!pending) return;
+    let live = true;
+    applyCustomerReferral(pending).then(async (result) => {
+      if (!live) return;
+      if (result.ok && !result.already) {
+        setReferralNotice(result.message || `$${result.credit || REFERRAL_CREDIT} referral credit is on your account.`);
+      } else if (!result.ok && result.error) {
+        stashPendingReferral(pending);
+        setReferralNotice(result.error);
+      }
+      const next = await getProfile(user.id).catch(() => null);
+      if (live && next) setAccountCredit(Number(next.account_credit || 0));
+    });
+    return () => { live = false };
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -255,7 +289,7 @@ const [timesLoading, setTimesLoading] = useState(false);
     setBookSubmitting(true);
 
     try {
-      const price =
+      const gross =
         bookedPkg.price +
         VEHICLE_SIZES[bookVehicle].extra +
         bookAddOns.reduce((sum, i) => sum + ADD_ONS[i][1], 0);
@@ -272,7 +306,7 @@ const [timesLoading, setTimesLoading] = useState(false);
           package_name: bookedPkg.name,
           add_ons: bookAddOns.map(i => ADD_ONS[i][0]),
           vehicle_info: profile?.vehicle_info ?? '',
-          price,
+          price: gross,
           notes: bookNotes,
           status: 'pending',
           source_channel: 'portal',
@@ -285,6 +319,17 @@ const [timesLoading, setTimesLoading] = useState(false);
       if (appointmentError) throw appointmentError;
       if (!appointment?.id) throw new Error('Appointment was not created.');
 
+      const { spent, remaining } = await spendAccountCredit(gross);
+      const price = Math.max(0, gross - spent);
+      if (spent) {
+        setAccountCredit(remaining);
+        const creditNote = `Referral credit applied: ${money(spent)} (was ${money(gross)}).`;
+        const notes = [bookNotes.trim(), creditNote].filter(Boolean).join('\n');
+        await supabase.from('appointments').update({ price, notes }).eq('id', appointment.id);
+        appointment.price = price;
+        appointment.notes = notes;
+      }
+
       const { error: paymentError } = await supabase
         .from('payments')
         .insert({
@@ -292,7 +337,7 @@ const [timesLoading, setTimesLoading] = useState(false);
           appointment_id: appointment.id,
           amount: price,
           status: 'pending',
-          description: bookedPkg.name,
+          description: spent ? `${bookedPkg.name} · ${money(spent)} referral credit` : bookedPkg.name,
         });
 
       if (paymentError) console.warn('Pending payment row failed', paymentError);
@@ -460,6 +505,7 @@ const [timesLoading, setTimesLoading] = useState(false);
                   <span className="eyebrow">Your vehicle</span>
                   <h2>Welcome back, {firstName}.</h2>
                   <p>Book Exterior, Interior, or Full vehicle — Essential, Signature, or Elite — then track the visit live.</p>
+                  {referralNotice && <p className="referral-banner">{referralNotice}</p>}
                 </div>
                 <button className="btn-primary" onClick={openBook}>
                   <Plus size={16} /> Schedule a Detail
@@ -496,6 +542,13 @@ const [timesLoading, setTimesLoading] = useState(false);
                   </div>
                 </div>
               </div>
+
+              {accountCredit > 0 && (
+                <div className="dash-card referral-credit-card">
+                  <h3><Gift size={18} /> Referral credit</h3>
+                  <p className="dash-card-sub">{money(accountCredit)} will come off your next booked visit. Tell a friend at signup and you both get {money(REFERRAL_CREDIT)}.</p>
+                </div>
+              )}
 
               {/* Savings Visual */}
               {lifetimeSpend > 0 && (
@@ -692,6 +745,15 @@ const [timesLoading, setTimesLoading] = useState(false);
                 title="Billing & savings"
                 lead="Track what you have invested in this vehicle — and the protection that comes with it."
               />
+              {accountCredit > 0 && (
+                <div className="current-plan-banner referral-credit-card">
+                  <div>
+                    <span>Referral credit</span>
+                    <strong>{money(accountCredit)} on this account</strong>
+                    <p>Applied automatically the next time you book a visit.</p>
+                  </div>
+                </div>
+              )}
 
               {/* Savings Hero */}
               <div className="billing-savings-card">
@@ -877,7 +939,13 @@ const [timesLoading, setTimesLoading] = useState(false);
                 </div>
                 <div className="modal-total">
                   <span>Estimated total</span>
-                  <strong>{money(bookedPkg.price + VEHICLE_SIZES[bookVehicle].extra + bookAddOns.reduce((s, i) => s + ADD_ONS[i][1], 0))}</strong>
+                  <strong>
+                    {(() => {
+                      const gross = bookedPkg.price + VEHICLE_SIZES[bookVehicle].extra + bookAddOns.reduce((s, i) => s + ADD_ONS[i][1], 0);
+                      const due = Math.max(0, gross - accountCredit);
+                      return due < gross ? `${money(due)} after ${money(Math.min(accountCredit, gross))} credit` : money(gross);
+                    })()}
+                  </strong>
                 </div>
                 <button type="submit" className="btn-primary btn-full" disabled={bookSubmitting}>
                   {bookSubmitting ? 'Sending request…' : 'Request appointment'}

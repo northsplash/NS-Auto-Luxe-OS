@@ -430,6 +430,7 @@ function CommandCenter({employees,appointments,customers,payments,onNavigate,own
      <a href="#owner-pipeline">Pipeline</a>
      <button type="button" onClick={()=>go('schedule')}>Open calendar</button>
      <button type="button" onClick={()=>go('employees')}>Open team</button>
+     <button type="button" onClick={()=>go('retention')}>Referrals</button>
    </nav>
    <div className="ns-field-loop" id="owner-field-loop" aria-label="Field loop">
      {fieldLoop.map((step,i)=><button type="button" key={step.key} className={step.n?'hot':''} onClick={()=>go(step.view,step.filter)}><em>{step.n}</em><span><b>{step.label}</b><small>{step.sub}</small></span>{i<fieldLoop.length-1&&<i className="ns-field-loop-arrow" aria-hidden/>}</button>)}

@@ -291,10 +291,10 @@ export const WORKSPACE_REFS: Record<
     lead: 'Sessions, pages, and sources — traffic as an operator metric.',
   },
   retention: {
-    kicker: 'CRM',
-    title: 'Retention',
-    modeled: 'HubSpot + Housecall Pro',
-    lead: 'Who is due back, memberships, and review requests.',
+    kicker: 'Customers',
+    title: 'Referrals',
+    modeled: 'HubSpot',
+    lead: 'Who signed up from whom, and the $20 credit on both accounts.',
   },
   continuity: {
     kicker: 'Admin',

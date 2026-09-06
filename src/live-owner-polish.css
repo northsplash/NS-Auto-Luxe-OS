@@ -5890,3 +5890,108 @@ html, body, #root {
     padding: 44px 40px !important;
   }
 }
+
+.auth-referral {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid #e4d9cc;
+  border-radius: 12px;
+  background: #fffdf8;
+}
+.auth-referral-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  color: #1c1814;
+  font-weight: 600;
+  line-height: 1.35;
+}
+.auth-referral-toggle input {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: #1c1814;
+  flex: 0 0 auto;
+}
+.auth-referral .auth-field small {
+  color: #6b5e52;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.referral-board {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+.referral-board-compact-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #1c1814;
+}
+.referral-board-compact-head h3 {
+  margin: 0;
+  font-size: 18px;
+}
+.referral-board-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.referral-board-kpis > div {
+  background: #fffdf8;
+  border: 1px solid #e4d9cc;
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.referral-board-kpis span {
+  font-size: 11px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #6b5e52;
+}
+.referral-board-kpis strong {
+  font-size: 22px;
+  color: #1c1814;
+}
+.referral-board .data-table-head.referral-head,
+.referral-board .data-table-row.referral-row {
+  grid-template-columns: 1.3fr 1.2fr .9fr .7fr .7fr;
+}
+.referral-sub {
+  display: block;
+  color: #6b5e52;
+  font-size: 12px;
+}
+.referral-banner,
+.referral-credit-card {
+  background: #fffdf8;
+  border: 1px solid #e4d9cc;
+  border-radius: 14px;
+  color: #1c1814;
+}
+.referral-banner {
+  margin-top: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+}
+@media (max-width: 720px) {
+  .referral-board-kpis {
+    grid-template-columns: 1fr;
+  }
+  .referral-board .data-table-head.referral-head {
+    display: none;
+  }
+  .referral-board .data-table-row.referral-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+}

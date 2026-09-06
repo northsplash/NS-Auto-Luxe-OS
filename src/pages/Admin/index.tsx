@@ -6,7 +6,7 @@ import {
   Eye, DollarSign, Activity, ChevronDown, ChevronUp, Globe, Archive,
   BriefcaseBusiness, CalendarClock, Clock3, PackageSearch, Settings2,
   Target, MapPinned, ListChecks, Wrench, FileText, ShieldCheck, Bell,
-  ClipboardCheck, ScrollText, UserCog, Gauge, MessageCircle, Search, MoreHorizontal, CheckCircle2, Mail, Phone, Camera
+  ClipboardCheck, ScrollText, UserCog, Gauge, MessageCircle, Search, MoreHorizontal, CheckCircle2, Mail, Phone, Camera, Gift
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { signOut } from '@/lib/auth';
@@ -39,6 +39,7 @@ import { readOwnerHomeCache, writeOwnerHomeCache } from '@/lib/ownerHomeCache';
 import { inviteEmployeeLogin, portalRoleFromPosition } from '@/lib/inviteHire';
 import WorkspaceHero from '@/components/WorkspaceHero';
 import ClientPhotosSection from '@/components/ClientPhotosSection';
+import ReferralBoard from '@/components/ReferralBoard';
 import WorkspaceGate from '@/components/WorkspaceGate';
 import TeamMessaging from '@/components/TeamMessaging';
 import AdminDataManager from '@/components/AdminDataManager';
@@ -606,7 +607,7 @@ const handleDeleteAvailability = async (id: string) => {
     { id: 'purchasing' as AdminTab, label: 'Purchasing', Icon: PackageSearch },
     { id: 'communications' as AdminTab, label: 'Communications', Icon: Bell },
     { id: 'messages' as AdminTab, label: 'Messages', Icon: MessageCircle },
-    { id: 'retention' as AdminTab, label: 'Retention', Icon: Target },
+    { id: 'retention' as AdminTab, label: 'Referrals', Icon: Gift },
     { id: 'continuity' as AdminTab, label: 'Backups & Exports', Icon: Archive },
     { id: 'payments' as AdminTab, label: 'Payments', Icon: CreditCard },
     { id: 'visitors' as AdminTab, label: 'Site Visitors', Icon: Globe },
@@ -893,6 +894,7 @@ const handleDeleteAvailability = async (id: string) => {
           {/* CUSTOMERS — HubSpot */}
           {tab === 'customers' && (
             <div className="tab-content">
+              <ReferralBoard customers={customers} compact />
               <div className="hubspot-toolbar">
                 <input
                   type="search"
@@ -906,12 +908,13 @@ const handleDeleteAvailability = async (id: string) => {
               <div className="admin-card">
                 <div className="data-table customer-table-v21">
                   <div className="data-table-head">
-                    <span>Name</span><span>Email</span><span>Last job</span><span>Spend</span><span>Status</span><span>Actions</span>
+                    <span>Name</span><span>Email</span><span>Last job</span><span>Spend</span><span>Referral</span><span>Status</span><span>Actions</span>
                   </div>
                   {customers.filter(c=>!customerQuery||[c.full_name,c.email,c.phone].filter(Boolean).join(' ').toLowerCase().includes(customerQuery.toLowerCase())).map(c => {
                     const jobs=appointments.filter(a=>a.user_id===c.id);
                     const last=jobs.filter(a=>a.scheduled_at).sort((a,b)=>+new Date(b.scheduled_at!)-+new Date(a.scheduled_at!))[0];
                     const spend=jobs.filter(a=>a.status==='completed').reduce((s,a)=>s+Number(a.price||0),0);
+                    const referrer = customers.find(x => x.id === c.referred_by);
                     return (
                     <div key={c.id} className="data-table-row">
                       <div className="dt-cell dt-name">
@@ -924,6 +927,7 @@ const handleDeleteAvailability = async (id: string) => {
                       <span className="dt-cell">{c.email ?? '—'}</span>
                       <span className="dt-cell">{last?.service_name ? `${last.service_name} · ${new Date(last.scheduled_at!).toLocaleDateString()}` : '—'}</span>
                       <span className="dt-cell"><strong>{money(spend)}</strong></span>
+                      <span className="dt-cell">{referrer ? `By ${referrer.full_name || referrer.email || 'customer'}` : Number(c.account_credit||0) > 0 ? `${money(Number(c.account_credit))} credit` : '—'}</span>
                       <span className="dt-cell"><StatusBadge status="active" /></span>
                       <span className="dt-cell dt-actions"><button className="icon-danger" title="Permanently delete customer" onClick={()=>handleDeleteCustomer(c)}><Trash2 size={14}/></button></span>
                     </div>
@@ -934,6 +938,7 @@ const handleDeleteAvailability = async (id: string) => {
                       <span className="dt-cell">{a.customer_email||'—'}</span>
                       <span className="dt-cell">{a.service_name} · {a.scheduled_at?new Date(a.scheduled_at).toLocaleDateString():'unscheduled'}</span>
                       <span className="dt-cell">{money(Number(a.price||0))}</span>
+                      <span className="dt-cell">—</span>
                       <span className="dt-cell"><span className="status-badge badge-yellow">booking contact</span></span>
                       <span className="dt-cell dt-actions"><button className="icon-danger" title="Delete guest/test contact" onClick={()=>handleDeleteGuest(a)}><Trash2 size={14}/></button></span>
                     </div>

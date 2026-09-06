@@ -24,16 +24,24 @@ function Loader() {
 }
 
 function WorkspaceCrashScreen({ message, onRetry }: { message: string; onRetry: () => void }) {
+  const hookCrash = /310|Rendered more hooks|fewer hooks/i.test(message || '');
+  const retry = () => {
+    if (hookCrash) {
+      window.location.reload();
+      return;
+    }
+    onRetry();
+  };
   return (
     <div className="route-error-v27 nsos-cream">
       <div className="route-error-card-v27">
         <span className="eyebrow">North Splash Auto Luxe</span>
         <img className="auth-brand-logo" src={BRAND_LOGO} alt="North Splash Auto Luxe" />
-        <h2>This screen stopped</h2>
-        <p>Try again. The rest of the company is still here.</p>
+        <h2>This screen could not load</h2>
+        <p>{hookCrash ? 'Reload this page to pick up the latest workspace.' : 'Try again. The rest of the company is still here.'}</p>
         {message && <p className="empty-text">{message}</p>}
         <div className="route-error-actions-v27">
-          <button type="button" className="btn-primary" onClick={onRetry}>
+          <button type="button" className="btn-primary" onClick={retry}>
             Try again
           </button>
           <Link className="btn-outline" to="/os">
@@ -45,7 +53,7 @@ function WorkspaceCrashScreen({ message, onRetry }: { message: string; onRetry: 
           <button
             type="button"
             className="btn-outline"
-            onClick={() => { onRetry(); window.history.back(); }}
+            onClick={() => { if (hookCrash) { window.location.href = '/login'; return; } onRetry(); window.history.back(); }}
           >
             Go back
           </button>
