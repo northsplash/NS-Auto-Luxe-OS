@@ -155,8 +155,13 @@ const [availabilityForm, setAvailabilityForm] = useState({
   const [empSubmitting, setEmpSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!loading && !hasWorkspaceAccess) {
-      navigate('/portal');
+    if (loading) return;
+    if (!user) {
+      navigate('/login', { replace: true });
+      return;
+    }
+    if (!hasWorkspaceAccess) {
+      navigate('/portal', { replace: true });
     }
   }, [user, profile, loading, navigate, hasWorkspaceAccess]);
 
@@ -456,12 +461,20 @@ const handleDeleteAvailability = async (id: string) => {
     navigate('/');
   };
 
-  if (loading || dataLoading) {
+  if (loading) {
     return <WorkspaceGate busy title="Opening Owner workspace" body="Loading live jobs, team, and cash." />;
+  }
+
+  if (!user) {
+    return <WorkspaceGate title="Sign in to continue" body="Owner and Admin live behind your North Splash login." homeHref="/login" homeLabel="Sign in" />;
   }
 
   if (!hasWorkspaceAccess) {
     return <WorkspaceGate title="This workspace is closed" body="Your account does not have Owner or Admin access." homeHref="/portal" homeLabel="Open customer portal" />;
+  }
+
+  if (dataLoading) {
+    return <WorkspaceGate busy title="Opening Owner workspace" body="Loading live jobs, team, and cash." />;
   }
 
   const navItems = [

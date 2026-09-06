@@ -83,11 +83,13 @@ export default function D2DPortal(){
   const lastLocationWrite=useRef(0);
 
   useEffect(()=>{
-    if(!loading&&(!user||!['d2d','owner'].includes(profile?.portal_role||'')))navigate('/portal');
+    if(loading)return;
+    if(!user){navigate('/login',{replace:true});return;}
+    if(!['d2d','owner'].includes(profile?.portal_role||''))navigate('/portal');
   },[user,profile,loading,navigate]);
 
   const load=async()=>{
-    if(!user)return;
+    if(!user){setBusy(false);return;}
     setBusy(true);
     try{
     const {data:emp}=await supabase.from('employees').select('*').eq('user_id',user.id).maybeSingle();

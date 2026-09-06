@@ -32,7 +32,6 @@ export type OsTab =
 type NavItem = { id: OsTab; label: string; Icon: typeof LayoutDashboard };
 
 const NAV: NavItem[] = [
-  { id: 'dashboard', label: 'Owner Dashboard', Icon: LayoutDashboard },
   { id: 'command_center', label: 'Command Center', Icon: Gauge },
   { id: 'owner_growth', label: 'Growth', Icon: Target },
   { id: 'owner_profits', label: 'Profits', Icon: TrendingUp },
@@ -157,6 +156,7 @@ const TAB_SHORT: Record<OsTab, string> = {
 
 const LEGACY: Record<string, OsTab> = {
   home: 'command_center',
+  dashboard: 'command_center',
   command: 'command_center',
   chat: 'messages',
   people: 'employees',
@@ -172,6 +172,7 @@ const LEGACY: Record<string, OsTab> = {
 
 function resolveTab(raw?: string | null): OsTab {
   const id = String(raw || '').trim();
+  if (id === 'dashboard') return 'command_center';
   if (id && id in PAGE) return id as OsTab;
   const mapped = LEGACY[id];
   if (mapped && mapped in PAGE) return mapped;
@@ -329,7 +330,7 @@ function OsShell() {
   };
 
   const homeTab: OsTab = mode === 'd2d' ? 'sales' : mode === 'detailer' ? 'jobs' : mode === 'admin' ? 'communications' : 'command_center';
-  const currentWorkspace = WORKSPACES.find((w) => w.items.includes(tab)) ?? WORKSPACES[4];
+  const currentWorkspace = WORKSPACES.find((w) => w.items.includes(tab)) ?? WORKSPACES[0];
   const currentNav = nav(tab);
   const phoneHome = mode === 'd2d'
     ? ['sales', 'leads', 'territories'].includes(tab)

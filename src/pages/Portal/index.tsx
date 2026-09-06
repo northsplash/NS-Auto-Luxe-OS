@@ -107,7 +107,7 @@ const [timesLoading, setTimesLoading] = useState(false);
   const [subscribeNotice, setSubscribeNotice] = useState('');
 
   useEffect(() => {
-    if (!loading && !user) navigate('/login');
+    if (!loading && !user) navigate('/login', { replace: true });
   }, [user, loading, navigate]);
 
   useEffect(() => {
@@ -368,8 +368,11 @@ const [timesLoading, setTimesLoading] = useState(false);
     { id: 'billing', label: 'Billing & Savings', Icon: CreditCard },
   ];
 
-  if (loading || !user) {
+  if (loading) {
     return <WorkspaceGate busy title="Opening customer portal" body="Loading your appointments and membership." />;
+  }
+  if (!user) {
+    return <WorkspaceGate title="Sign in to continue" body="Appointments, membership, and billing are behind your North Splash login." homeHref="/login" homeLabel="Sign in" />;
   }
   if (dataLoading) {
     return <WorkspaceGate busy title="Loading your visits" body="Appointments, membership, and billing for this vehicle." />;
