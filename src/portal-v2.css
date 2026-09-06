@@ -608,7 +608,7 @@ body{color-scheme:dark}
 .portal-main::after{
   content:"";position:fixed;z-index:-1;pointer-events:none;
   left:var(--ns-sidebar,236px);right:0;top:72px;bottom:0;
-  background-image:url('/ns-auto-luxe-logo.png');background-repeat:no-repeat;background-position:center 46%;
+  background-image:none;background-repeat:no-repeat;background-position:center 46%;
   background-size:min(72vw,920px) auto;opacity:1!important;filter:none!important;
 }
 .portal-main::before{display:none!important}

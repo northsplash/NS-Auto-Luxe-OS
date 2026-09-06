@@ -2,7 +2,6 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath, URL } from 'node:url';
 
-// https://vitejs.dev/config/
 export default defineConfig({
   base: process.env.GITHUB_PAGES === 'true' ? '/NS-Auto-Luxe-OS/' : '/',
   plugins: [react()],
@@ -12,7 +11,20 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    exclude: ['lucide-react'],
+    include: ['react', 'react-dom', 'react-router-dom', 'lucide-react'],
+  },
+  build: {
+    target: 'es2020',
+    cssMinify: true,
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules/react-dom') || id.includes('node_modules/react/') || id.includes('react-router')) return 'react';
+          if (id.includes('@supabase')) return 'supabase';
+        },
+      },
+    },
   },
   server: {
     host: '0.0.0.0',

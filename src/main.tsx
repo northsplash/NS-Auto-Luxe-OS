@@ -8,6 +8,9 @@ import './os/cream-os.css';
 import './live-owner-polish.css';
 import App from './App';
 
+const assetBase = import.meta.env.BASE_URL;
+document.documentElement.style.setProperty('--ns-brand-mark', `url("${assetBase}ns-auto-luxe-logo.svg")`);
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />
@@ -15,5 +18,7 @@ createRoot(document.getElementById('root')!).render(
 );
 
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').then(reg => reg.update()).catch(console.error));
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register(`${assetBase}sw.js`).then((reg) => reg.update()).catch(console.error);
+  });
 }

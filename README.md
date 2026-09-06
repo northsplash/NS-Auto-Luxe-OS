@@ -17,14 +17,16 @@ The app serves at `http://127.0.0.1:43127`. Demo state lives in this browser (`l
 
 ## Public URLs
 
+- Production (Vercel, branch `main`): https://ns-auto-luxe-os.vercel.app/
 - GitHub Pages (updates on every push to `main`): https://northsplash.github.io/NS-Auto-Luxe-OS/?tab=dashboard
-- Vercel: import **this GitHub repo**, production branch **`main`** (not `gh-pages`). `vercel.json` runs `npm ci --include=dev` then `npm run build` into `dist`, and turns off Vercel builds for `gh-pages`. `gh-pages` is a static snapshot for GitHub Pages only — it has no Vite, so a Vercel build of that branch fails with `vite: command not found`. Add `northsplash.com` or `app.northsplash.com` as the project domain, then point DNS to Vercel. This repository cannot change northsplash.com DNS by itself.
 
-Open **Owner → Dashboard**. Each push to `main` rebuilds GitHub Pages.
+`vercel.json` runs `npm ci --include=dev` then `npm run build` into `dist`, SPA-rewrites every route to `index.html`, and turns off Vercel builds for `gh-pages`. `gh-pages` is a static snapshot for GitHub Pages only — it has no Vite, so a Vercel build of that branch fails with `vite: command not found`. Add `northsplash.com` or `app.northsplash.com` as the project domain, then point DNS to Vercel. This repository cannot change northsplash.com DNS by itself.
+
+Open **Owner → Dashboard**. Each push to `main` rebuilds Vercel and GitHub Pages. Hard-refresh once after a deploy so the service worker drops the previous shell.
 
 ## How it is modeled
 
-Visual language is **cream luxury**: ivory cards, espresso sidebar, tight type, 14px radius, gold only for primary actions, KPIs, and active states. Home is role-based (Owner / D2D / Detailer / Admin). Command Center leads with exceptions. Phones use a 5-button bar: Home / Chat / Calendar / Team / More, with bottom sheets instead of desktop popups.
+Visual language is **cream luxury**: ivory paper, espresso sidebar, canvas chrome, 14px radius. Gold is for eyebrows, KPI icons, and cash-flow bars. Primary actions are espresso. Home is role-based (Owner / D2D / Detailer / Admin). Command Center leads with exceptions. Phones use a 5-button bar: Home / Chat / Calendar / Team / More, with bottom sheets instead of desktop popups.
 
 Workflows follow the product that already does that job well:
 
