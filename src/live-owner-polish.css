@@ -594,10 +594,35 @@
 .portal-layout.nsos-cream .portal-content p,
 .portal-layout.nsos-cream .tab-header p,
 .portal-layout.nsos-cream .v2-page-head p,
-.portal-layout.nsos-cream .empty-text,
-.portal-layout.nsos-cream .ns-empty {
+.portal-layout.nsos-cream .empty-text {
   color: #6f675e !important;
   -webkit-text-fill-color: #6f675e !important;
+}
+
+.portal-layout.nsos-cream .portal-content .ns-empty,
+.portal-layout.nsos-cream .portal-content .empty-text,
+.portal-layout.nsos-cream .portal-content .empty-inspector,
+.portal-layout.nsos-cream .portal-content .v19-empty,
+.portal-layout.nsos-cream .portal-content .v19-premium-empty,
+.portal-layout.nsos-cream .portal-content .empty-state,
+.portal-layout.nsos-cream .portal-content [class*="empty-state"] {
+  background: radial-gradient(circle at 50% 18%, rgba(184, 137, 58, .08), transparent 62%), #fffdf8 !important;
+  border: 1px dashed #d9cbb8 !important;
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+  border-radius: 14px !important;
+  padding: 28px 20px !important;
+  text-align: center;
+}
+.portal-layout.nsos-cream .portal-content .empty-state svg,
+.portal-layout.nsos-cream .portal-content .v19-premium-empty svg,
+.portal-layout.nsos-cream .portal-content .ns-empty svg {
+  color: #b8893a !important;
+}
+.portal-layout.nsos-cream .portal-content .empty-state h3,
+.portal-layout.nsos-cream .portal-content .v19-premium-empty h3 {
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
 }
 
 .portal-layout.nsos-cream .training-card,
@@ -1494,4 +1519,227 @@
 @media (pointer: coarse) {
   .portal-layout.nsos-cream .os-secondary-nav-scroll button { min-height: 44px; padding: 0 14px; }
   .portal-layout.nsos-cream .status-filter { min-height: 40px; }
+}
+
+/* Owner profit / growth / payment lab — cream paper, espresso ink (kills near-white type on ivory). */
+.portal-layout.nsos-cream .owner-profit-page,
+.portal-layout.nsos-cream .owner-growth-page,
+.portal-layout.nsos-cream .owner-payment-test-page {
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .owner-profit-head,
+.portal-layout.nsos-cream .owner-growth-head,
+.portal-layout.nsos-cream .owner-payment-test-head {
+  border-bottom-color: #eadfd3 !important;
+}
+.portal-layout.nsos-cream .owner-profit-head h1,
+.portal-layout.nsos-cream .owner-growth-head h1,
+.portal-layout.nsos-cream .owner-payment-test-head h1,
+.portal-layout.nsos-cream .owner-plan-editor-head h2,
+.portal-layout.nsos-cream .owner-profit-panel-title h3,
+.portal-layout.nsos-cream .owner-growth-section-title h2,
+.portal-layout.nsos-cream .owner-payment-test-card h2 {
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .owner-profit-head p,
+.portal-layout.nsos-cream .owner-growth-head p,
+.portal-layout.nsos-cream .owner-payment-test-head p,
+.portal-layout.nsos-cream .owner-plan-editor-head p,
+.portal-layout.nsos-cream .owner-profit-note,
+.portal-layout.nsos-cream .owner-payment-test-card p {
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+}
+.portal-layout.nsos-cream .owner-profit-flow { color: #3d3228 !important; }
+.portal-layout.nsos-cream .owner-profit-flow span { color: #b8893a !important; }
+.portal-layout.nsos-cream .owner-loading {
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+}
+.portal-layout.nsos-cream .owner-profit-settings,
+.portal-layout.nsos-cream .owner-profit-table-card,
+.portal-layout.nsos-cream .owner-profit-charts > section,
+.portal-layout.nsos-cream .owner-profit-split > section,
+.portal-layout.nsos-cream .owner-growth-panel,
+.portal-layout.nsos-cream .owner-growth-phases,
+.portal-layout.nsos-cream .owner-growth-weekly,
+.portal-layout.nsos-cream .owner-plan-editor,
+.portal-layout.nsos-cream .owner-payment-test-card,
+.portal-layout.nsos-cream .owner-split-cards > div,
+.portal-layout.nsos-cream .owner-profit-summary-grid > div,
+.portal-layout.nsos-cream .owner-growth-phase-grid article,
+.portal-layout.nsos-cream .owner-growth-week-list article,
+.portal-layout.nsos-cream .owner-profit-milestones > div,
+.portal-layout.nsos-cream .owner-growth-milestones > div {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  border-color: #e4d9cc !important;
+  box-shadow: 0 10px 28px rgba(61, 42, 26, .06) !important;
+}
+.portal-layout.nsos-cream .owner-profit-settings-grid label,
+.portal-layout.nsos-cream .owner-edit-field,
+.portal-layout.nsos-cream .owner-week-edit-grid label {
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+}
+.portal-layout.nsos-cream .owner-profit-settings-grid small,
+.portal-layout.nsos-cream .owner-profit-filter > span,
+.portal-layout.nsos-cream .owner-profit-bars span,
+.portal-layout.nsos-cream .owner-split-cards small,
+.portal-layout.nsos-cream .owner-profit-milestones small,
+.portal-layout.nsos-cream .owner-growth-phase-grid p,
+.portal-layout.nsos-cream .owner-growth-week-list span,
+.portal-layout.nsos-cream .owner-growth-week-list small,
+.portal-layout.nsos-cream .owner-growth-rules span,
+.portal-layout.nsos-cream .owner-growth-milestones small {
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+}
+.portal-layout.nsos-cream .owner-profit-filter button,
+.portal-layout.nsos-cream .owner-growth-horizon button {
+  background: #fffdf8 !important;
+  color: #3d3228 !important;
+  -webkit-text-fill-color: #3d3228 !important;
+  border-color: #e4d9cc !important;
+}
+.portal-layout.nsos-cream .owner-profit-filter button.active,
+.portal-layout.nsos-cream .owner-growth-horizon button.active {
+  background: #1c1814 !important;
+  color: #f6f1e8 !important;
+  -webkit-text-fill-color: #f6f1e8 !important;
+  border-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .owner-split-cards strong,
+.portal-layout.nsos-cream .owner-profit-panel-title > strong,
+.portal-layout.nsos-cream .owner-growth-week-list strong,
+.portal-layout.nsos-cream .owner-growth-phase-grid h3 {
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .owner-growth-phase-grid small,
+.portal-layout.nsos-cream .owner-growth-week-list b {
+  color: #b8893a !important;
+  -webkit-text-fill-color: #b8893a !important;
+}
+.portal-layout.nsos-cream .owner-profit-milestones > div > span,
+.portal-layout.nsos-cream .owner-growth-rules svg,
+.portal-layout.nsos-cream .owner-growth-phase-grid svg {
+  background: #f4efe8 !important;
+  color: #b8893a !important;
+}
+.portal-layout.nsos-cream .owner-profit-summary-row {
+  border-bottom-color: #eadfd3 !important;
+}
+.portal-layout.nsos-cream .owner-profit-summary-row small,
+.portal-layout.nsos-cream .owner-profit-table td small {
+  color: #6f675e !important;
+}
+.portal-layout.nsos-cream .portal-content .owner-profit-table,
+.portal-layout.nsos-cream .portal-content .data-table,
+.portal-layout.nsos-cream .portal-content table {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .portal-content .owner-profit-table th,
+.portal-layout.nsos-cream .portal-content .data-table-head,
+.portal-layout.nsos-cream .portal-content thead,
+.portal-layout.nsos-cream .portal-content th {
+  background: #f4efe8 !important;
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+  border-color: #eadfd3 !important;
+}
+.portal-layout.nsos-cream .portal-content .owner-profit-table td,
+.portal-layout.nsos-cream .portal-content .data-table-row,
+.portal-layout.nsos-cream .portal-content tbody tr,
+.portal-layout.nsos-cream .portal-content td {
+  background: transparent !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  border-color: #eadfd3 !important;
+}
+.portal-layout.nsos-cream .portal-content .data-table-row:hover,
+.portal-layout.nsos-cream .portal-content tbody tr:hover {
+  background: #f7f1ea !important;
+}
+.portal-layout.nsos-cream .owner-week-edit,
+.portal-layout.nsos-cream .owner-table-edit,
+.portal-layout.nsos-cream .owner-mobile-edit-week {
+  background: #f4efe8 !important;
+  color: #6b4e1f !important;
+  -webkit-text-fill-color: #6b4e1f !important;
+  border-color: #e4d9cc !important;
+}
+.portal-layout.nsos-cream .owner-week-modal {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  border-color: #e4d9cc !important;
+  box-shadow: 0 28px 90px rgba(61, 42, 26, .18) !important;
+}
+.portal-layout.nsos-cream .owner-week-modal-head {
+  border-bottom-color: #eadfd3 !important;
+}
+.portal-layout.nsos-cream .owner-week-modal-head h3 { color: #1c1814 !important; -webkit-text-fill-color: #1c1814 !important; }
+.portal-layout.nsos-cream .owner-week-modal-head p,
+.portal-layout.nsos-cream .owner-week-preview { color: #6f675e !important; -webkit-text-fill-color: #6f675e !important; }
+.portal-layout.nsos-cream .owner-week-modal-head > button {
+  background: #f4efe8 !important;
+  color: #1c1814 !important;
+  border-color: #e4d9cc !important;
+}
+.portal-layout.nsos-cream .owner-week-preview {
+  border-color: #eadfd3 !important;
+}
+.portal-layout.nsos-cream .owner-week-modal-actions {
+  background: #fffdf8 !important;
+}
+.portal-layout.nsos-cream .owner-test-price {
+  background: #f4efe8 !important;
+  border-color: #d9cbb8 !important;
+  color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .owner-test-price small { color: #b8893a !important; -webkit-text-fill-color: #b8893a !important; }
+.portal-layout.nsos-cream .owner-test-price strong { color: #1c1814 !important; -webkit-text-fill-color: #1c1814 !important; }
+.portal-layout.nsos-cream .owner-payment-test-card ul,
+.portal-layout.nsos-cream .owner-payment-test-card code { color: #3d3228 !important; }
+.portal-layout.nsos-cream .owner-payment-test-note {
+  border-color: #e4d4a8 !important;
+  background: #fbf6ea !important;
+  color: #6b4e1f !important;
+}
+.portal-layout.nsos-cream .owner-payment-test-note p { color: #6f675e !important; }
+.portal-layout.nsos-cream .owner-payment-return {
+  border-color: #c9e4d2 !important;
+  background: #f2faf4 !important;
+  color: #1f5c38 !important;
+}
+.portal-layout.nsos-cream .owner-payment-error {
+  border-color: #f0c9c4 !important;
+  background: #fdf4f2 !important;
+  color: #8a2e26 !important;
+}
+.portal-layout.nsos-cream .owner-save-status {
+  color: #1f5c38 !important;
+  background: #f2faf4 !important;
+}
+.portal-layout.nsos-cream .current-plan-banner,
+.portal-layout.nsos-cream .plan-card {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  border-color: #e4d9cc !important;
+}
+.portal-layout.nsos-cream .plan-card h3,
+.portal-layout.nsos-cream .plan-price,
+.portal-layout.nsos-cream .current-plan-banner strong {
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .plan-card p,
+.portal-layout.nsos-cream .plan-card li,
+.portal-layout.nsos-cream .current-plan-banner span,
+.portal-layout.nsos-cream .current-plan-banner p {
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
 }

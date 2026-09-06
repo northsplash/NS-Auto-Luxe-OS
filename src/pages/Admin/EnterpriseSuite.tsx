@@ -122,7 +122,7 @@ function LeadMap({ leads, territories, onMapPoint }: { leads: Lead[]; territorie
     });
   }, [leads, territories, ready]);
 
-  return <div ref={ref} style={{ height: 460, borderRadius: 14, overflow: 'hidden', border: '1px solid #292929', background: '#0a0a0a' }} />;
+  return <div ref={ref} style={{ height: 460, borderRadius: 14, overflow: 'hidden', border: '1px solid #e4d9cc', background: '#f4efe8' }} />;
 }
 
 export default function EnterpriseSuite({ section, employees, setEmployees, appointments, setAppointments }: Props) {

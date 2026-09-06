@@ -950,12 +950,13 @@ const handleDeleteAvailability = async (id: string) => {
     <form
       onSubmit={handleSaveAvailability}
       style={{
-        background: '#101010',
-        color: '#f7f7f5',
-        border: '1px solid rgba(255,255,255,.08)',
+        background: '#fffdf8',
+        color: '#1c1814',
+        border: '1px solid #e4d9cc',
         borderRadius: '14px',
         padding: '24px',
         marginBottom: '30px',
+        boxShadow: '0 10px 28px rgba(61,42,26,.06)',
       }}
     >
       <h3 style={{ marginTop: 0 }}>Set Availability</h3>
@@ -1065,17 +1066,18 @@ const handleDeleteAvailability = async (id: string) => {
 
     <div
       style={{
-        background: '#101010',
-        color: '#f7f7f5',
-        border: '1px solid rgba(255,255,255,.08)',
+        background: '#fffdf8',
+        color: '#1c1814',
+        border: '1px solid #e4d9cc',
         borderRadius: '14px',
         padding: '24px',
+        boxShadow: '0 10px 28px rgba(61,42,26,.06)',
       }}
     >
       <h3>Upcoming Availability</h3>
 
       {availability.length === 0 ? (
-        <p style={{ color: '#8f8f8b' }}>
+        <p className="ns-empty">
           No availability has been added yet.
         </p>
       ) : (
