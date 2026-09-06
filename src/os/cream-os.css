@@ -1096,9 +1096,17 @@ html.nsos-active #root {
   .nsos-cream .team-messaging.messaging-os,
   .nsos-cream .team-messaging.messaging-os.with-info,
   .nsos-cream .team-messaging.messaging-os:not(.with-info) {
-    grid-template-columns: 1fr !important;
+    display: block !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    width: 100% !important;
+    max-width: none !important;
     border: 0 !important;
-    border-radius: 12px !important;
+    border-radius: 0 !important;
+    height: calc(100dvh - 168px) !important;
+  }
+  .nsos-cream .message-channel-rail {
+    width: 100% !important;
+    max-width: none !important;
   }
   .nsos-cream .message-thread { display: none !important; }
   .nsos-cream .team-messaging.thread-open .message-channel-rail { display: none !important; }

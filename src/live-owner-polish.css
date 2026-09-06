@@ -3342,8 +3342,10 @@
   .portal-layout.nsos-cream .team-messaging,
   .portal-layout.nsos-cream .team-messaging.thread-open,
   .portal-layout.nsos-cream .team-messaging.with-info,
-  .portal-layout.nsos-cream .team-messaging.messaging-v6 {
-    display: flex !important;
+  .portal-layout.nsos-cream .team-messaging.messaging-v6,
+  .portal-layout.nsos-cream .team-messaging.messaging-os,
+  .portal-layout.nsos-cream .team-messaging.messaging-os:not(.with-info) {
+    display: block !important;
     flex-direction: column !important;
     align-items: stretch !important;
     grid-template-columns: minmax(0, 1fr) !important;
