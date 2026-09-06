@@ -974,7 +974,7 @@ button.nsos-kpi { width: 100%; text-align: left; }
   .nsos-admin-preview .os-command-trigger { min-width: 42px !important; width: auto; }
 }
 
-@media (min-width: 721px) {
+@media (min-width: 1181px) {
   .nsos-admin-preview .os-mobile-bottom-nav.mobile-app-nav-v25 {
     display: none !important;
   }

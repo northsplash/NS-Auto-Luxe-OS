@@ -741,7 +741,80 @@ html.nsos-active #root {
   min-height: 100dvh !important;
   overflow: hidden !important;
   display: grid !important;
-  grid-template-columns: 272px minmax(0, 1fr) !important;
+  /* Phone + tablet are overlay chrome. Persistent 272px rail is desktop-only. */
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+@media (min-width: 1181px) {
+  .portal-layout.nsos-cream {
+    grid-template-columns: 272px minmax(0, 1fr) !important;
+  }
+}
+@media (max-width: 1180px) {
+  html.nsos-active .portal-layout.nsos-cream,
+  .portal-layout.nsos-cream {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .nsos-cream .portal-sidebar {
+    position: fixed !important;
+    left: -320px !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    width: min(86vw, 300px) !important;
+    min-width: 0 !important;
+    max-width: min(86vw, 300px) !important;
+    z-index: 1300 !important;
+  }
+  .nsos-cream .portal-sidebar.sidebar-open { left: 0 !important; }
+  .nsos-cream .portal-main {
+    margin-left: 0 !important;
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+  .nsos-cream .os-desktop-subnav,
+  .nsos-cream .os-secondary-nav { display: none !important; }
+  .os-phone-subnav {
+    display: flex !important;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 8px 12px 10px;
+    background: #efe8dc;
+    flex-shrink: 0;
+    scrollbar-width: none;
+  }
+  .os-phone-subnav::-webkit-scrollbar { display: none; }
+  .os-phone-subnav button {
+    flex: 0 0 auto;
+    border: 1px solid #e4d9cc;
+    background: #fffdf8;
+    color: #6f675e;
+    border-radius: 999px;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .os-phone-subnav button.active {
+    background: #1c1814;
+    color: #f6f1e8;
+    border-color: #1c1814;
+  }
+  .nsos-cream .os-mobile-bottom-nav,
+  .nsos-cream .os-mobile-bottom-nav.mobile-app-nav-v25 {
+    display: grid !important;
+    grid-template-columns: repeat(5, 1fr) !important;
+    position: fixed !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    z-index: 9600 !important;
+    height: calc(56px + env(safe-area-inset-bottom)) !important;
+    padding: 2px 0 env(safe-area-inset-bottom) !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-top: 1px solid #e4d9cc !important;
+    border-radius: 0 !important;
+    background: rgba(255, 253, 248, .97) !important;
+    box-shadow: none !important;
+  }
 }
 .nsos-cream .portal-sidebar {
   height: 100dvh !important;
