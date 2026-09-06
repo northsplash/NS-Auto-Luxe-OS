@@ -3608,7 +3608,7 @@
   background-repeat: no-repeat !important;
   background-position: center 42% !important;
   background-size: min(52vw, 560px) auto !important;
-  opacity: .07 !important;
+  opacity: .14 !important;
   filter: none !important;
   mask-image: none !important;
   -webkit-mask-image: none !important;
@@ -3631,6 +3631,6 @@
   .portal-layout.nsos-cream .portal-main::after {
     background-size: min(72vw, 320px) auto !important;
     background-position: center 36% !important;
-    opacity: .05 !important;
+    opacity: .1 !important;
   }
 }
