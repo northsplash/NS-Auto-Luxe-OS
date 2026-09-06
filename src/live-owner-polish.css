@@ -2824,3 +2824,142 @@
   .portal-layout.nsos-cream .profile-edit-grid-v25 { grid-template-columns: 1fr !important; }
   .portal-layout.nsos-cream .customer-progress-steps-v25 small { font-size: 8px; }
 }
+
+/* Kill leftover white fill on cream paper: inline dark cards, native selects, pay + comm. */
+.portal-layout.nsos-cream .portal-main [style*="background:#111"],
+.portal-layout.nsos-cream .portal-main [style*="background: #111"],
+.portal-layout.nsos-cream .portal-main [style*="background: rgb(17, 17, 17)"] {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream option,
+.portal-layout.nsos-cream optgroup {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .data-table-row:hover,
+.portal-layout.nsos-cream .admin-row:hover {
+  background: #f6efe8 !important;
+}
+.portal-layout.nsos-cream .team-profile-actions {
+  background: linear-gradient(180deg, rgba(255, 253, 248, 0), #fffdf8 28%) !important;
+}
+
+.portal-layout.nsos-cream .pay-command-kpis > div,
+.portal-layout.nsos-cream .pay-employee-list-v25 > button,
+.portal-layout.nsos-cream .pay-editor-v25,
+.portal-layout.nsos-cream .pay-empty-v25,
+.portal-layout.nsos-cream .comm-provider-status span,
+.portal-layout.nsos-cream .comm-lifecycle-v25,
+.portal-layout.nsos-cream .comm-filter-v25 button,
+.portal-layout.nsos-cream .comm-template-list-v25,
+.portal-layout.nsos-cream .comm-editor-v25 > .phase-panel,
+.portal-layout.nsos-cream .comm-channel-switches label,
+.portal-layout.nsos-cream .comm-log-v25,
+.portal-layout.nsos-cream .comm-preview-modal {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  border-color: #e4d9cc !important;
+}
+.portal-layout.nsos-cream .pay-command-kpis strong,
+.portal-layout.nsos-cream .pay-employee-list-v25 strong,
+.portal-layout.nsos-cream .comm-preview-modal > header h3,
+.portal-layout.nsos-cream .email-body-v25 h2,
+.portal-layout.nsos-cream .email-detail-card strong {
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .pay-command-kpis span,
+.portal-layout.nsos-cream .pay-command-kpis small,
+.portal-layout.nsos-cream .pay-employee-list-v25 small,
+.portal-layout.nsos-cream .comm-lifecycle-v25 small,
+.portal-layout.nsos-cream .comm-group-title,
+.portal-layout.nsos-cream .comm-variable-bank > span,
+.portal-layout.nsos-cream .email-detail-card span {
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+}
+.portal-layout.nsos-cream .pay-employee-list-v25 em,
+.portal-layout.nsos-cream .comm-group-title span,
+.portal-layout.nsos-cream .email-detail-card b {
+  color: #b8893a !important;
+  -webkit-text-fill-color: #b8893a !important;
+}
+.portal-layout.nsos-cream .pay-employee-list-v25 > button:hover,
+.portal-layout.nsos-cream .pay-employee-list-v25 > button.active {
+  background: #f6ead4 !important;
+  border-color: #d9cbb8 !important;
+}
+.portal-layout.nsos-cream .comm-filter-v25 button.active,
+.portal-layout.nsos-cream .comm-variable-bank button {
+  background: #1c1814 !important;
+  color: #f6f1e8 !important;
+  -webkit-text-fill-color: #f6f1e8 !important;
+  border-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .comm-lifecycle-v25 span {
+  background: #f6efe8 !important;
+  color: #6b4e1f !important;
+  -webkit-text-fill-color: #6b4e1f !important;
+  border-color: #e4d9cc !important;
+}
+.portal-layout.nsos-cream .comm-preview-backdrop {
+  background: rgba(28, 24, 20, .42) !important;
+}
+.portal-layout.nsos-cream .comm-preview-modal > header button {
+  background: #fff !important;
+  color: #1c1814 !important;
+  border-color: #e4d9cc !important;
+}
+.portal-layout.nsos-cream .email-preview-v25,
+.portal-layout.nsos-cream .email-body-v25,
+.portal-layout.nsos-cream .email-detail-card {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  border-color: #e4d9cc !important;
+}
+.portal-layout.nsos-cream .email-brand-v25 {
+  background: #1c1814 !important;
+  color: #f6f1e8 !important;
+  border-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .email-brand-v25 strong {
+  color: #f6f1e8 !important;
+  -webkit-text-fill-color: #f6f1e8 !important;
+}
+.portal-layout.nsos-cream .email-brand-v25 small {
+  color: #e8c96a !important;
+  -webkit-text-fill-color: #e8c96a !important;
+}
+.portal-layout.nsos-cream .email-status-v25 span {
+  color: #6f675e !important;
+  border-top-color: #eadfd3 !important;
+}
+.portal-layout.nsos-cream .email-status-v25 span.done {
+  color: #b8893a !important;
+  border-top-color: #b8893a !important;
+}
+
+@media (max-width: 1180px) {
+  .portal-layout.nsos-cream .pay-command-layout,
+  .portal-layout.nsos-cream .comm-layout-v25 {
+    grid-template-columns: 1fr !important;
+  }
+  .portal-layout.nsos-cream .pay-command-kpis { grid-template-columns: 1fr 1fr !important; }
+  .portal-layout.nsos-cream .comm-lifecycle-v25 {
+    display: flex !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .portal-layout.nsos-cream .comm-lifecycle-v25 > div { flex: 0 0 72px; }
+  .portal-layout.nsos-cream .pay-editor-v25 { position: static !important; }
+}
+
+@media (max-width: 720px) {
+  .portal-layout.nsos-cream .pay-command-kpis { grid-template-columns: 1fr !important; }
+  .portal-layout.nsos-cream .comm-actions-v25 { grid-template-columns: 1fr !important; }
+  .portal-layout.nsos-cream .email-status-v25 { grid-template-columns: repeat(5, minmax(48px, 1fr)); overflow-x: auto; }
+}
