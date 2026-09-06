@@ -1,22 +1,104 @@
 import { Component, lazy, Suspense, type ErrorInfo, type ReactNode } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-const OsApp=lazy(()=>import('@/os/OsApp'));
-const Login=lazy(()=>import('@/pages/Login')); const Portal=lazy(()=>import('@/pages/Portal')); const Admin=lazy(()=>import('@/pages/Admin'));
-const ForgotPassword=lazy(()=>import('@/pages/ForgotPassword')); const ResetPassword=lazy(()=>import('@/pages/ResetPassword'));
-const ManagerPortal=lazy(()=>import('@/pages/Manager')); const EmployeePortal=lazy(()=>import('@/pages/Employee')); const D2DPortal=lazy(()=>import('@/pages/D2D'));
-function Loader(){return <div className="route-loader"><div className="route-loader-mark">NS</div><div><strong>North Splash OS</strong><span>Opening workspace…</span></div></div>}
-class RouteErrorBoundary extends Component<{children:ReactNode},{failed:boolean;message:string}> {
-  state={failed:false,message:''};
-  static getDerivedStateFromError(error:Error){return {failed:true,message:error?.message||'Render error'}}
-  componentDidCatch(error:Error,info:ErrorInfo){console.error('North Splash route error',error,info)}
-  render(){
-    if(this.state.failed)return <div className="route-error-v27"><div className="route-error-card-v27"><div className="route-error-mark-v27">NS</div><span className="eyebrow">NORTH SPLASH OS</span><h2>This workspace hit an error</h2><p>The OS caught the error instead of showing a blank screen. Reload the workspace. If it repeats, send the first red browser-console error.</p>{this.state.message&&<p className="empty-text" style={{marginTop:8}}>{this.state.message}</p>}<div className="route-error-actions-v27"><button onClick={()=>window.location.reload()} className="btn-primary">Reload Workspace</button><button onClick={()=>{this.setState({failed:false,message:''});window.history.back()}} className="btn-outline">Go Back</button></div></div></div>;
+import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
+
+const OsApp = lazy(() => import('@/os/OsApp'));
+const Login = lazy(() => import('@/pages/Login'));
+const Portal = lazy(() => import('@/pages/Portal'));
+const Admin = lazy(() => import('@/pages/Admin'));
+const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
+const ManagerPortal = lazy(() => import('@/pages/Manager'));
+const EmployeePortal = lazy(() => import('@/pages/Employee'));
+const D2DPortal = lazy(() => import('@/pages/D2D'));
+
+function Loader() {
+  return (
+    <div className="route-loader">
+      <div className="route-loader-mark">NS</div>
+      <div>
+        <strong>North Splash OS</strong>
+        <span>Opening workspace…</span>
+      </div>
+    </div>
+  );
+}
+
+function WorkspaceCrashScreen({ message, onRetry }: { message: string; onRetry: () => void }) {
+  return (
+    <div className="route-error-v27">
+      <div className="route-error-card-v27">
+        <div className="route-error-mark-v27">NS</div>
+        <span className="eyebrow">NORTH SPLASH OS</span>
+        <h2>This screen could not load</h2>
+        <p>North Splash stopped this page so you would not get a blank screen. Try it again, or open another workspace.</p>
+        {message && <p className="empty-text" style={{ marginTop: 8 }}>{message}</p>}
+        <div className="route-error-actions-v27">
+          <button type="button" onClick={onRetry} className="btn-primary">Try again</button>
+          <Link to="/os" className="btn-outline">Open demo OS</Link>
+          <Link to="/login" className="btn-outline">Sign in</Link>
+          <button
+            type="button"
+            className="btn-outline"
+            onClick={() => { onRetry(); window.history.back(); }}
+          >
+            Go back
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+class RouteErrorBoundary extends Component<{ children: ReactNode; resetKey: string }, { failed: boolean; message: string }> {
+  state = { failed: false, message: '' };
+  static getDerivedStateFromError(error: Error) {
+    return { failed: true, message: error?.message || 'This screen could not finish loading.' };
+  }
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error('North Splash route error', error, info);
+  }
+  componentDidUpdate(prevProps: { resetKey: string }) {
+    if (prevProps.resetKey !== this.props.resetKey && this.state.failed) {
+      this.setState({ failed: false, message: '' });
+    }
+  }
+  retry = () => this.setState({ failed: false, message: '' });
+  render() {
+    if (this.state.failed) {
+      return <WorkspaceCrashScreen message={this.state.message} onRetry={this.retry} />;
+    }
     return this.props.children;
   }
 }
+
+function RoutedErrorBoundary({ children }: { children: ReactNode }) {
+  const location = useLocation();
+  return <RouteErrorBoundary resetKey={`${location.pathname}${location.search}`}>{children}</RouteErrorBoundary>;
+}
+
 const routerBasename = import.meta.env.BASE_URL.replace(/\/$/, '') || undefined;
 
-export default function App(){return <RouteErrorBoundary><BrowserRouter basename={routerBasename}><Suspense fallback={<Loader/>}><Routes>
-<Route path="/" element={<Admin/>}/>
-<Route path="/os" element={<OsApp/>}/>
-<Route path="/login" element={<Login/>}/><Route path="/forgot-password" element={<ForgotPassword/>}/><Route path="/reset-password" element={<ResetPassword/>}/><Route path="/portal" element={<Portal/>}/><Route path="/admin" element={<Admin/>}/><Route path="/owner" element={<Admin/>}/><Route path="/manager" element={<ManagerPortal/>}/><Route path="/employee" element={<EmployeePortal/>}/><Route path="/d2d" element={<D2DPortal/>}/><Route path="*" element={<Navigate to="/" replace/>}/></Routes></Suspense></BrowserRouter></RouteErrorBoundary>}
+export default function App() {
+  return (
+    <BrowserRouter basename={routerBasename}>
+      <RoutedErrorBoundary>
+        <Suspense fallback={<Loader />}>
+          <Routes>
+            <Route path="/" element={<Admin />} />
+            <Route path="/os" element={<OsApp />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/portal" element={<Portal />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/owner" element={<Admin />} />
+            <Route path="/manager" element={<ManagerPortal />} />
+            <Route path="/employee" element={<EmployeePortal />} />
+            <Route path="/d2d" element={<D2DPortal />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
+      </RoutedErrorBoundary>
+    </BrowserRouter>
+  );
+}

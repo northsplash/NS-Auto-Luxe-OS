@@ -183,16 +183,21 @@ function nav(id: OsTab) {
 
 class OsErrorBoundary extends Component<{ children: ReactNode; onReset?: () => void }, { failed: boolean; message: string }> {
   state = { failed: false, message: '' };
-  static getDerivedStateFromError(error: Error) { return { failed: true, message: error?.message || 'View error' }; }
+  static getDerivedStateFromError(error: Error) { return { failed: true, message: error?.message || 'This view could not finish loading.' }; }
   componentDidCatch(error: Error, info: ErrorInfo) { console.error('North Splash OS view error', error, info); }
+  retry = () => this.setState({ failed: false, message: '' });
   render() {
     if (this.state.failed) {
       return (
-        <div className="nsos-card" style={{ margin: 20 }}>
-          <h2>This workspace hit a snag</h2>
-          <p style={{ color: 'var(--os-muted)', margin: '8px 0 14px' }}>The rest of the OS is still running. Reset this view instead of reloading the whole app.</p>
+        <div className="nsos-card route-error-inline-v50" style={{ margin: 20 }}>
+          <span className="nsos-eyebrow">NORTH SPLASH OS</span>
+          <h2>This view could not load</h2>
+          <p style={{ color: 'var(--os-muted)', margin: '8px 0 14px' }}>The rest of the OS is still running. Try this view again, or open Team Chat.</p>
           {this.state.message && <p className="empty-text">{this.state.message}</p>}
-          <button className="nsos-btn" onClick={() => { this.setState({ failed: false, message: '' }); this.props.onReset?.(); }}>Back to Team Messages</button>
+          <div className="route-error-actions-v27" style={{ marginTop: 16 }}>
+            <button type="button" className="nsos-btn" onClick={this.retry}>Try again</button>
+            <button type="button" className="nsos-btn ghost" onClick={() => { this.retry(); this.props.onReset?.(); }}>Open Team Chat</button>
+          </div>
         </div>
       );
     }
