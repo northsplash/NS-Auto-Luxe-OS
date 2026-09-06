@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Award, Bell, CalendarDays, CheckCircle2, ChevronDown, ClipboardCheck, Clock3, DollarSign,
@@ -30,7 +30,8 @@ type Location={latitude:number;longitude:number;accuracy?:number};
 
 export default function EmployeePortal(){
   const {user,profile,loading}=useAuth();const navigate=useNavigate();const [tab,setTab]=useState<Tab>('home');const [sidebar,setSidebar]=useState(false);const [groups,setGroups]=useState<Record<string,boolean>>({today:true,work:true,account:false});
-  const [employee,setEmployee]=useState<Employee|null>(null);const [jobs,setJobs]=useState<Appointment[]>([]);const [shifts,setShifts]=useState<EmployeeShift[]>([]);const [times,setTimes]=useState<TimeEntry[]>([]);const [breaks,setBreaks]=useState<TimeEntryBreak[]>([]);const [tasks,setTasks]=useState<BusinessTask[]>([]);const [off,setOff]=useState<TimeOffRequest[]>([]);const [notifications,setNotifications]=useState<BusinessNotification[]>([]);const [commissions,setCommissions]=useState<CommissionLedger[]>([]);const [selectedJob,setSelectedJob]=useState<Appointment|null>(null);const [live,setLive]=useState<Location|null>(null);const [busy,setBusy]=useState(true);const [timeOffForm,setTimeOffForm]=useState({start_date:'',end_date:'',request_type:'unpaid',reason:''});
+  const [employee,setEmployee]=useState<Employee|null>(null);const [jobs,setJobs]=useState<Appointment[]>([]);const [shifts,setShifts]=useState<EmployeeShift[]>([]);const [times,setTimes]=useState<TimeEntry[]>([]);const [breaks,setBreaks]=useState<TimeEntryBreak[]>([]);const [tasks,setTasks]=useState<BusinessTask[]>([]);const [off,setOff]=useState<TimeOffRequest[]>([]);const [notifications,setNotifications]=useState<BusinessNotification[]>([]);const [commissions,setCommissions]=useState<CommissionLedger[]>([]);const [selectedJob,setSelectedJob]=useState<Appointment|null>(null);const [busy,setBusy]=useState(true);const [timeOffForm,setTimeOffForm]=useState({start_date:'',end_date:'',request_type:'unpaid',reason:''});
+  const lastLocationWrite=useRef(0);
   const [packetOpened,setPacketOpened]=useState(false);
 
   useEffect(()=>{if(!loading&&(!user||!['employee','manager','d2d','owner'].includes(profile?.portal_role||'')))navigate('/portal')},[user,profile,loading,navigate]);
@@ -65,7 +66,16 @@ export default function EmployeePortal(){
   },[employee,packetOpened]);
 
   const openEntry=times.find(t=>!t.clock_out);const openBreak=breaks.find(b=>!b.ended_at&&openEntry&&b.time_entry_id===openEntry.id);
-  useEffect(()=>{if(!openEntry||!navigator.geolocation)return;const watch=navigator.geolocation.watchPosition(p=>setLive({latitude:p.coords.latitude,longitude:p.coords.longitude,accuracy:p.coords.accuracy}),()=>{}, {enableHighAccuracy:true,maximumAge:30000});return()=>navigator.geolocation.clearWatch(watch)},[openEntry?.id]);
+  useEffect(()=>{
+    if(!employee||!openEntry||!navigator.geolocation)return;
+    const watch=navigator.geolocation.watchPosition(async p=>{
+      const now=Date.now();if(now-lastLocationWrite.current<90000)return;lastLocationWrite.current=now;
+      try{
+        await supabase.from('rep_locations').insert({employee_id:employee.id,latitude:p.coords.latitude,longitude:p.coords.longitude,accuracy_meters:p.coords.accuracy,captured_at:new Date().toISOString()});
+      }catch{/* field tracking should never interrupt work */}
+    },()=>{}, {enableHighAccuracy:true,maximumAge:30000,timeout:15000});
+    return()=>navigator.geolocation.clearWatch(watch);
+  },[employee?.id,openEntry?.id]);
   const clock=async()=>{if(!employee)return;const loc=await getPosition();if(openEntry){if(openBreak)await endBreak(openBreak);const {data,error}=await supabase.from('time_entries').update({clock_out:new Date().toISOString(),clock_out_latitude:loc?.latitude??null,clock_out_longitude:loc?.longitude??null}).eq('id',openEntry.id).select().single();if(error)return alert(error.message);setTimes(p=>p.map(x=>x.id===openEntry.id?data:x));}
     else{const shift=shifts.find(s=>s.shift_date===new Date().toISOString().slice(0,10));const scheduledStart=shift?.start_time?new Date(`${shift.shift_date}T${shift.start_time}`).getTime():null;const late=scheduledStart?Date.now()>scheduledStart+10*60000:false;const {data,error}=await supabase.from('time_entries').insert({employee_id:employee.id,clock_in:new Date().toISOString(),clock_in_latitude:loc?.latitude??null,clock_in_longitude:loc?.longitude??null,scheduled_shift_id:shift?.id||null,is_late:late,status:'pending'}).select().single();if(error)return alert(error.message);setTimes(p=>[data,...p]);}};
   const startBreak=async()=>{if(!employee||!openEntry||openBreak)return;const {data,error}=await supabase.from('time_entry_breaks').insert({time_entry_id:openEntry.id,employee_id:employee.id,started_at:new Date().toISOString()}).select().single();if(error)return alert(error.message);setBreaks(p=>[data,...p])};

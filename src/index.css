@@ -970,6 +970,7 @@ h4 { font-size: 16px; }
 }
 .modal-success h4 { font-size: 20px; color: var(--ink); }
 .modal-success p { color: var(--muted); font-size: 13px; }
+.modal-success .btn-primary { min-width: 140px; }
 
 /* ─── ADMIN SPECIFIC ──────────────────────────────────────── */
 .admin-dashboard { display: flex; flex-direction: column; gap: 24px; }

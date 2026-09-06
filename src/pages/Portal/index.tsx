@@ -103,6 +103,8 @@ const [bookTime, setBookTime] = useState('');
 const [availableTimes, setAvailableTimes] = useState<string[]>([]);
 const [timesLoading, setTimesLoading] = useState(false);
   const [bookDone, setBookDone] = useState(false);
+  const [subscribeBusy, setSubscribeBusy] = useState(false);
+  const [subscribeNotice, setSubscribeNotice] = useState('');
 
   useEffect(() => {
     if (!loading && !user) navigate('/login');
@@ -219,148 +221,145 @@ const [timesLoading, setTimesLoading] = useState(false);
   
   const bookedPkg = packageForSelf(bookFamily, bookSelf);
 
+  const openBook = () => {
+    setBookDone(false);
+    setBookSubmitting(false);
+    setShowBook(true);
+  };
+
+  const refreshPortal = async () => {
+    if (!user) return;
+    try {
+      const [apts, pays, subs] = await Promise.all([
+        supabase.from('appointments').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
+        supabase.from('payments').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
+        supabase.from('subscriptions').select('*').eq('user_id', user.id).eq('status', 'active').maybeSingle(),
+      ]);
+      setAppointments((apts.data ?? []).map((a: Appointment) => ({ ...a, add_ons: Array.isArray(a.add_ons) ? a.add_ons : [] })));
+      setPayments(pays.data ?? []);
+      setSubscription(subs.data ?? null);
+    } catch (err) {
+      console.warn('Customer portal load failed', err);
+    }
+  };
+
   const handleBookSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-
-  if (!user) return;
-
+    e.preventDefault();
+    if (!user) return;
     if (!bookDate || !bookTime) {
-  alert('Please choose an appointment date and time.');
-  return;
-}
-
-  setBookSubmitting(true);
-
-  try {
-    const price =
-      bookedPkg.price +
-      VEHICLE_SIZES[bookVehicle].extra +
-      bookAddOns.reduce((sum, i) => sum + ADD_ONS[i][1], 0);
-
-    const { data: appointment, error: appointmentError } = await supabase
-      .from('appointments')
-      .insert({
-        user_id: user.id,
-        customer_name: profile?.full_name ?? null,
-        customer_email: user.email ?? null,
-        customer_phone: profile?.phone ?? null,
-        service_name: bookedPkg.name,
-        scheduled_at: new Date(
-  `${bookDate}T${bookTime}:00`
-).toISOString(),
-        package_name: bookedPkg.name,
-        add_ons: bookAddOns.map(i => ADD_ONS[i][0]),
-        vehicle_info: profile?.vehicle_info ?? '',
-        price,
-        notes: bookNotes,
-        status: 'pending',
-      })
-      .select()
-      .single();
-
-    if (appointmentError) throw appointmentError;
-
-    const { error: paymentError } = await supabase
-      .from('payments')
-      .insert({
-        user_id: user.id,
-        appointment_id: appointment.id,
-        amount: price,
-        status: 'pending',
-        description: bookedPkg.name,
-      });
-
-    if (paymentError) throw paymentError;
-
-    if (user.email) {
-      sendCommunication('booking_received', {
-        appointment_id: appointment.id,
-        recipient_email: user.email,
-        variables: {
-          customer_name: profile?.full_name || 'Customer',
-          service_name: bookedPkg.name,
-          appointment_date: new Date(appointment.scheduled_at).toLocaleDateString('en-US'),
-          appointment_time: new Date(appointment.scheduled_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
-        },
-      }).catch(console.warn);
+      alert('Please choose an appointment date and time.');
+      return;
     }
 
-    navigate('/checkout', {
-  state: {
-    appointmentId: appointment.id,
-    amount: price,
-    serviceName: bookedPkg.name,
-    servicePrice: bookedPkg.price,
-    vehicleName: VEHICLE_SIZES[bookVehicle].name,
-    vehicleExtra: VEHICLE_SIZES[bookVehicle].extra,
-    addOns: bookAddOns.map(i => ({
-      name: ADD_ONS[i][0],
-      price: ADD_ONS[i][1],
-    })),
-  },
-});
-  } catch (error) {
-    console.error('Booking/payment error:', error);
+    setBookSubmitting(true);
 
-    alert(
-      error instanceof Error
-        ? error.message
-        : 'Unable to start payment. Please try again.'
-    );
+    try {
+      const price =
+        bookedPkg.price +
+        VEHICLE_SIZES[bookVehicle].extra +
+        bookAddOns.reduce((sum, i) => sum + ADD_ONS[i][1], 0);
 
-    setBookSubmitting(false);
-  }
-};
+      const { data: appointment, error: appointmentError } = await supabase
+        .from('appointments')
+        .insert({
+          user_id: user.id,
+          customer_name: profile?.full_name ?? null,
+          customer_email: user.email ?? null,
+          customer_phone: profile?.phone ?? null,
+          service_name: bookedPkg.name,
+          scheduled_at: new Date(`${bookDate}T${bookTime}:00`).toISOString(),
+          package_name: bookedPkg.name,
+          add_ons: bookAddOns.map(i => ADD_ONS[i][0]),
+          vehicle_info: profile?.vehicle_info ?? '',
+          price,
+          notes: bookNotes,
+          status: 'pending',
+        })
+        .select()
+        .single();
+
+      if (appointmentError) throw appointmentError;
+      if (!appointment?.id) throw new Error('Appointment was not created.');
+
+      const { error: paymentError } = await supabase
+        .from('payments')
+        .insert({
+          user_id: user.id,
+          appointment_id: appointment.id,
+          amount: price,
+          status: 'pending',
+          description: bookedPkg.name,
+        });
+
+      if (paymentError) console.warn('Pending payment row failed', paymentError);
+
+      if (user.email) {
+        const when = appointment.scheduled_at ? new Date(appointment.scheduled_at) : null;
+        sendCommunication('booking_received', {
+          appointment_id: appointment.id,
+          recipient_email: user.email,
+          variables: {
+            customer_name: profile?.full_name || 'Customer',
+            service_name: bookedPkg.name,
+            appointment_date: when ? when.toLocaleDateString('en-US') : bookDate,
+            appointment_time: when
+              ? when.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+              : bookTime,
+          },
+        }).catch(console.warn);
+      }
+
+      await refreshPortal();
+      setBookDone(true);
+    } catch (error) {
+      console.error('Booking error:', error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : 'Unable to request this appointment. Please try again.'
+      );
+    } finally {
+      setBookSubmitting(false);
+    }
+  };
+
   const handleSubscribe = async (plan: typeof MEMBERSHIPS[0]) => {
-  if (!user) return;
+    if (!user || subscribeBusy) return;
+    setSubscribeBusy(true);
+    setSubscribeNotice('');
 
-  try {
-    const nextDate = new Date();
-    nextDate.setMonth(nextDate.getMonth() + 1);
+    try {
+      const nextDate = new Date();
+      nextDate.setMonth(nextDate.getMonth() + 1);
 
-    const { data: newSubscription, error } = await supabase
-      .from('subscriptions')
-      .insert({
-        user_id: user.id,
-        plan_name: plan.name,
-        plan_price: plan.price,
+      const { data: newSubscription, error } = await supabase
+        .from('subscriptions')
+        .insert({
+          user_id: user.id,
+          plan_name: plan.name,
+          plan_price: plan.price,
+          status: 'pending',
+          next_detail_date: nextDate.toISOString().split('T')[0],
+          billing_cycle_start: new Date().toISOString().split('T')[0],
+        })
+        .select()
+        .single();
 
-        // Don't activate until payment succeeds
-        status: 'pending',
+      if (error) throw error;
+      if (!newSubscription?.id) throw new Error('Membership request was not created.');
 
-        next_detail_date: nextDate.toISOString().split('T')[0],
-        billing_cycle_start: new Date().toISOString().split('T')[0],
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    navigate('/checkout', {
-      state: {
-        paymentType: 'membership',
-        subscriptionId: newSubscription.id,
-
-        amount: plan.price,
-
-        serviceName: `${plan.name} Membership`,
-        servicePrice: plan.price,
-
-        vehicleName: '',
-        vehicleExtra: 0,
-        addOns: [],
-      },
-    });
-  } catch (error) {
-    console.error('Membership checkout error:', error);
-
-    alert(
-      error instanceof Error
-        ? error.message
-        : 'Unable to start membership payment.'
-    );
-  }
-};
+      setSubscribeNotice(`${plan.name} membership requested. We'll be in touch to confirm billing.`);
+    } catch (error) {
+      console.error('Membership request error:', error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : 'Unable to request this membership.'
+      );
+    } finally {
+      setSubscribeBusy(false);
+    }
+  };
 
   const navItems: { id: Tab; label: string; Icon: any }[] = [
     { id: 'dashboard', label: 'Dashboard', Icon: LayoutDashboard },
@@ -432,7 +431,7 @@ const [timesLoading, setTimesLoading] = useState(false);
             <h1>{navItems.find(n => n.id === tab)?.label}</h1>
             <span>{upcomingAppointment ? upcomingAppointment.service_name : 'Book Exterior, Interior, or Full vehicle'}</span>
           </div>
-          <button className="btn-primary topbar-book" onClick={() => setShowBook(true)}>
+          <button className="btn-primary topbar-book" onClick={openBook}>
             <Plus size={16} /> Book Service
           </button>
         </div>
@@ -448,7 +447,7 @@ const [timesLoading, setTimesLoading] = useState(false);
                   <h2>Welcome back, {firstName}.</h2>
                   <p>Book Exterior, Interior, or Full vehicle — Essential, Signature, or Elite — then track the visit live.</p>
                 </div>
-                <button className="btn-primary" onClick={() => setShowBook(true)}>
+                <button className="btn-primary" onClick={openBook}>
                   <Plus size={16} /> Schedule a Detail
                 </button>
               </div>
@@ -512,7 +511,7 @@ const [timesLoading, setTimesLoading] = useState(false);
                   <div className="empty-state">
                     <Sparkles size={32} />
                     <p>No upcoming appointments. Pick a self and we will confirm the window.</p>
-                    <button className="btn-primary" onClick={() => setShowBook(true)}>Book a self</button>
+                    <button className="btn-primary" onClick={openBook}>Book a self</button>
                   </div>
                 )}
               </div>
@@ -552,7 +551,7 @@ const [timesLoading, setTimesLoading] = useState(false);
                 title="Your appointments"
                 lead={appointments.length ? `${appointments.length} service${appointments.length !== 1 ? 's' : ''} on file — live status from booked through complete.` : 'Book your first Exterior, Interior, or Full-vehicle self.'}
               >
-                <button className="btn-primary" onClick={() => setShowBook(true)}>
+                <button className="btn-primary" onClick={openBook}>
                   <Plus size={16} /> New Appointment
                 </button>
               </PortalPageHead>
@@ -562,7 +561,7 @@ const [timesLoading, setTimesLoading] = useState(false);
                   <Calendar size={48} />
                   <h3>No appointments yet</h3>
                   <p>Choose Exterior, Interior, or Full vehicle — then Essential, Signature, or Elite.</p>
-                  <button className="btn-primary" onClick={() => setShowBook(true)}>Book a self</button>
+                  <button className="btn-primary" onClick={openBook}>Book a self</button>
                 </div>
               ) : (
                 <div className="apt-list">
@@ -608,6 +607,16 @@ const [timesLoading, setTimesLoading] = useState(false);
                 title="Membership plans"
                 lead="Keep Signature visits on a monthly cadence. Switch or cancel any time."
               />
+              {subscribeNotice && (
+                <div className="current-plan-banner">
+                  <div>
+                    <span>Membership request</span>
+                    <strong>Pending confirmation</strong>
+                    <p>{subscribeNotice}</p>
+                  </div>
+                  <StatusBadge status="pending" />
+                </div>
+              )}
               {subscription && (
                 <div className="current-plan-banner">
                   <div>
@@ -637,6 +646,7 @@ const [timesLoading, setTimesLoading] = useState(false);
                       {!isCurrent && (
                         <button
                           className={i === 1 ? 'btn-primary btn-full' : 'btn-outline btn-full'}
+                          disabled={subscribeBusy}
                           onClick={() => handleSubscribe(plan)}
                         >
                           {subscription ? 'Switch to this plan' : `Join ${plan.name}`}
@@ -710,7 +720,7 @@ const [timesLoading, setTimesLoading] = useState(false);
                   <div className="empty-state">
                     <TrendingUp size={36} />
                     <p>Start your Luxe journey to track your vehicle's protection value.</p>
-                    <button className="btn-primary" onClick={() => setShowBook(true)}>Book Your First Detail</button>
+                    <button className="btn-primary" onClick={openBook}>Book Your First Detail</button>
                   </div>
                 )}
               </div>
@@ -763,6 +773,7 @@ const [timesLoading, setTimesLoading] = useState(false);
                 <CheckCircle size={48} />
                 <h4>Appointment Requested!</h4>
                 <p>We'll be in touch to confirm your booking.</p>
+                <button type="button" className="btn-primary" onClick={() => setShowBook(false)}>Done</button>
               </div>
             ) : (
               <form className="modal-form" onSubmit={handleBookSubmit}>
@@ -848,7 +859,7 @@ const [timesLoading, setTimesLoading] = useState(false);
                   <strong>{money(bookedPkg.price + VEHICLE_SIZES[bookVehicle].extra + bookAddOns.reduce((s, i) => s + ADD_ONS[i][1], 0))}</strong>
                 </div>
                 <button type="submit" className="btn-primary btn-full" disabled={bookSubmitting}>
-                  {bookSubmitting ? 'Opening Square...' : 'Continue to Payment'}
+                  {bookSubmitting ? 'Sending request…' : 'Request appointment'}
                 </button>
               </form>
             )}

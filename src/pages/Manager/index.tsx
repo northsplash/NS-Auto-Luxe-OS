@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Award, BarChart3, Bell, CalendarClock, CheckCircle2, ChevronDown, ClipboardCheck,
-  Clock3, DollarSign, GraduationCap, ListChecks, LogOut, MapPinned, Menu, PackageSearch,
+  Clock3, DollarSign, GraduationCap, ListChecks, LogOut, Menu, PackageSearch,
   ShieldCheck, Target, Users, X, MessageCircle, Gauge,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
