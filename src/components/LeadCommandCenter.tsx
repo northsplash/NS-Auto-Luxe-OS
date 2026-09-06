@@ -5,7 +5,7 @@ import {
   Target, TrendingUp, UserRound, X, RefreshCw
 } from 'lucide-react';
 import { supabase, type Lead } from '@/lib/supabase';
-import { money } from '@/lib/data';
+import { money, prettyLabel } from '@/lib/data';
 import { localDateTime, DOOR_STATUSES, doorStatus } from '@/lib/fieldOps';
 import { GOOGLE_MAPS_MAP_ID, googleMapsErrorMessage, loadGoogleMaps } from '@/lib/googleMaps';
 
@@ -109,7 +109,7 @@ export default function LeadCommandCenter({leads,onOpen,onSchedule,repName}:Prop
       <div className="lead-command-head"><span>Customer</span><span>Stage</span><span>Next action</span><span>Value</span><span>Actions</span></div>
       {rows.map(l=><div className="lead-command-row" key={l.id}>
         <button className="lead-customer-cell" onClick={()=>onOpen(l)}><i className="door-knock-dot-v29" style={{background:doorStatus(l.status).color}}/><div><strong>{l.customer_name||'Unnamed prospect'}</strong><span>{l.address||'Address not added'}</span><small>{doorStatus(l.status).label} · {l.service_interest||'Service not selected'}{l.vehicle_info?` · ${l.vehicle_info}`:''}</small></div></button>
-        <span><b className={`lead-stage stage-${l.status}`}>{statusNames[l.status]||l.status.replaceAll('_',' ')}</b><small className="lead-score-line">Score {score(l)} · {temp(l)}</small></span>
+        <span><b className={`lead-stage stage-${l.status}`}>{statusNames[l.status||'']||prettyLabel(l.status)}</b><small className="lead-score-line">Score {score(l)} · {temp(l)}</small></span>
         <span>{l.follow_up_at?<><strong className={new Date(l.follow_up_at).getTime()<=now?'overdue-text':''}>{new Date(l.follow_up_at).getTime()<=now?'Due ':'Next '}{localDateTime(l.follow_up_at)}</strong><small>{l.last_contacted_at?`Last contact ${new Date(l.last_contacted_at).toLocaleDateString()}`:'No contact logged'}</small></>:<><strong>No next action</strong><small>Set a follow-up to keep it moving</small></>}</span>
         <span><strong>{money(Number(l.estimated_value||0))}</strong><small>{l.contact_attempt_count||0} attempts</small></span>
         <span className="lead-row-actions">{l.phone&&<a href={`tel:${l.phone}`} title="Call"><Phone size={16}/></a>}{l.latitude&&l.longitude&&<button onClick={()=>openMaps(l)} title="Navigate"><Navigation size={16}/></button>}{onSchedule&&<button onClick={()=>onSchedule(l)} title="Schedule"><CalendarPlus size={16}/></button>}<button onClick={()=>onOpen(l)} title="Open"><ChevronRight size={17}/></button></span>

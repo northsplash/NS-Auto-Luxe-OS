@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Award, BookOpen, CheckCircle2, ChevronRight, Clock3, XCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import type { Employee, TrainingAssignment, TrainingCourse, TrainingLesson, TrainingOption, TrainingQuestion } from '@/lib/supabase';
+import { prettyLabel } from '@/lib/data';
 import {
   ACADEMY_COURSES,
   academyById,
@@ -290,7 +291,7 @@ export default function TrainingPortal({ employee }: { employee: Employee }) {
                 <div className="training-meta">
                   <span><Clock3 size={13} />{c?.duration_minutes || academy?.duration_minutes || 15} min</span>
                   {a.score != null && <span>{a.score}%</span>}
-                  <span>{a.status.replaceAll('_', ' ')}</span>
+                  <span>{prettyLabel(a.status)}</span>
                 </div>
               </div>
               <ChevronRight />

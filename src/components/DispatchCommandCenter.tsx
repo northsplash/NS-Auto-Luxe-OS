@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import type { Appointment, Employee } from '@/lib/supabase';
-import { money } from '@/lib/data';
+import { money, prettyLabel } from '@/lib/data';
 import { dayKey, timeLabel } from '@/lib/scheduling';
 import EmployeeAvatar from '@/components/EmployeeAvatar';
 import { employeeCanDetail } from '@/lib/workCapabilities';
@@ -21,7 +21,7 @@ const duration=(a:Appointment)=>Number(a.estimated_duration_minutes||120);
 const buffer=(a:Appointment)=>Number(a.travel_buffer_minutes||30);
 const isLive=(a:Appointment)=>['en_route','arrived','in_progress'].includes(a.field_status||a.status);
 const jobStatus=(a:Appointment)=>a.status==='completed'?'completed':a.field_status||a.dispatch_status||a.status||'scheduled';
-const statusLabel=(s:string)=>s.replaceAll('_',' ').replace(/\b\w/g,c=>c.toUpperCase());
+const statusLabel=(s?:string|null)=>prettyLabel(s).replace(/\b\w/g,c=>c.toUpperCase());
 function dateInput(d=new Date()){const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${day}`}
 function countScheduleConflicts(rows:Appointment[],employeeId:string){
   const es=rows.filter(j=>j.assigned_employee_id===employeeId&&j.scheduled_at).sort((a,b)=>+new Date(a.scheduled_at!)-+new Date(b.scheduled_at!));

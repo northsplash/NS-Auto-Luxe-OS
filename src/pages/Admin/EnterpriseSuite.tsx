@@ -10,7 +10,7 @@ import type {
   EmployeeDocument, EquipmentAsset, Lead, LeadTerritory, PayrollRun, Profile,
   TimeEntry, TimeOffRequest
 } from '@/lib/supabase';
-import { money } from '@/lib/data';
+import { money, prettyLabel } from '@/lib/data';
 import { DEFAULT_ROLE_PERMISSIONS, PERMISSION_GROUPS, PortalRole } from '@/lib/permissions';
 import FieldTerritoryMap from '@/components/FieldTerritoryMap';
 import EmployeeAvatar from '@/components/EmployeeAvatar';
@@ -117,7 +117,7 @@ function LeadMap({ leads, territories, onMapPoint }: { leads: Lead[]; territorie
       if (l.latitude != null && l.longitude != null) {
         const color = l.status === 'sold' ? '#35b36b' : l.status === 'not_interested' || l.status === 'do_not_knock' ? '#b94d4d' : '#c9a96e';
         L.circleMarker([Number(l.latitude), Number(l.longitude)], { radius: 7, color, fillColor: color, fillOpacity: .9 })
-          .bindPopup(`<strong>${l.customer_name || 'Lead'}</strong><br>${l.address || ''}<br>${l.status.replaceAll('_',' ')}`).addTo(layerRef.current);
+          .bindPopup(`<strong>${l.customer_name || 'Lead'}</strong><br>${l.address || ''}<br>${prettyLabel(l.status)}`).addTo(layerRef.current);
       }
     });
   }, [leads, territories, ready]);
@@ -372,7 +372,7 @@ function Permissions({ profiles, employees, setEmployees, onSave }: { profiles: 
     <Header tab="permissions" />
     <section className="permission-invite-card">
       <div><span className="eyebrow">ACCOUNT SETUP</span><h3>Invite unlinked employees</h3><p>Employee roles automatically choose the best starting portal. You can customize access after they join.</p></div>
-      <div className="permission-invite-list">{employees.filter(e=>!e.user_id&&e.status!=='inactive').slice(0,8).map(e=><div key={e.id}><div><strong>{e.name}</strong><small>{e.email||'Email required'} · {e.role.replaceAll('_',' ')}</small></div><button className="btn-outline" disabled={!e.email} onClick={()=>inviteEmployee(e)}>Send Invite</button></div>)}{!employees.some(e=>!e.user_id&&e.status!=='inactive')&&<span className="empty-text">All active employees are linked.</span>}</div>
+      <div className="permission-invite-list">{employees.filter(e=>!e.user_id&&e.status!=='inactive').slice(0,8).map(e=><div key={e.id}><div><strong>{e.name}</strong><small>{e.email||'Email required'} · {prettyLabel(e.role)}</small></div><button className="btn-outline" disabled={!e.email} onClick={()=>inviteEmployee(e)}>Send Invite</button></div>)}{!employees.some(e=>!e.user_id&&e.status!=='inactive')&&<span className="empty-text">All active employees are linked.</span>}</div>
     </section>
 
     <div className="permissions-layout-v3">
@@ -391,7 +391,7 @@ function Permissions({ profiles, employees, setEmployees, onSave }: { profiles: 
           {(['customer','manager','employee','d2d','recruiter','finance','owner'] as PortalRole[]).map(r=><button key={r} disabled={person.role==='admin'&&r!=='owner'} className={role===r?'active':''} onClick={()=>applyRole(r)}><strong>{roleLabel(r)}</strong><small>{r==='owner'?'Full system':r==='d2d'?'Field sales':r==='manager'?'Team operations':r==='employee'?'Detailing operations':r==='customer'?'Customer only':'Specialized access'}</small></button>)}
         </div>
 
-        <div className="permission-link-row"><div><span className="eyebrow">EMPLOYEE LINK</span><strong>{employees.find(e=>e.user_id===person.id)?.name||'No employee linked'}</strong></div><select value={linkEmployeeId} onChange={e=>setLinkEmployeeId(e.target.value)}><option value="">Not linked</option>{employees.map(e=><option key={e.id} value={e.id}>{e.name} · {e.role.replaceAll('_',' ')} L{e.employment_level||1}</option>)}</select><button type="button" className="btn-outline" onClick={linkEmployee}>Link</button></div>
+        <div className="permission-link-row"><div><span className="eyebrow">EMPLOYEE LINK</span><strong>{employees.find(e=>e.user_id===person.id)?.name||'No employee linked'}</strong></div><select value={linkEmployeeId} onChange={e=>setLinkEmployeeId(e.target.value)}><option value="">Not linked</option>{employees.map(e=><option key={e.id} value={e.id}>{e.name} · {prettyLabel(e.role)} L{e.employment_level||1}</option>)}</select><button type="button" className="btn-outline" onClick={linkEmployee}>Link</button></div>
 
         <div className="permission-groups-v3">{PERMISSION_GROUPS.map(g=>{
           const open=openGroups[g.label]??true;

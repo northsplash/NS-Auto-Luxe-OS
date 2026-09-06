@@ -45,8 +45,8 @@ export function emptyOnboarding(): OnboardingPacket {
   };
 }
 
-export function last4(value: string) {
-  return value.replace(/\D/g, '').slice(-4);
+export function last4(value?: string | null) {
+  return String(value || '').replace(/\D/g, '').slice(-4);
 }
 
 export function onboardingPercent(packet?: OnboardingPacket | null) {

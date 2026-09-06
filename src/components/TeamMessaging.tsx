@@ -3,6 +3,7 @@ import {
   ArrowLeft, AtSign, BellRing, Check, ChevronDown, Hash, Megaphone, MessageCircle, MoreHorizontal,
   Paperclip, Plus, Search, Send, Smile, Sparkles, Star, Users, X, Zap,
 } from 'lucide-react';
+import { prettyLabel } from '@/lib/data';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
 import type { Employee } from '@/lib/supabase';
@@ -285,7 +286,7 @@ export default function TeamMessaging({employee,employees=[],portalKind='employe
       <div className="message-info-note"><Sparkles size={15}/><p>Operations-first messaging keeps wins, appointments, delays and help requests in the same workspace as the team conversation.</p></div>
     </aside>}
 
-    {showCreate&&<div className="message-modal-backdrop" onClick={()=>setShowCreate(false)}><form className="message-group-modal" onSubmit={createGroup} onClick={e=>e.stopPropagation()}><header><div><span className="eyebrow">NEW GROUP</span><h3>Create message group</h3></div><button type="button" className="message-icon-btn" onClick={()=>setShowCreate(false)}><X size={17}/></button></header><label>Group name<input required value={newName} onChange={e=>setNewName(e.target.value)} placeholder="Raleigh D2D Crew"/></label><div className="message-member-picker"><span>Members</span>{employees.filter(e=>e.status==='active').map(e=><label key={e.id}><input type="checkbox" checked={newMembers.includes(e.id)} onChange={()=>setNewMembers(p=>p.includes(e.id)?p.filter(x=>x!==e.id):[...p,e.id])}/><span>{e.name}<small>{e.role.replaceAll('_',' ')}</small></span>{newMembers.includes(e.id)&&<Check size={14}/>}</label>)}</div><button className="btn-primary"><Users size={15}/>Create Group</button></form></div>}
+    {showCreate&&<div className="message-modal-backdrop" onClick={()=>setShowCreate(false)}><form className="message-group-modal" onSubmit={createGroup} onClick={e=>e.stopPropagation()}><header><div><span className="eyebrow">NEW GROUP</span><h3>Create message group</h3></div><button type="button" className="message-icon-btn" onClick={()=>setShowCreate(false)}><X size={17}/></button></header><label>Group name<input required value={newName} onChange={e=>setNewName(e.target.value)} placeholder="Raleigh D2D Crew"/></label><div className="message-member-picker"><span>Members</span>{employees.filter(e=>e.status==='active').map(e=><label key={e.id}><input type="checkbox" checked={newMembers.includes(e.id)} onChange={()=>setNewMembers(p=>p.includes(e.id)?p.filter(x=>x!==e.id):[...p,e.id])}/><span>{e.name}<small>{prettyLabel(e.role)}</small></span>{newMembers.includes(e.id)&&<Check size={14}/>}</label>)}</div><button className="btn-primary"><Users size={15}/>Create Group</button></form></div>}
   </div>;
 }
 

@@ -446,8 +446,8 @@ export function clockNow() {
   return new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 }
 
-export function initialsOf(name: string) {
-  return name.split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase() || 'NS';
+export function initialsOf(name?: string | null) {
+  return String(name || '').split(' ').map((p) => p[0]).filter(Boolean).join('').slice(0, 2).toUpperCase() || 'NS';
 }
 
 export const OS_SERVICES = [
@@ -472,15 +472,16 @@ export function defaultDocuments(): OsDocument[] {
   ];
 }
 
-export function normalizeEmployee(e: Partial<OsEmployee> & Pick<OsEmployee, 'id' | 'name'>): OsEmployee {
-  return {
+export function normalizeEmployee(e: Partial<OsEmployee> & { id?: string; name?: string }): OsEmployee {
+  const merged = {
+    id: e.id || uid(),
     title: 'Team member',
     role: 'employee',
     department: 'Operations',
-    status: 'active',
+    status: 'active' as OsEmployee['status'],
     email: '',
     phone: '',
-    initials: initialsOf(e.name),
+    initials: 'NS',
     hue: '#7c6a4a',
     pay_type: 'hourly',
     hourly_rate: 0,
@@ -493,14 +494,24 @@ export function normalizeEmployee(e: Partial<OsEmployee> & Pick<OsEmployee, 'id'
     onboarding: 0,
     location: 'Raleigh',
     ...e,
+    name: e.name || 'Team member',
+  };
+  return {
+    ...merged,
+    status: (['active', 'leave', 'inactive'].includes(String(merged.status)) ? merged.status : 'active') as OsEmployee['status'],
+    role: merged.role || 'employee',
+    pay_type: merged.pay_type || 'hourly',
+    pay_schedule: merged.pay_schedule || 'weekly',
+    initials: merged.initials || initialsOf(merged.name),
     documents: Array.isArray(e.documents) && e.documents.length ? e.documents : defaultDocuments(),
     availability: { ...FALLBACK_AVAIL, ...(e.availability || {}) },
     onboarding_packet: e.onboarding_packet ? { ...emptyOnboarding(), ...e.onboarding_packet, steps: e.onboarding_packet.steps || {} } : e.onboarding_packet,
   };
 }
 
-export function normalizeJob(j: Partial<OsJob> & Pick<OsJob, 'id'>): OsJob {
-  return {
+export function normalizeJob(j: Partial<OsJob> & { id?: string }): OsJob {
+  const merged = {
+    id: j.id || uid(),
     customer: 'Customer',
     email: '',
     phone: '',
@@ -508,46 +519,65 @@ export function normalizeJob(j: Partial<OsJob> & Pick<OsJob, 'id'>): OsJob {
     vehicle: 'Vehicle TBD',
     address: '',
     time: 'TBD',
-    status: 'scheduled',
+    status: 'scheduled' as JobStatus,
     detailer: 'Unassigned',
     price: 275,
     payment: 'due',
     internal_notes: '',
     ...j,
+  };
+  return {
+    ...merged,
+    customer: merged.customer || 'Customer',
+    service: merged.service || 'Luxe Signature Detail',
+    time: merged.time || 'TBD',
+    status: merged.status || 'scheduled',
+    detailer: merged.detailer || 'Unassigned',
+    price: Number(merged.price || 0),
+    payment: (['paid', 'due', 'refunded'].includes(String(merged.payment)) ? merged.payment : 'due') as OsJob['payment'],
     notes: Array.isArray(j.notes) ? j.notes : [],
     photos: Array.isArray(j.photos) ? j.photos : [],
     comms: Array.isArray(j.comms) ? j.comms : [],
   };
 }
 
-export function normalizeChat(c: Partial<OsChat> & Pick<OsChat, 'id' | 'name'>): OsChat {
+export function normalizeChat(c: Partial<OsChat> & { id?: string; name?: string }): OsChat {
   const messages = Array.isArray(c.messages)
     ? c.messages.filter((m): m is OsMessage => Boolean(m && m.id && m.body != null))
     : [];
+  const name = c.name || 'Channel';
   return {
     kind: 'space',
     preview: '',
     at: '',
     unread: 0,
-    initials: initialsOf(c.name),
     hue: '#c8a96a',
     ...c,
+    id: c.id || uid(),
+    name,
+    initials: c.initials || initialsOf(name),
     messages,
   };
 }
 
-export function normalizeLead(l: Partial<OsLead> & Pick<OsLead, 'id' | 'name'>): OsLead {
-  return {
+export function normalizeLead(l: Partial<OsLead> & { id?: string; name?: string }): OsLead {
+  const merged = {
+    id: l.id || uid(),
     address: '',
-    status: 'new',
+    status: 'new' as LeadStatus,
     rep: 'Unassigned',
     value: 275,
-    temp: 'warm',
+    temp: 'warm' as const,
     phone: '',
     x: 40 + Math.random() * 30,
     y: 30 + Math.random() * 30,
     notes: '',
     ...l,
+    name: l.name || 'Lead',
+  };
+  return {
+    ...merged,
+    status: merged.status || 'new',
     activity: Array.isArray(l.activity) ? l.activity : [],
   };
 }

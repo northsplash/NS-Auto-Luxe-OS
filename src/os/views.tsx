@@ -8,7 +8,7 @@ import OnboardingTab from './OnboardingTab';
 import { liveOpenSlots } from './appointmentSlots';
 import { channelLabel, COMM_GROUPS, COMM_VARIABLES, fillTemplate, SAMPLE_VARS } from '@/lib/communicationCatalog';
 import { emptyEmployeeDraft, type EmployeeDraft } from '@/lib/rolePresets';
-import { money } from '@/lib/data';
+import { money, prettyLabel } from '@/lib/data';
 import {
   JOB_STEP_LABELS, JOB_STEPS, LEAD_STAGES, OS_SERVICES, SHIFT_DAYS, WEEKDAYS, payLine, revenueDays,
   type JobStatus, type LeadStatus, type OsChat, type OsEmployee, type OsJob,
@@ -191,7 +191,7 @@ export function OwnerDashboard({
                 <span>
                   {tech ? <Avatar initials={tech.initials} hue={tech.hue} photo={tech.photo} size={24} /> : null}
                   <small>{j.detailer || 'Unassigned'}</small>
-                  <b className={statusClass(j.status)}>{j.status.replaceAll('_', ' ')}</b>
+                  <b className={statusClass(j.status)}>{prettyLabel(j.status)}</b>
                 </span>
               </button>
             );
@@ -276,7 +276,7 @@ export function OwnerStripeDashboard({
 }) {
   const { jobs, payments, employees, customers } = useOs();
   const collected = payments.filter((p) => p.status === 'succeeded').reduce((s, p) => s + p.amount, 0);
-  const monthRevenue = jobs.filter((j) => j.time.includes('Today') || j.time.includes('Tomorrow') || j.status === 'completed').reduce((s, j) => s + j.price, 0);
+  const monthRevenue = jobs.filter((j) => (j.time || '').includes('Today') || (j.time || '').includes('Tomorrow') || j.status === 'completed').reduce((s, j) => s + Number(j.price || 0), 0);
   const detailers = employees.filter((e) => e.role === 'detailer');
   const d2dAgents = employees.filter((e) => e.role === 'd2d_agent');
   const managers = employees.filter((e) => e.role === 'manager');
@@ -362,7 +362,7 @@ export function OwnerStripeDashboard({
                 <strong>{j.service}</strong>
                 <div style={{ color: 'var(--os-muted)', fontSize: 12 }}>{j.customer} · {j.time}</div>
               </div>
-              <span className={statusClass(j.status)}>{j.status.replaceAll('_', ' ')}</span>
+              <span className={statusClass(j.status)}>{prettyLabel(j.status)}</span>
             </button>
           ))}
           {recent.length === 0 && <div className="ns-empty">No appointments yet.</div>}
@@ -388,7 +388,7 @@ export function OwnerStripeDashboard({
                 </span>
               </div>
               <div className="admin-row-right">
-                <span className="status-badge st-confirmed">{e.role.replaceAll('_', ' ')}</span>
+                <span className="status-badge st-confirmed">{prettyLabel(e.role)}</span>
                 <span className="nsos-pill">Level {employeeLevel(e)}</span>
                 <small>{jobCount} {jobCount === 1 ? 'job' : 'jobs'}</small>
               </div>
@@ -430,7 +430,7 @@ export function ChatThread({ chat, onSend }: { chat: OsChat; onSend: (body: stri
       </div>
       <div className="nsos-chips">
         {todayJobs.map((j) => (
-          <button key={j.id} type="button" onClick={() => onSend(`Job card: ${j.customer} · ${j.service} · ${j.status.replaceAll('_', ' ')} · ${j.address}`)}>Share {j.customer.split(' ')[0]}</button>
+          <button key={j.id} type="button" onClick={() => onSend(`Job card: ${j.customer} · ${j.service} · ${prettyLabel(j.status)} · ${j.address}`)}>Share {j.customer.split(' ')[0]}</button>
         ))}
       </div>
       <form className="nsos-composer" onSubmit={(e) => { e.preventDefault(); if (!draft.trim()) return; onSend(draft.trim()); setDraft(''); }}>
@@ -482,7 +482,7 @@ export function PeopleHome({ employees, onOpen, onHire }: { employees: OsEmploye
               <Avatar initials={e.initials} hue={e.hue} photo={e.photo} size={36} />
               <span><strong>{e.name}</strong><small>{e.title} · {e.location}</small></span>
             </span>
-            <span className="dt-cell" data-label="Role"><strong>{e.department}</strong><small>{e.role.replaceAll('_', ' ')}</small></span>
+            <span className="dt-cell" data-label="Role"><strong>{e.department}</strong><small>{prettyLabel(e.role)}</small></span>
             <span className="dt-cell" data-label="Status"><span className={`nsos-pill ${e.status === 'active' ? 'green' : e.status === 'leave' ? 'gold' : 'red'}`}>{e.status}</span></span>
             <span className="dt-cell" data-label="Hours"><strong>{e.hours_week}h</strong></span>
             <span className="dt-cell" data-label="Pay"><strong>{payLine(e)}</strong></span>
@@ -540,7 +540,7 @@ export function PeopleProfile({ employee }: { employee: OsEmployee }) {
         <div className="nsos-card">
           <p><b>Email</b> · {employee.email}</p>
           <p><b>Phone</b> · {employee.phone}</p>
-          <p><b>System role</b> · {employee.role.replaceAll('_', ' ')}</p>
+          <p><b>System role</b> · {prettyLabel(employee.role)}</p>
           <p><b>Job title</b> · {employee.title}</p>
           <label className="nsos-field" style={{ marginTop: 12 }}>Hours this week
             <input type="number" value={employee.hours_week} onChange={(e) => os.updateEmployee(employee.id, { hours_week: Number(e.target.value) })} />
@@ -560,7 +560,7 @@ export function PeopleProfile({ employee }: { employee: OsEmployee }) {
       )}
       {tab === 'pay' && (
         <div className="nsos-card">
-          <p>Paid as <b>{employee.pay_type.replaceAll('_', ' ')}</b> on a {employee.pay_schedule} schedule.</p>
+          <p>Paid as <b>{prettyLabel(employee.pay_type)}</b> on a {employee.pay_schedule} schedule.</p>
           <p style={{ marginTop: 8 }}>{payLine(employee)}</p>
           <p style={{ color: 'var(--os-muted)', marginTop: 8 }}>Add employee supports any mix of salary, hourly, draw, commission, per-job, and custom rules — including admins.</p>
         </div>
@@ -582,7 +582,7 @@ export function PeopleProfile({ employee }: { employee: OsEmployee }) {
             <div key={a.id} style={{ fontSize: 13, padding: '8px 0', borderBottom: '1px solid var(--os-line)' }}>{a.at} · {a.text}</div>
           ))}
           {os.jobs.filter((j) => j.detailer === employee.name).map((j) => (
-            <div key={j.id} style={{ fontSize: 13, padding: '8px 0' }}>{j.time} · {j.customer} · {j.status.replaceAll('_', ' ')}</div>
+            <div key={j.id} style={{ fontSize: 13, padding: '8px 0' }}>{j.time} · {j.customer} · {prettyLabel(j.status)}</div>
           ))}
         </div>
       )}
@@ -791,7 +791,7 @@ export function CalendarView({ onOpen }: { onOpen: (id: string) => void }) {
       {showLeads && leadsToday.length > 0 && <div className="nsos-eyebrow">Lead follow-ups</div>}
       {showLeads && leadsToday.map((l) => (
         <div className="nsos-job" key={l.id}>
-          <div><strong>{l.name}</strong><div style={{ color: 'var(--os-muted)', fontSize: 12 }}>{l.address} · {l.status.replaceAll('_', ' ')}</div></div>
+          <div><strong>{l.name}</strong><div style={{ color: 'var(--os-muted)', fontSize: 12 }}>{l.address} · {prettyLabel(l.status)}</div></div>
           <span className="nsos-pill gold">{l.rep}</span>
         </div>
       ))}
@@ -820,7 +820,7 @@ export function CalendarView({ onOpen }: { onOpen: (id: string) => void }) {
                 <div style={{ color: 'var(--os-muted)', fontSize: 12 }}>{j.customer} · {j.vehicle}</div>
                 <div style={{ color: 'var(--os-muted)', fontSize: 12 }}><CalendarDays size={12} /> {j.time} · {j.address}</div>
               </div>
-              <span className={statusClass(j.status)}>{j.status.replaceAll('_', ' ')}</span>
+              <span className={statusClass(j.status)}>{prettyLabel(j.status)}</span>
             </button>
           ))}
         </section>
@@ -856,7 +856,7 @@ export function DispatchView({ onOpen }: { onOpen?: (id: string) => void }) {
     >
       <div className="nsos-st-job-top">
         <span>{jobClock(j.time)}</span>
-        <b className={statusClass(j.status)}>{j.status.replaceAll('_', ' ')}</b>
+        <b className={statusClass(j.status)}>{prettyLabel(j.status)}</b>
       </div>
       <strong>{j.customer}</strong>
       <small>{j.service} · {money(j.price)}</small>
@@ -1172,7 +1172,7 @@ export function CustomersView({ onOpenJob }: { onOpenJob?: (id: string) => void 
         {jobs.map((j) => (
           <button key={j.id} className="nsos-job" style={{ width: '100%', textAlign: 'left' }} onClick={() => onOpenJob?.(j.id)}>
             <span>{j.time} · {j.service}</span>
-            <span className="nsos-pill gold">{j.status.replaceAll('_', ' ')}</span>
+            <span className="nsos-pill gold">{prettyLabel(j.status)}</span>
           </button>
         ))}
         {pays.map((p) => (
@@ -1282,7 +1282,7 @@ export function JobDetail({ job }: { job: OsJob }) {
           </div>
           <div>
             <span className="nsos-eyebrow">Live job status</span>
-            <h3>{job.status.replaceAll('_', ' ')}</h3>
+            <h3>{prettyLabel(job.status)}</h3>
             <p style={{ color: 'var(--os-muted)' }}>{job.eta ? `ETA ${job.eta}` : job.time} · {job.detailer || 'Unassigned'}</p>
             <p style={{ color: 'var(--os-muted)', fontSize: 12 }}>{job.address}</p>
           </div>
@@ -1312,7 +1312,7 @@ export function JobDetail({ job }: { job: OsJob }) {
           {job.payment === 'due' && <button className="nsos-btn" onClick={() => os.collectJob(job.id)}><CreditCard size={14} />Collect {money(job.price)}</button>}
           <button className="nsos-btn ghost" onClick={() => {
             const crew = os.chats.find((c) => c.channel_type === 'crew' || (c.kind === 'space' && c.name.toLowerCase().includes('crew')));
-            if (crew) os.shareToChat(crew.id, `${job.customer} · ${job.service} is ${job.status.replaceAll('_', ' ')} at ${job.address}`);
+            if (crew) os.shareToChat(crew.id, `${job.customer} · ${job.service} is ${prettyLabel(job.status)} at ${job.address}`);
           }}>Share to crew</button>
         </div>
       </div>
@@ -1810,7 +1810,7 @@ export function JobsHome({ jobs, onOpen }: { jobs: OsJob[]; onOpen: (id: string)
             <div style={{ color: 'var(--os-muted)', fontSize: 12 }}>{j.time} · {j.address}</div>
           </button>
           <div className="nsos-job-actions" style={{ display: 'grid', gap: 6, justifyItems: 'end' }}>
-            <span className={`nsos-pill ${j.status === 'completed' ? 'green' : 'gold'}`}>{j.status.replaceAll('_', ' ')}</span>
+            <span className={`nsos-pill ${j.status === 'completed' ? 'green' : 'gold'}`}>{prettyLabel(j.status)}</span>
             {j.status === 'confirmed' || j.status === 'scheduled' ? (
               <button className="nsos-btn" onClick={() => os.setJobStatus(j.id, 'en_route')}>En route</button>
             ) : j.status === 'en_route' ? (

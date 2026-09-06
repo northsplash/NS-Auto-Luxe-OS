@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Camera, Check, FileText, Landmark, ShieldCheck, UserRound } from 'lucide-react';
+import { prettyLabel } from '@/lib/data';
 import EmployeeAvatar from '@/components/EmployeeAvatar';
 import {
   emptyOnboarding,
@@ -268,7 +269,7 @@ export default function EmployeeOnboardingTab({ employee, onUpdated }: Props) {
             <div key={t.id} className={t.status === 'completed' ? 'done' : ''}>
               <strong>{t.title}</strong>
               <small>{t.description || t.category}</small>
-              <em>{t.status.replaceAll('_', ' ')}</em>
+              <em>{prettyLabel(t.status)}</em>
             </div>
           ))}
         </div>

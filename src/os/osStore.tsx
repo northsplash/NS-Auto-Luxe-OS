@@ -109,11 +109,11 @@ function load(): OsSnapshot {
 
 function jobVars(job: OsJob) {
   return {
-    customer_first_name: job.customer.split(' ')[0],
-    detailer_name: job.detailer.split(' ')[0],
-    vehicle: job.vehicle,
-    service: job.service,
-    appointment_time: job.time,
+    customer_first_name: String(job.customer || 'Customer').split(' ')[0],
+    detailer_name: String(job.detailer || 'Detailer').split(' ')[0],
+    vehicle: job.vehicle || '',
+    service: job.service || '',
+    appointment_time: job.time || '',
     price: money(job.price),
     eta: job.eta || 'about 15 minutes',
     portal_link: 'northsplash.com/appointment',

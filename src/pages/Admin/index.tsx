@@ -12,7 +12,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { signOut } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { Profile, Appointment, Payment, Employee } from '@/lib/supabase';
-import { money } from '@/lib/data';
+import { money, prettyLabel } from '@/lib/data';
 import { sendCommunication } from '@/lib/communications';
 import BusinessSuite, { BusinessSection } from './BusinessSuite';
 import EnterpriseSuite, { EnterpriseSection } from './EnterpriseSuite';
@@ -1217,7 +1217,7 @@ const handleDeleteAvailability = async (id: string) => {
                   {title:'D2D Sales',roles:['d2d_agent']},
                   {title:'Detailing',roles:['detailer']},
                   {title:'Other Team',roles:['employee','admin']},
-                ].map(group=>{const people=employees.filter(e=>group.roles.includes(e.role)&&(!teamQuery||[e.name,e.title,e.email,e.role].filter(Boolean).join(' ').toLowerCase().includes(teamQuery.toLowerCase())));if(!people.length)return null;return <section key={group.title} className="team-directory-section"><div className="team-directory-heading"><h3>{group.title}</h3><span>{people.length}</span></div><div className="team-portrait-grid">{people.map(e=><button className="team-portrait-card" key={e.id} onClick={()=>{setProfileInitialTab(e.onboarding_status&&e.onboarding_status!=='complete'?'onboarding':'overview');setSelectedEmployeeId(e.id)}}><EmployeeAvatar employee={e} size="xl"/><span className={`team-presence ${e.status==='active'?'online':''}`}/><strong>{e.title||e.role.replaceAll('_',' ')}</strong><h4>{e.name}</h4><small>{e.onboarding_status&&e.onboarding_status!=='complete'?'Onboarding packet':e.status==='active'?'Active':'Inactive'} · Level {e.employment_level??1}</small></button>)}</div></section>})}
+                ].map(group=>{const people=employees.filter(e=>group.roles.includes(e.role)&&(!teamQuery||[e.name,e.title,e.email,e.role].filter(Boolean).join(' ').toLowerCase().includes(teamQuery.toLowerCase())));if(!people.length)return null;return <section key={group.title} className="team-directory-section"><div className="team-directory-heading"><h3>{group.title}</h3><span>{people.length}</span></div><div className="team-portrait-grid">{people.map(e=><button className="team-portrait-card" key={e.id} onClick={()=>{setProfileInitialTab(e.onboarding_status&&e.onboarding_status!=='complete'?'onboarding':'overview');setSelectedEmployeeId(e.id)}}><EmployeeAvatar employee={e} size="xl"/><span className={`team-presence ${e.status==='active'?'online':''}`}/><strong>{e.title||prettyLabel(e.role)}</strong><h4>{e.name}</h4><small>{e.onboarding_status&&e.onboarding_status!=='complete'?'Onboarding packet':e.status==='active'?'Active':'Inactive'} · Level {e.employment_level??1}</small></button>)}</div></section>})}
                 {!employees.length&&<div className="v19-premium-empty"><Users size={28}/><h3>No team members yet</h3><p>Add your first employee to start scheduling, messaging, training and dispatch.</p></div>}
                 {employees.length>0&&!employees.some(e=>!teamQuery||[e.name,e.title,e.email,e.role].filter(Boolean).join(' ').toLowerCase().includes(teamQuery.toLowerCase()))&&<div className="v19-premium-empty"><Users size={28}/><h3>No matches</h3><p>Try a different name or role.</p></div>}
               </div>
