@@ -571,8 +571,11 @@
 .portal-layout.nsos-cream .enterprise-suite,
 .portal-layout.nsos-cream .business-suite,
 .portal-layout.nsos-cream .permissions-v3,
+.portal-layout.nsos-cream .training-dashboard,
+.portal-layout.nsos-cream .training-course-view,
 .portal-layout.nsos-cream .customer-os {
   color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
 }
 .portal-layout.nsos-cream .eyebrow {
   color: #b8893a !important;
@@ -719,14 +722,18 @@
 .portal-layout.nsos-cream .sidebar-user span,
 .portal-layout.nsos-cream .sidebar-brand small { color: #c4b6a4 !important; -webkit-text-fill-color: #c4b6a4 !important; }
 .portal-layout.nsos-cream .job-mode-head,
-.portal-layout.nsos-cream .training-admin-hero {
+.portal-layout.nsos-cream .training-admin-hero,
+.portal-layout.nsos-cream .training-course-hero {
   background: #1c1814 !important;
   color: #f6f1e8 !important;
+  -webkit-text-fill-color: #f6f1e8 !important;
 }
 .portal-layout.nsos-cream .job-mode-head h2,
-.portal-layout.nsos-cream .training-admin-hero h2 { color: #f6f1e8 !important; -webkit-text-fill-color: #f6f1e8 !important; }
+.portal-layout.nsos-cream .training-admin-hero h2,
+.portal-layout.nsos-cream .training-course-hero h2 { color: #f6f1e8 !important; -webkit-text-fill-color: #f6f1e8 !important; }
 .portal-layout.nsos-cream .job-mode-head p,
-.portal-layout.nsos-cream .training-admin-hero p { color: #d4c4b0 !important; -webkit-text-fill-color: #d4c4b0 !important; }
+.portal-layout.nsos-cream .training-admin-hero p,
+.portal-layout.nsos-cream .training-course-hero p { color: #d4c4b0 !important; -webkit-text-fill-color: #d4c4b0 !important; }
 
 .portal-layout.nsos-cream .ws-hero {
   width: min(100%, 1320px);
@@ -2962,4 +2969,48 @@
   .portal-layout.nsos-cream .pay-command-kpis { grid-template-columns: 1fr !important; }
   .portal-layout.nsos-cream .comm-actions-v25 { grid-template-columns: 1fr !important; }
   .portal-layout.nsos-cream .email-status-v25 { grid-template-columns: repeat(5, minmax(48px, 1fr)); overflow-x: auto; }
+}
+
+/* Permissions, training lists, field topbars: no leftover #f4f3ef / #ddd on ivory. */
+.portal-layout.nsos-cream .permission-account-list button,
+.portal-layout.nsos-cream .comm-template-list button,
+.portal-layout.nsos-cream .permission-role-presets button,
+.portal-layout.nsos-cream .permission-grid-v3 label {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  border-color: #e4d9cc !important;
+}
+.portal-layout.nsos-cream .permission-account-list button.selected,
+.portal-layout.nsos-cream .comm-template-list button.selected,
+.portal-layout.nsos-cream .permission-role-presets button.active,
+.portal-layout.nsos-cream .permission-grid-v3 label.enabled {
+  background: #f6ead4 !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  border-color: #d9cbb8 !important;
+}
+.portal-layout.nsos-cream .training-lesson,
+.portal-layout.nsos-cream .quiz-question,
+.portal-layout.nsos-cream .training-card,
+.portal-layout.nsos-cream .visitors-v21 .admin-card {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  border-color: #e4d9cc !important;
+}
+.portal-layout.nsos-cream.d2d-os .portal-topbar,
+.portal-layout.nsos-cream.employee-os .portal-topbar,
+.portal-layout.nsos-cream.manager-os .portal-topbar,
+.portal-layout.nsos-cream.customer-os .portal-topbar {
+  background: rgba(255, 253, 248, .96) !important;
+  color: #1c1814 !important;
+  border-bottom-color: #eadfd3 !important;
+}
+.portal-layout.nsos-cream.d2d-os .topbar-title h1,
+.portal-layout.nsos-cream.employee-os .topbar-title h1,
+.portal-layout.nsos-cream.manager-os .topbar-title h1,
+.portal-layout.nsos-cream.customer-os .topbar-title h1 {
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
 }
