@@ -362,7 +362,12 @@ function OsShell() {
       return <PeopleHome employees={os.employees} onOpen={setPeopleId} onHire={() => { setHirePreset(undefined); setHireOpen(true); }} />;
     }
     if (tab === 'recruiting' || tab === 'training') {
-      return <HireView onHire={(name, title) => { setHirePreset({ name: name || '', title: title || '' }); setHireOpen(true); }} />;
+      return (
+        <HireView
+          onHire={(name, title) => { setHirePreset({ name: name || '', title: title || '' }); setHireOpen(true); }}
+          onOpen={(id) => { setTab('employees'); setPeopleId(id); }}
+        />
+      );
     }
     if (tab === 'staff_schedule' || tab === 'timeclock' || tab === 'time_off' || tab === 'payroll_approval') return <ScheduleView />;
     if (tab === 'crews' || tab === 'dispatch' || tab === 'job_assignments') return <DispatchView onOpen={openJob} />;
@@ -415,6 +420,7 @@ function OsShell() {
 
   return (
     <div className={`portal-layout nsos-admin-preview admin-os nsos-cream os-tab-${tab}${moreOpen ? ' os-more-open' : ''} os-mode-${mode}`}>
+      <a className="nsos-skip" href="#os-main">Skip to workspace</a>
       <aside className={`portal-sidebar admin-sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <div className="sidebar-header">
           <Link to="/" className="sidebar-brand" onClick={() => go(homeTab)}>
@@ -483,7 +489,7 @@ function OsShell() {
 
       {sidebarOpen && <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} />}
 
-      <main className="portal-main">
+      <main className="portal-main" id="os-main" tabIndex={-1}>
         <div className="portal-topbar">
           <button className="sidebar-toggle" onClick={() => setSidebarOpen(true)}><Menu size={20} /></button>
           <div className="topbar-title"><span>{currentWorkspace.label}</span><h1>{currentNav?.label}</h1></div>

@@ -4,15 +4,15 @@ import { channelLabel, fillTemplate } from '@/lib/communicationCatalog';
 import type { EmployeeDraft } from '@/lib/rolePresets';
 import { money } from '@/lib/data';
 import {
-  clockNow, defaultTemplates, initialsOf, normalizeEmployee, normalizeJob, normalizeLead,
+  clockNow, defaultTemplates, initialsOf, normalizeChat, normalizeEmployee, normalizeJob, normalizeLead,
   seedActivity, seedCandidates, seedChats, seedCustomers, seedEmployees, seedJobs, seedLeads,
-  seedPayments, seedSettings, seedShifts, seedTimeOff, uid,
+  seedPayments, seedSettings, seedShifts, seedTimeOff, uid, emptyOnboarding,
   type JobDraft, type JobStatus, type LeadStatus, type OsActivity, type OsCandidate, type OsChat,
   type OsCustomer, type OsEmployee, type OsJob, type OsLead, type OsPayment, type OsSettings,
   type OsShift, type OsTimeOff, type Weekday,
 } from './demoData';
 
-const KEY = 'ns-os-v6';
+const KEY = 'ns-os-v7';
 
 export type Toast = { id: string; title: string; body: string };
 
@@ -56,7 +56,7 @@ function migrate(data: Partial<OsSnapshot>): OsSnapshot {
     employees: (data.employees?.length ? data.employees : base.employees).map((e) => normalizeEmployee(e)),
     jobs: (data.jobs?.length ? data.jobs : base.jobs).map((j) => normalizeJob(j)),
     leads: (data.leads?.length ? data.leads : base.leads).map((l) => normalizeLead(l)),
-    chats: data.chats?.length ? data.chats : base.chats,
+    chats: (data.chats?.length ? data.chats : base.chats).map((c) => normalizeChat(c)),
     payments: data.payments?.length ? data.payments : base.payments,
     candidates: data.candidates?.length ? data.candidates : base.candidates,
     templates: defaultTemplates.map((t) => {
@@ -71,9 +71,34 @@ function migrate(data: Partial<OsSnapshot>): OsSnapshot {
   };
 }
 
+function slimForStorage(state: OsSnapshot): OsSnapshot {
+  return {
+    ...state,
+    employees: state.employees.map((e) => ({
+      ...e,
+      photo: e.photo?.startsWith('data:') ? undefined : e.photo,
+      onboarding_packet: e.onboarding_packet
+        ? { ...e.onboarding_packet, headshot: e.onboarding_packet.headshot?.startsWith('data:') ? undefined : e.onboarding_packet.headshot }
+        : e.onboarding_packet,
+    })),
+  };
+}
+
+function persist(state: OsSnapshot) {
+  try {
+    localStorage.setItem(KEY, JSON.stringify({ v: 3, data: state }));
+  } catch {
+    try {
+      localStorage.setItem(KEY, JSON.stringify({ v: 3, data: slimForStorage(state) }));
+    } catch {
+      /* Demo photos can overflow storage; keep the session in memory. */
+    }
+  }
+}
+
 function load(): OsSnapshot {
   try {
-    const raw = localStorage.getItem(KEY) || localStorage.getItem('ns-os-v2');
+    const raw = localStorage.getItem(KEY) || localStorage.getItem('ns-os-v6') || localStorage.getItem('ns-os-v2');
     if (!raw) return seed();
     const parsed = JSON.parse(raw) as { v?: number; data?: Partial<OsSnapshot> };
     return migrate(parsed?.data || (parsed as Partial<OsSnapshot>));
@@ -162,7 +187,7 @@ export function OsProvider({ children }: { children: ReactNode }) {
   const [toast, setToast] = useState<Toast | null>(null);
 
   useEffect(() => {
-    localStorage.setItem(KEY, JSON.stringify({ v: 3, data: state }));
+    persist(state);
   }, [state]);
 
   const flash = useCallback((title: string, body: string) => {
@@ -210,6 +235,7 @@ export function OsProvider({ children }: { children: ReactNode }) {
     dismissToast: () => setToast(null),
     resetDemo: () => {
       localStorage.removeItem(KEY);
+      localStorage.removeItem('ns-os-v6');
       localStorage.removeItem('ns-os-v2');
       setState(seed());
       flash('Demo reset', 'North Splash OS restored to seed data.');
@@ -234,14 +260,16 @@ export function OsProvider({ children }: { children: ReactNode }) {
         per_job_rate: draft.per_job_rate,
         pay_schedule: draft.pay_schedule,
         hours_week: 0,
-        onboarding: 20,
+        onboarding: 8,
         location: draft.work_location,
+        onboarding_packet: { ...emptyOnboarding(), legal_first: draft.name.split(' ')[0] || '', legal_last: draft.name.split(' ').slice(1).join(' '), preferred: draft.name.split(' ')[0] || '' },
         documents: [
           { id: uid(), name: 'Offer letter', status: 'review' },
           { id: uid(), name: 'I-9', status: 'missing' },
           { id: uid(), name: 'W-4', status: 'missing' },
           { id: uid(), name: 'Handbook', status: 'missing' },
           { id: uid(), name: 'Direct deposit', status: 'missing' },
+          { id: uid(), name: 'Headshot', status: 'missing' },
         ],
         availability: { Mon: true, Tue: true, Wed: true, Thu: true, Fri: true, Sat: false, Sun: false },
         custom_compensation: draft.custom_compensation,
@@ -276,13 +304,16 @@ export function OsProvider({ children }: { children: ReactNode }) {
         return { ...e, documents, onboarding };
       }),
     })),
-    sendChat: (chatId, body) => setState((s) => ({
-      ...s,
-      chats: s.chats.map((c) => c.id !== chatId ? c : {
-        ...c, preview: body, at: 'Now', unread: 0,
-        messages: [...c.messages, { id: uid(), from: 'You', mine: true, body, at: clockNow() }],
-      }),
-    })),
+    sendChat: (chatId, body) => setState((s) => {
+      const at = clockNow();
+      return {
+        ...s,
+        chats: s.chats.map((c) => c.id !== chatId ? c : {
+          ...c, preview: body, at, unread: 0,
+          messages: [...(Array.isArray(c.messages) ? c.messages : []), { id: uid(), from: 'You', mine: true, body, at }],
+        }),
+      };
+    }),
     markChatRead: (chatId) => setState((s) => ({
       ...s,
       chats: s.chats.map((c) => c.id === chatId ? { ...c, unread: 0 } : c),
@@ -328,9 +359,9 @@ export function OsProvider({ children }: { children: ReactNode }) {
           activity,
           chats: crew ? s.chats.map((c) => c.id !== crew.id ? c : {
             ...c, preview: `${job.service} → ${status.replaceAll('_', ' ')}`, at: clockNow(),
-            messages: c.messages.some((m) => m.id === `m_${job.id}_${status}`)
-              ? c.messages
-              : [...c.messages, { id: `m_${job.id}_${status}`, from: 'OS', body: `${job.customer} · ${job.service} is now ${status.replaceAll('_', ' ')}.`, at: clockNow() }],
+            messages: (c.messages || []).some((m) => m.id === `m_${job.id}_${status}`)
+              ? (c.messages || [])
+              : [...(c.messages || []), { id: `m_${job.id}_${status}`, from: 'OS', body: `${job.customer} · ${job.service} is now ${status.replaceAll('_', ' ')}.`, at: clockNow() }],
           }) : s.chats,
         };
       });
@@ -553,13 +584,16 @@ export function OsProvider({ children }: { children: ReactNode }) {
       ...s,
       chats: s.chats.map((c) => c.id === id ? { ...c, name, initials: initialsOf(name) } : c),
     })),
-    shareToChat: (chatId, body) => setState((s) => ({
-      ...s,
-      chats: s.chats.map((c) => c.id !== chatId ? c : {
-        ...c, preview: body, at: clockNow(), unread: 0,
-        messages: [...c.messages, { id: uid(), from: 'You', mine: true, body, at: clockNow() }],
-      }),
-    })),
+    shareToChat: (chatId, body) => setState((s) => {
+      const at = clockNow();
+      return {
+        ...s,
+        chats: s.chats.map((c) => c.id !== chatId ? c : {
+          ...c, preview: body, at, unread: 0,
+          messages: [...(Array.isArray(c.messages) ? c.messages : []), { id: uid(), from: 'You', mine: true, body, at }],
+        }),
+      };
+    }),
     createJob: (draft) => {
       const id = `j_${Date.now()}`;
       const job = normalizeJob({

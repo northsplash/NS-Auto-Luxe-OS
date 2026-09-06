@@ -26,7 +26,55 @@ export type OsEmployee = {
   documents: OsDocument[];
   availability: Record<Weekday, boolean>;
   custom_compensation?: unknown;
+  onboarding_packet?: OnboardingPacket;
 };
+
+export type OnboardingPacket = {
+  legal_first: string;
+  legal_middle: string;
+  legal_last: string;
+  preferred: string;
+  dob: string;
+  ssn_last4: string;
+  ssn_on_file: boolean;
+  street: string;
+  city: string;
+  state: string;
+  zip: string;
+  work_auth: string;
+  filing_status: string;
+  allowances: string;
+  extra_withholding: string;
+  bank_name: string;
+  routing_last4: string;
+  account_last4: string;
+  account_type: 'checking' | 'savings' | '';
+  emergency_name: string;
+  emergency_phone: string;
+  emergency_relation: string;
+  handbook_ack: boolean;
+  i9_ack: boolean;
+  headshot?: string;
+  steps: Record<string, boolean>;
+};
+
+export function emptyOnboarding(): OnboardingPacket {
+  return {
+    legal_first: '', legal_middle: '', legal_last: '', preferred: '', dob: '',
+    ssn_last4: '', ssn_on_file: false, street: '', city: '', state: '', zip: '',
+    work_auth: '', filing_status: '', allowances: '', extra_withholding: '',
+    bank_name: '', routing_last4: '', account_last4: '', account_type: '',
+    emergency_name: '', emergency_phone: '', emergency_relation: '',
+    handbook_ack: false, i9_ack: false, steps: {},
+  };
+}
+
+export function onboardingPercent(packet: OnboardingPacket | undefined, documents: OsDocument[] = []) {
+  const steps = ['identity', 'tax', 'pay', 'work', 'emergency'];
+  const done = steps.filter((s) => packet?.steps?.[s]).length;
+  const docs = documents.length ? documents.filter((d) => d.status === 'complete').length / documents.length : 1;
+  return Math.round(((done / steps.length) * 0.8 + docs * 0.2) * 100);
+}
 
 export type Weekday = 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat' | 'Sun';
 export const WEEKDAYS: Weekday[] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -250,7 +298,11 @@ export const seedChats: OsChat[] = [
   {
     id: 'c-company', name: 'Company Updates', kind: 'space', channel_type: 'company',
     description: 'Company-wide announcements and field updates.',
-    preview: '', at: '', unread: 0, initials: 'CU', hue: '#c8a96a', topic: 'Company', messages: [],
+    preview: 'Welcome to North Splash field comms.', at: '8:01 AM', unread: 0, initials: 'CU', hue: '#c8a96a', topic: 'Company',
+    messages: [
+      { id: 'm-welcome', from: 'Jordan Miles', body: 'Company channel is live. Wins, delays, and safety notes belong here — not in a group text.', at: '8:01 AM' },
+      { id: 'm-welcome-2', from: 'Avery Chen', body: 'If you are new, finish your onboarding packet under People → your name → Onboarding.', at: '8:04 AM' },
+    ],
   },
   {
     id: 'c-crew', name: 'Crew V1', kind: 'space', channel_type: 'crew',
@@ -443,6 +495,7 @@ export function normalizeEmployee(e: Partial<OsEmployee> & Pick<OsEmployee, 'id'
     ...e,
     documents: Array.isArray(e.documents) && e.documents.length ? e.documents : defaultDocuments(),
     availability: { ...FALLBACK_AVAIL, ...(e.availability || {}) },
+    onboarding_packet: e.onboarding_packet ? { ...emptyOnboarding(), ...e.onboarding_packet, steps: e.onboarding_packet.steps || {} } : e.onboarding_packet,
   };
 }
 
@@ -464,6 +517,22 @@ export function normalizeJob(j: Partial<OsJob> & Pick<OsJob, 'id'>): OsJob {
     notes: Array.isArray(j.notes) ? j.notes : [],
     photos: Array.isArray(j.photos) ? j.photos : [],
     comms: Array.isArray(j.comms) ? j.comms : [],
+  };
+}
+
+export function normalizeChat(c: Partial<OsChat> & Pick<OsChat, 'id' | 'name'>): OsChat {
+  const messages = Array.isArray(c.messages)
+    ? c.messages.filter((m): m is OsMessage => Boolean(m && m.id && m.body != null))
+    : [];
+  return {
+    kind: 'space',
+    preview: '',
+    at: '',
+    unread: 0,
+    initials: initialsOf(c.name),
+    hue: '#c8a96a',
+    ...c,
+    messages,
   };
 }
 

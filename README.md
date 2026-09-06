@@ -54,12 +54,13 @@ The two cores: **SalesRabbit** for territory maps, pins, knocks, and canvassing;
 
 - Owner Dashboard: six KPIs, monthly cash flow, recent appointments, and team overview (Stripe layout)
 - Owner Command Center with glance KPIs, exceptions, today’s schedule, and booking flow
-- Rippling-style people directory and profile tabs
+- Rippling-style people directory and Gusto-style onboarding packet (headshot, legal name, tax last-four, deposit, I-9)
 - ServiceTitan dispatch: unassigned rail, tech columns, drag-to-assign
-- SalesRabbit D2D: tall map, West / Central / East areas, knock outcomes, book-the-door
+- SalesRabbit D2D: tall map, West / Central / East areas, knock outcomes, door list, book-the-door
 - HubSpot pipeline and customer records
-- Jobber appointments and job detail with Uber-style live status
-- Square payments, Gusto hiring checklists, Stripe settings
+- Jobber appointments (week strip + day board) and job detail with Uber-style live status
+- Square payments, Gusto hiring pipeline, Stripe settings
+- Teams-style messaging (Chat / Teams filters, composer, company channel)
 - Phones: Home / Chat / Calendar / Team / More. Tablets use split map/list, chat, and dispatch.
 
 ## Supabase

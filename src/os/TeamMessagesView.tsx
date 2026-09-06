@@ -28,7 +28,7 @@ function readFavorites() {
 
 export default function TeamMessagesView() {
   const os = useOs();
-  const channels = os.chats.filter((c) => c.kind === 'space');
+  const channels = os.chats;
   const [activeId, setActiveId] = useState(() => channels.find((c) => c.channel_type === 'company')?.id || channels[0]?.id || '');
   const [draft, setDraft] = useState('');
   const [kind, setKind] = useState('message');
@@ -36,7 +36,8 @@ export default function TeamMessagesView() {
   const [messageSearch, setMessageSearch] = useState('');
   const [showInfo, setShowInfo] = useState(() => typeof window !== 'undefined' && window.innerWidth > 1100);
   const [mobileThreadOpen, setMobileThreadOpen] = useState(() => typeof window !== 'undefined' && window.innerWidth > 760);
-  const [railFilter, setRailFilter] = useState<'all' | 'unread' | 'teams'>('all');
+  const [railFilter, setRailFilter] = useState<'all' | 'unread' | 'chats' | 'teams'>('all');
+  const [sendError, setSendError] = useState('');
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState('');
   const [newMembers, setNewMembers] = useState<string[]>([]);
@@ -63,7 +64,8 @@ export default function TeamMessagesView() {
   const filtered = channels.filter((c) => {
     if (search && !`${c.name} ${c.description || c.topic || ''}`.toLowerCase().includes(search.toLowerCase())) return false;
     if (railFilter === 'unread') return c.unread > 0;
-    if (railFilter === 'teams') return c.kind === 'space' && c.channel_type !== 'company';
+    if (railFilter === 'chats') return c.kind === 'dm';
+    if (railFilter === 'teams') return c.kind === 'space';
     return true;
   });
   const favoriteChannels = filtered.filter((c) => favorites.includes(c.id));
@@ -81,11 +83,17 @@ export default function TeamMessagesView() {
   const send = (e?: FormEvent) => {
     e?.preventDefault();
     if (!draft.trim() || !active) return;
-    os.sendChat(active.id, draft.trim());
-    setDraft('');
-    setKind('message');
-    composerRef.current?.focus();
-    window.setTimeout(() => endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 40);
+    try {
+      os.sendChat(active.id, draft.trim());
+      setDraft('');
+      setKind('message');
+      setSendError('');
+      composerRef.current?.focus();
+      window.setTimeout(() => endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 40);
+    } catch (err) {
+      console.error(err);
+      setSendError('Message did not send. Reset demo data from Manage data if this workspace is full, then try again.');
+    }
   };
   const onComposerKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -114,6 +122,9 @@ export default function TeamMessagesView() {
     setMobileThreadOpen(true);
   };
 
+  const dms = regularChannels.filter((c) => c.kind === 'dm');
+  const teams = regularChannels.filter((c) => c.kind !== 'dm');
+
   const channelButton = (c: OsChat) => (
     <button
       key={c.id}
@@ -137,11 +148,11 @@ export default function TeamMessagesView() {
       <aside className="message-channel-rail">
         <div className="message-workspace-brand">
           <span className="message-workspace-mark">NS</span>
-          <div><strong>North Splash</strong><small>Field Communications</small></div>
+          <div><strong>North Splash</strong><small>Teams · activity · chat</small></div>
           <ChevronDown size={15} />
         </div>
         <div className="nsos-seg message-rail-seg" role="tablist" aria-label="Chat filters">
-          {([['all', 'All'], ['unread', 'Unread'], ['teams', 'Teams']] as const).map(([id, label]) => (
+          {([['all', 'All'], ['unread', 'Unread'], ['chats', 'Chat'], ['teams', 'Teams']] as const).map(([id, label]) => (
             <button key={id} type="button" className={railFilter === id ? 'active' : ''} onClick={() => setRailFilter(id)}>{label}</button>
           ))}
         </div>
@@ -162,12 +173,23 @@ export default function TeamMessagesView() {
               {favoriteChannels.map(channelButton)}
             </>
           )}
-          <div className="message-section-label">
-            <span><Hash size={12} />Channels</span>
-            <button onClick={() => setShowCreate(true)} title="Create group"><Plus size={14} /></button>
-          </div>
-          {regularChannels.map(channelButton)}
-          {!filtered.length && <div className="ns-empty compact">No message groups available.</div>}
+          {(railFilter === 'all' || railFilter === 'chats') && (
+            <>
+              <div className="message-section-label"><span><MessageCircle size={12} />Chat</span></div>
+              {(railFilter === 'chats' ? filtered.filter((c) => !favorites.includes(c.id)) : dms).map(channelButton)}
+              {railFilter === 'chats' && !filtered.length && <div className="ns-empty compact">No direct messages.</div>}
+            </>
+          )}
+          {(railFilter === 'all' || railFilter === 'teams' || railFilter === 'unread') && (
+            <>
+              <div className="message-section-label">
+                <span><Hash size={12} />{railFilter === 'unread' ? 'Unread' : 'Teams'}</span>
+                <button type="button" onClick={() => setShowCreate(true)} title="Create team"><Plus size={14} /></button>
+              </div>
+              {(railFilter === 'unread' ? filtered.filter((c) => !favorites.includes(c.id)) : teams).map(channelButton)}
+            </>
+          )}
+          {!filtered.length && <div className="ns-empty compact">No conversations match that filter.</div>}
         </div>
         <div className="message-rail-footer">
           <span className="message-presence-dot" />
@@ -241,6 +263,7 @@ export default function TeamMessagesView() {
               <div ref={endRef} />
             </div>
             <form className="message-composer" onSubmit={send}>
+              {sendError && <div className="nsos-onboard-error" role="alert">{sendError}</div>}
               <div className="message-composer-box">
                 <div className="message-composer-toolbar">
                   <button type="button" title="Add attachment"><Plus size={16} /></button>
@@ -257,7 +280,7 @@ export default function TeamMessagesView() {
                 />
                 <div className="message-composer-bottom">
                   <small>Enter to send · Shift+Enter for new line</small>
-                  <button className="message-send-btn" disabled={!draft.trim()}><Send size={16} />Send</button>
+                  <button className="message-send-btn" type="submit" disabled={!draft.trim()}><Send size={16} />Send</button>
                 </div>
               </div>
             </form>
@@ -316,10 +339,10 @@ export default function TeamMessagesView() {
         <div className="message-modal-backdrop" onClick={() => setShowCreate(false)}>
           <form className="message-group-modal" onSubmit={createGroup} onClick={(e) => e.stopPropagation()}>
             <header>
-              <div><span className="eyebrow">NEW GROUP</span><h3>Create message group</h3></div>
+              <div><span className="eyebrow">NEW TEAM</span><h3>Create a team</h3></div>
               <button type="button" className="message-icon-btn" onClick={() => setShowCreate(false)}><X size={17} /></button>
             </header>
-            <label>Group name<input required value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Raleigh D2D Crew" /></label>
+            <label>Team name<input required value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Raleigh D2D Crew" /></label>
             <div className="message-member-picker">
               <span>Members</span>
               {os.employees.filter((e) => e.status === 'active').map((e) => (
@@ -330,7 +353,7 @@ export default function TeamMessagesView() {
                 </label>
               ))}
             </div>
-            <button className="btn-primary"><Users size={15} />Create Group</button>
+            <button className="btn-primary"><Users size={15} />Create team</button>
           </form>
         </div>
       )}
