@@ -3449,6 +3449,17 @@
   color: #6f675e !important;
   -webkit-text-fill-color: #6f675e !important;
 }
+.portal-layout.nsos-cream .portal-main input,
+.portal-layout.nsos-cream .portal-main select,
+.portal-layout.nsos-cream .portal-main textarea,
+.portal-layout.nsos-cream .portal-main .search-box,
+.portal-layout.nsos-cream .portal-main .message-search,
+.portal-layout.nsos-cream .workspace-search {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  border-color: #e4d9cc !important;
+}
 
 .portal-layout.nsos-cream .portal-main .admin-card,
 .portal-layout.nsos-cream .portal-main .admin-stat,
