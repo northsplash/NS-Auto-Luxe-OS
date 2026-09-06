@@ -725,3 +725,297 @@ html.nsos-active #root {
 }
 .nsos-cream .portal-main .phase-kpi small.nsos-delta,
 .nsos-delta { color: #2f7a55 !important; font-weight: 700 !important; font-size: 12px !important; }
+
+html.nsos-active,
+html.nsos-active body,
+html.nsos-active #root {
+  height: 100% !important;
+  overflow: hidden !important;
+}
+.portal-layout.nsos-cream {
+  height: 100dvh !important;
+  min-height: 100dvh !important;
+  overflow: hidden !important;
+  display: grid !important;
+  grid-template-columns: 272px minmax(0, 1fr) !important;
+}
+.nsos-cream .portal-sidebar {
+  height: 100dvh !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+.nsos-cream .os-workspace-nav {
+  flex: 1 !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  padding-bottom: 8px !important;
+}
+.nsos-cream .portal-main {
+  min-width: 0 !important;
+  height: 100dvh !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background: #efe8dc !important;
+}
+.nsos-cream .portal-content {
+  flex: 1 !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding: 16px 22px 28px !important;
+}
+.nsos-cream.os-tab-messages .portal-content,
+.nsos-cream.os-tab-sales .portal-content {
+  overflow: hidden !important;
+  padding: 12px 16px 16px !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+.nsos-cream.os-tab-messages .team-messaging,
+.nsos-cream.os-tab-sales .nsos-sr {
+  flex: 1 !important;
+  min-height: 0 !important;
+  height: 100% !important;
+}
+
+.os-workspace-block { display: grid; gap: 2px; }
+.os-workspace-children {
+  display: grid;
+  gap: 2px;
+  padding: 0 10px 8px 42px;
+}
+.os-workspace-children button {
+  text-align: left;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 253, 248, .62);
+  font-size: 12px;
+  font-weight: 600;
+  min-height: 32px;
+  border-radius: 8px;
+  padding: 0 10px;
+}
+.os-workspace-children button.active {
+  color: #e8c96a;
+  background: rgba(184, 137, 58, .16);
+}
+.os-mode-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 6px !important;
+}
+.os-mode-grid button {
+  display: grid !important;
+  justify-items: start !important;
+  gap: 2px !important;
+  padding: 8px 10px !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(255, 253, 248, .12) !important;
+  background: rgba(255, 255, 255, .04) !important;
+  color: #f4efe6 !important;
+  text-align: left !important;
+}
+.os-mode-grid button.active {
+  border-color: #b8893a !important;
+  background: rgba(184, 137, 58, .18) !important;
+  color: #e8c96a !important;
+}
+.os-mode-grid small { opacity: .7; font-size: 10px; }
+.os-mode-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 20px;
+  background: #f6ead4;
+  border-bottom: 1px solid #e0c48a;
+  color: #1c1814;
+  flex-shrink: 0;
+}
+.os-mode-banner span { display: block; color: #6f675e; font-size: 12px; }
+.os-mode-banner button {
+  border: 0;
+  background: #1c1814;
+  color: #f6f1e8;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.os-phone-subnav { display: none; }
+.os-more-note {
+  margin: 8px 4px 0;
+  color: #6f675e;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.nsos-cream .team-messaging.messaging-os {
+  display: grid !important;
+  grid-template-columns: 280px minmax(0, 1fr) 260px !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  max-height: none !important;
+  overflow: hidden !important;
+  border-radius: 16px !important;
+}
+.nsos-cream .team-messaging.messaging-os:not(.with-info) {
+  grid-template-columns: 280px minmax(0, 1fr) !important;
+}
+.nsos-cream .message-channel-rail,
+.nsos-cream .message-thread,
+.nsos-cream .message-info-rail {
+  min-height: 0 !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+.nsos-cream .message-channel-list,
+.nsos-cream .message-scroll {
+  flex: 1 !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+}
+.nsos-cream .message-composer { flex-shrink: 0; }
+.nsos-seg { grid-template-columns: 1fr 1fr 1fr auto; }
+.nsos-seg-link {
+  border: 0;
+  background: transparent;
+  color: #6f675e;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 0 10px;
+}
+.nsos-pitch {
+  display: grid;
+  gap: 12px;
+  min-height: 0;
+  height: 100%;
+  overflow: auto;
+}
+.nsos-pitch-lead {
+  background: #fffdf8;
+  border: 1px solid #e4d9cc;
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+.nsos-pitch-slots {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+.nsos-pitch-slots button {
+  border: 1px solid #e4d9cc;
+  background: #fff;
+  border-radius: 12px;
+  padding: 10px;
+  text-align: left;
+}
+.nsos-pitch-slots strong { display: block; color: #1c1814; }
+.nsos-pitch-slots small { color: #6f675e; }
+.nsos-pitch .sales-presentation-embedded {
+  min-height: 640px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid #1c1814;
+}
+.sales-slot-board {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+}
+.sales-slot-board button {
+  border: 1px solid rgba(255,255,255,.12);
+  background: #14120f;
+  color: #f7f3eb;
+  border-radius: 14px;
+  padding: 14px;
+  text-align: left;
+  display: grid;
+  gap: 4px;
+}
+.sales-slot-board button.active {
+  border-color: #d4ad3b;
+  background: #1d180f;
+}
+.sales-slot-board strong { font-size: 18px; }
+.sales-slot-board small { color: #9a9286; }
+.sales-empty-slots {
+  padding: 24px;
+  border: 1px dashed rgba(255,255,255,.16);
+  border-radius: 14px;
+  color: #9a9286;
+}
+
+@media (max-width: 1100px) {
+  .nsos-cream .team-messaging.messaging-os,
+  .nsos-cream .team-messaging.messaging-os.with-info,
+  .nsos-cream .team-messaging.messaging-os:not(.with-info) {
+    grid-template-columns: 240px minmax(0, 1fr) !important;
+  }
+  .nsos-cream .message-info-rail { display: none !important; }
+  .nsos-pitch-slots { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 860px) {
+  .portal-layout.nsos-cream {
+    grid-template-columns: 1fr !important;
+    height: 100dvh !important;
+  }
+  .nsos-cream .portal-main {
+    height: 100dvh !important;
+    padding-bottom: 0 !important;
+  }
+  .nsos-cream .portal-content {
+    padding: 10px 12px calc(64px + env(safe-area-inset-bottom)) !important;
+  }
+  .nsos-cream.os-tab-messages .portal-content,
+  .nsos-cream.os-tab-sales .portal-content {
+    padding: 8px 8px calc(58px + env(safe-area-inset-bottom)) !important;
+  }
+  .os-phone-subnav {
+    display: flex !important;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 8px 12px 10px;
+    background: #efe8dc;
+    flex-shrink: 0;
+    scrollbar-width: none;
+  }
+  .os-phone-subnav::-webkit-scrollbar { display: none; }
+  .os-phone-subnav button {
+    flex: 0 0 auto;
+    border: 1px solid #e4d9cc;
+    background: #fffdf8;
+    color: #6f675e;
+    border-radius: 999px;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .os-phone-subnav button.active {
+    background: #1c1814;
+    color: #f6f1e8;
+    border-color: #1c1814;
+  }
+  .os-mode-banner {
+    padding: 8px 12px;
+    align-items: flex-start;
+  }
+  .nsos-cream .team-messaging.messaging-os,
+  .nsos-cream .team-messaging.messaging-os.with-info,
+  .nsos-cream .team-messaging.messaging-os:not(.with-info) {
+    grid-template-columns: 1fr !important;
+    border: 0 !important;
+    border-radius: 12px !important;
+  }
+  .nsos-cream .message-thread { display: none !important; }
+  .nsos-cream .team-messaging.thread-open .message-channel-rail { display: none !important; }
+  .nsos-cream .team-messaging.thread-open .message-thread { display: flex !important; }
+  .nsos-seg { grid-template-columns: 1fr 1fr 1fr auto; }
+  .nsos-pitch-slots { grid-template-columns: 1fr 1fr; }
+}

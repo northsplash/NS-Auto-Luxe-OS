@@ -135,7 +135,7 @@ type OsApi = OsSnapshot & {
   setLeadStatus: (id: string, status: LeadStatus) => void;
   assignLead: (id: string, rep: string) => void;
   addLeadNote: (id: string, body: string) => void;
-  convertLead: (id: string) => string | null;
+  convertLead: (id: string, opts?: { time?: string; service?: string; price?: number; detailer?: string }) => string | null;
   addCustomerNote: (id: string, body: string) => void;
   moveShift: (shiftId: string, day: Weekday) => void;
   addShift: (employeeId: string, day: Weekday) => void;
@@ -427,24 +427,38 @@ export function OsProvider({ children }: { children: ReactNode }) {
         ...l, notes: body, activity: [{ id: uid(), at: clockNow(), author: 'You', body }, ...l.activity],
       }),
     })),
-    convertLead: (id) => {
+    convertLead: (id, opts) => {
       const jobId = `j_${id}`;
       setState((s) => {
         const lead = s.leads.find((l) => l.id === id);
         if (!lead) return s;
-        if (s.jobs.some((j) => j.id === jobId)) return s;
+        if (s.jobs.some((j) => j.id === jobId)) {
+          if (opts?.time) {
+            return {
+              ...s,
+              jobs: s.jobs.map((j) => j.id === jobId ? {
+                ...j,
+                time: opts.time || j.time,
+                service: opts.service || j.service,
+                price: opts.price ?? j.price,
+                detailer: opts.detailer || j.detailer,
+              } : j),
+            };
+          }
+          return s;
+        }
         const job: OsJob = {
           id: jobId,
           customer: lead.name,
           email: '',
           phone: lead.phone,
-          service: lead.value >= 500 ? 'Luxe Ceramic Coating' : 'Luxe Signature Detail',
+          service: opts?.service || (lead.value >= 500 ? 'Luxe Ceramic Coating' : 'Luxe Signature Detail'),
           vehicle: 'Vehicle TBD',
           address: lead.address,
-          time: 'Fri · 11:00 AM',
+          time: opts?.time || 'Fri · 11:00 AM',
           status: 'scheduled',
-          detailer: 'Marcus Hale',
-          price: lead.value || 275,
+          detailer: opts?.detailer || 'Marcus Hale',
+          price: opts?.price || lead.value || 275,
           payment: 'due',
           internal_notes: `Converted from D2D lead (${lead.rep}). ${lead.notes}`.trim(),
           notes: [],

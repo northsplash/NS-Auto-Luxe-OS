@@ -12,9 +12,9 @@ function Avatar({ initials, hue, size = 34, photo }: { initials: string; hue: st
 }
 
 const QUICK = [
-  { label: 'Announcement', text: '📣 Company announcement — ', kind: 'announcement' },
-  { label: 'Operations', text: '⚙️ Operations update — ', kind: 'operations' },
-  { label: 'Urgent', text: '🚨 Urgent company update — ', kind: 'priority' },
+  { label: 'Announce', text: 'Company announcement — ', kind: 'announcement' },
+  { label: 'Ops', text: 'Operations update — ', kind: 'operations' },
+  { label: 'Urgent', text: 'Urgent — ', kind: 'priority' },
 ];
 
 function readFavorites() {
@@ -133,7 +133,7 @@ export default function TeamMessagesView() {
   );
 
   return (
-    <div className={`team-messaging messaging-v6 ${showInfo ? 'with-info' : ''} ${mobileThreadOpen ? 'thread-open' : ''}`}>
+    <div className={`team-messaging messaging-v6 messaging-os ${showInfo ? 'with-info' : ''} ${mobileThreadOpen ? 'thread-open' : ''}`}>
       <aside className="message-channel-rail">
         <div className="message-workspace-brand">
           <span className="message-workspace-mark">NS</span>
@@ -148,7 +148,6 @@ export default function TeamMessagesView() {
         <div className="message-search">
           <Search size={15} />
           <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Find a channel" />
-          <kbd>⌘K</kbd>
         </div>
         <div className="message-rail-actions">
           <button onClick={() => setActiveId(channels.find((c) => c.channel_type === 'company')?.id || activeId)}>
@@ -202,9 +201,9 @@ export default function TeamMessagesView() {
               </div>
             </header>
             <div className="message-quick-row">
-              <span><Zap size={13} />Field shortcuts</span>
+              <span>Shortcuts</span>
               {QUICK.map((q) => (
-                <button key={q.label} onClick={() => quickSend(q)}><Sparkles size={13} />{q.label}</button>
+                <button key={q.label} onClick={() => quickSend(q)}>{q.label}</button>
               ))}
             </div>
             <div className="message-scroll">

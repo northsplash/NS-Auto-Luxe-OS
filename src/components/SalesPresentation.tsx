@@ -5,6 +5,7 @@ import {
   Sparkles, Star, Target, X,
 } from 'lucide-react';
 import { MEMBERSHIPS, PACKAGES, VEHICLE_SIZES, money } from '@/lib/data';
+import type { OpenSlot } from '@/os/appointmentSlots';
 
 type OfferSelection={
   type:'service'|'membership';
@@ -17,6 +18,8 @@ type Props={
   customerName?:string;
   onClose?:()=>void;
   onSelectOffer?:(offer:OfferSelection)=>void;
+  onBookSlot?:(offer:OfferSelection,slot:OpenSlot)=>void;
+  slots?:OpenSlot[];
   onEvent?:(event:string,detail?:Record<string,unknown>)=>void;
   embedded?:boolean;
 };
@@ -32,13 +35,14 @@ const slides=[
   {id:'close',label:'Get Started'},
 ] as const;
 
-export default function SalesPresentation({customerName,onClose,onSelectOffer,onEvent,embedded=false}:Props){
+export default function SalesPresentation({customerName,onClose,onSelectOffer,onBookSlot,slots=[],onEvent,embedded=false}:Props){
   const [slide,setSlide]=useState(0);
-  const [mode,setMode]=useState<'presentation'|'quote'>('presentation');
+  const [mode,setMode]=useState<'presentation'|'quote'|'book'>('presentation');
   const [offerType,setOfferType]=useState<'service'|'membership'>('membership');
   const [serviceIndex,setServiceIndex]=useState(1);
   const [membershipIndex,setMembershipIndex]=useState(1);
   const [vehicleIndex,setVehicleIndex]=useState(0);
+  const [slotId,setSlotId]=useState(slots[0]?.id || '');
 
   const servicePrice=PACKAGES[serviceIndex].price+VEHICLE_SIZES[vehicleIndex].extra;
   const currentOffer:OfferSelection=offerType==='service'
@@ -56,7 +60,18 @@ export default function SalesPresentation({customerName,onClose,onSelectOffer,on
     onEvent?.('presentation_started',{source:'fullscreen'});
     try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen?.()}catch{/* fullscreen is optional */}
   };
-  const chooseOffer=()=>{onEvent?.('offer_selected',currentOffer);onSelectOffer?.(currentOffer)};
+  const chooseOffer=()=>{
+    onEvent?.('offer_selected',currentOffer);
+    if(slots.length && onBookSlot){setMode('book');return;}
+    onSelectOffer?.(currentOffer);
+  };
+  const confirmSlot=()=>{
+    const slot=slots.find((s)=>s.id===slotId)||slots[0];
+    if(!slot){onSelectOffer?.(currentOffer);return;}
+    onEvent?.('slot_booked',{...currentOffer,window:slot.window,tech:slot.tech});
+    onBookSlot?.(currentOffer,slot);
+    onSelectOffer?.(currentOffer);
+  };
 
   const content=useMemo(()=>{
     switch(slides[slide].id){
@@ -91,16 +106,45 @@ export default function SalesPresentation({customerName,onClose,onSelectOffer,on
 
   return <div className={`${embedded?'sales-presentation-embedded':'sales-presentation-overlay'}`}>
     <div className="sales-presentation-shell">
-      <header className="sales-presentation-header"><div className="sales-presentation-brand"><b>NS</b><span><strong>NORTH SPLASH</strong><small>SALES PRESENTATION</small></span></div><div className="sales-presentation-mode"><button type="button" className={mode==='presentation'?'active':''} onClick={()=>setMode('presentation')}>Presentation</button><button type="button" className={mode==='quote'?'active':''} onClick={()=>setMode('quote')}>Quote Mode</button></div><div className="sales-presentation-tools">{!embedded&&<button type="button" onClick={presentFullscreen} title="Full screen"><Maximize2/></button>}{onClose&&<button type="button" onClick={onClose} title="Close"><X/></button>}</div></header>
+      <header className="sales-presentation-header"><div className="sales-presentation-brand"><b>NS</b><span><strong>NORTH SPLASH</strong><small>SALES PRESENTATION</small></span></div><div className="sales-presentation-mode"><button type="button" className={mode==='presentation'?'active':''} onClick={()=>setMode('presentation')}>Pitch</button><button type="button" className={mode==='quote'?'active':''} onClick={()=>setMode('quote')}>Quote</button>{slots.length>0&&<button type="button" className={mode==='book'?'active':''} onClick={()=>setMode('book')}>Times</button>}</div><div className="sales-presentation-tools">{!embedded&&<button type="button" onClick={presentFullscreen} title="Full screen"><Maximize2/></button>}{onClose&&<button type="button" onClick={onClose} title="Close"><X/></button>}</div></header>
       {mode==='presentation'?<>
         <div className="sales-slide-progress"><i style={{width:`${progress}%`}}/></div>
         <div className="sales-presentation-body">{content}</div>
         <footer className="sales-presentation-footer"><button type="button" onClick={()=>go(slide-1)} disabled={slide===0}><ChevronLeft/>Previous</button><div className="sales-slide-dots">{slides.map((s,i)=><button type="button" aria-label={`Go to ${s.label}`} className={i===slide?'active':''} key={s.id} onClick={()=>go(i)}><span>{i+1}</span><small>{s.label}</small></button>)}</div><button type="button" className="next" onClick={()=>slide===slides.length-1?setMode('quote'):go(slide+1)}>{slide===slides.length-1?'Build Quote':'Next'}<ChevronRight/></button></footer>
-      </>:<div className="sales-quote-mode">
+      </>:null}
+      {mode==='quote'&&<div className="sales-quote-mode">
         <section className="sales-quote-builder"><div className="sales-slide-heading"><span className="sales-kicker">CUSTOMER QUOTE</span><h2>Build the offer in front of the customer.</h2><p>Select a one-time service or membership. This creates a sales estimate for the D2D lead; final pricing can still be adjusted based on condition and add-ons.</p></div><div className="sales-quote-toggle"><button type="button" className={offerType==='service'?'active':''} onClick={()=>setOfferType('service')}><Sparkles/>One-Time Service</button><button type="button" className={offerType==='membership'?'active':''} onClick={()=>setOfferType('membership')}><Crown/>Membership</button></div>
           {offerType==='service'?<div className="sales-quote-options"><label><span>Service</span><select value={serviceIndex} onChange={e=>setServiceIndex(Number(e.target.value))}>{PACKAGES.map((p,i)=><option value={i} key={p.name}>{p.name} — {money(p.price)}+</option>)}</select></label><label><span>Vehicle</span><select value={vehicleIndex} onChange={e=>setVehicleIndex(Number(e.target.value))}>{VEHICLE_SIZES.map((v,i)=><option value={i} key={v.name}>{v.name}{v.extra?` +${money(v.extra)}`:''}</option>)}</select></label></div>:<div className="sales-quote-plan-picker">{MEMBERSHIPS.map((m,i)=><button type="button" className={i===membershipIndex?'active':''} key={m.name} onClick={()=>setMembershipIndex(i)}><span>{m.name}</span><strong>{money(m.price)}<small>/mo</small></strong><em>{m.desc}</em></button>)}</div>}
         </section>
-        <aside className="sales-quote-summary"><span className="sales-kicker">TODAY'S RECOMMENDATION</span><h3>{currentOffer.name}</h3><strong>{money(currentOffer.amount)}<small>{currentOffer.type==='membership'?'/month':' estimated'}</small></strong><p>{currentOffer.detail}</p><div className="sales-quote-includes">{(currentOffer.type==='service'?PACKAGES[serviceIndex].features:MEMBERSHIPS[membershipIndex].features).slice(0,6).map(f=><span key={f}><Check/>{f}</span>)}</div><button type="button" className="sales-use-offer" onClick={chooseOffer}><Target/>Use This Offer for Lead</button><button type="button" className="sales-back-presentation" onClick={()=>setMode('presentation')}><ArrowLeft/>Back to Presentation</button><small>Final service price may change for vehicle size, condition or add-ons. Membership enrollment terms are confirmed before purchase.</small></aside>
+        <aside className="sales-quote-summary"><span className="sales-kicker">TODAY'S RECOMMENDATION</span><h3>{currentOffer.name}</h3><strong>{money(currentOffer.amount)}<small>{currentOffer.type==='membership'?'/month':' estimated'}</small></strong><p>{currentOffer.detail}</p><div className="sales-quote-includes">{(currentOffer.type==='service'?PACKAGES[serviceIndex].features:MEMBERSHIPS[membershipIndex].features).slice(0,6).map(f=><span key={f}><Check/>{f}</span>)}</div><button type="button" className="sales-use-offer" onClick={chooseOffer}><Target/>{slots.length?'Pick a live time':'Use This Offer for Lead'}</button><button type="button" className="sales-back-presentation" onClick={()=>setMode('presentation')}><ArrowLeft/>Back to Presentation</button><small>Final service price may change for vehicle size, condition or add-ons. Membership enrollment terms are confirmed before purchase.</small></aside>
+      </div>}
+      {mode==='book'&&<div className="sales-quote-mode sales-book-mode">
+        <section className="sales-quote-builder">
+          <div className="sales-slide-heading">
+            <span className="sales-kicker">LIVE APPOINTMENT BOARD</span>
+            <h2>Hold a real window, not a maybe.</h2>
+            <p>{customerName?`These times are open for ${customerName}.`:'These times are open on the North Splash board right now — taken jobs are already removed.'}</p>
+          </div>
+          {slots.length===0?<div className="sales-empty-slots">No open windows in the next few days. Offer a waitlist or check staff availability.</div>:
+          <div className="sales-slot-board">
+            {slots.map((slot)=>(
+              <button type="button" key={slot.id} className={slotId===slot.id?'active':''} onClick={()=>setSlotId(slot.id)}>
+                <span>{slot.dateLabel}</span>
+                <strong>{slot.time}</strong>
+                <small>{slot.tech} · available</small>
+              </button>
+            ))}
+          </div>}
+        </section>
+        <aside className="sales-quote-summary">
+          <span className="sales-kicker">CLOSE THE DOOR</span>
+          <h3>{currentOffer.name}</h3>
+          <strong>{money(currentOffer.amount)}<small>{currentOffer.type==='membership'?'/month':' estimated'}</small></strong>
+          <p>{slots.find((s)=>s.id===slotId)?.window || 'Choose a window'} · {slots.find((s)=>s.id===slotId)?.tech}</p>
+          <button type="button" className="sales-use-offer" onClick={confirmSlot} disabled={!slots.length}><Clock3/>Book this window</button>
+          <button type="button" className="sales-back-presentation" onClick={()=>setMode('quote')}><ArrowLeft/>Change the offer</button>
+          <small>Booking writes the job onto the live calendar with the assigned detailer. The household stays in this OS — you do not jump to another portal.</small>
+        </aside>
       </div>}
     </div>
   </div>;

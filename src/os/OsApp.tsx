@@ -1,5 +1,5 @@
 import { Component, useEffect, useState, type ErrorInfo, type ReactNode } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   Archive, Bell, BriefcaseBusiness, Calendar, CalendarClock, Car, CheckCircle2, ClipboardCheck,
   Clock3, CreditCard, DollarSign, FileText, Gauge, Globe, LayoutDashboard, ListChecks, LogOut, Mail,
@@ -81,13 +81,13 @@ const NAV: NavItem[] = [
 ];
 
 const WORKSPACES = [
-  { id: 'owner', label: 'Owner', Icon: ShieldCheck, items: ['dashboard', 'command_center', 'owner_growth', 'owner_profits', 'payment_test'] as OsTab[] },
-  { id: 'sales', label: 'Sales', Icon: Target, items: ['sales', 'leads', 'territories', 'marketing', 'retention'] as OsTab[] },
-  { id: 'customers', label: 'Customers', Icon: Users, items: ['customers', 'crm', 'appointments', 'schedule', 'availability', 'archived', 'fleet'] as OsTab[] },
-  { id: 'operations', label: 'Operations', Icon: ListChecks, items: ['jobs', 'dispatch', 'job_assignments', 'inventory', 'equipment', 'tasks', 'documents', 'notifications', 'purchasing', 'incidents', 'approvals'] as OsTab[] },
-  { id: 'people', label: 'People', Icon: UserCheck, items: ['employees', 'staff_schedule', 'recruiting', 'messages', 'crews', 'timeclock', 'time_off', 'payroll_approval', 'training'] as OsTab[] },
-  { id: 'finance', label: 'Finance', Icon: DollarSign, items: ['payments', 'reports', 'finance', 'pay_settings'] as OsTab[] },
-  { id: 'admin', label: 'Admin', Icon: Settings2, items: ['communications', 'automations', 'permissions', 'locations', 'continuity', 'audit', 'visitors'] as OsTab[] },
+  { id: 'owner', label: 'Owner', Icon: ShieldCheck, items: ['dashboard', 'command_center', 'owner_growth', 'owner_profits'] as OsTab[] },
+  { id: 'sales', label: 'Sales', Icon: Target, items: ['sales', 'leads', 'territories'] as OsTab[] },
+  { id: 'customers', label: 'Customers', Icon: Users, items: ['customers', 'appointments', 'availability', 'fleet'] as OsTab[] },
+  { id: 'operations', label: 'Operations', Icon: ListChecks, items: ['jobs', 'dispatch', 'job_assignments'] as OsTab[] },
+  { id: 'people', label: 'People', Icon: UserCheck, items: ['employees', 'messages', 'staff_schedule', 'recruiting'] as OsTab[] },
+  { id: 'finance', label: 'Finance', Icon: DollarSign, items: ['payments', 'reports', 'finance'] as OsTab[] },
+  { id: 'admin', label: 'Admin', Icon: Settings2, items: ['communications', 'permissions', 'locations'] as OsTab[] },
 ];
 
 const PAGE: Record<OsTab, [string, string, string]> = {
@@ -182,7 +182,7 @@ class OsErrorBoundary extends Component<{ children: ReactNode; onReset?: () => v
 type WorkMode = 'owner' | 'd2d' | 'detailer' | 'admin';
 
 function WorkspacePage({ tab, children, action }: { tab: OsTab; children: ReactNode; action?: ReactNode }) {
-  if (tab === 'command_center' || tab === 'dashboard') return <>{children}</>;
+  if (tab === 'command_center' || tab === 'dashboard' || tab === 'messages' || tab === 'sales') return <>{children}</>;
   const meta = PAGE[tab];
   if (!meta) return <>{children}</>;
   const [eyebrow, title, sub] = meta;
@@ -203,7 +203,6 @@ function WorkspacePage({ tab, children, action }: { tab: OsTab; children: ReactN
 
 function OsShell() {
   const os = useOs();
-  const navigate = useNavigate();
   const [tab, setTab] = useState<OsTab>(() => {
     try {
       const fromUrl = new URLSearchParams(window.location.search).get('tab');
@@ -226,6 +225,9 @@ function OsShell() {
   const [mode, setMode] = useState<WorkMode>(() => {
     try { return (sessionStorage.getItem('ns-os-mode') as WorkMode) || 'owner'; } catch { return 'owner'; }
   });
+  const [lastByWorkspace, setLastByWorkspace] = useState<Partial<Record<string, OsTab>>>(() => {
+    try { return JSON.parse(sessionStorage.getItem('ns-os-ws-last') || '{}'); } catch { return {}; }
+  });
 
 
   useEffect(() => {
@@ -234,6 +236,13 @@ function OsShell() {
 
   useEffect(() => {
     try { sessionStorage.setItem('ns-os-tab', tab); } catch { /* ignore */ }
+    const ws = WORKSPACES.find((w) => w.items.includes(tab));
+    if (!ws) return;
+    setLastByWorkspace((prev) => {
+      const next = { ...prev, [ws.id]: tab };
+      try { sessionStorage.setItem('ns-os-ws-last', JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
   }, [tab]);
 
   useEffect(() => {
@@ -263,6 +272,12 @@ function OsShell() {
     setNewWorkOpen(false);
     setPeopleId(null);
     setJobId(null);
+  };
+
+  const switchMode = (next: WorkMode) => {
+    setMode(next);
+    const home: OsTab = next === 'd2d' ? 'sales' : next === 'detailer' ? 'jobs' : next === 'admin' ? 'communications' : 'dashboard';
+    go(home);
   };
 
   const openJob = (id: string) => {
@@ -402,8 +417,8 @@ function OsShell() {
     <div className={`portal-layout nsos-admin-preview admin-os nsos-cream os-tab-${tab}${moreOpen ? ' os-more-open' : ''} os-mode-${mode}`}>
       <aside className={`portal-sidebar admin-sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <div className="sidebar-header">
-          <Link to="/" className="sidebar-brand" onClick={() => go('dashboard')}>
-            <img className="portal-brand-logo" src="/ns-auto-luxe-logo.svg" alt="North Splash Auto Luxe" />
+          <Link to="/" className="sidebar-brand" onClick={() => go(homeTab)}>
+            <img className="portal-brand-logo" src={`${import.meta.env.BASE_URL}ns-auto-luxe-logo.svg`} alt="North Splash Auto Luxe" />
             <div><strong>North Splash</strong><small>Auto Luxe OS</small></div>
           </Link>
           <button className="sidebar-close" onClick={() => setSidebarOpen(false)}><X size={18} /></button>
@@ -417,15 +432,29 @@ function OsShell() {
           {WORKSPACES.map((w) => {
             const active = currentWorkspace.id === w.id;
             return (
-              <button key={w.id} className={`os-workspace-button ${active ? 'active' : ''}`} onClick={() => go(w.items[0])}>
-                <span className="os-workspace-icon"><w.Icon size={18} /></span>
-                <span>{w.label}</span>
-                <small>{w.items.length}</small>
-              </button>
+              <div key={w.id} className={`os-workspace-block ${active ? 'open' : ''}`}>
+                <button type="button" className={`os-workspace-button ${active ? 'active' : ''}`} onClick={() => { if (!active) go(lastByWorkspace[w.id] || w.items[0]); }}>
+                  <span className="os-workspace-icon"><w.Icon size={18} /></span>
+                  <span>{w.label}</span>
+                </button>
+                {active && (
+                  <div className="os-workspace-children">
+                    {w.items.map((id) => {
+                      const item = nav(id);
+                      if (!item) return null;
+                      return (
+                        <button key={id} type="button" className={tab === id ? 'active' : ''} onClick={() => go(id)}>
+                          {TAB_SHORT[id] || item.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             );
           })}
           <div className="os-sidebar-section-label os-sidebar-section-gap">PINNED</div>
-          {(['command_center', 'appointments', 'leads'] as OsTab[]).map((id) => {
+          {(['command_center', 'appointments', 'leads', 'messages'] as OsTab[]).map((id) => {
             const item = nav(id);
             if (!item) return null;
             const { Icon, label } = item;
@@ -437,17 +466,18 @@ function OsShell() {
           })}
         </nav>
         <div className="sidebar-footer">
-          <div className="owner-field-switch-v26">
-            <span>WORK MODE</span>
-            <div>
-              <button type="button" className="owner-field-mode-btn" onClick={() => { setMode('d2d'); go('sales'); }}><Target size={16} /><strong>D2D</strong><small>Sell / canvass</small></button>
-              <button type="button" className="owner-field-mode-btn" onClick={() => { setMode('detailer'); go('jobs'); }}><Car size={16} /><strong>Detail</strong><small>Run jobs</small></button>
+          <div className="owner-field-switch-v26 os-mode-switch">
+            <span>PORTAL MODE</span>
+            <div className="os-mode-grid">
+              <button type="button" className={mode === 'owner' ? 'active' : ''} onClick={() => switchMode('owner')}><ShieldCheck size={16} /><strong>Owner</strong><small>Dashboard</small></button>
+              <button type="button" className={mode === 'd2d' ? 'active' : ''} onClick={() => switchMode('d2d')}><Target size={16} /><strong>D2D</strong><small>Canvass</small></button>
+              <button type="button" className={mode === 'detailer' ? 'active' : ''} onClick={() => switchMode('detailer')}><Car size={16} /><strong>Detail</strong><small>Run jobs</small></button>
+              <button type="button" className={mode === 'admin' ? 'active' : ''} onClick={() => switchMode('admin')}><Settings2 size={16} /><strong>Admin</strong><small>Templates</small></button>
             </div>
           </div>
-          <Link to="/portal" className="sidebar-item"><UserCheck size={18} /> Customer View</Link>
           <button className="sidebar-item" onClick={() => setHelpOpen(true)}><Mail size={18} /> Help</button>
-          <a href="https://www.northsplash.com" className="sidebar-item" target="_blank" rel="noreferrer"><Globe size={18} /> View Site</a>
-          <button className="sidebar-item sidebar-signout" onClick={() => navigate('/login')}><LogOut size={18} /> Sign Out</button>
+          <a href="https://northsplash.github.io/NS-Auto-Luxe-OS/?tab=dashboard" className="sidebar-item" target="_blank" rel="noreferrer"><Globe size={18} /> Live demo</a>
+          <button className="sidebar-item sidebar-signout" onClick={() => { setMode('owner'); go('dashboard'); }}><LogOut size={18} /> Back to Owner</button>
         </div>
       </aside>
 
@@ -473,8 +503,24 @@ function OsShell() {
               return <button key={id} className={tab === id ? 'active' : ''} onClick={() => go(id)}>{TAB_SHORT[id] || item.label}</button>;
             })}
           </div>
-          <div className="os-view-context"><span className="os-live-dot" />Live workspace</div>
+          <div className="os-view-context"><span className="os-live-dot" />{mode === 'owner' ? 'Owner portal' : mode === 'd2d' ? 'D2D field' : mode === 'detailer' ? 'Detailer' : 'Admin'}</div>
         </div>
+        <div className="os-phone-subnav" aria-label="Workspace pages">
+          {currentWorkspace.items.map((id) => {
+            const item = nav(id);
+            if (!item) return null;
+            return <button key={id} type="button" className={tab === id ? 'active' : ''} onClick={() => go(id)}>{TAB_SHORT[id] || item.label}</button>;
+          })}
+        </div>
+        {mode !== 'owner' && (
+          <div className="os-mode-banner">
+            <div>
+              <strong>{mode === 'd2d' ? 'D2D field mode' : mode === 'detailer' ? 'Detailer mode' : 'Admin mode'}</strong>
+              <span>You stay in this OS. Switching does not open a second login portal.</span>
+            </div>
+            <button type="button" onClick={() => switchMode('owner')}>Back to Owner</button>
+          </div>
+        )}
 
         {commandOpen && (
           <div className="os-command-backdrop" onClick={() => setCommandOpen(false)}>
@@ -607,17 +653,14 @@ function OsShell() {
                 );
               })}
             </div>
-            <div className="os-more-sheet-label">Switch mode</div>
+            <div className="os-more-sheet-label">Switch portal</div>
             <div className="os-mode-row">
-              <button className={mode === 'owner' ? 'active' : ''} onClick={() => { setMode('owner'); go('dashboard'); }}><strong>Owner</strong><small>Dashboard</small></button>
-              <button className={mode === 'd2d' ? 'active' : ''} onClick={() => { setMode('d2d'); go('sales'); }}><strong>D2D</strong><small>Canvass</small></button>
-              <button className={mode === 'detailer' ? 'active' : ''} onClick={() => { setMode('detailer'); go('jobs'); }}><strong>Detailer</strong><small>Run jobs</small></button>
-              <button className={mode === 'admin' ? 'active' : ''} onClick={() => { setMode('admin'); go('communications'); }}><strong>Admin</strong><small>Templates</small></button>
+              <button className={mode === 'owner' ? 'active' : ''} onClick={() => switchMode('owner')}><strong>Owner</strong><small>Dashboard</small></button>
+              <button className={mode === 'd2d' ? 'active' : ''} onClick={() => switchMode('d2d')}><strong>D2D</strong><small>Canvass</small></button>
+              <button className={mode === 'detailer' ? 'active' : ''} onClick={() => switchMode('detailer')}><strong>Detailer</strong><small>Run jobs</small></button>
+              <button className={mode === 'admin' ? 'active' : ''} onClick={() => switchMode('admin')}><strong>Admin</strong><small>Templates</small></button>
             </div>
-            <div className="os-more-sheet-modes">
-              <Link to="/d2d" className="owner-field-mode-btn" onClick={() => setMoreOpen(false)}><Target size={16} /><strong>D2D portal</strong><small>Field canvas</small></Link>
-              <Link to="/employee" className="owner-field-mode-btn" onClick={() => setMoreOpen(false)}><Car size={16} /><strong>Detail portal</strong><small>Job list</small></Link>
-            </div>
+            <p className="os-more-note">Owner, D2D, Detail, and Admin are views of the same OS. You do not leave this workspace.</p>
           </div>
         </div>
       )}

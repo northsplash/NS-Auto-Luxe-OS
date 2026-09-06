@@ -15,7 +15,12 @@ npm run dev
 
 The app serves at `http://127.0.0.1:43127`. Demo state lives in this browser (`localStorage`). Reset it from **Manage data**.
 
-A public demo is on GitHub Pages: https://northsplash.github.io/NS-Auto-Luxe-OS/ — open **Owner → Dashboard**. Each push to `main` rebuilds that site.
+## Public URLs
+
+- GitHub Pages (updates on every push to `main`): https://northsplash.github.io/NS-Auto-Luxe-OS/?tab=dashboard
+- Vercel: import this GitHub repo in Vercel. `vercel.json` already rewrites the SPA. Add `northsplash.com` or `app.northsplash.com` as the project domain, then point DNS to Vercel. This repository cannot change northsplash.com DNS by itself.
+
+Open **Owner → Dashboard**. Each push to `main` rebuilds GitHub Pages.
 
 ## How it is modeled
 

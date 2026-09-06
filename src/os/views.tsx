@@ -3,6 +3,8 @@ import {
   Activity, BarChart2, Bell, Calendar, CalendarClock, CalendarDays, Car, Check, ChevronRight, Clock3, CreditCard, DollarSign, GripVertical, MapPin, MessageCircle, Navigation, Plus, Search, Send, Smartphone, Target, Trash2, TrendingUp, UserCheck, Users,
 } from 'lucide-react';
 import AddEmployeeForm from '@/components/AddEmployeeForm';
+import SalesPresentation from '@/components/SalesPresentation';
+import { liveOpenSlots } from './appointmentSlots';
 import { channelLabel, COMM_GROUPS, COMM_VARIABLES, fillTemplate, SAMPLE_VARS } from '@/lib/communicationCatalog';
 import { emptyEmployeeDraft, type EmployeeDraft } from '@/lib/rolePresets';
 import { money } from '@/lib/data';
@@ -857,10 +859,11 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
   const [note, setNote] = useState('');
   const [door, setDoor] = useState({ name: '', address: '' });
   const [zone, setZone] = useState<'all' | 'west' | 'central' | 'east'>('all');
-  const [pane, setPane] = useState<'map' | 'pipeline' | 'list'>('map');
+  const [pane, setPane] = useState<'map' | 'pitch' | 'list'>('map');
   const lead = os.leads.find((l) => l.id === active) || os.leads[0];
   const territory = (x: number) => (x < 33 ? 'west' : x < 66 ? 'central' : 'east');
   const pins = os.leads.filter((l) => zone === 'all' || territory(l.x) === zone);
+  const slots = liveOpenSlots(os.jobs, os.employees, 10);
   const knocks: { id: LeadStatus; label: string }[] = [
     { id: 'knocked', label: 'Not home' },
     { id: 'interested', label: 'Interested' },
@@ -874,23 +877,50 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
     if (status === 'dnk') return 'dnk';
     return 'cold';
   };
+  const bookLead = (time?: string, service?: string, price?: number, detailer?: string) => {
+    if (!lead) return;
+    const id = os.convertLead(lead.id, { time, service, price, detailer });
+    if (id) onBook?.(id);
+  };
   return (
     <div className="nsos-sr">
       <div className="nsos-seg" role="tablist" aria-label="Leads view">
-        {([['map', 'Map'], ['pipeline', 'Pipeline'], ['list', 'List']] as const).map(([id, label]) => (
-          <button key={id} type="button" role="tab" aria-selected={pane === id} className={pane === id ? 'active' : ''} onClick={() => {
-            if (id === 'pipeline' && onPipeline) onPipeline();
-            else setPane(id);
-          }}>{label}</button>
+        {([['map', 'Map'], ['pitch', 'Pitch'], ['list', 'Doors']] as const).map(([id, label]) => (
+          <button key={id} type="button" role="tab" aria-selected={pane === id} className={pane === id ? 'active' : ''} onClick={() => setPane(id)}>{label}</button>
         ))}
+        <button type="button" className="nsos-seg-link" onClick={() => onPipeline?.()}>Pipeline</button>
       </div>
       <div className="nsos-sr-kpis">
         <div className="nsos-kpi"><span>Doors</span><strong>{os.leads.length}</strong></div>
         <div className="nsos-kpi"><span>Touched</span><strong>{os.leads.filter((l) => l.status !== 'new').length}</strong></div>
-        <div className="nsos-kpi"><span>Appointments</span><strong>{os.leads.filter((l) => l.status === 'appointment').length}</strong></div>
+        <div className="nsos-kpi"><span>Open windows</span><strong>{slots.length}</strong></div>
         <div className="nsos-kpi"><span>Sold</span><strong>{os.leads.filter((l) => l.status === 'sold').length}</strong></div>
       </div>
-      {pane === 'list' ? (
+      {pane === 'pitch' ? (
+        <div className="nsos-pitch">
+          <div className="nsos-pitch-lead">
+            <span className="nsos-eyebrow">{lead ? `${territory(lead.x)} door` : 'No door selected'}</span>
+            <h3>{lead?.name || 'Pick a household on the map'}</h3>
+            <p>{lead ? `${lead.address} · Next open window ${slots[0]?.window || 'TBD'}` : 'Open Map, tap a pin, then come back to Pitch.'}</p>
+            {lead && (
+              <div className="nsos-pitch-slots">
+                {slots.slice(0, 4).map((slot) => (
+                  <button key={slot.id} type="button" onClick={() => bookLead(slot.window, undefined, undefined, slot.tech)}>
+                    <strong>{slot.time}</strong>
+                    <small>{slot.dateLabel} · {slot.tech}</small>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <SalesPresentation
+            embedded
+            customerName={lead?.name}
+            slots={slots}
+            onBookSlot={(offer, slot) => bookLead(slot.window, offer.name, offer.amount, slot.tech)}
+          />
+        </div>
+      ) : pane === 'list' ? (
         <div className="nsos-sr-doors">
           {pins.map((l) => (
             <button className={`nsos-job ${l.id === lead?.id ? 'active-row' : ''}`} key={l.id} onClick={() => setActive(l.id)}>
@@ -952,7 +982,7 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
               {lead.activity.slice(0, 4).map((a) => (
                 <div key={a.id} style={{ fontSize: 12, color: 'var(--os-muted)', padding: '6px 0', borderTop: '1px solid var(--os-line)' }}>{a.at} · {a.author} · {a.body}</div>
               ))}
-              <button className="nsos-btn" style={{ marginTop: 10, width: '100%', justifyContent: 'center' }} onClick={() => { const id = os.convertLead(lead.id); if (id) onBook?.(id); }}>Book this door</button>
+              <button className="nsos-btn" style={{ marginTop: 10, width: '100%', justifyContent: 'center' }} onClick={() => setPane('pitch')}>Pitch & book a window</button>
             </div>
           )}
           <form className="nsos-card" onSubmit={(e) => {
