@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import type { CommunicationTemplate } from '@/lib/communicationCatalog';
 import { channelLabel, fillTemplate } from '@/lib/communicationCatalog';
 import type { EmployeeDraft } from '@/lib/rolePresets';
-import { money } from '@/lib/data';
+import { firstWord, money, prettyLabel } from '@/lib/data';
 import {
   clockNow, defaultTemplates, initialsOf, normalizeChat, normalizeEmployee, normalizeJob, normalizeLead,
   seedActivity, seedCandidates, seedChats, seedCustomers, seedEmployees, seedJobs, seedLeads,
@@ -109,8 +109,8 @@ function load(): OsSnapshot {
 
 function jobVars(job: OsJob) {
   return {
-    customer_first_name: String(job.customer || 'Customer').split(' ')[0],
-    detailer_name: String(job.detailer || 'Detailer').split(' ')[0],
+    customer_first_name: firstWord(job.customer, 'Customer'),
+    detailer_name: firstWord(job.detailer, 'Detailer'),
     vehicle: job.vehicle || '',
     service: job.service || '',
     appointment_time: job.time || '',
@@ -262,7 +262,7 @@ export function OsProvider({ children }: { children: ReactNode }) {
         hours_week: 0,
         onboarding: 8,
         location: draft.work_location,
-        onboarding_packet: { ...emptyOnboarding(), legal_first: draft.name.split(' ')[0] || '', legal_last: draft.name.split(' ').slice(1).join(' '), preferred: draft.name.split(' ')[0] || '' },
+        onboarding_packet: { ...emptyOnboarding(), legal_first: firstWord(draft.name), legal_last: String(draft.name || '').trim().split(/\s+/).slice(1).join(' '), preferred: firstWord(draft.name) },
         documents: [
           { id: uid(), name: 'Offer letter', status: 'review' },
           { id: uid(), name: 'I-9', status: 'missing' },
@@ -280,7 +280,7 @@ export function OsProvider({ children }: { children: ReactNode }) {
         chats: [{
           id: `c_${emp.id}`, name: emp.name, kind: 'dm', preview: 'Added to North Splash.', at: clockNow(), unread: 0,
           initials: emp.initials, hue: emp.hue,
-          messages: [{ id: uid(), from: 'You', mine: true, body: `Welcome to North Splash, ${emp.name.split(' ')[0]}.`, at: clockNow() }],
+          messages: [{ id: uid(), from: 'You', mine: true, body: `Welcome to North Splash, ${firstWord(emp.name, 'there')}.`, at: clockNow() }],
         }, ...s.chats],
         activity: [{ id: uid(), at: clockNow(), text: `Hired ${emp.name} as ${emp.title}.`, kind: 'hire' }, ...s.activity],
       }));
@@ -345,23 +345,24 @@ export function OsProvider({ children }: { children: ReactNode }) {
           eta: status === 'en_route' ? job.eta || '15 min' : job.eta,
           comms: [...fresh, ...job.comms],
         };
-        const crew = s.chats.find((c) => c.channel_type === 'crew' || (c.kind === 'space' && c.name.toLowerCase().includes('crew')));
+        const crew = s.chats.find((c) => c.channel_type === 'crew' || (c.kind === 'space' && String(c.name || '').toLowerCase().includes('crew')));
         const actId = `act_${job.id}_${status}`;
+        const statusLabel = prettyLabel(status);
         const activity = s.activity.some((a) => a.id === actId)
           ? s.activity
           : [{
               id: actId, at: clockNow(), kind: 'comms' as const,
-              text: `${job.detailer.split(' ')[0]} moved ${job.customer.split(' ')[0]}’s job to ${status.replaceAll('_', ' ')}${fresh[0] ? ` · ${fresh[0].channel.toUpperCase()} sent` : ''}.`,
+              text: `${firstWord(job.detailer, 'Detailer')} moved ${firstWord(job.customer, 'Customer')}’s job to ${statusLabel}${fresh[0] ? ` · ${fresh[0].channel.toUpperCase()} sent` : ''}.`,
             }, ...s.activity];
         return {
           ...s,
           jobs: s.jobs.map((j) => j.id === id ? next : j),
           activity,
           chats: crew ? s.chats.map((c) => c.id !== crew.id ? c : {
-            ...c, preview: `${job.service} → ${status.replaceAll('_', ' ')}`, at: clockNow(),
+            ...c, preview: `${job.service} → ${statusLabel}`, at: clockNow(),
             messages: (c.messages || []).some((m) => m.id === `m_${job.id}_${status}`)
               ? (c.messages || [])
-              : [...(c.messages || []), { id: `m_${job.id}_${status}`, from: 'OS', body: `${job.customer} · ${job.service} is now ${status.replaceAll('_', ' ')}.`, at: clockNow() }],
+              : [...(c.messages || []), { id: `m_${job.id}_${status}`, from: 'OS', body: `${job.customer} · ${job.service} is now ${statusLabel}.`, at: clockNow() }],
           }) : s.chats,
         };
       });

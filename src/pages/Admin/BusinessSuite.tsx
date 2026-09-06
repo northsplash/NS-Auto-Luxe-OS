@@ -56,7 +56,7 @@ function SectionHeader({ tab, action }: { tab: string; action?: React.ReactNode 
 
 
 function InitialAvatar({ name, size = 34 }: { name: string; size?: number }) {
-  const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map(x => x[0]).join('').toUpperCase() || 'NS';
+  const initials = String(name || '').split(/\s+/).filter(Boolean).slice(0, 2).map(x => x[0]).join('').toUpperCase() || 'NS';
   return <span className="v19-avatar" style={{ width: size, height: size }}>{initials}</span>;
 }
 

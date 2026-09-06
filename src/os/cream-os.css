@@ -159,6 +159,24 @@ html.nsos-active #root {
   border-radius: var(--ns-radius) !important;
   box-shadow: 0 8px 24px rgba(48, 38, 28, .05) !important;
 }
+.nsos-cream .nsos-lead {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 4px !important;
+}
+.nsos-cream .nsos-lead > strong,
+.nsos-cream .nsos-lead-name {
+  display: block !important;
+  width: 100% !important;
+  line-height: 1.35 !important;
+}
+.nsos-cream .nsos-lead > small,
+.nsos-cream .nsos-lead-addr {
+  display: block !important;
+  width: 100% !important;
+  line-height: 1.35 !important;
+}
 .nsos-cream .nsos-kpi span, .nsos-cream .nsos-eyebrow { color: var(--ns-muted) !important; }
 .nsos-cream .nsos-kpi strong, .nsos-cream .phase-kpi strong { color: var(--ns-ink) !important; -webkit-text-fill-color: var(--ns-ink) !important; font-size: 24px !important; }
 .nsos-cream .owner-kpis-v17 .phase-kpi span { color: var(--ns-muted) !important; }

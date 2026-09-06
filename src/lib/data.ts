@@ -136,6 +136,11 @@ export function prettyLabel(value?: string | null) {
   return text ? text.replaceAll('_', ' ') : '—';
 }
 
+export function firstWord(value?: string | null, fallback = '') {
+  const word = String(value || '').trim().split(/\s+/)[0];
+  return word || fallback;
+}
+
 export function calcSavings(lifetimeSpend: number): number {
   // Industry estimate: every $1 spent on detailing prevents ~$3-5 in long-term damage
   // Paint fading alone: $500-2000 in respray. Leather cracking: $1000-3000 replacement.

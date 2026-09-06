@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Camera, Check, FileText, Landmark, ShieldCheck, UserRound } from 'lucide-react';
-import { prettyLabel } from '@/lib/data';
+import { firstWord, prettyLabel } from '@/lib/data';
 import EmployeeAvatar from '@/components/EmployeeAvatar';
 import {
   emptyOnboarding,
@@ -137,7 +137,7 @@ export default function EmployeeOnboardingTab({ employee, onUpdated }: Props) {
       <div className="nsos-onboard-hero">
         <div>
           <span className="nsos-eyebrow eyebrow">Gusto-style packet</span>
-          <h3>Finish hiring {employee.name.split(' ')[0]}</h3>
+          <h3>Finish hiring {firstWord(employee.name)}</h3>
           <p>The hire fills this in. North Splash stores last-four identifiers only — never a full Social or full account number.</p>
         </div>
         <strong>{percent}%</strong>

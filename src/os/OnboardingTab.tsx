@@ -1,5 +1,6 @@
 import { FormEvent, useMemo, useState } from 'react';
 import { Camera, Check, Landmark, ShieldCheck, UserRound, FileText } from 'lucide-react';
+import { firstWord } from '@/lib/data';
 import type { OnboardingPacket, OsEmployee } from './demoData';
 import { emptyOnboarding, onboardingPercent } from './demoData';
 import { useOs } from './osStore';
@@ -12,8 +13,8 @@ const STEPS = [
   { id: 'emergency', label: 'Emergency', Icon: ShieldCheck, hint: 'Who we call if something happens in the field.' },
 ] as const;
 
-function last4(value: string) {
-  return value.replace(/\D/g, '').slice(-4);
+function last4(value?: string | null) {
+  return String(value || '').replace(/\D/g, '').slice(-4);
 }
 
 function shrinkHeadshot(file: File): Promise<string> {
@@ -62,7 +63,7 @@ export default function OnboardingTab({ employee }: { employee: OsEmployee }) {
       steps: { ...packet.steps, ...(steps || []).reduce((m, id) => ({ ...m, [id]: true }), {}) },
     };
     const documents = (employee.documents || []).map((d) => {
-      const name = d.name.toLowerCase();
+      const name = String(d.name || '').toLowerCase();
       if (next.steps.identity && (name.includes('headshot') || name.includes('photo'))) return { ...d, status: 'complete' as const };
       if (next.steps.tax && name.includes('w-4')) return { ...d, status: 'complete' as const };
       if (next.steps.pay && name.includes('deposit')) return { ...d, status: 'complete' as const };
@@ -149,7 +150,7 @@ export default function OnboardingTab({ employee }: { employee: OsEmployee }) {
       <div className="nsos-onboard-hero">
         <div>
           <span className="nsos-eyebrow">Gusto-style packet</span>
-          <h3>Finish hiring {employee.name.split(' ')[0]}</h3>
+          <h3>Finish hiring {firstWord(employee.name)}</h3>
           <p>The hire fills this in. North Splash stores last-four identifiers only — never a full Social or full account number.</p>
         </div>
         <strong>{percent}%</strong>

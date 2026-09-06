@@ -190,6 +190,15 @@ html.nsos-active h1, html.nsos-active h2, html.nsos-active h3, html.nsos-active 
 .nsos-lead {
   width: 100%; text-align: left; background: var(--os-card); border: 1px solid var(--os-line);
   border-radius: 12px; padding: 10px; margin-bottom: 8px;
+  display: flex; flex-direction: column; align-items: stretch; gap: 2px;
+}
+.nsos-lead > strong,
+.nsos-lead-name {
+  display: block; width: 100%; font-size: 13px; font-weight: 700; line-height: 1.35;
+}
+.nsos-lead > small,
+.nsos-lead-addr {
+  display: block; width: 100%; color: var(--os-muted); font-size: 12px; line-height: 1.35;
 }
 .nsos-map {
   height: 280px; border-radius: 16px; border: 1px solid var(--os-line); position: relative; overflow: hidden;

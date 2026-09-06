@@ -269,14 +269,14 @@ export default function TeamMessagesView() {
                 <div className="message-composer-toolbar">
                   <button type="button" title="Add attachment"><Plus size={16} /></button>
                   <button type="button" title="Attach file"><Paperclip size={15} /></button>
-                  <span>{kind !== 'message' ? kind.replaceAll('_', ' ') : 'Message'}</span>
+                  <span>{kind && kind !== 'message' ? prettyLabel(kind) : 'Message'}</span>
                 </div>
                 <textarea
                   ref={composerRef}
                   value={draft}
                   onChange={(e) => setDraft(e.target.value)}
                   onKeyDown={onComposerKeyDown}
-                  placeholder={`Message #${active.name.toLowerCase().replaceAll(' ', '-')}`}
+                  placeholder={`Message #${String(active.name || '').toLowerCase().replaceAll(' ', '-')}`}
                   rows={2}
                 />
                 <div className="message-composer-bottom">
@@ -374,6 +374,6 @@ function channelIcon(c: OsChat) {
   if (c.channel_type === 'custom') return <Users size={15} />;
   return <Hash size={15} />;
 }
-function initials(name: string) {
-  return name.split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]?.toUpperCase()).join('') || 'NS';
+function initials(name?: string | null) {
+  return String(name || '').split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]?.toUpperCase()).join('') || 'NS';
 }
