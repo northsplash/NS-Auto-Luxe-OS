@@ -1125,7 +1125,7 @@
 }
 .auth-hero-lockup {
   display: block;
-  width: min(210px, 42vw);
+  width: min(280px, 52vw);
   height: auto;
   margin: 0 0 16px;
   object-fit: contain;
@@ -1466,8 +1466,9 @@
   content: none !important;
 }
 .portal-layout.nsos-cream .portal-brand-logo {
-  width: 42px !important;
+  width: auto !important;
   height: 42px !important;
+  max-width: 56px !important;
   max-height: 42px !important;
   object-fit: contain !important;
   background: transparent !important;
@@ -1510,7 +1511,7 @@
     max-height: 28vh;
   }
   .auth-page .auth-bg-copy span { display: none; }
-  .auth-hero-lockup { width: min(128px, 40vw); margin-bottom: 8px; }
+  .auth-hero-lockup { width: min(200px, 58vw); margin-bottom: 8px; }
   .auth-page .auth-title { font-size: 26px !important; }
   .auth-page .auth-field input,
   .auth-page .btn-primary { min-height: 48px !important; }
@@ -4491,9 +4492,9 @@
 .portal-layout.nsos-cream .portal-brand-logo,
 .portal-layout.nsos-cream .sidebar-header .portal-brand-logo,
 .portal-layout.nsos-cream .sidebar-brand .portal-brand-logo {
-  width: 42px !important;
+  width: auto !important;
   height: 42px !important;
-  max-width: 42px !important;
+  max-width: 56px !important;
   max-height: 42px !important;
   padding: 0 !important;
   margin: 0 !important;
@@ -4601,8 +4602,9 @@
   }
   .portal-layout.nsos-cream .portal-brand-logo,
   .portal-layout.nsos-cream .sidebar-header .portal-brand-logo {
-    width: 42px !important;
+    width: auto !important;
     height: 42px !important;
+    max-width: 56px !important;
     max-height: 42px !important;
   }
 }

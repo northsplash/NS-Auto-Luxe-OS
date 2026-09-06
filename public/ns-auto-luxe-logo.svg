@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="NS Auto Luxe">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 96" role="img" aria-label="NS Auto Luxe">
   <defs>
     <linearGradient id="gold" x1="18%" y1="8%" x2="86%" y2="92%">
       <stop offset="0%" stop-color="#f5d67e"/>
@@ -11,8 +11,8 @@
       <stop offset="100%" stop-color="#8a8a86"/>
     </linearGradient>
   </defs>
-  <path fill="none" stroke="url(#gold)" stroke-width="5" stroke-linejoin="round"
-    d="M64 10c-16 0-36 3-40 8v36c0 28 18 48 40 62 22-14 40-34 40-62V18c-4-5-24-8-40-8z"/>
-  <text x="52" y="78" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="44" font-weight="700" fill="url(#gold)">N</text>
-  <text x="78" y="78" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="44" font-weight="700" fill="url(#silver)">S</text>
+  <path fill="#140f0c" stroke="url(#gold)" stroke-width="4.5" stroke-linejoin="round"
+    d="M80 6c-22 0-52 4-58 10v28c0 18 22 34 58 46 36-12 58-28 58-46V16c-6-6-36-10-58-10z"/>
+  <text x="70" y="58" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="36" font-weight="700" fill="url(#gold)">N</text>
+  <text x="96" y="58" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="36" font-weight="700" fill="url(#silver)">S</text>
 </svg>
