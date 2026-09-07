@@ -801,6 +801,13 @@ html.nsos-active .portal-layout.nsos-cream {
   .portal-layout.nsos-cream .nsos-hire-notes + .nsos-hire-meta {
     margin-top: 8px;
   }
+  .portal-layout.nsos-cream .owner-command-v17 .owner-command-grid-v17,
+  .portal-layout.nsos-cream .owner-command-v17 .owner-bottom-v17 {
+    display: none !important;
+  }
+  .portal-layout.nsos-cream .nsos-today-strip button {
+    flex-basis: min(70vw, 200px);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

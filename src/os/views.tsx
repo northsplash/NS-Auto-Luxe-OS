@@ -210,9 +210,9 @@ export function OwnerDashboard({
         <div className="nsos-today-strip" aria-label="Today’s jobs">
           {today.slice(0, 4).map((j) => (
             <button type="button" key={j.id} onClick={() => onOpenJob?.(j.id)}>
-              <time>{jobClock(j.time)}</time>
+              <time>{jobClock(j.time)} · {money(j.price)}</time>
               <b>{j.customer}</b>
-              <small>{j.service} · {money(j.price)}</small>
+              <small>{j.service}</small>
             </button>
           ))}
           {today.length > 4 && (
@@ -2029,14 +2029,18 @@ export function HireView({ onHire, onOpen }: { onHire: (name?: string, title?: s
         <button type="button" className="nsos-hire-card-hit" onClick={() => setOpenId(open && compact ? null : c.id)}>
           <span className="nsos-eyebrow">{c.role}{c.source ? ` · ${c.source}` : ''}</span>
           <h3>{c.name}</h3>
-          <p>{[c.email, c.city, c.phone].filter(Boolean).join(' · ') || 'No contact yet'}</p>
+          <p>{[c.city, c.phone].filter(Boolean).join(' · ') || 'No contact yet'}</p>
         </button>
         {open && (
           <>
+            {c.email ? <p className="nsos-hire-meta">{c.email}</p> : null}
             {c.startDate && !(c.notes && /start/i.test(c.notes)) ? <p className="nsos-hire-meta">Can start {c.startDate}</p> : null}
             {c.notes ? <p className="nsos-hire-notes">{c.notes}</p> : <p className="nsos-hire-empty">No written answers on this card yet.</p>}
             <p className="nsos-hire-meta">Next: {c.checklist?.find((item) => !item.done)?.label || 'Convert to teammate'}</p>
-            <button className="nsos-btn ghost" style={{ marginTop: 10, width: '100%', justifyContent: 'center' }} onClick={() => onHire(c.name, c.role)}>Convert to teammate</button>
+            <div className="nsos-hire-actions">
+              {c.phone ? <a className="nsos-btn ghost" href={`tel:${c.phone.replace(/\D/g, '')}`}>Call</a> : null}
+              <button className="nsos-btn ghost" type="button" onClick={() => onHire(c.name, c.role)}>Convert</button>
+            </div>
           </>
         )}
       </div>

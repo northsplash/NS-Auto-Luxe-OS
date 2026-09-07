@@ -1414,7 +1414,13 @@ html.nsos-active #root {
 }
 .nsos-today-strip time { color: #b8893a; font-size: 12px; font-weight: 700; }
 .nsos-today-strip b { font-size: 14px; }
-.nsos-today-strip small { color: #6f675e; font-size: 12px; }
+.nsos-today-strip small {
+  color: #6f675e;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .nsos-today-more { flex-basis: auto !important; min-width: 88px; place-items: center; }
 .nsos-hire-web {
   margin: 0 0 16px;
@@ -1477,6 +1483,17 @@ html.nsos-active #root {
 }
 .nsos-hire-card-hit h3 { margin: 4px 0 0; }
 .nsos-hire-card-hit p { margin: 2px 0 0; color: #6f675e; font-size: 13px; }
+.nsos-hire-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+.nsos-hire-actions .nsos-btn {
+  width: 100%;
+  justify-content: center;
+  min-height: 42px;
+}
 .nsos-hire-head p { color: #6f675e; max-width: 52ch; font-size: 13px; }
 .nsos-hire-onboard {
   display: grid;
