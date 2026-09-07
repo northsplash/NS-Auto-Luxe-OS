@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   ArrowLeft, BadgeCheck, Car, Check, ChevronLeft, ChevronRight,
   Clock3, Copy, Crown, Eye, EyeOff, Gauge, Home, KeyRound, Maximize2, ShieldCheck,
@@ -218,7 +219,7 @@ export default function SalesPresentation({
     </div>
   ) : null;
 
-  return <div className={`${embedded ? 'sales-presentation-embedded' : 'sales-presentation-overlay'}`}>
+  const tree = <div className={`nsos-cream ${embedded ? 'sales-presentation-embedded' : 'sales-presentation-overlay'}`}>
     <div className="sales-presentation-shell">
       <header className="sales-presentation-header"><div className="sales-presentation-brand"><b>NS</b><span><strong>NORTH SPLASH</strong><small>SALES PRESENTATION</small></span></div><div className="sales-presentation-mode"><button type="button" className={mode === 'presentation' ? 'active' : ''} onClick={() => setMode('presentation')}>Pitch</button><button type="button" className={mode === 'quote' ? 'active' : ''} onClick={() => setMode('quote')}>Quote</button><button type="button" className={mode === 'account' ? 'active' : ''} onClick={() => setMode('account')}>Account</button>{slots.length > 0 && <button type="button" className={mode === 'book' ? 'active' : ''} onClick={() => setMode('book')}>Times</button>}</div><div className="sales-presentation-tools">{!embedded && <button type="button" onClick={presentFullscreen} title="Full screen"><Maximize2 /></button>}{onClose && <button type="button" onClick={onClose} title="Close"><X /></button>}</div></header>
       {mode === 'presentation' ? <>
@@ -327,4 +328,6 @@ export default function SalesPresentation({
       </div>}
     </div>
   </div>;
+  if (embedded || typeof document === 'undefined') return tree;
+  return createPortal(tree, document.body);
 }

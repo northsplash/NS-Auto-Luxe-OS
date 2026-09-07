@@ -841,12 +841,16 @@ html.nsos-active .portal-layout.nsos-cream {
 }
 
 /* Cream paper pitch: customer deck matches the OS, and covers the bottom bar. */
+html:has(.sales-presentation-overlay) .os-mobile-bottom-nav,
+html:has(.sales-presentation-overlay) .os-mobile-bottom-nav.mobile-app-nav-v25,
+html:has(.sales-presentation-overlay) .d2d-add-lead-fab,
 .portal-layout.nsos-cream:has(.sales-presentation-overlay) .os-mobile-bottom-nav,
 .portal-layout.nsos-cream:has(.sales-presentation-overlay) .os-mobile-bottom-nav.mobile-app-nav-v25,
 .portal-layout.nsos-cream:has(.sales-presentation-overlay) .d2d-add-lead-fab {
   display: none !important;
 }
 
+.nsos-cream.sales-presentation-overlay,
 .nsos-cream .sales-presentation-overlay,
 .portal-layout.nsos-cream .sales-presentation-overlay {
   z-index: 12000;
@@ -862,10 +866,14 @@ html.nsos-active .portal-layout.nsos-cream {
   background: #fffdf8;
   color: #1c1814;
 }
+.nsos-cream.sales-presentation-overlay .sales-presentation-shell,
 .nsos-cream .sales-presentation-overlay .sales-presentation-shell {
   min-height: 100%;
   height: 100%;
 }
+.nsos-cream.sales-presentation-overlay .sales-presentation-body,
+.nsos-cream.sales-presentation-overlay .sales-quote-mode,
+.nsos-cream.sales-presentation-overlay .sales-account-mode,
 .nsos-cream .sales-presentation-overlay .sales-presentation-body,
 .nsos-cream .sales-presentation-overlay .sales-quote-mode,
 .nsos-cream .sales-presentation-overlay .sales-account-mode {
@@ -1150,19 +1158,23 @@ html.nsos-active .portal-layout.nsos-cream {
 }
 
 @media (min-width: 721px) and (max-width: 1280px) {
+  .nsos-cream.sales-presentation-overlay,
   .nsos-cream .sales-presentation-overlay {
     display: flex;
   }
+  .nsos-cream.sales-presentation-overlay .sales-presentation-shell,
   .nsos-cream .sales-presentation-overlay .sales-presentation-shell {
     display: flex;
     flex-direction: column;
     height: 100dvh;
   }
+  .nsos-cream.sales-presentation-overlay .sales-presentation-body,
   .nsos-cream .sales-presentation-overlay .sales-presentation-body {
     flex: 1;
     min-height: 0;
     align-items: stretch;
   }
+  .nsos-cream.sales-presentation-overlay .sales-slide,
   .nsos-cream .sales-presentation-overlay .sales-slide {
     margin: 0 auto;
     min-height: 0;
@@ -1174,6 +1186,8 @@ html.nsos-active .portal-layout.nsos-cream {
     grid-template-columns: 1fr 1fr;
     gap: 14px;
   }
+  .nsos-cream.sales-presentation-overlay .sales-benefit-grid,
+  .nsos-cream.sales-presentation-overlay .sales-proof-grid,
   .nsos-cream .sales-presentation-overlay .sales-benefit-grid,
   .nsos-cream .sales-presentation-overlay .sales-proof-grid {
     flex: 1;
