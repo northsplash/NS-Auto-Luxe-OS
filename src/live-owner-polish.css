@@ -6509,3 +6509,41 @@ html, body, #root {
     display: none !important;
   }
 }
+
+.portal-layout.nsos-cream.nsos-admin-preview.os-tab-messages .portal-content,
+.portal-layout.nsos-cream.nsos-admin-preview.os-tab-messages .tab-content,
+.portal-layout.nsos-cream.nsos-admin-preview.os-tab-messages .v2-page {
+  padding: 0 !important;
+  max-width: none !important;
+  overflow: hidden !important;
+}
+.portal-layout.nsos-cream .messaging-usable .nsos-seg,
+.nsos-cream .messaging-usable .nsos-seg.message-rail-seg {
+  margin: 10px 12px !important;
+  padding: 4px !important;
+}
+.portal-layout.nsos-cream .messaging-usable .nsos-seg button,
+.nsos-cream .messaging-usable .nsos-seg button {
+  min-height: 40px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-info-rail,
+.portal-layout.nsos-cream .messaging-usable .message-info-card,
+.portal-layout.nsos-cream .messaging-usable .message-info-section,
+.portal-layout.nsos-cream .messaging-usable .message-workflow,
+.portal-layout.nsos-cream.nsos-admin-preview .messaging-usable .message-info-rail,
+.portal-layout.nsos-cream.nsos-admin-preview .messaging-usable .message-info-card,
+.portal-layout.nsos-cream.nsos-admin-preview .messaging-usable .message-workflow {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  border-color: #e4d9cc !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-info-card p,
+.portal-layout.nsos-cream .messaging-usable .message-workflow small,
+.portal-layout.nsos-cream .messaging-usable .message-people-stack small {
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+  font-size: 13px !important;
+}
