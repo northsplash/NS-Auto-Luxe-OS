@@ -372,7 +372,7 @@ export const seedCandidates: OsCandidate[] = [
   { id: 'h1', name: 'Chris Young', role: 'Mobile Detailer', stage: 'Background check', progress: 70, email: 'chris.young@email.com', phone: '704-555-2218', city: 'Charlotte', source: 'Referral', notes: 'Five years mobile detail. Valid NC license. Can start after two weeks’ notice.', checklist: gusto(4) },
   { id: 'h2', name: 'Maya Singh', role: 'D2D Sales', stage: 'Offer sent', progress: 85, email: 'maya.singh@email.com', phone: '919-555-7740', city: 'Durham', source: 'Indeed', notes: 'Closing experience at another shop. Wants 12% commission and a weekend route.', checklist: gusto(5) },
   { id: 'h3', name: 'Owen Blake', role: 'Office Admin', stage: 'First interview', progress: 40, email: 'owen.blake@email.com', phone: '910-555-4412', city: 'Wilmington', source: 'Website', notes: 'Applied from northsplash.com/apply. Weekend mornings only until May. Wants to start April 14.', startDate: 'Apr 14', checklist: gusto(2) },
-  { id: 'h4', name: 'Tessa Cole', role: 'Manager', stage: 'Applied', progress: 15, email: 'tessa.cole@email.com', phone: '336-555-0194', city: 'Greensboro', source: 'Website', notes: 'Applied from /apply for Manager. Eight years running a 4-van shop. Driver license on file. Can start in two weeks.', startDate: 'Two weeks', checklist: gusto(1) },
+  { id: 'h4', name: 'Tessa Cole', role: 'Manager', stage: 'Applied', progress: 15, email: 'tessa.cole@email.com', phone: '336-555-0194', city: 'Greensboro', source: 'Website', notes: 'Applied from /apply for Manager. Eight years running a 4-van shop. Driver license on file. Can start in two weeks.', startDate: 'in two weeks', checklist: gusto(1) },
 ];
 
 export const seedShifts: OsShift[] = [
