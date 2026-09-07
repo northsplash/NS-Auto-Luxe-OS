@@ -9,6 +9,8 @@ type Props = FieldTerritoryMapProps;
 
 const LEAFLET_CSS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
 const LEAFLET_JS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+/** CARTO Voyager now watermarks every tile with "API KEY REQUIRED". OSM raster stays key-free. */
+const OSM_TILES = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 
 export default function FieldTerritoryMapLegacy({
   territories,
@@ -100,15 +102,14 @@ export default function FieldTerritoryMapLegacy({
       attributionControl: true,
       preferCanvas: false,
       minZoom: 3,
-      maxZoom: 20,
+      maxZoom: 19,
       scrollWheelZoom: true,
       touchZoom: true,
       dragging: true,
     }).setView([MARKET.lat, MARKET.lng], MARKET.zoom);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-      maxZoom: 20,
-      subdomains: 'abcd',
-      attribution: '&copy; OpenStreetMap &copy; CARTO',
+    L.tileLayer(OSM_TILES, {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors',
     }).addTo(instance);
     layers.current = L.layerGroup().addTo(instance);
     drawLayer.current = L.layerGroup().addTo(instance);

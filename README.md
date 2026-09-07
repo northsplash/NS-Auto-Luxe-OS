@@ -30,7 +30,7 @@ Territory maps use OpenStreetMap. Address search runs through Nominatim. Google 
 
 ## How it is modeled
 
-Visual language is **cream luxury**: ivory paper `#fffdf8` on canvas `#efe8dc`, 14px radius. Gold is for eyebrows, KPI icons, and cash-flow bars. Primary actions are espresso. The More drawer and Owner sidebar stay on cream paper — black panels are leftover dark-theme invert, not the design system. Workspace pages fade in, maps use a cream Carto street layer, and phone/tablet chrome uses 44px targets. Home is role-based (Owner / D2D / Detailer / Admin). Command Center leads with exceptions. Phones use a 5-button bar: Home / Chat / Calendar / Team / More.
+Visual language is **cream luxury**: ivory paper `#fffdf8` on canvas `#efe8dc`, 14px radius. Gold is for eyebrows, KPI icons, and cash-flow bars. Primary actions are espresso. The More drawer and Owner sidebar stay on cream paper — black panels are leftover dark-theme invert, not the design system. Workspace pages fade in, maps use OpenStreetMap street tiles (no Carto or Google key), and phone/tablet chrome uses 44px targets. Home is role-based (Owner / D2D / Detailer / Admin). Command Center leads with exceptions. Phones use a 5-button bar: Home / Chat / Calendar / Team / More.
 
 Workflows follow the product that already does that job well:
 
