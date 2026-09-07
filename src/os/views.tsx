@@ -1227,6 +1227,7 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
     const next = new URLSearchParams(window.location.search).get('pane');
     return next === 'pitch' || next === 'list' ? next : 'map';
   });
+  const [presenting, setPresenting] = useState(() => new URLSearchParams(window.location.search).get('present') === '1');
   const lead = os.leads.find((l) => l.id === active) || os.leads[0];
   const me = os.employees.find((e) => e.role === 'owner');
   const d2dReps = ['Unassigned', ...os.employees.filter((e) => e.role === 'd2d_agent' || e.role === 'owner').map((e) => e.name)];
@@ -1351,7 +1352,9 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
                 ))}
               </div>
             )}
+            <button type="button" className="nsos-btn" onClick={() => setPresenting(true)}>Present to customer</button>
           </div>
+          {!presenting && (
           <SalesPresentation
             embedded
             initialMode={typeof window !== 'undefined' && window.innerWidth <= 860 ? 'quote' : 'presentation'}
@@ -1366,6 +1369,7 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
             onSelectOffer={(offer) => { void applyOfferToLead(offer); }}
             onApplyAndSave={applyOfferToLead}
           />
+          )}
         </div>
       ) : pane === 'list' ? (
         <div className="nsos-sr-doors nsos-sr-doors-board">
@@ -1515,6 +1519,22 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
           </div>
         </aside>
       </div>
+      )}
+      {presenting && (
+        <SalesPresentation
+          initialMode="presentation"
+          householdSeed={lead ? fieldsFromLead(lead) : undefined}
+          customerName={lead?.name}
+          customerPhone={lead?.phone}
+          customerEmail={lead?.email}
+          customerAddress={lead?.address}
+          leadId={lead?.id}
+          slots={slots}
+          onClose={() => setPresenting(false)}
+          onBookSlot={(offer, slot) => { void applyOfferToLead(offer); bookLead(slot.window, offer.name, offer.amount, slot.tech); }}
+          onSelectOffer={(offer) => { void applyOfferToLead(offer); }}
+          onApplyAndSave={applyOfferToLead}
+        />
       )}
     </div>
   );

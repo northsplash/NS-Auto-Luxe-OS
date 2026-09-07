@@ -1153,17 +1153,17 @@ html.nsos-active .portal-layout.nsos-cream {
   .nsos-cream .sales-presentation-overlay {
     display: flex;
   }
-  .nsos-cream .sales-presentation-shell {
+  .nsos-cream .sales-presentation-overlay .sales-presentation-shell {
     display: flex;
     flex-direction: column;
     height: 100dvh;
   }
-  .nsos-cream .sales-presentation-body {
+  .nsos-cream .sales-presentation-overlay .sales-presentation-body {
     flex: 1;
     min-height: 0;
     align-items: stretch;
   }
-  .nsos-cream .sales-slide {
+  .nsos-cream .sales-presentation-overlay .sales-slide {
     margin: 0 auto;
     min-height: 0;
     height: 100%;
@@ -1173,6 +1173,9 @@ html.nsos-active .portal-layout.nsos-cream {
   .nsos-cream .sales-proof-grid {
     grid-template-columns: 1fr 1fr;
     gap: 14px;
+  }
+  .nsos-cream .sales-presentation-overlay .sales-benefit-grid,
+  .nsos-cream .sales-presentation-overlay .sales-proof-grid {
     flex: 1;
   }
   .nsos-cream .sales-benefit-grid article,
