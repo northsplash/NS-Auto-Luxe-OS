@@ -19,7 +19,7 @@ function list<T>(value: T[] | undefined | null): T[] {
   return Array.isArray(value) ? value : [];
 }
 
-const KEY = 'ns-os-v9';
+const KEY = 'ns-os-v10';
 
 export type Toast = { id: string; title: string; body: string };
 
@@ -80,7 +80,12 @@ function migrate(data: Partial<OsSnapshot>): OsSnapshot {
     timeOff: data.timeOff?.length ? data.timeOff : base.timeOff,
     activity: (data.activity?.length ? data.activity : base.activity).map((a) => normalizeActivity(a)),
     customers: (data.customers?.length ? data.customers : base.customers).map((c) => normalizeCustomer(c)),
-    candidates: (data.candidates?.length ? data.candidates : base.candidates).map((c) => normalizeCandidate(c)),
+    candidates: (data.candidates?.length ? data.candidates : base.candidates).map((c) => {
+      const next = normalizeCandidate(c);
+      const seeded = base.candidates.find((s) => s.id === next.id);
+      if (seeded && /\/apply|northsplash\.com\/apply/i.test(next.notes || '')) next.notes = seeded.notes;
+      return next;
+    }),
     settings: { ...base.settings, ...(data.settings || {}) },
   };
 }
@@ -112,7 +117,7 @@ function persist(state: OsSnapshot) {
 
 function load(): OsSnapshot {
   try {
-    const raw = localStorage.getItem(KEY) || localStorage.getItem('ns-os-v7') || localStorage.getItem('ns-os-v6') || localStorage.getItem('ns-os-v2');
+    const raw = localStorage.getItem(KEY) || localStorage.getItem('ns-os-v9') || localStorage.getItem('ns-os-v7') || localStorage.getItem('ns-os-v6') || localStorage.getItem('ns-os-v2');
     if (!raw) return seed();
     const parsed = JSON.parse(raw) as { v?: number; data?: Partial<OsSnapshot> };
     return migrate(parsed?.data || (parsed as Partial<OsSnapshot>));
@@ -252,6 +257,7 @@ export function OsProvider({ children }: { children: ReactNode }) {
     dismissToast: () => setToast(null),
     resetDemo: () => {
       localStorage.removeItem(KEY);
+      localStorage.removeItem('ns-os-v9');
       localStorage.removeItem('ns-os-v7');
       localStorage.removeItem('ns-os-v6');
       localStorage.removeItem('ns-os-v2');

@@ -236,7 +236,7 @@ export function OwnerDashboard({
         <StripeKpi label="Collected" value={money(collected)} delta={trendLabel(todayCollected, earlierCollected)} onOpen={onOpenPayments} />
         <StripeKpi label="Jobs completed" value={String(completed.length)} onOpen={onOpenSchedule} />
         <StripeKpi label="New leads" value={String(newLeads)} onOpen={onOpenPipeline} />
-        <StripeKpi label="Avg completed job" value={money(avgTicket)} onOpen={onOpenPayments} />
+        <StripeKpi label="Avg job" value={money(avgTicket)} onOpen={onOpenPayments} />
       </div>
 
       <section className="owner-glance-v17">

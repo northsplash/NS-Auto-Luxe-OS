@@ -756,6 +756,49 @@ html.nsos-active .portal-layout.nsos-cream {
     min-height: 40px !important;
     padding: 8px 12px !important;
   }
+  .portal-layout.nsos-cream .owner-command-v17 .nsos-alerts {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 6px !important;
+  }
+  .portal-layout.nsos-cream .owner-command-v17 .nsos-alert {
+    grid-template-columns: auto 1fr !important;
+    align-items: center !important;
+    padding: 8px 10px !important;
+    gap: 8px !important;
+    min-height: 52px;
+  }
+  .portal-layout.nsos-cream .owner-command-v17 .nsos-alert small,
+  .portal-layout.nsos-cream .owner-command-v17 .nsos-alert svg {
+    display: none !important;
+  }
+  .portal-layout.nsos-cream .owner-command-v17 .nsos-alert em {
+    font-size: 18px !important;
+    line-height: 1 !important;
+  }
+  .portal-layout.nsos-cream .owner-command-v17 .nsos-alert b {
+    font-size: 12px !important;
+    line-height: 1.25 !important;
+  }
+  .portal-layout.nsos-cream .owner-command-head h2 {
+    font-size: 22px !important;
+    margin: 0 0 10px !important;
+  }
+  .portal-layout.nsos-cream .owner-command-v17 .owner-glance-v17 {
+    display: none !important;
+  }
+  .portal-layout.nsos-cream .owner-kpis-v17 .phase-kpi {
+    padding: 10px 12px !important;
+    min-height: 0 !important;
+  }
+  .portal-layout.nsos-cream .owner-kpis-v17 .phase-kpi strong {
+    font-family: Inter, system-ui, sans-serif !important;
+    letter-spacing: 0 !important;
+    font-size: 22px !important;
+    line-height: 1.15 !important;
+  }
+  .portal-layout.nsos-cream .nsos-hire-notes + .nsos-hire-meta {
+    margin-top: 8px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
