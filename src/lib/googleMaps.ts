@@ -26,7 +26,9 @@ export function googleMapsUnavailable() {
 }
 
 export function shouldUseGoogleMaps() {
-  return GOOGLE_MAPS_ENABLED && Boolean(GOOGLE_MAPS_API_KEY) && !googleMapsUnavailable();
+  // Production maps stay on OpenStreetMap. A billed Google key in Vercel must not
+  // bring back the Street View pegman or the "For development purposes only" watermark.
+  return false;
 }
 
 export function markGoogleMapsUnavailable() {

@@ -113,8 +113,8 @@ export default function TerritoryStreetView({ houses, activeHouse, onActiveHouse
         <span className="streetview-toggle-icon"><Eye size={19} /></span>
         <span>
           <small>PROPERTY REVIEW</small>
-          <strong>{open ? 'Hide Street View' : 'Check Street View'}</strong>
-          <em>{houses.length ? `${houses.length} mapped ${houses.length === 1 ? 'house' : 'houses'} — open a house in Google Maps Street View` : 'Load or preview houses, then open Street View in Google Maps.'}</em>
+          <strong>{open ? 'Hide property review' : 'Review houses'}</strong>
+          <em>{houses.length ? `${houses.length} mapped ${houses.length === 1 ? 'house' : 'houses'} — open a house on the street map` : 'Load or preview houses, then open a property on the street map.'}</em>
         </span>
         <span className="streetview-toggle-action">{open ? 'Close' : 'Open viewer'} <ChevronRight size={17} /></span>
       </button>
@@ -125,7 +125,7 @@ export default function TerritoryStreetView({ houses, activeHouse, onActiveHouse
             <div>
               <span className="eyebrow">PROPERTY IMAGERY</span>
               <h3>{current?.address || 'Choose a mapped house'}</h3>
-              <p>Open the house in Google Maps Street View. In-app Street View stays off until Google Maps billing is enabled.</p>
+              <p>Open the house on the public street map. In-app Street View stays off until Google Maps billing is enabled.</p>
             </div>
             <div className="streetview-house-nav">
               <button type="button" className="btn-outline" disabled={!houses.length} onClick={() => shiftHouse(-1)}><ChevronLeft size={15}/>Previous House</button>
@@ -144,7 +144,7 @@ export default function TerritoryStreetView({ houses, activeHouse, onActiveHouse
             </div>
 
             <aside className="streetview-house-list">
-              <div className="streetview-house-list-head"><div><strong>Territory Houses</strong><small>Click a property, then open it in Google Maps</small></div><span>{houses.length}</span></div>
+              <div className="streetview-house-list-head"><div><strong>Territory Houses</strong><small>Click a property, then open it on the street map</small></div><span>{houses.length}</span></div>
               <div className="streetview-house-scroll">
                 {houses.length === 0 && <div className="ns-empty compact">No mapped houses yet.</div>}
                 {houses.slice(0,250).map((house,index)=>{
@@ -154,7 +154,7 @@ export default function TerritoryStreetView({ houses, activeHouse, onActiveHouse
               </div>
             </aside>
           </div>
-          {current&&<div className="streetview-footer"><div><strong>Google-powered property review</strong><span>Street View availability depends on Google coverage for the selected property.</span></div><a className="btn-outline" href={externalStreetViewUrl(current)} target="_blank" rel="noreferrer">Open in Google Maps <ExternalLink size={14}/></a></div>}
+          {current&&<div className="streetview-footer"><div><strong>Property review</strong><span>Open the house on the public street map when you need a closer look.</span></div><a className="btn-outline" href={externalStreetViewUrl(current)} target="_blank" rel="noreferrer">Open street view <ExternalLink size={14}/></a></div>}
         </div>
       )}
     </section>

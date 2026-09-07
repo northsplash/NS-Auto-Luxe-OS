@@ -80,13 +80,13 @@ html.nsos-active #root {
 }
 
 .nsos-cream .os-workspace-button.active {
-  background: rgba(255, 255, 255, .08) !important;
-  color: #fff !important;
+  background: #f6ead4 !important;
+  color: #1c1814 !important;
   box-shadow: inset 3px 0 0 var(--ns-gold) !important;
 }
 .nsos-cream .os-pinned-link.active {
-  background: rgba(184, 137, 58, .14) !important;
-  color: #e8c96a !important;
+  background: #f6ead4 !important;
+  color: #1c1814 !important;
 }
 
 .nsos-cream .os-secondary-nav {
@@ -716,13 +716,13 @@ html.nsos-active #root {
 }
 
 .nsos-cream .portal-sidebar .os-workspace-button.active {
-  background: rgba(255, 255, 255, .07) !important;
-  color: #fff !important;
+  background: #f6ead4 !important;
+  color: #1c1814 !important;
   box-shadow: inset 3px 0 0 #b8893a !important;
 }
 .nsos-cream .portal-sidebar .os-workspace-button.active .os-workspace-icon {
-  background: rgba(184, 137, 58, .2) !important;
-  color: #e8c96a !important;
+  background: #efe4d0 !important;
+  color: #7a5a1e !important;
 }
 .nsos-cream .os-secondary-nav {
   background: #efe8dc !important;
@@ -892,7 +892,7 @@ html.nsos-active #root {
   text-align: left;
   border: 0;
   background: transparent;
-  color: rgba(255, 253, 248, .62);
+  color: #6f675e;
   font-size: 12px;
   font-weight: 600;
   min-height: 32px;
@@ -900,8 +900,8 @@ html.nsos-active #root {
   padding: 0 10px;
 }
 .os-workspace-children button.active {
-  color: #e8c96a;
-  background: rgba(184, 137, 58, .16);
+  color: #1c1814;
+  background: #f6ead4;
 }
 .os-workspace-chevron {
   color: #8a8178;

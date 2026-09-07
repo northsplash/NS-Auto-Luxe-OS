@@ -771,27 +771,17 @@
   -webkit-text-fill-color: #6f675e !important;
 }
 
-/* Ink stays cream only on true espresso surfaces */
-.portal-layout.nsos-cream .portal-sidebar,
-.portal-layout.nsos-cream .portal-sidebar *,
+/* Ink stays cream only on true espresso surfaces — never the More / Owner drawer. */
 .portal-layout.nsos-cream .job-mode-head,
 .portal-layout.nsos-cream .job-mode-head *,
 .portal-layout.nsos-cream .training-admin-hero,
 .portal-layout.nsos-cream .training-admin-hero * {
   -webkit-text-fill-color: unset;
 }
-.portal-layout.nsos-cream .portal-sidebar { color: #f6f1e8; }
 .portal-layout.nsos-cream .sidebar-brand > div {
   display: grid !important;
   gap: 1px;
 }
-.portal-layout.nsos-cream .os-workspace-button { color: #d9d0c4 !important; -webkit-text-fill-color: #d9d0c4 !important; }
-.portal-layout.nsos-cream .os-workspace-button.active { color: #fff !important; -webkit-text-fill-color: #fff !important; }
-.portal-layout.nsos-cream .os-pinned-link { color: #c9bfb2 !important; -webkit-text-fill-color: #c9bfb2 !important; }
-.portal-layout.nsos-cream .sidebar-user p,
-.portal-layout.nsos-cream .sidebar-brand strong { color: #f6f1e8 !important; -webkit-text-fill-color: #f6f1e8 !important; }
-.portal-layout.nsos-cream .sidebar-user span,
-.portal-layout.nsos-cream .sidebar-brand small { color: #c4b6a4 !important; -webkit-text-fill-color: #c4b6a4 !important; }
 .portal-layout.nsos-cream .job-mode-head,
 .portal-layout.nsos-cream .training-admin-hero,
 .portal-layout.nsos-cream .training-course-hero {
@@ -4641,14 +4631,14 @@
   gap: 7px;
   margin: 8px 10px 10px;
   padding: 10px 9px;
-  border: 1px solid rgba(255, 253, 248, .12) !important;
+  border: 1px solid #eadfd3 !important;
   border-radius: 14px;
-  background: rgba(255, 255, 255, .04) !important;
+  background: #fffdf8 !important;
 }
 .portal-layout.nsos-cream .owner-field-switch-v26 > span,
 .portal-layout.nsos-cream .portal-switch-grid > span {
-  color: #e8c96a !important;
-  -webkit-text-fill-color: #e8c96a !important;
+  color: #b8893a !important;
+  -webkit-text-fill-color: #b8893a !important;
   font-size: 9px !important;
   font-weight: 800;
   letter-spacing: .14em;
@@ -4670,31 +4660,31 @@
   min-height: 44px !important;
   padding: 8px 10px !important;
   border-radius: 12px !important;
-  border: 1px solid rgba(255, 253, 248, .12) !important;
-  background: rgba(255, 255, 255, .05) !important;
-  color: #f6f1e8 !important;
-  -webkit-text-fill-color: #f6f1e8 !important;
+  border: 1px solid #eadfd3 !important;
+  background: #fff !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
   text-decoration: none !important;
 }
 .portal-layout.nsos-cream .owner-field-mode-btn svg,
-.portal-layout.nsos-cream .os-mode-grid button svg { color: #e8c96a; grid-row: 1 / 3; }
+.portal-layout.nsos-cream .os-mode-grid button svg { color: #b8893a; grid-row: 1 / 3; }
 .portal-layout.nsos-cream .owner-field-mode-btn strong,
 .portal-layout.nsos-cream .os-mode-grid button strong {
   font-size: 11px;
-  color: #f6f1e8 !important;
-  -webkit-text-fill-color: #f6f1e8 !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
 }
 .portal-layout.nsos-cream .owner-field-mode-btn small,
 .portal-layout.nsos-cream .os-mode-grid button small {
   font-size: 9px;
-  color: rgba(246, 241, 232, .62) !important;
-  -webkit-text-fill-color: rgba(246, 241, 232, .62) !important;
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
 }
 .portal-layout.nsos-cream .owner-field-mode-btn.active,
 .portal-layout.nsos-cream .os-mode-grid button.active,
 .portal-layout.nsos-cream .os-mode-grid a.active {
   border-color: #b8893a !important;
-  background: rgba(184, 137, 58, .18) !important;
+  background: #f6ead4 !important;
 }
 .portal-layout.nsos-cream .os-mode-banner,
 .portal-layout.nsos-cream .portal-switch-banner {
@@ -7470,4 +7460,155 @@ html {
   border-radius: 0;
   border: 0;
   border-bottom: 1px solid #eadfd3;
+  display: none;
+}
+
+/* More drawer / Owner sidebar — cream paper, not leftover espresso invert. */
+.portal-layout.nsos-cream .portal-sidebar,
+.portal-layout.nsos-cream.nsos-admin-preview .portal-sidebar,
+.portal-layout.nsos-cream.admin-os .portal-sidebar,
+.portal-layout.nsos-cream.d2d-os .portal-sidebar,
+.portal-layout.nsos-cream.employee-os .portal-sidebar,
+.portal-layout.nsos-cream.manager-os .portal-sidebar {
+  background: #fffdf8 !important;
+  background-image: none !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  border-right: 1px solid #eadfd3 !important;
+  box-shadow: 18px 0 40px rgba(48, 38, 28, .08) !important;
+}
+.portal-layout.nsos-cream .sidebar-header,
+.portal-layout.nsos-cream .sidebar-user,
+.portal-layout.nsos-cream .sidebar-nav,
+.portal-layout.nsos-cream .sidebar-footer {
+  background: transparent !important;
+  border-color: #eadfd3 !important;
+}
+.portal-layout.nsos-cream .sidebar-brand,
+.portal-layout.nsos-cream .sidebar-brand strong,
+.portal-layout.nsos-cream .sidebar-user p {
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .sidebar-brand small,
+.portal-layout.nsos-cream .sidebar-user span,
+.portal-layout.nsos-cream .os-sidebar-section-label,
+.portal-layout.nsos-cream .nav-group-title {
+  color: #8a7d6e !important;
+  -webkit-text-fill-color: #8a7d6e !important;
+}
+.portal-layout.nsos-cream .sidebar-close {
+  color: #6f675e !important;
+  background: #f7f1ea !important;
+  border: 1px solid #eadfd3 !important;
+  border-radius: 10px !important;
+}
+.portal-layout.nsos-cream .sidebar-user {
+  background: #f7f1ea !important;
+  border: 1px solid #eadfd3 !important;
+  border-radius: 14px !important;
+}
+.portal-layout.nsos-cream .sidebar-avatar,
+.portal-layout.nsos-cream .admin-avatar {
+  background: #efe4d0 !important;
+  color: #7a5a1e !important;
+  border: 1px solid #e0c48a !important;
+  box-shadow: none !important;
+}
+.portal-layout.nsos-cream .os-workspace-button,
+.portal-layout.nsos-cream .os-pinned-link,
+.portal-layout.nsos-cream .sidebar-item,
+.portal-layout.nsos-cream .sidebar-nav button,
+.portal-layout.nsos-cream .nav-group button {
+  color: #3d3832 !important;
+  -webkit-text-fill-color: #3d3832 !important;
+  background: transparent !important;
+}
+.portal-layout.nsos-cream .os-workspace-icon {
+  background: #f6ead4 !important;
+  color: #7a5a1e !important;
+}
+.portal-layout.nsos-cream .os-workspace-button.active,
+.portal-layout.nsos-cream .os-pinned-link.active,
+.portal-layout.nsos-cream .os-workspace-children button.active,
+.portal-layout.nsos-cream .sidebar-item.sidebar-active,
+.portal-layout.nsos-cream .sidebar-nav button.active,
+.portal-layout.nsos-cream .nav-group button.active {
+  background: #f6ead4 !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .os-workspace-chevron {
+  color: #8a7d6e !important;
+}
+.portal-layout.nsos-cream .os-workspace-block.open .os-workspace-chevron {
+  color: #b8893a !important;
+}
+.portal-layout.nsos-cream .os-workspace-children button {
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+}
+.portal-layout.nsos-cream .sidebar-item:hover,
+.portal-layout.nsos-cream .os-workspace-button:hover,
+.portal-layout.nsos-cream .os-pinned-link:hover,
+.portal-layout.nsos-cream .os-workspace-children button:hover {
+  background: #f7f1ea !important;
+  color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .sidebar-signout {
+  color: #8a4a3a !important;
+  -webkit-text-fill-color: #8a4a3a !important;
+}
+
+/* Territories leftover dark chrome: house counter, street-view card, setup metrics. */
+.portal-layout.nsos-cream .territory-map-counter,
+.portal-layout.nsos-cream .territory-map-counter-v13 {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  border: 1px solid #eadfd3 !important;
+  box-shadow: 0 8px 22px rgba(48, 38, 28, .08) !important;
+}
+.portal-layout.nsos-cream .territory-map-counter span,
+.portal-layout.nsos-cream .territory-map-counter-v13 span {
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+}
+.portal-layout.nsos-cream .territory-streetview,
+.portal-layout.nsos-cream .territory-google-streetview,
+.portal-layout.nsos-cream .territory-streetview-toggle,
+.portal-layout.nsos-cream .territory-streetview-body,
+.portal-layout.nsos-cream .streetview-house-list,
+.portal-layout.nsos-cream .streetview-footer {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  border-color: #eadfd3 !important;
+  box-shadow: none !important;
+}
+.portal-layout.nsos-cream .streetview-toggle-icon {
+  background: #1c1814 !important;
+  color: #f6f1e8 !important;
+}
+.portal-layout.nsos-cream .territory-streetview-toggle small,
+.portal-layout.nsos-cream .territory-streetview-toggle em,
+.portal-layout.nsos-cream .streetview-footer span {
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+}
+.portal-layout.nsos-cream .territory-selection-summary-v13 > div,
+.portal-layout.nsos-cream .territory-setup-card-v13 {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  border-color: #eadfd3 !important;
+}
+.portal-layout.nsos-cream .os-more-sheet,
+.portal-layout.nsos-cream .os-more-sheet-head,
+.portal-layout.nsos-cream .os-more-sheet-grid button,
+.portal-layout.nsos-cream .os-more-sheet-pins button {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  border-color: #eadfd3 !important;
 }
