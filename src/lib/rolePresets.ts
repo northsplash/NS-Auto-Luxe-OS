@@ -271,7 +271,7 @@ export const emptyEmployeeDraft = (): EmployeeDraft => ({
   custom_compensation: { rules: [], guarantee_floor_weekly: 0, cap_weekly: 0 },
   work_modes: ['detailer'],
   hire_date: new Date().toISOString().slice(0, 10),
-  work_location: 'Raleigh',
+  work_location: 'Raleigh, NC 27616',
   status: 'active',
 });
 

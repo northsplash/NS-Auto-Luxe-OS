@@ -120,7 +120,7 @@ export default function Login() {
             </div>
             <div className="auth-field">
               <label>Phone Number</label>
-              <input type="tel" autoComplete="tel" placeholder="330-000-0000" value={phone} onChange={e => setPhone(e.target.value)} />
+              <input type="tel" autoComplete="tel" placeholder="919-000-0000" value={phone} onChange={e => setPhone(e.target.value)} />
             </div>
             <div className="auth-referral">
               <label className="auth-referral-toggle">
@@ -137,7 +137,7 @@ export default function Login() {
                   <input
                     required
                     autoComplete="off"
-                    placeholder="friend@email.com or 330-000-0000"
+                    placeholder="friend@email.com or 919-000-0000"
                     value={referrerContact}
                     onChange={e => setReferrerContact(e.target.value)}
                   />

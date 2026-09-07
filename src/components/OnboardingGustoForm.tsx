@@ -4,7 +4,7 @@ import { ONBOARDING_STEP_META } from '@/lib/onboarding';
 import {
   GUSTO_FILING_STATUSES,
   GUSTO_I9_STATUSES,
-  GUSTO_OHIO_FILING,
+  GUSTO_NC_FILING,
   GUSTO_PAYMENT_METHODS,
   gustoExportRows,
   gustoStepCopy,
@@ -134,18 +134,18 @@ export default function OnboardingGustoForm({
               <input value={packet.apartment} onChange={(e) => onPatch({ apartment: e.target.value })} placeholder="Optional" />
             </Field>
             <Field label="City" gusto="City">
-              <input value={packet.city} onChange={(e) => onPatch({ city: e.target.value })} required />
+              <input value={packet.city} onChange={(e) => onPatch({ city: e.target.value })} placeholder="Raleigh" required />
             </Field>
             <Field label="State" gusto="State">
-              <input value={packet.state} onChange={(e) => onPatch({ state: e.target.value })} placeholder="OH" maxLength={2} required />
+              <input value={packet.state} onChange={(e) => onPatch({ state: e.target.value })} placeholder="NC" maxLength={2} required />
             </Field>
             <Field label="ZIP" gusto="ZIP">
-              <input value={packet.zip} onChange={(e) => onPatch({ zip: e.target.value })} required />
+              <input value={packet.zip} onChange={(e) => onPatch({ zip: e.target.value })} placeholder="27616" required />
             </Field>
           </div>
           <div className="form-row">
             <Field label="Personal phone" gusto="Phone number">
-              <input type="tel" value={packet.personal_phone} onChange={(e) => onPatch({ personal_phone: e.target.value })} placeholder="330-000-0000" required />
+              <input type="tel" value={packet.personal_phone} onChange={(e) => onPatch({ personal_phone: e.target.value })} placeholder="919-000-0000" required />
             </Field>
             <Field label="Personal email" gusto="Personal email">
               <input type="email" value={packet.personal_email} onChange={(e) => onPatch({ personal_email: e.target.value })} placeholder="name@email.com" />
@@ -193,16 +193,16 @@ export default function OnboardingGustoForm({
             </Field>
           </div>
           <div className="form-row">
-            <Field label="Ohio filing status" gusto="Ohio IT-4">
+            <Field label="NC-4 filing status" gusto="NC-4">
               <select value={packet.ohio_filing_status} onChange={(e) => onPatch({ ohio_filing_status: e.target.value })}>
                 <option value="">Select</option>
-                {GUSTO_OHIO_FILING.map((status) => <option key={status}>{status}</option>)}
+                {GUSTO_NC_FILING.map((status) => <option key={status}>{status}</option>)}
               </select>
             </Field>
-            <Field label="Ohio school district" gusto="OH school district #">
-              <input value={packet.ohio_school_district} onChange={(e) => onPatch({ ohio_school_district: e.target.value })} placeholder="e.g. 7701 Akron CSD" />
+            <Field label="NC county" gusto="Work county">
+              <input value={packet.ohio_school_district} onChange={(e) => onPatch({ ohio_school_district: e.target.value })} placeholder="Wake County" />
             </Field>
-            <Field label="Extra Ohio withholding" gusto="Ohio extra withholding">
+            <Field label="Extra NC withholding" gusto="NC extra withholding">
               <input value={packet.ohio_extra_withholding} onChange={(e) => onPatch({ ohio_extra_withholding: e.target.value })} placeholder="$0" />
             </Field>
           </div>

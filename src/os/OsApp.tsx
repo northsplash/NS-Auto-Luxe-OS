@@ -138,7 +138,7 @@ const PAGE: Record<OsTab, [string, string, string]> = {
   permissions: ['Admin', 'Access', 'Who can open Owner, People, Finance, and field modes.'],
   communications: ['Admin', 'Templates', 'Appointment → Confirmed → En Route → In Progress → Complete.'],
   automations: ['Admin', 'Rules', 'The same templates, fired when a job status moves.'],
-  locations: ['Admin', 'Locations', 'Raleigh, Cary, Durham, and locker points.'],
+  locations: ['Admin', 'Locations', 'Raleigh NC 27616, Cary, Durham, and locker points.'],
   continuity: ['Admin', 'Backups', 'Demo data lives in this browser until you reset it.'],
   audit: ['Admin', 'Audit', 'Hires, status changes, and payment actions.'],
   visitors: ['Admin', 'Traffic', 'Marketing site traffic when Supabase is connected.'],

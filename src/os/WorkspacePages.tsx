@@ -80,7 +80,7 @@ const ISSUES = [
 ];
 
 const SHOPS = [
-  { id: 'raleigh', name: 'Raleigh locker', city: 'Raleigh, NC', radius: '25 mi', manager: 'Jordan Miles' },
+  { id: 'raleigh', name: 'Raleigh 27616 locker', city: 'Raleigh, NC 27616', radius: '20 mi', manager: 'Jordan Miles' },
   { id: 'cary', name: 'Cary staging', city: 'Cary, NC', radius: '18 mi', manager: 'Noah Patel' },
   { id: 'durham', name: 'Durham locker', city: 'Durham, NC', radius: '20 mi', manager: 'Sofia Reyes' },
 ];

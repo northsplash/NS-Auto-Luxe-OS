@@ -4,14 +4,16 @@ function last4(value?: string | null) {
   return String(value || '').replace(/\D/g, '').slice(-4);
 }
 
-/** Gusto People → Add employee / employee self-onboarding. Ohio because North Splash payroll is Ohio. */
+/** Gusto People → Add employee / employee self-onboarding. North Splash payroll is North Carolina (27616). */
 export const GUSTO_FILING_STATUSES = [
   'Single or Married filing separately',
   'Married filing jointly',
   'Head of household',
 ] as const;
 
-export const GUSTO_OHIO_FILING = ['Single', 'Married', 'Married filing separately'] as const;
+export const GUSTO_NC_FILING = ['Single', 'Married', 'Married filing separately'] as const;
+/** @deprecated Use GUSTO_NC_FILING. Kept so existing imports keep working. */
+export const GUSTO_OHIO_FILING = GUSTO_NC_FILING;
 
 export const GUSTO_I9_STATUSES = [
   'A citizen of the United States',
@@ -43,7 +45,7 @@ export function normalizeI9Status(value?: string | null) {
 
 export function gustoStepCopy(id: OnboardingStepId) {
   if (id === 'identity') return { gusto: 'Personal details', enter: 'People → Add employee → Personal details' };
-  if (id === 'tax') return { gusto: 'Tax withholdings', enter: 'People → Taxes → Federal W-4 and Ohio IT-4' };
+  if (id === 'tax') return { gusto: 'Tax withholdings', enter: 'People → Taxes → Federal W-4 and NC-4' };
   if (id === 'pay') return { gusto: 'Payment method', enter: 'People → Pay → Payment method' };
   if (id === 'work') return { gusto: 'Form I-9', enter: 'People → Documents → Form I-9, Section 1' };
   return { gusto: 'Emergency contacts', enter: 'People → Profile → Emergency contacts' };
@@ -119,9 +121,9 @@ export function gustoExportRows(packet: OnboardingPacket) {
     ['Other income (Step 4a)', packet.other_income || '$0'],
     ['Deductions (Step 4b)', packet.w4_deductions || '$0'],
     ['Extra withholding (Step 4c)', packet.extra_withholding || '$0'],
-    ['Gusto → Ohio IT-4', packet.ohio_filing_status || '—'],
-    ['Ohio school district', packet.ohio_school_district || '—'],
-    ['Ohio extra withholding', packet.ohio_extra_withholding || '$0'],
+    ['Gusto → NC-4', packet.ohio_filing_status || '—'],
+    ['NC county', packet.ohio_school_district || '—'],
+    ['NC extra withholding', packet.ohio_extra_withholding || '$0'],
     ['Gusto → Payment method', pay],
     ['Bank', packet.bank_name || '—'],
     ['Gusto → Form I-9', packet.work_auth || '—'],

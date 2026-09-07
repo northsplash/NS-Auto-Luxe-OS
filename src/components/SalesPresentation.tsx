@@ -117,7 +117,7 @@ export default function SalesPresentation({
     <div className="sales-household-grid">
       <label><span>Name</span><input autoComplete="name" placeholder="Resident name" value={household.name} onChange={(e)=>patchHousehold({name:e.target.value})}/></label>
       <label><span>Phone</span><input autoComplete="tel" inputMode="tel" type="tel" placeholder="919-555-0100" value={household.phone} onChange={(e)=>patchHousehold({phone:e.target.value})}/></label>
-      <label className="wide"><span>Address</span><input autoComplete="street-address" placeholder="Street, city, ZIP" value={household.address} onChange={(e)=>patchHousehold({address:e.target.value})}/></label>
+      <label className="wide"><span>Address</span><input autoComplete="street-address" placeholder="Street, Raleigh NC 27616" value={household.address} onChange={(e)=>patchHousehold({address:e.target.value})}/></label>
       <label className="wide"><span>Email</span><input autoComplete="email" type="email" placeholder="optional" value={household.email} onChange={(e)=>patchHousehold({email:e.target.value})}/></label>
     </div>
     <div className="sales-household-actions">

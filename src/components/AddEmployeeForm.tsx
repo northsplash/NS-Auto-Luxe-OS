@@ -107,7 +107,7 @@ export default function AddEmployeeForm({ value, onChange, onSubmit, submitting,
           </div>
           <div className="form-group">
             <label>Phone</label>
-            <input type="tel" value={value.phone} onChange={(e) => patch({ phone: e.target.value })} placeholder="330-000-0000" />
+            <input type="tel" value={value.phone} onChange={(e) => patch({ phone: e.target.value })} placeholder="919-000-0000" />
           </div>
         </div>
         <div className="form-row">
@@ -117,7 +117,7 @@ export default function AddEmployeeForm({ value, onChange, onSubmit, submitting,
           </div>
           <div className="form-group">
             <label>Work location</label>
-            <input value={value.work_location} onChange={(e) => patch({ work_location: e.target.value })} placeholder="Raleigh" />
+            <input value={value.work_location} onChange={(e) => patch({ work_location: e.target.value })} placeholder="Raleigh, NC 27616" />
           </div>
         </div>
       </div>

@@ -1295,7 +1295,7 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
             <div className="nsos-add-door-grid">
               <label className="nsos-field">Name<input value={door.name} onChange={(e) => setDoor({ ...door, name: e.target.value })} placeholder="Resident" /></label>
               <label className="nsos-field">Phone<input value={door.phone} onChange={(e) => setDoor({ ...door, phone: e.target.value })} placeholder="919-555-0100" inputMode="tel" /></label>
-              <label className="nsos-field wide">Address<input value={door.address} onChange={(e) => setDoor({ ...door, address: e.target.value })} placeholder="Street, Raleigh NC" /></label>
+              <label className="nsos-field wide">Address<input value={door.address} onChange={(e) => setDoor({ ...door, address: e.target.value })} placeholder="Street, Raleigh NC 27616" /></label>
             </div>
             <button className="nsos-btn" type="submit"><Plus size={15} />Save lead</button>
           </form>
@@ -1585,7 +1585,7 @@ export function PremiumEmail({
       <div className="nsos-status nsos-status-light">
         {JOB_STEP_LABELS.map((s, i) => <span key={s} className={i < step ? 'done' : i === step ? 'now' : ''}>{s}</span>)}
       </div>
-      <footer>North Splash Auto Luxe · Raleigh · hello@northsplash.com · (919) 555-0100</footer>
+      <footer>North Splash Auto Luxe · Raleigh, NC 27616 · hello@northsplash.com · 330-990-3956</footer>
     </div>
   );
 }

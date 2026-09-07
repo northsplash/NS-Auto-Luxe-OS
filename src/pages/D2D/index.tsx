@@ -15,6 +15,7 @@ import type {
   TerritoryDoorHistory, TerritoryRoute, TimeEntry,
 } from '@/lib/supabase';
 import { money } from '@/lib/data';
+import { MARKET } from '@/lib/market';
 import FieldTerritoryMap from '@/components/FieldTerritoryMap';
 import TrainingPortal from '@/components/TrainingPortal';
 import TeamMessaging from '@/components/TeamMessaging';
@@ -402,14 +403,14 @@ export default function D2DPortal(){
   };
   const toggleRoute=async()=>{if(!route)return;const status=route.status==='paused'?'active':'paused';const patch=status==='paused'?{status,paused_at:new Date().toISOString()}:{status,paused_at:null};await supabase.from('territory_routes').update(patch).eq('id',route.id);setRoute({...route,...patch});};
   const finishRoute=async()=>{if(!route)return;await supabase.from('territory_routes').update({status:'completed',ended_at:new Date().toISOString()}).eq('id',route.id);setRoute(null);setRouteDoorIds([]);};
-  const nextBest=()=>{const nextId=routeDoorIds[0];const start=live||(selectedDoor&&selectedDoor.latitude!=null&&selectedDoor.longitude!=null?{latitude:Number(selectedDoor.latitude),longitude:Number(selectedDoor.longitude)}:territoryDoors[0]||{latitude:35.7796,longitude:-78.6382});const door=nextId?doors.find(d=>d.id===nextId):rankNextBestHouse(start as any,territoryDoors.filter(d=>!d.do_not_knock&&['unworked','no_answer','revisit','follow_up'].includes(d.status||'unworked')))[0];if(door){pickDoor(door);setTab('territory')}else alert('No available house found.');};
+  const nextBest=()=>{const nextId=routeDoorIds[0];const start=live||(selectedDoor&&selectedDoor.latitude!=null&&selectedDoor.longitude!=null?{latitude:Number(selectedDoor.latitude),longitude:Number(selectedDoor.longitude)}:territoryDoors[0]||{latitude:MARKET.lat,longitude:MARKET.lng});const door=nextId?doors.find(d=>d.id===nextId):rankNextBestHouse(start as any,territoryDoors.filter(d=>!d.do_not_knock&&['unworked','no_answer','revisit','follow_up'].includes(d.status||'unworked')))[0];if(door){pickDoor(door);setTab('territory')}else alert('No available house found.');};
 
   const saveAndNext=async()=>{
     const current=selectedDoor;
     if(!current)return;
     const ok=await saveLead(undefined,form.status);
     if(!ok)return;
-    const start={latitude:Number(current.latitude??live?.latitude??35.7796),longitude:Number(current.longitude??live?.longitude??-78.6382)};
+    const start={latitude:Number(current.latitude??live?.latitude??MARKET.lat),longitude:Number(current.longitude??live?.longitude??MARKET.lng)};
     const candidates=rankNextBestHouse(start,territoryDoors.filter(d=>d.id!==current.id&&!d.do_not_knock&&['unworked','no_answer','revisit','follow_up'].includes(d.status||'unworked')));
     if(candidates[0])setTimeout(()=>pickDoor(candidates[0]),80);
   };
@@ -494,7 +495,7 @@ export default function D2DPortal(){
   const nextSuggestedDoor=(()=>{
     const eligible=territoryDoors.filter(d=>!d.do_not_knock&&['unworked','no_answer','revisit','follow_up'].includes(d.status||'unworked'));
     if(!eligible.length)return null;
-    const start=live||territoryDoors[0]||{latitude:35.7796,longitude:-78.6382};
+    const start=live||territoryDoors[0]||{latitude:MARKET.lat,longitude:MARKET.lng};
     return rankNextBestHouse(start,eligible)[0];
   })();
 
@@ -609,7 +610,7 @@ function HouseDrawer({door,form,setForm,history,manual,saving,onClose,onSave,onS
     <div className="field-contact-strip">
       <label><span>Name</span><input autoComplete="name" placeholder="Who you met" value={form.customer_name} onChange={e=>setForm((p:any)=>({...p,customer_name:e.target.value}))}/></label>
       <label><span>Phone</span><input autoComplete="tel" type="tel" inputMode="tel" placeholder="919-555-0100" value={form.phone} onChange={e=>setForm((p:any)=>({...p,phone:e.target.value}))}/></label>
-      <label className="wide"><span>Address</span><input required={manual} autoComplete="street-address" placeholder={manual?'Street, city, ZIP':'Street if missing'} value={form.address} onChange={e=>setForm((p:any)=>({...p,address:e.target.value}))}/></label>
+      <label className="wide"><span>Address</span><input required={manual} autoComplete="street-address" placeholder={manual?'Street, Raleigh NC 27616':'Street if missing'} value={form.address} onChange={e=>setForm((p:any)=>({...p,address:e.target.value}))}/></label>
     </div>
 
     {hasOffer&&<div className="d2d-applied-offer"><Sparkles size={16}/><div><strong>{form.service_interest||'Offer applied'}</strong><span>{form.estimated_value?money(Number(form.estimated_value)): 'Quote on this household'}</span></div><button type="button" onClick={onQuote}>Change</button></div>}

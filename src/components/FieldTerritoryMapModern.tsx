@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { doorStatus } from '@/lib/fieldOps';
 import { GOOGLE_MAPS_MAP_ID, googleMapsErrorMessage, loadGoogleMaps, shouldUseGoogleMaps, watchGoogleMapError } from '@/lib/googleMaps';
+import { MARKET } from '@/lib/market';
 import type { FieldDoor, FieldTerritoryMapProps } from './FieldTerritoryMap.types';
 
 type MarkerLike = { setMap?: (map: any) => void };
@@ -78,7 +79,7 @@ export default function FieldTerritoryMapModern({
       if (cancelled || !el.current) return;
       googleRef.current = google;
       const instance = new google.maps.Map(el.current, {
-        center: { lat: 35.7796, lng: -78.6382 },
+        center: { lat: MARKET.lat, lng: MARKET.lng },
         zoom: 13,
         minZoom: 3,
         maxZoom: 21,

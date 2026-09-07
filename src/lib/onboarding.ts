@@ -53,7 +53,7 @@ export const PACKET_TASK_TITLE = '__onboarding_packet__';
 export function emptyOnboarding(): OnboardingPacket {
   return {
     legal_first: '', legal_middle: '', legal_last: '', preferred: '', dob: '',
-    ssn_last4: '', ssn_on_file: false, street: '', apartment: '', city: '', state: '', zip: '',
+    ssn_last4: '', ssn_on_file: false, street: '', apartment: '', city: 'Raleigh', state: 'NC', zip: '27616',
     personal_email: '', personal_phone: '',
     work_auth: '', i9_uscis: '', i9_work_until: '',
     filing_status: '', allowances: '', extra_withholding: '', two_jobs: false, other_income: '', w4_deductions: '',
@@ -70,7 +70,7 @@ export function last4(value?: string | null) {
 
 export const ONBOARDING_STEP_META: Array<{ id: OnboardingStepId; label: string; hint: string; next: string; gusto: string }> = [
   { id: 'identity', label: 'Personal', gusto: 'Personal details', hint: 'The same personal details Gusto asks when you add an employee: legal name, birthday, home address, phone, and email.', next: 'Gusto personal details' },
-  { id: 'tax', label: 'W-4 & Ohio', gusto: 'Tax withholdings', hint: 'Federal Form W-4 (2020+) and Ohio IT-4 — the screens Gusto opens under Taxes. OS keeps only the last four of the SSN; enter the full SSN in Gusto.', next: 'Gusto tax withholdings' },
+  { id: 'tax', label: 'W-4 & NC', gusto: 'Tax withholdings', hint: 'Federal Form W-4 (2020+) and North Carolina NC-4 — the screens Gusto opens under Taxes. OS keeps only the last four of the SSN; enter the full SSN in Gusto.', next: 'Gusto tax withholdings' },
   { id: 'pay', label: 'Payment', gusto: 'Payment method', hint: 'How Gusto pays this person: direct deposit or paper check. Routing and account stay last-four here; type the full numbers into Gusto.', next: 'Gusto payment method' },
   { id: 'work', label: 'I-9', gusto: 'Form I-9', hint: 'Form I-9 Section 1 citizenship status, matching Gusto’s I-9.', next: 'Gusto Form I-9' },
   { id: 'emergency', label: 'Emergency', gusto: 'Emergency contacts', hint: 'Name, relationship, phone, and email — Gusto’s emergency contact fields.', next: 'Gusto emergency contacts' },
@@ -357,7 +357,7 @@ export async function saveOnboardingPacket(employee: Employee, packet: Onboardin
 
 export const DEFAULT_HIRE_TASKS: Array<{ title: string; description: string; category: string }> = [
   { title: 'Identity & headshot', description: 'Gusto personal details: legal name, birthday, home address, phone, email, roster photo.', category: 'identity' },
-  { title: 'Tax withholding (W-4)', description: 'Gusto federal W-4 (2020+) and Ohio IT-4. Last-four of SSN only in OS.', category: 'tax' },
+  { title: 'Tax withholding (W-4)', description: 'Gusto federal W-4 (2020+) and North Carolina NC-4. Last-four of SSN only in OS.', category: 'tax' },
   { title: 'Direct deposit', description: 'Gusto payment method: direct deposit or paper check.', category: 'pay' },
   { title: 'I-9 work eligibility', description: 'Gusto Form I-9 Section 1 citizenship status and attestation.', category: 'work' },
   { title: 'Emergency contact', description: 'Gusto emergency contact: name, relationship, phone, email.', category: 'emergency' },

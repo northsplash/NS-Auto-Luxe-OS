@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { doorStatus } from '@/lib/fieldOps';
+import { MARKET } from '@/lib/market';
 import { searchOsmPlace } from '@/lib/osmGeocode';
 import type { FieldTerritoryMapProps } from './FieldTerritoryMap.types';
 
@@ -102,7 +103,7 @@ export default function FieldTerritoryMapLegacy({
       scrollWheelZoom: true,
       touchZoom: true,
       dragging: true,
-    }).setView([35.7796, -78.6382], 13);
+    }).setView([MARKET.lat, MARKET.lng], MARKET.zoom);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
       maxZoom: 20,
       subdomains: 'abcd',
