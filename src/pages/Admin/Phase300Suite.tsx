@@ -16,6 +16,8 @@ import EmployeeAvatar from '@/components/EmployeeAvatar';
 import { applyNewHireAcademy, ACADEMY_COURSES } from '@/lib/trainingAcademy';
 import { canCollectJob } from '@/lib/collectPayment';
 import { hiredCrew } from '@/lib/ownerFieldMode';
+import { leadAssignableEmployees, leadRepLabel, selfEmployeeForUser } from '@/lib/workCapabilities';
+import { useAuth } from '@/hooks/useAuth';
 import { setOwnerBoardFilter } from '@/lib/ownerJump';
 import { isHirePacketOpen } from '@/lib/onboarding';
 import { BRAND_LOCKUP } from '@/lib/brand';
@@ -108,7 +110,9 @@ async function fetchTerritoryHouseData(bbox:string,points?:[number,number][]){
 }
 
 function TerritoryCenter({employees}:{employees:Employee[]}){
-  const reps=employees.filter(e=>e.status==='active'&&e.role==='d2d_agent');
+  const {user,profile}=useAuth();
+  const self=selfEmployeeForUser(employees,user?.id,user?.email||profile?.email);
+  const reps=leadAssignableEmployees(employees);
   const [territories,setTerritories]=useState<LeadTerritory[]>([]);
   const [doors,setDoors]=useState<TerritoryDoor[]>([]);
   const [form,setForm]=useState<TerritoryForm>(emptyTerritory());
@@ -238,7 +242,17 @@ function TerritoryCenter({employees}:{employees:Employee[]}){
 
           <div className="territory-form-section-v13">
             <label>Name<input required placeholder="Example: North Hills West" value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))}/></label>
-            <label>Assigned D2D rep<select value={form.assigned_employee_id} onChange={e=>setForm(p=>({...p,assigned_employee_id:e.target.value}))}><option value="">Unassigned</option>{reps.map(r=><option key={r.id} value={r.id}>{r.name} · L{r.employment_level||1}</option>)}</select></label>
+            <label>Assigned D2D rep
+              <div className="owner-lead-assign">
+                <select value={form.assigned_employee_id} onChange={e=>setForm(p=>({...p,assigned_employee_id:e.target.value}))}>
+                  <option value="">Unassigned</option>
+                  {reps.map(r=><option key={r.id} value={r.id}>{leadRepLabel(r)} · L{r.employment_level||1}</option>)}
+                </select>
+                <button type="button" className="btn-outline" disabled={!self||form.assigned_employee_id===self?.id} onClick={()=>self&&setForm(p=>({...p,assigned_employee_id:self.id}))}>
+                  {form.assigned_employee_id===self?.id?'Assigned to you':'Assign to me'}
+                </button>
+              </div>
+            </label>
             <div className="two-fields territory-two-fields-v13">
               <label>Status<select value={form.status} onChange={e=>setForm(p=>({...p,status:e.target.value}))}><option value="active">Active</option><option value="paused">Paused</option><option value="complete">Complete</option><option value="inactive">Archived</option></select></label>
               <label>Map color<input type="color" value={form.color} onChange={e=>setForm(p=>({...p,color:e.target.value}))}/></label>

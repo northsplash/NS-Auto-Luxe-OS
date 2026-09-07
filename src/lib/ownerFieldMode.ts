@@ -4,11 +4,23 @@ import type { Employee } from '@/lib/supabase';
 
 export function isOwnerFieldEmployee(employee?: Employee | null) {
   if (!employee) return false;
+  if (employee.role === 'owner') return true;
   if (employee.title === 'Owner / Field Operator') return true;
   if (employee.department === 'Ownership') return true;
   if (String(employee.notes || '').includes('Owner field profile')) return true;
   const modes = employee.work_modes || [];
   return modes.includes('owner') && employee.role === 'detailer' && Number(employee.employment_level || 0) >= 5;
+}
+
+async function ensureLeadCapable(employee: Employee): Promise<Employee> {
+  const modes = Array.isArray(employee.work_modes) ? employee.work_modes.map(String) : [];
+  const next = [...new Set([...modes, 'owner', 'd2d'])];
+  const patch: Record<string, unknown> = {};
+  if (!modes.includes('d2d') || !modes.includes('owner')) patch.work_modes = next;
+  if (!employee.department) patch.department = 'Ownership';
+  if (!Object.keys(patch).length) return employee;
+  const updated = await supabase.from('employees').update(patch).eq('id', employee.id).select().single();
+  return (updated.data as Employee | null) || employee;
 }
 
 export function hiredCrew(employees: Employee[]) {
@@ -17,14 +29,14 @@ export function hiredCrew(employees: Employee[]) {
 
 export async function ensureOwnerFieldEmployee(userId:string, name?:string|null, email?:string|null):Promise<Employee|null>{
   const rpc=await supabase.rpc('ensure_owner_field_employee');
-  if(!rpc.error&&rpc.data)return rpc.data as Employee;
+  if(!rpc.error&&rpc.data)return ensureLeadCapable(rpc.data as Employee);
   const existing=await supabase.from('employees').select('*').eq('user_id',userId).maybeSingle();
-  if(existing.data)return existing.data as Employee;
+  if(existing.data)return ensureLeadCapable(existing.data as Employee);
   if(email){
     const byEmail=await supabase.from('employees').select('*').ilike('email',email).maybeSingle();
     if(byEmail.data){
       const linked=await supabase.from('employees').update({user_id:userId}).eq('id',byEmail.data.id).select().single();
-      if(linked.data)return linked.data as Employee;
+      if(linked.data)return ensureLeadCapable(linked.data as Employee);
     }
   }
   const created=await supabase.from('employees').insert({

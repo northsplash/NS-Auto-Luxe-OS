@@ -124,7 +124,8 @@ export function isLeadershipSeat(employee?: Pick<Employee, 'role' | 'title' | 'd
 }
 
 export function isHirePacketOpen(employee?: Employee | null) {
-  return Boolean(employee) && isOnboardingOpen(employee.onboarding_status) && !isLeadershipSeat(employee);
+  if (!employee) return false;
+  return isOnboardingOpen(employee.onboarding_status) && !isLeadershipSeat(employee);
 }
 
 export function preferLinkedPeople<T extends { id: string; email?: string | null; user_id?: string | null }>(people: T[]): T[] {

@@ -7,7 +7,9 @@ import { money, prettyLabel } from '@/lib/data';
 import { notifyCustomer } from '@/lib/communications';
 import { ServiceMenuSelect } from '@/components/DetailSelfPicker';
 import { DOOR_STATUSES, doorStatus } from '@/lib/fieldOps';
-import { employeeCanD2D } from '@/lib/workCapabilities';
+import { leadAssignableEmployees, leadRepLabel, selfEmployeeForUser } from '@/lib/workCapabilities';
+import { ensureOwnerFieldEmployee } from '@/lib/ownerFieldMode';
+import { useAuth } from '@/hooks/useAuth';
 import type { Appointment, Employee, Lead, TerritoryDoor } from '@/lib/supabase';
 import WorkspaceHero from '@/components/WorkspaceHero';
 import FieldTerritoryMap from '@/components/FieldTerritoryMap';
@@ -80,8 +82,22 @@ function dupeKey(l: Lead) {
   return '';
 }
 
+function assignedName(reps: Employee[], id?: string | null) {
+  const rep = reps.find((r) => r.id === id);
+  return rep ? leadRepLabel(rep) : 'Unassigned';
+}
+
 export default function OwnerLeadPipeline({ employees, setAppointments, onNavigate }: Props) {
-  const reps = employees.filter((e) => e.status === 'active' && (employeeCanD2D(e) || e.role === 'manager'));
+  const { user, profile } = useAuth();
+  const [claimedSelf, setClaimedSelf] = useState<Employee | null>(null);
+  const [claimingSelf, setClaimingSelf] = useState(false);
+  const linkedSelf = selfEmployeeForUser(employees, user?.id, user?.email || profile?.email);
+  const self = claimedSelf || linkedSelf;
+  const reps = useMemo(() => {
+    const list = leadAssignableEmployees(employees);
+    if (self && !list.some((rep) => rep.id === self.id)) return [self, ...list];
+    return list;
+  }, [employees, self]);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [doors, setDoors] = useState<TerritoryDoor[]>([]);
   const [status, setStatus] = useState('all');
@@ -234,6 +250,30 @@ export default function OwnerLeadPipeline({ employees, setAppointments, onNaviga
     await updateStatus(lead, stage);
   };
 
+  const claimSelf = async () => {
+    if (self) return self;
+    if (!user) {
+      alert('Sign in to assign this lead to yourself.');
+      return null;
+    }
+    setClaimingSelf(true);
+    try {
+      const field = await ensureOwnerFieldEmployee(
+        user.id,
+        profile?.full_name || user.email?.split('@')[0] || 'Owner',
+        user.email || profile?.email,
+      );
+      if (!field) {
+        alert('Could not create an owner field profile to assign this lead to.');
+        return null;
+      }
+      setClaimedSelf(field);
+      return field;
+    } finally {
+      setClaimingSelf(false);
+    }
+  };
+
   return (
     <div className="tab-content phase300 v2-page owner-leads-v39">
       <WorkspaceHero
@@ -263,11 +303,18 @@ export default function OwnerLeadPipeline({ employees, setAppointments, onNaviga
             <label className="wide">Address<input value={draft.address} onChange={(e) => setDraft((p) => ({ ...p, address: e.target.value }))} placeholder="Street, city" /></label>
             <label>Service<ServiceMenuSelect value={draft.service_interest} onChange={(name,pkg)=>setDraft((p)=>({...p,service_interest:name,estimated_value:String(pkg?.price||p.estimated_value)}))}/></label>
             <label>Value<input type="number" min="0" value={draft.estimated_value} onChange={(e) => setDraft((p) => ({ ...p, estimated_value: e.target.value }))} /></label>
-            <label>Rep
-              <select value={draft.assigned_employee_id} onChange={(e) => setDraft((p) => ({ ...p, assigned_employee_id: e.target.value }))}>
-                <option value="">Unassigned</option>
-                {reps.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
-              </select>
+            <label className="wide">Rep
+              <AssignRepControls
+                value={draft.assigned_employee_id}
+                reps={reps}
+                selfId={self?.id}
+                claiming={claimingSelf}
+                onChange={(id) => setDraft((p) => ({ ...p, assigned_employee_id: id }))}
+                onAssignToMe={async () => {
+                  const me = await claimSelf();
+                  if (me) setDraft((p) => ({ ...p, assigned_employee_id: me.id }));
+                }}
+              />
             </label>
             <label className="wide">Notes<input value={draft.notes} onChange={(e) => setDraft((p) => ({ ...p, notes: e.target.value }))} placeholder="How they found us, vehicle, gate code" /></label>
           </div>
@@ -313,7 +360,7 @@ export default function OwnerLeadPipeline({ employees, setAppointments, onNaviga
         <div className="search-control search-box"><Search size={16} /><input placeholder="Search name, address, phone or service" value={query} onChange={(e) => setQuery(e.target.value)} /></div>
         <select value={repFilter} onChange={(e) => setRepFilter(e.target.value)}>
           <option value="all">All reps</option>
-          {reps.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+          {reps.map((r) => <option key={r.id} value={r.id}>{leadRepLabel(r)}</option>)}
         </select>
         <select value={status} onChange={(e) => setStatus(e.target.value)}>
           <option value="all">All statuses</option>
@@ -358,6 +405,9 @@ export default function OwnerLeadPipeline({ employees, setAppointments, onNaviga
           <LeadInspector
             selected={selected}
             reps={reps}
+            selfId={self?.id}
+            claiming={claimingSelf}
+            onAssignToMe={claimSelf}
             setAppointments={setAppointments}
             onNavigate={onNavigate}
             updateStatus={updateStatus}
@@ -402,7 +452,7 @@ export default function OwnerLeadPipeline({ employees, setAppointments, onNaviga
                       </div>
                       <strong>{l.customer_name || l.address || 'Unnamed lead'}</strong>
                       <small>{l.address || 'No address'}</small>
-                      <p>{reps.find((r) => r.id === l.assigned_employee_id)?.name || 'Unassigned'}</p>
+                      <p>{assignedName(reps, l.assigned_employee_id)}</p>
                       <footer>
                         <span>{l.service_interest || 'Service TBD'}</span>
                         <b>{money(Number(l.estimated_value || 0))}</b>
@@ -428,7 +478,7 @@ export default function OwnerLeadPipeline({ employees, setAppointments, onNaviga
           {filtered.sort((a, b) => leadScore(b) - leadScore(a)).map((l) => (
             <button className="lead-command-row" type="button" key={l.id} onClick={() => setSelected(l)}>
               <span><strong>{l.customer_name || 'Unnamed lead'}</strong><small>{l.address || 'No address'} · {l.service_interest || 'No service selected'}</small></span>
-              <span>{reps.find((r) => r.id === l.assigned_employee_id)?.name || 'Unassigned'}</span>
+              <span>{assignedName(reps, l.assigned_employee_id)}</span>
               <span><b className={isHot(l) ? 'lead-score hot' : 'lead-score'}>{leadScore(l)}</b></span>
               <span><b className="status-lozenge">{humanStatus(l.status)}</b></span>
               <span>{money(Number(l.actual_sale_amount || l.estimated_value || 0))}</span>
@@ -458,6 +508,9 @@ export default function OwnerLeadPipeline({ employees, setAppointments, onNaviga
           <LeadInspector
             selected={selected}
             reps={reps}
+            selfId={self?.id}
+            claiming={claimingSelf}
+            onAssignToMe={claimSelf}
             setAppointments={setAppointments}
             onNavigate={onNavigate}
             updateStatus={updateStatus}
@@ -473,10 +526,13 @@ export default function OwnerLeadPipeline({ employees, setAppointments, onNaviga
 }
 
 function LeadInspector({
-  selected, reps, setAppointments, onNavigate, updateStatus, patchLead, archiveLead, restoreLead, clear,
+  selected, reps, selfId, claiming, onAssignToMe, setAppointments, onNavigate, updateStatus, patchLead, archiveLead, restoreLead, clear,
 }: {
   selected: Lead | null;
   reps: Employee[];
+  selfId?: string;
+  claiming?: boolean;
+  onAssignToMe: () => Promise<Employee | null>;
   setAppointments?: React.Dispatch<React.SetStateAction<Appointment[]>>;
   onNavigate?: (view: string) => void;
   updateStatus: (l: Lead, s: string) => void;
@@ -602,14 +658,18 @@ function LeadInspector({
         <label>Service<input value={service} onChange={(e) => setService(e.target.value)} /></label>
         <label>Value<input type="number" min="0" value={value} onChange={(e) => setValue(e.target.value)} /></label>
         <label>Follow-up<input type="datetime-local" value={followUp} onChange={(e) => setFollowUp(e.target.value)} /></label>
-        <label>Rep
-          <select
+        <label className="wide">Rep
+          <AssignRepControls
             value={selected.assigned_employee_id || ''}
-            onChange={(e) => patchLead(selected, { assigned_employee_id: e.target.value || null }, { type: 'assigned', notes: e.target.value ? 'Rep assigned' : 'Rep cleared' })}
-          >
-            <option value="">Unassigned</option>
-            {reps.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
-          </select>
+            reps={reps}
+            selfId={selfId}
+            claiming={claiming}
+            onChange={(id) => patchLead(selected, { assigned_employee_id: id || null }, { type: 'assigned', notes: id ? 'Rep assigned' : 'Rep cleared' })}
+            onAssignToMe={async () => {
+              const me = await onAssignToMe();
+              if (me) await patchLead(selected, { assigned_employee_id: me.id }, { type: 'assigned', notes: 'Owner assigned this lead to themselves' });
+            }}
+          />
         </label>
         <label className="wide">Notes<textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} /></label>
         <button className="btn-primary" type="submit">Save details</button>
@@ -638,5 +698,34 @@ function LeadInspector({
           : <button className="btn-outline" type="button" onClick={() => archiveLead(selected)}><Archive size={15} />Archive 6 Months</button>}
       </div>
     </aside>
+  );
+}
+
+function AssignRepControls({
+  value,
+  reps,
+  selfId,
+  claiming,
+  onChange,
+  onAssignToMe,
+}: {
+  value: string;
+  reps: Employee[];
+  selfId?: string;
+  claiming?: boolean;
+  onChange: (id: string) => void;
+  onAssignToMe: () => void | Promise<void>;
+}) {
+  const mine = Boolean(selfId && value === selfId);
+  return (
+    <div className="owner-lead-assign">
+      <select value={value} onChange={(e) => onChange(e.target.value)}>
+        <option value="">Unassigned</option>
+        {reps.map((r) => <option key={r.id} value={r.id}>{leadRepLabel(r)}</option>)}
+      </select>
+      <button type="button" className="btn-outline" disabled={Boolean(claiming) || mine} onClick={() => void onAssignToMe()}>
+        {mine ? 'Assigned to you' : claiming ? 'Assigning…' : 'Assign to me'}
+      </button>
+    </div>
   );
 }

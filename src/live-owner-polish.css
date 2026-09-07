@@ -3966,6 +3966,21 @@
 .portal-layout.nsos-cream .owner-lead-edit .wide {
   grid-column: 1 / -1;
 }
+.portal-layout.nsos-cream .owner-lead-assign {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+.portal-layout.nsos-cream .owner-lead-assign select {
+  flex: 1;
+  min-width: 0;
+}
+.portal-layout.nsos-cream .owner-lead-assign button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  height: auto;
+  min-height: 42px;
+}
 .portal-layout.nsos-cream .owner-lead-compose label,
 .portal-layout.nsos-cream .owner-lead-edit label,
 .portal-layout.nsos-cream .owner-lead-book label {
@@ -3999,6 +4014,11 @@
   gap: 6px;
   margin-top: 6px;
   font-size: 12px;
+  flex-wrap: wrap;
+}
+.portal-layout.nsos-cream .nsos-lead-meta .nsos-btn {
+  width: 100%;
+  justify-content: center;
 }
 .portal-layout.nsos-cream .nsos-lead-meta select {
   min-height: 32px !important;

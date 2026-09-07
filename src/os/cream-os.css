@@ -1669,3 +1669,20 @@ html.nsos-active #root {
 .nsos-cream .sidebar-footer .sidebar-item {
   min-height: 36px !important;
 }
+
+.nsos-cream .owner-lead-assign,
+.owner-lead-assign {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+.nsos-cream .owner-lead-assign select,
+.owner-lead-assign select {
+  flex: 1;
+  min-width: 0;
+}
+.nsos-cream .owner-lead-assign button,
+.owner-lead-assign button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}

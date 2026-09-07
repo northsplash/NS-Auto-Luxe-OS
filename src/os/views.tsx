@@ -988,6 +988,7 @@ export function TerritoriesView({ onMap, onPipeline }: { onMap?: () => void; onP
   const [active, setActive] = useState<string | null>(os.leads[0]?.id || null);
   const [reps, setReps] = useState<Record<string, string>>(readTerritoryReps);
   const lead = os.leads.find((l) => l.id === active) || os.leads[0];
+  const me = os.employees.find((e) => e.role === 'owner');
   const d2dReps = ['Unassigned', ...os.employees.filter((e) => e.role === 'd2d_agent' || e.role === 'owner').map((e) => e.name)];
   const pinClass = (status: LeadStatus) => {
     if (status === 'sold' || status === 'appointment') return 'hot';
@@ -1053,9 +1054,14 @@ export function TerritoriesView({ onMap, onPipeline }: { onMap?: () => void; onP
             </button>
             <label className="nsos-field">
               Rep
-              <select value={z.assigned} onChange={(e) => assignZone(z.id, e.target.value)}>
-                {d2dReps.map((n) => <option key={n}>{n}</option>)}
-              </select>
+              <div className="owner-lead-assign">
+                <select value={z.assigned} onChange={(e) => assignZone(z.id, e.target.value)}>
+                  {d2dReps.map((n) => <option key={n}>{n}</option>)}
+                </select>
+                <button type="button" className="nsos-btn ghost" disabled={!me || z.assigned === me.name} onClick={() => { if (me) assignZone(z.id, me.name); }}>
+                  {me && z.assigned === me.name ? 'Assigned to you' : 'Assign to me'}
+                </button>
+              </div>
             </label>
           </article>
         ))}
@@ -1130,6 +1136,8 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
     return next === 'pitch' || next === 'list' ? next : 'map';
   });
   const lead = os.leads.find((l) => l.id === active) || os.leads[0];
+  const me = os.employees.find((e) => e.role === 'owner');
+  const d2dReps = ['Unassigned', ...os.employees.filter((e) => e.role === 'd2d_agent' || e.role === 'owner').map((e) => e.name)];
   const territory = (x: number) => (x < 33 ? 'west' : x < 66 ? 'central' : 'east');
   const pins = os.leads.filter((l) => zone === 'all' || territory(l.x) === zone);
   const slots = liveOpenSlots(os.jobs, os.employees, 10);
@@ -1251,9 +1259,19 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
               <h3>{lead.name}</h3>
               <p style={{ color: 'var(--os-muted)' }}>{lead.address} · {lead.phone || 'No phone'} · {money(lead.value)}</p>
               <label className="nsos-field">Rep
-                <select value={lead.rep} onChange={(e) => os.assignLead(lead.id, e.target.value)}>
-                  {['Unassigned', ...os.employees.filter((e) => e.role === 'd2d_agent' || e.role === 'owner').map((e) => e.name)].map((n) => <option key={n}>{n}</option>)}
-                </select>
+                <div className="owner-lead-assign">
+                  <select value={lead.rep} onChange={(e) => os.assignLead(lead.id, e.target.value)}>
+                    {d2dReps.map((n) => <option key={n}>{n}</option>)}
+                  </select>
+                  <button
+                    type="button"
+                    className="nsos-btn ghost"
+                    disabled={!me || lead.rep === me.name}
+                    onClick={() => { if (me) os.assignLead(lead.id, me.name); }}
+                  >
+                    {me && lead.rep === me.name ? 'Assigned to you' : 'Assign to me'}
+                  </button>
+                </div>
               </label>
               <div className="nsos-sr-knocks">
                 {knocks.map((s) => (
@@ -1324,6 +1342,7 @@ export function PipelineView({ onBook }: { onBook?: (jobId: string) => void }) {
   const unassigned = live.filter((l) => !l.rep || l.rep === 'Unassigned');
   const sold = os.leads.filter((l) => l.status === 'sold').length;
   const reps = os.employees.filter((e) => e.role === 'd2d_agent' || e.role === 'owner');
+  const me = os.employees.find((e) => e.role === 'owner');
   return (
     <div className="owner-demo-pipeline">
       <div className="owner-leads-head-actions" style={{ marginBottom: 12 }}>
@@ -1405,9 +1424,12 @@ export function PipelineView({ onBook }: { onBook?: (jobId: string) => void }) {
                       onChange={(e) => os.assignLead(l.id, e.target.value)}
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <option>Unassigned</option>
-                      {reps.map((r) => <option key={r.id}>{r.name}</option>)}
+                      <option value="Unassigned">Unassigned</option>
+                      {reps.map((r) => <option key={r.id} value={r.name}>{r.name}{r.role === 'owner' ? ' · Owner' : ''}</option>)}
                     </select>
+                    {me && l.rep !== me.name && (
+                      <button type="button" className="nsos-btn ghost" onClick={(e) => { e.stopPropagation(); os.assignLead(l.id, me.name); }}>Assign to me</button>
+                    )}
                     <b>{money(l.value)}</b>
                   </div>
                   {(s === 'appointment' || s === 'sold' || s === 'interested') && (
