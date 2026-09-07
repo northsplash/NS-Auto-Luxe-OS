@@ -1411,6 +1411,8 @@ html.nsos-active #root {
   border: 1px solid #e4d9cc;
   background: #fff;
   color: #1c1814;
+  overflow: hidden;
+  min-width: 0;
 }
 .nsos-today-strip time { color: #b8893a; font-size: 12px; font-weight: 700; }
 .nsos-today-strip b { font-size: 14px; }

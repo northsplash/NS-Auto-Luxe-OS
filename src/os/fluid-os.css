@@ -806,7 +806,7 @@ html.nsos-active .portal-layout.nsos-cream {
     display: none !important;
   }
   .portal-layout.nsos-cream .nsos-today-strip button {
-    flex-basis: min(70vw, 200px);
+    flex-basis: min(78vw, 240px);
   }
 }
 
