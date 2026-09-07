@@ -381,7 +381,7 @@ function CommandCenter({employees,appointments,customers,payments,onNavigate,own
   unassigned?{n:unassigned,title:'Unassigned jobs',sub:'Need a technician',view:'dispatch',hot:true}:null,
   unpaid.length?{n:unpaid.length,title:'Unpaid finished jobs',sub:'Collect before the van leaves',view:'dispatch',hot:true}:null,
   leadSnap.hot?{n:leadSnap.hot,title:'Hot leads',sub:'Ready to book from the map',view:'leads',hot:true}:null,
-  packets?{n:packets,title:'Open hire packets',sub:'Finish identity, tax, or deposit',view:'employees',hot:true}:null,
+  packets?{n:packets,title:'Open Gusto packets',sub:'Personal, W-4, payment, or I-9 still open',view:'employees',hot:true}:null,
   pending?{n:pending,title:'Pending bookings',sub:'Awaiting confirmation',view:'appointments',hot:false}:null,
   qc?{n:qc,title:'QC queue',sub:'Jobs waiting for quality review',view:'dispatch',hot:false}:null,
  ].filter(Boolean) as {n:number;title:string;sub:string;view:string;hot:boolean}[];

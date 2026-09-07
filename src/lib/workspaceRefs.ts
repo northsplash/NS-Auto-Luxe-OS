@@ -155,8 +155,8 @@ export const WORKSPACE_REFS: Record<
   recruiting: {
     kicker: 'People',
     title: 'Hiring',
-    modeled: 'Gusto + ADP',
-    lead: 'Pipeline → offer → onboarding packet. Convert puts the hire on Team.',
+    modeled: 'Gusto',
+    lead: 'Pipeline → offer → Gusto payroll packet (personal, W-4, payment, I-9). Convert puts the hire on Team.',
   },
   communications: {
     kicker: 'Customer',

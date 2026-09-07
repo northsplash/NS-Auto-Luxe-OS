@@ -1,6 +1,10 @@
 import { DEFAULT_COMM_TEMPLATES, type CommunicationTemplate } from '@/lib/communicationCatalog';
 import { compensationSummary } from '@/lib/compensation';
 import { BOOKABLE_SERVICES, checklistForService, findDetailPackage } from '@/lib/detailCatalog';
+import { emptyOnboarding as emptyHirePacket, type OnboardingPacket as HirePacket } from '@/lib/onboarding';
+
+export type OnboardingPacket = HirePacket;
+export const emptyOnboarding = emptyHirePacket;
 
 export type OsEmployee = {
   id: string;
@@ -30,45 +34,7 @@ export type OsEmployee = {
   onboarding_packet?: OnboardingPacket;
 };
 
-export type OnboardingPacket = {
-  legal_first: string;
-  legal_middle: string;
-  legal_last: string;
-  preferred: string;
-  dob: string;
-  ssn_last4: string;
-  ssn_on_file: boolean;
-  street: string;
-  city: string;
-  state: string;
-  zip: string;
-  work_auth: string;
-  filing_status: string;
-  allowances: string;
-  extra_withholding: string;
-  bank_name: string;
-  routing_last4: string;
-  account_last4: string;
-  account_type: 'checking' | 'savings' | '';
-  emergency_name: string;
-  emergency_phone: string;
-  emergency_relation: string;
-  handbook_ack: boolean;
-  i9_ack: boolean;
-  headshot?: string;
-  steps: Record<string, boolean>;
-};
-
-export function emptyOnboarding(): OnboardingPacket {
-  return {
-    legal_first: '', legal_middle: '', legal_last: '', preferred: '', dob: '',
-    ssn_last4: '', ssn_on_file: false, street: '', city: '', state: '', zip: '',
-    work_auth: '', filing_status: '', allowances: '', extra_withholding: '',
-    bank_name: '', routing_last4: '', account_last4: '', account_type: '',
-    emergency_name: '', emergency_phone: '', emergency_relation: '',
-    handbook_ack: false, i9_ack: false, steps: {},
-  };
-}
+export type OsDocument = { id: string; name: string; status: 'complete' | 'missing' | 'review' };
 
 export function onboardingPercent(packet: OnboardingPacket | undefined, documents: OsDocument[] = []) {
   const steps = ['identity', 'tax', 'pay', 'work', 'emergency'];
@@ -80,8 +46,6 @@ export function onboardingPercent(packet: OnboardingPacket | undefined, document
 export type Weekday = 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat' | 'Sun';
 export const WEEKDAYS: Weekday[] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 export const SHIFT_DAYS: Weekday[] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-export type OsDocument = { id: string; name: string; status: 'complete' | 'missing' | 'review' };
 
 export type JobStatus = 'scheduled' | 'confirmed' | 'en_route' | 'arrived' | 'in_progress' | 'completed';
 export const JOB_STEPS: JobStatus[] = ['scheduled', 'confirmed', 'en_route', 'in_progress', 'completed'];
@@ -234,9 +198,9 @@ export const seedEmployees: OsEmployee[] = [
   { id: 'e1', name: 'Jordan Miles', title: 'Owner / Field Operator', role: 'owner', department: 'Ownership', status: 'active', email: 'jordan@northsplash.com', phone: '330-555-0100', initials: 'JM', hue: '#c8a96a', photo: P('2379005'), pay_type: 'custom', hourly_rate: 0, annual_salary: 0, weekly_base: 0, commission_rate: 0, per_job_rate: 0, pay_schedule: 'monthly', hours_week: 48, onboarding: 100, location: 'Raleigh', documents: docs(5), availability: fieldAvail() },
   { id: 'e2', name: 'Avery Chen', title: 'Operations Administrator', role: 'admin', department: 'Operations', status: 'active', email: 'avery@northsplash.com', phone: '330-555-0101', initials: 'AC', hue: '#7c6a4a', photo: P('1181686'), pay_type: 'salary', hourly_rate: 0, annual_salary: 62000, weekly_base: 0, commission_rate: 0, per_job_rate: 0, pay_schedule: 'biweekly', hours_week: 40, onboarding: 100, location: 'Raleigh', documents: docs(5), availability: officeAvail() },
   { id: 'e3', name: 'Marcus Hale', title: 'Lead Mobile Detailer', role: 'detailer', department: 'Detailing', status: 'active', email: 'marcus@northsplash.com', phone: '330-555-0102', initials: 'MH', hue: '#3d5a4c', photo: P('1681010'), pay_type: 'hourly', hourly_rate: 22, annual_salary: 0, weekly_base: 0, commission_rate: 0, per_job_rate: 35, pay_schedule: 'weekly', hours_week: 38, onboarding: 100, location: 'Cary', documents: docs(5), availability: fieldAvail() },
-  { id: 'e4', name: 'Sofia Reyes', title: 'D2D Closer', role: 'd2d_agent', department: 'Sales', status: 'active', email: 'sofia@northsplash.com', phone: '330-555-0103', initials: 'SR', hue: '#5c3d5a', photo: P('774909'), pay_type: 'base_commission', hourly_rate: 0, annual_salary: 0, weekly_base: 350, commission_rate: 12.5, per_job_rate: 0, pay_schedule: 'weekly', hours_week: 32, onboarding: 80, location: 'Durham', documents: docs(4), availability: fieldAvail(), onboarding_packet: { ...emptyOnboarding(), legal_first: 'Sofia', legal_last: 'Reyes', preferred: 'Sofia', dob: '1998-04-12', street: '12 West Chapel', city: 'Durham', state: 'NC', zip: '27701', ssn_last4: '4412', ssn_on_file: true, filing_status: 'Single', bank_name: 'Truist', routing_last4: '0610', account_last4: '8821', account_type: 'checking', work_auth: 'U.S. citizen', i9_ack: true, handbook_ack: true, steps: { identity: true, tax: true, pay: true, work: true } } },
+  { id: 'e4', name: 'Sofia Reyes', title: 'D2D Closer', role: 'd2d_agent', department: 'Sales', status: 'active', email: 'sofia@northsplash.com', phone: '330-555-0103', initials: 'SR', hue: '#5c3d5a', photo: P('774909'), pay_type: 'base_commission', hourly_rate: 0, annual_salary: 0, weekly_base: 350, commission_rate: 12.5, per_job_rate: 0, pay_schedule: 'weekly', hours_week: 32, onboarding: 80, location: 'Durham', documents: docs(4), availability: fieldAvail(), onboarding_packet: { ...emptyOnboarding(), legal_first: 'Sofia', legal_last: 'Reyes', preferred: 'Sofia', dob: '1998-04-12', street: '12 West Chapel', city: 'Akron', state: 'OH', zip: '44303', personal_phone: '330-555-0103', personal_email: 'sofia@northsplash.com', ssn_last4: '4412', ssn_on_file: true, filing_status: 'Single or Married filing separately', ohio_filing_status: 'Single', bank_name: 'Huntington', routing_last4: '0410', account_last4: '8821', account_type: 'checking', payment_method: 'direct_deposit', work_auth: 'A citizen of the United States', i9_ack: true, handbook_ack: true, steps: { identity: true, tax: true, pay: true, work: true } } },
   { id: 'e5', name: 'Noah Patel', title: 'Crew Manager', role: 'manager', department: 'Operations', status: 'active', email: 'noah@northsplash.com', phone: '330-555-0104', initials: 'NP', hue: '#3d4a5c', photo: P('1516680'), pay_type: 'hourly_plus_commission', hourly_rate: 24, annual_salary: 0, weekly_base: 0, commission_rate: 3, per_job_rate: 0, pay_schedule: 'weekly', hours_week: 42, onboarding: 100, location: 'Raleigh', documents: docs(5), availability: fieldAvail() },
-  { id: 'e6', name: 'Elena Ward', title: 'Client Experience Admin', role: 'office', department: 'Customer Care', status: 'leave', email: 'elena@northsplash.com', phone: '330-555-0105', initials: 'EW', hue: '#6a4a3d', photo: P('415829'), pay_type: 'salary_plus_commission', hourly_rate: 0, annual_salary: 54000, weekly_base: 0, commission_rate: 2, per_job_rate: 0, pay_schedule: 'biweekly', hours_week: 0, onboarding: 60, location: 'Remote', documents: docs(3), availability: officeAvail(), onboarding_packet: { ...emptyOnboarding(), legal_first: 'Elena', legal_last: 'Ward', preferred: 'Elena', dob: '1994-11-02', street: '88 Cameron', city: 'Raleigh', state: 'NC', zip: '27605', ssn_last4: '2291', ssn_on_file: true, filing_status: 'Head of household', bank_name: 'Wells Fargo', routing_last4: '1210', account_last4: '3304', account_type: 'checking', steps: { identity: true, tax: true, pay: true } } },
+  { id: 'e6', name: 'Elena Ward', title: 'Client Experience Admin', role: 'office', department: 'Customer Care', status: 'leave', email: 'elena@northsplash.com', phone: '330-555-0105', initials: 'EW', hue: '#6a4a3d', photo: P('415829'), pay_type: 'salary_plus_commission', hourly_rate: 0, annual_salary: 54000, weekly_base: 0, commission_rate: 2, per_job_rate: 0, pay_schedule: 'biweekly', hours_week: 0, onboarding: 60, location: 'Remote', documents: docs(3), availability: officeAvail(), onboarding_packet: { ...emptyOnboarding(), legal_first: 'Elena', legal_last: 'Ward', preferred: 'Elena', dob: '1994-11-02', street: '88 Cameron', city: 'Akron', state: 'OH', zip: '44311', personal_phone: '330-555-0105', personal_email: 'elena@northsplash.com', ssn_last4: '2291', ssn_on_file: true, filing_status: 'Head of household', ohio_filing_status: 'Single', bank_name: 'Huntington', routing_last4: '0410', account_last4: '3304', account_type: 'checking', payment_method: 'direct_deposit', steps: { identity: true, tax: true, pay: true } } },
 ];
 
 export const seedJobs: OsJob[] = [

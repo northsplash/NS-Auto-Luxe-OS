@@ -1,5 +1,6 @@
 import { supabase, type Employee } from '@/lib/supabase';
 import { assignAcademyForEmployee, courseIdsForEmployee, D2D_ACADEMY_ID, DETAIL_ACADEMY_ID } from '@/lib/trainingAcademy';
+import { normalizeFilingStatus, normalizeI9Status } from '@/lib/gustoPayroll';
 
 export const ONBOARDING_STEPS = ['identity', 'tax', 'pay', 'work', 'emergency'] as const;
 export type OnboardingStepId = (typeof ONBOARDING_STEPS)[number];
@@ -13,22 +14,36 @@ export type OnboardingPacket = {
   ssn_last4: string;
   ssn_on_file: boolean;
   street: string;
+  apartment: string;
   city: string;
   state: string;
   zip: string;
+  personal_email: string;
+  personal_phone: string;
   work_auth: string;
+  i9_uscis: string;
+  i9_work_until: string;
   filing_status: string;
   allowances: string;
   extra_withholding: string;
+  two_jobs: boolean;
+  other_income: string;
+  w4_deductions: string;
+  ohio_filing_status: string;
+  ohio_school_district: string;
+  ohio_extra_withholding: string;
   bank_name: string;
   routing_last4: string;
   account_last4: string;
   account_type: 'checking' | 'savings' | '';
+  payment_method: 'direct_deposit' | 'paper_check' | '';
   emergency_name: string;
   emergency_phone: string;
   emergency_relation: string;
+  emergency_email: string;
   handbook_ack: boolean;
   i9_ack: boolean;
+  headshot?: string;
   steps: Record<string, boolean>;
 };
 
@@ -37,10 +52,13 @@ export const PACKET_TASK_TITLE = '__onboarding_packet__';
 export function emptyOnboarding(): OnboardingPacket {
   return {
     legal_first: '', legal_middle: '', legal_last: '', preferred: '', dob: '',
-    ssn_last4: '', ssn_on_file: false, street: '', city: '', state: '', zip: '',
-    work_auth: '', filing_status: '', allowances: '', extra_withholding: '',
-    bank_name: '', routing_last4: '', account_last4: '', account_type: '',
-    emergency_name: '', emergency_phone: '', emergency_relation: '',
+    ssn_last4: '', ssn_on_file: false, street: '', apartment: '', city: '', state: '', zip: '',
+    personal_email: '', personal_phone: '',
+    work_auth: '', i9_uscis: '', i9_work_until: '',
+    filing_status: '', allowances: '', extra_withholding: '', two_jobs: false, other_income: '', w4_deductions: '',
+    ohio_filing_status: '', ohio_school_district: '', ohio_extra_withholding: '',
+    bank_name: '', routing_last4: '', account_last4: '', account_type: '', payment_method: 'direct_deposit',
+    emergency_name: '', emergency_phone: '', emergency_relation: '', emergency_email: '',
     handbook_ack: false, i9_ack: false, steps: {},
   };
 }
@@ -49,12 +67,12 @@ export function last4(value?: string | null) {
   return String(value || '').replace(/\D/g, '').slice(-4);
 }
 
-export const ONBOARDING_STEP_META: Array<{ id: OnboardingStepId; label: string; hint: string; next: string }> = [
-  { id: 'identity', label: 'Identity', hint: 'Legal name, birthday, and a headshot for the roster.', next: 'legal name and headshot' },
-  { id: 'tax', label: 'Tax', hint: 'W-4 style withholding. We keep only the last four of the SSN.', next: 'tax withholding' },
-  { id: 'pay', label: 'Direct deposit', hint: 'Bank routing and account, last four only.', next: 'direct deposit' },
-  { id: 'work', label: 'Work eligibility', hint: 'I-9 attestation the hire completes themselves.', next: 'I-9 eligibility' },
-  { id: 'emergency', label: 'Emergency', hint: 'Who we call if something happens in the field.', next: 'emergency contact' },
+export const ONBOARDING_STEP_META: Array<{ id: OnboardingStepId; label: string; hint: string; next: string; gusto: string }> = [
+  { id: 'identity', label: 'Personal', gusto: 'Personal details', hint: 'The same personal details Gusto asks when you add an employee: legal name, birthday, home address, phone, and email.', next: 'Gusto personal details' },
+  { id: 'tax', label: 'W-4 & Ohio', gusto: 'Tax withholdings', hint: 'Federal Form W-4 (2020+) and Ohio IT-4 — the screens Gusto opens under Taxes. OS keeps only the last four of the SSN; enter the full SSN in Gusto.', next: 'Gusto tax withholdings' },
+  { id: 'pay', label: 'Payment', gusto: 'Payment method', hint: 'How Gusto pays this person: direct deposit or paper check. Routing and account stay last-four here; type the full numbers into Gusto.', next: 'Gusto payment method' },
+  { id: 'work', label: 'I-9', gusto: 'Form I-9', hint: 'Form I-9 Section 1 citizenship status, matching Gusto’s I-9.', next: 'Gusto Form I-9' },
+  { id: 'emergency', label: 'Emergency', gusto: 'Emergency contacts', hint: 'Name, relationship, phone, and email — Gusto’s emergency contact fields.', next: 'Gusto emergency contacts' },
 ];
 
 export function onboardingPercent(packet?: OnboardingPacket | null) {
@@ -99,33 +117,73 @@ export function isOnboardingOpen(status?: string | null) {
 
 function fromRow(row: Record<string, unknown>): OnboardingPacket {
   const steps = (row.steps && typeof row.steps === 'object') ? row.steps as Record<string, boolean> : {};
+  const gusto = (row.gusto && typeof row.gusto === 'object') ? row.gusto as Record<string, unknown> : {};
+  const pick = (key: string, fallback = '') => String(row[key] ?? gusto[key] ?? fallback);
+  const pickBool = (key: string) => Boolean(row[key] ?? gusto[key]);
   return {
     ...emptyOnboarding(),
-    legal_first: String(row.legal_first || ''),
-    legal_middle: String(row.legal_middle || ''),
-    legal_last: String(row.legal_last || ''),
-    preferred: String(row.preferred || ''),
-    dob: String(row.dob || ''),
-    ssn_last4: String(row.ssn_last4 || ''),
-    ssn_on_file: Boolean(row.ssn_last4) || Boolean(row.ssn_on_file),
-    street: String(row.street || ''),
-    city: String(row.city || ''),
-    state: String(row.state || ''),
-    zip: String(row.zip || ''),
-    work_auth: String(row.work_auth || ''),
-    filing_status: String(row.filing_status || ''),
-    allowances: String(row.allowances || ''),
-    extra_withholding: String(row.extra_withholding || ''),
-    bank_name: String(row.bank_name || ''),
-    routing_last4: String(row.routing_last4 || ''),
-    account_last4: String(row.account_last4 || ''),
-    account_type: (row.account_type === 'checking' || row.account_type === 'savings') ? row.account_type : '',
-    emergency_name: String(row.emergency_name || ''),
-    emergency_phone: String(row.emergency_phone || ''),
-    emergency_relation: String(row.emergency_relation || ''),
-    handbook_ack: Boolean(row.handbook_ack),
-    i9_ack: Boolean(row.i9_ack),
+    legal_first: pick('legal_first'),
+    legal_middle: pick('legal_middle'),
+    legal_last: pick('legal_last'),
+    preferred: pick('preferred'),
+    dob: pick('dob'),
+    ssn_last4: pick('ssn_last4'),
+    ssn_on_file: Boolean(pick('ssn_last4')) || pickBool('ssn_on_file'),
+    street: pick('street'),
+    apartment: pick('apartment'),
+    city: pick('city'),
+    state: pick('state'),
+    zip: pick('zip'),
+    personal_email: pick('personal_email'),
+    personal_phone: pick('personal_phone'),
+    work_auth: normalizeI9Status(pick('work_auth')),
+    i9_uscis: pick('i9_uscis'),
+    i9_work_until: pick('i9_work_until'),
+    filing_status: normalizeFilingStatus(pick('filing_status')),
+    allowances: pick('allowances'),
+    extra_withholding: pick('extra_withholding'),
+    two_jobs: pickBool('two_jobs'),
+    other_income: pick('other_income'),
+    w4_deductions: pick('w4_deductions'),
+    ohio_filing_status: pick('ohio_filing_status'),
+    ohio_school_district: pick('ohio_school_district'),
+    ohio_extra_withholding: pick('ohio_extra_withholding'),
+    bank_name: pick('bank_name'),
+    routing_last4: pick('routing_last4'),
+    account_last4: pick('account_last4'),
+    account_type: (row.account_type === 'checking' || row.account_type === 'savings' || gusto.account_type === 'checking' || gusto.account_type === 'savings')
+      ? (String(row.account_type || gusto.account_type) as 'checking' | 'savings')
+      : '',
+    payment_method: pick('payment_method') === 'paper_check'
+      ? 'paper_check'
+      : pick('payment_method') === 'direct_deposit' || pick('routing_last4')
+        ? 'direct_deposit'
+        : '',
+    emergency_name: pick('emergency_name'),
+    emergency_phone: pick('emergency_phone'),
+    emergency_relation: pick('emergency_relation'),
+    emergency_email: pick('emergency_email'),
+    handbook_ack: pickBool('handbook_ack'),
+    i9_ack: pickBool('i9_ack'),
     steps,
+  };
+}
+
+function gustoBag(packet: OnboardingPacket) {
+  return {
+    apartment: packet.apartment,
+    personal_email: packet.personal_email,
+    personal_phone: packet.personal_phone,
+    i9_uscis: packet.i9_uscis,
+    i9_work_until: packet.i9_work_until,
+    two_jobs: packet.two_jobs,
+    other_income: packet.other_income,
+    w4_deductions: packet.w4_deductions,
+    ohio_filing_status: packet.ohio_filing_status,
+    ohio_school_district: packet.ohio_school_district,
+    ohio_extra_withholding: packet.ohio_extra_withholding,
+    payment_method: packet.payment_method,
+    emergency_email: packet.emergency_email,
   };
 }
 
@@ -139,22 +197,36 @@ function toProfileRow(employeeId: string, packet: OnboardingPacket) {
     dob: packet.dob || null,
     ssn_last4: packet.ssn_last4 || null,
     street: packet.street,
+    apartment: packet.apartment,
     city: packet.city,
     state: packet.state,
     zip: packet.zip,
+    personal_email: packet.personal_email,
+    personal_phone: packet.personal_phone,
     work_auth: packet.work_auth,
+    i9_uscis: packet.i9_uscis,
+    i9_work_until: packet.i9_work_until,
     filing_status: packet.filing_status,
     allowances: packet.allowances,
     extra_withholding: packet.extra_withholding,
+    two_jobs: packet.two_jobs,
+    other_income: packet.other_income,
+    w4_deductions: packet.w4_deductions,
+    ohio_filing_status: packet.ohio_filing_status,
+    ohio_school_district: packet.ohio_school_district,
+    ohio_extra_withholding: packet.ohio_extra_withholding,
     bank_name: packet.bank_name,
     routing_last4: packet.routing_last4 || null,
     account_last4: packet.account_last4 || null,
     account_type: packet.account_type || null,
+    payment_method: packet.payment_method || null,
     emergency_name: packet.emergency_name,
     emergency_phone: packet.emergency_phone,
     emergency_relation: packet.emergency_relation,
+    emergency_email: packet.emergency_email,
     handbook_ack: packet.handbook_ack,
     i9_ack: packet.i9_ack,
+    gusto: gustoBag(packet),
     steps: packet.steps,
     percent_complete: onboardingPercent(packet),
     updated_at: new Date().toISOString(),
@@ -168,7 +240,15 @@ export async function loadOnboardingPacket(employeeId: string): Promise<Onboardi
   if (task.data?.description) {
     try {
       const parsed = JSON.parse(task.data.description);
-      if (parsed && typeof parsed === 'object') return { ...emptyOnboarding(), ...parsed, steps: parsed.steps || {} };
+      if (parsed && typeof parsed === 'object') {
+        return {
+          ...emptyOnboarding(),
+          ...parsed,
+          filing_status: normalizeFilingStatus(parsed.filing_status),
+          work_auth: normalizeI9Status(parsed.work_auth),
+          steps: parsed.steps || {},
+        };
+      }
     } catch { /* ignore corrupt packet notes */ }
   }
   return emptyOnboarding();
@@ -178,7 +258,39 @@ export async function saveOnboardingPacket(employee: Employee, packet: Onboardin
   const percent = onboardingPercent(packet);
   const status = onboardingStatusLabel(percent);
   const profileRow = toProfileRow(employee.id, packet);
-  const upsert = await supabase.from('employee_onboarding_profiles').upsert(profileRow, { onConflict: 'employee_id' });
+  let upsert = await supabase.from('employee_onboarding_profiles').upsert(profileRow, { onConflict: 'employee_id' });
+  if (upsert.error) {
+    upsert = await supabase.from('employee_onboarding_profiles').upsert({
+      employee_id: employee.id,
+      legal_first: packet.legal_first,
+      legal_middle: packet.legal_middle,
+      legal_last: packet.legal_last,
+      preferred: packet.preferred,
+      dob: packet.dob || null,
+      ssn_last4: packet.ssn_last4 || null,
+      street: packet.street,
+      city: packet.city,
+      state: packet.state,
+      zip: packet.zip,
+      work_auth: packet.work_auth,
+      filing_status: packet.filing_status,
+      allowances: packet.allowances,
+      extra_withholding: packet.extra_withholding,
+      bank_name: packet.bank_name,
+      routing_last4: packet.routing_last4 || null,
+      account_last4: packet.account_last4 || null,
+      account_type: packet.account_type || null,
+      emergency_name: packet.emergency_name,
+      emergency_phone: packet.emergency_phone,
+      emergency_relation: packet.emergency_relation,
+      handbook_ack: packet.handbook_ack,
+      i9_ack: packet.i9_ack,
+      gusto: gustoBag(packet),
+      steps: packet.steps,
+      percent_complete: percent,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'employee_id' });
+  }
   if (upsert.error) {
     const existing = await supabase.from('onboarding_tasks').select('id').eq('employee_id', employee.id).eq('title', PACKET_TASK_TITLE).maybeSingle();
     const payload = {
@@ -206,6 +318,8 @@ export async function saveOnboardingPacket(employee: Employee, packet: Onboardin
     onboarding_status: status,
   };
   if (packet.steps.identity && displayName) employeePatch.name = displayName;
+  if (packet.personal_phone) employeePatch.phone = packet.personal_phone;
+  if (packet.personal_email) employeePatch.email = packet.personal_email;
   await syncHireTasks(employee.id, packet);
   const { data, error } = await supabase.from('employees').update(employeePatch).eq('id', employee.id).select().single();
   if (error && !/onboarding_status/i.test(error.message)) throw error;
@@ -219,11 +333,11 @@ export async function saveOnboardingPacket(employee: Employee, packet: Onboardin
 }
 
 export const DEFAULT_HIRE_TASKS: Array<{ title: string; description: string; category: string }> = [
-  { title: 'Identity & headshot', description: 'Legal name, birthday, and a roster photo.', category: 'identity' },
-  { title: 'Tax withholding (W-4)', description: 'Filing status and last-four of SSN only.', category: 'tax' },
-  { title: 'Direct deposit', description: 'Bank last-four for payroll.', category: 'pay' },
-  { title: 'I-9 work eligibility', description: 'Hire attests they are authorized to work in the U.S.', category: 'work' },
-  { title: 'Emergency contact', description: 'Who we call if something happens in the field.', category: 'emergency' },
+  { title: 'Identity & headshot', description: 'Gusto personal details: legal name, birthday, home address, phone, email, roster photo.', category: 'identity' },
+  { title: 'Tax withholding (W-4)', description: 'Gusto federal W-4 (2020+) and Ohio IT-4. Last-four of SSN only in OS.', category: 'tax' },
+  { title: 'Direct deposit', description: 'Gusto payment method: direct deposit or paper check.', category: 'pay' },
+  { title: 'I-9 work eligibility', description: 'Gusto Form I-9 Section 1 citizenship status and attestation.', category: 'work' },
+  { title: 'Emergency contact', description: 'Gusto emergency contact: name, relationship, phone, email.', category: 'emergency' },
   { title: 'Review company policies', description: 'Read the North Splash handbook and workplace policies.', category: 'policy' },
 ];
 

@@ -44,14 +44,14 @@ export default function OnboardingPacketShell({
     <div className="nsos-onboard-flow live-onboard-v37">
       <div className={`nsos-onboard-hero ${complete ? 'complete' : ''}`}>
         <div>
-          <span className="nsos-eyebrow eyebrow">{self ? 'Your hire packet' : 'Onboarding packet'}</span>
-          <h3>{complete ? (self ? 'You are on the roster' : `${hireName} finished the packet`) : self ? 'Finish your hire packet' : `Finish hiring ${hireName}`}</h3>
+          <span className="nsos-eyebrow eyebrow">{self ? 'Your Gusto payroll packet' : 'Gusto payroll packet'}</span>
+          <h3>{complete ? (self ? 'You are ready for Gusto' : `${hireName} finished the Gusto packet`) : self ? 'Finish your Gusto hire packet' : `Finish Gusto hiring for ${hireName}`}</h3>
           <p>
             {complete
-              ? (self ? `Next is ${academyLabel || 'new-hire academy'}. Last-four identifiers stay last-four — never a full Social or account number.` : 'Packet fields are on file. Send them into academy before a live route.')
+              ? (self ? `Next is ${academyLabel || 'new-hire academy'}. Full SSN and bank numbers go in Gusto — this OS only keeps last-fours.` : 'Copy the Gusto summary into People → Add employee, then send them into academy.')
               : self
-                ? `North Splash stores last-four identifiers only. ${left} step${left === 1 ? '' : 's'} left${nextLabel ? ` · next: ${nextLabel}` : ''}.`
-                : `The hire fills this in. ${left} step${left === 1 ? '' : 's'} left${nextLabel ? ` · next: ${nextLabel}` : ''}.`}
+                ? `These questions match Gusto payroll: personal details, W-4, payment method, I-9, and emergency contact. ${left} step${left === 1 ? '' : 's'} left${nextLabel ? ` · next: ${nextLabel}` : ''}.`
+                : `Same fields Gusto asks. ${left} step${left === 1 ? '' : 's'} left${nextLabel ? ` · next: ${nextLabel}` : ''}.`}
           </p>
         </div>
         <div className="nsos-onboard-meter">
@@ -65,8 +65,8 @@ export default function OnboardingPacketShell({
         <div className="nsos-onboard-done">
           <CheckCircle2 size={22} />
           <div>
-            <strong>{self ? 'Packet complete' : 'Ready for academy'}</strong>
-            <p>{self ? `Open ${academyLabel || 'training'} before you run a live route.` : `${hireName} can open ${academyLabel || 'new-hire academy'} from their portal.`}</p>
+            <strong>{self ? 'Packet complete' : 'Ready for Gusto'}</strong>
+            <p>{self ? `Open ${academyLabel || 'training'} before you run a live route.` : `Add ${hireName} in Gusto People, then they can open ${academyLabel || 'new-hire academy'} from their portal.`}</p>
           </div>
           {onOpenTraining && <button type="button" className="btn-primary" onClick={onOpenTraining}><GraduationCap size={15} />{academyLabel || 'Open academy'}</button>}
         </div>

@@ -31,6 +31,7 @@ export default function OwnerOnboardingQueue({ employees, onOpen }: Props) {
         <div>
           <span className="eyebrow">Open packets</span>
           <h3>{open.length} hire{open.length === 1 ? '' : 's'} still onboarding</h3>
+          <p>Gusto payroll packet — personal, W-4, payment, I-9, emergency.</p>
         </div>
       </div>
       <div className="owner-onboard-queue-grid">
