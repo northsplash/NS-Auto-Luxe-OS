@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Bell, Briefcase, CalendarDays, CheckCircle2, ClipboardCheck, FileText, Gauge, MapPin,
   PackageCheck, Plus, Save, ShieldCheck, Target, Trash2, UserCog, Users,
@@ -12,6 +12,7 @@ import type {
 } from '@/lib/supabase';
 import { money, prettyLabel } from '@/lib/data';
 import { MARKET } from '@/lib/market';
+import { reverseGeocodeLatLng, shouldUseGoogleMaps } from '@/lib/googleMaps';
 import { fetchTerritoryHouses, mapOsmHouses } from '@/lib/territoryHouses';
 import { DEFAULT_ROLE_PERMISSIONS, PERMISSION_GROUPS, PortalRole } from '@/lib/permissions';
 import FieldTerritoryMap from '@/components/FieldTerritoryMap';
@@ -53,7 +54,12 @@ const roleLabel = (r?: string | null) => ({ owner: 'Owner / Admin', manager: 'Ma
 const dt = (v?: string | null) => v ? new Date(v).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '—';
 const day = (v?: string | null) => v ? new Date(`${v}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
 const paper = 'phase-panel caramel enterprise-paper';
-const reverseAddress=async(lat:number,lng:number)=>{try{const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,{headers:{'Accept-Language':'en-US,en'}});if(!r.ok)return'';const d=await r.json();const a=d.address||{};const street=[a.house_number,a.road||a.residential||a.pedestrian].filter(Boolean).join(' ');const city=a.city||a.town||a.village||a.municipality;const region=[city,a.state,a.postcode].filter(Boolean).join(', ').replace(/, ([0-9]{5})$/, ' $1');return [street,region].filter(Boolean).join(', ')||d.display_name||''}catch{return''}};
+const reverseAddress=async(lat:number,lng:number)=>{
+  if(shouldUseGoogleMaps()){
+    try{const addr=await reverseGeocodeLatLng(lat,lng);if(addr)return addr;}catch{/* OSM fallback */}
+  }
+  try{const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,{headers:{'Accept-Language':'en-US,en'}});if(!r.ok)return'';const d=await r.json();const a=d.address||{};const street=[a.house_number,a.road||a.residential||a.pedestrian].filter(Boolean).join(' ');const city=a.city||a.town||a.village||a.municipality;const region=[city,a.state,a.postcode].filter(Boolean).join(', ').replace(/, ([0-9]{5})$/, ' $1');return [street,region].filter(Boolean).join(', ')||d.display_name||''}catch{return''}
+};
 
 async function audit(action: string, entityType: string, entityId?: string, details: Record<string, unknown> = {}) {
   await supabase.from('audit_logs').insert({ action, entity_type: entityType, entity_id: entityId || null, details }).then(() => undefined);
@@ -64,66 +70,15 @@ function Header({ tab, action }: { tab: string; action?: React.ReactNode }) {
 }
 
 function LeadMap({ leads, territories, onMapPoint }: { leads: Lead[]; territories: LeadTerritory[]; onMapPoint: (lat: number, lng: number) => void }) {
-  const ref = useRef<HTMLDivElement | null>(null);
-  const mapRef = useRef<any>(null);
-  const layerRef = useRef<any>(null);
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    const load = async () => {
-      if (!document.querySelector('link[data-leaflet]')) {
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-        link.dataset.leaflet = 'true';
-        document.head.appendChild(link);
-      }
-      if (!(window as any).L) {
-        await new Promise<void>((resolve, reject) => {
-          const script = document.createElement('script');
-          script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-          script.onload = () => resolve();
-          script.onerror = () => reject(new Error('Map library could not load'));
-          document.body.appendChild(script);
-        });
-      }
-      setReady(true);
-    };
-    load().catch(console.error);
-  }, []);
-
-  useEffect(() => {
-    if (!ready || !ref.current || mapRef.current) return;
-    const L = (window as any).L;
-    const map = L.map(ref.current).setView([MARKET.lat, MARKET.lng], 12);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
-    layerRef.current = L.layerGroup().addTo(map);
-    map.on('click', (e: any) => onMapPoint(e.latlng.lat, e.latlng.lng));
-    mapRef.current = map;
-    setTimeout(() => map.invalidateSize(), 100);
-    return () => { map.remove(); mapRef.current = null; };
-  }, [ready, onMapPoint]);
-
-  useEffect(() => {
-    if (!mapRef.current || !layerRef.current) return;
-    const L = (window as any).L;
-    layerRef.current.clearLayers();
-    territories.forEach(t => {
-      if (t.center_lat != null && t.center_lng != null) {
-        L.circle([Number(t.center_lat), Number(t.center_lng)], { radius: t.radius_meters || 1200, color: '#c9a96e', weight: 2, fillOpacity: .05 })
-          .bindPopup(`<strong>${t.name}</strong>`).addTo(layerRef.current);
-      }
-    });
-    leads.forEach(l => {
-      if (l.latitude != null && l.longitude != null) {
-        const color = l.status === 'sold' ? '#35b36b' : l.status === 'not_interested' || l.status === 'do_not_knock' ? '#b94d4d' : '#c9a96e';
-        L.circleMarker([Number(l.latitude), Number(l.longitude)], { radius: 7, color, fillColor: color, fillOpacity: .9 })
-          .bindPopup(`<strong>${l.customer_name || 'Lead'}</strong><br>${l.address || ''}<br>${prettyLabel(l.status)}`).addTo(layerRef.current);
-      }
-    });
-  }, [leads, territories, ready]);
-
-  return <div ref={ref} style={{ height: 460, borderRadius: 14, overflow: 'hidden', border: '1px solid #e4d9cc', background: '#f4efe8' }} />;
+  return (
+    <FieldTerritoryMap
+      className="admin-lead-map"
+      fieldMode
+      territories={territories}
+      leads={leads}
+      onMapClick={onMapPoint}
+    />
+  );
 }
 
 export default function EnterpriseSuite({ section, employees, setEmployees, appointments, setAppointments }: Props) {

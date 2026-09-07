@@ -26,11 +26,11 @@ The app serves at `http://127.0.0.1:43127`. Demo state lives in this browser (`l
 
 Open **Owner → Command Center**. Each push to `main` rebuilds Vercel and GitHub Pages. Hard-refresh once after a deploy so the service worker drops the previous shell. If a screen says a JavaScript chunk could not load, reload once — the OS now recovers from stale hashed files after a deploy.
 
-Territory maps use OpenStreetMap. Address search runs through Nominatim. Google Maps stays off so an unbilled Vercel key cannot bring back the Street View pegman or a development watermark. Do not paste a Maps key into chat.
+Lead, territory, and D2D maps use Google Maps when `VITE_GOOGLE_MAPS_API_KEY` is set on the Vercel project (Maps JavaScript API, Geocoding API, and Places API). OpenStreetMap is the fallback if the key is missing or Google rejects it. Do not paste a Maps key into chat.
 
 ## How it is modeled
 
-Visual language is **cream luxury**: ivory paper `#fffdf8` on canvas `#efe8dc`, 14px radius. Gold is for eyebrows, KPI icons, and cash-flow bars. Primary actions are espresso. The More drawer and Owner sidebar stay on cream paper — black panels are leftover dark-theme invert, not the design system. Workspace pages fade in, maps use OpenStreetMap street tiles (no Carto or Google key), and phone/tablet chrome uses 44px targets. Home is role-based (Owner / D2D / Detailer / Admin). Command Center leads with exceptions. Phones use a 5-button bar: Home / Chat / Calendar / Team / More.
+Visual language is **cream luxury**: ivory paper `#fffdf8` on canvas `#efe8dc`, 14px radius. Gold is for eyebrows, KPI icons, and cash-flow bars. Primary actions are espresso. The More drawer and Owner sidebar stay on cream paper — black panels are leftover dark-theme invert, not the design system. Workspace pages fade in, maps use Google Maps when a Vercel key is in the build (OpenStreetMap otherwise), and phone/tablet chrome uses 44px targets. Home is role-based (Owner / D2D / Detailer / Admin). Command Center leads with exceptions. Phones use a 5-button bar: Home / Chat / Calendar / Team / More.
 
 Workflows follow the product that already does that job well:
 

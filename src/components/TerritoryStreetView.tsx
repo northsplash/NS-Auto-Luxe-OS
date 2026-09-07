@@ -95,9 +95,7 @@ export default function TerritoryStreetView({ houses, activeHouse, onActiveHouse
       setAvailable(false);
       setError(err?.message === 'NO_GOOGLE_STREET_VIEW'
         ? 'Google Street View did not find outdoor imagery close enough to this property.'
-        : err?.message === 'GOOGLE_MAPS_DISABLED'
-          ? 'In-app Street View stays off until Google Maps billing is enabled. Open the house in Google Maps instead.'
-          : googleMapsErrorMessage(err));
+        : googleMapsErrorMessage(err));
     } finally { setLoading(false); }
   };
 
@@ -125,7 +123,7 @@ export default function TerritoryStreetView({ houses, activeHouse, onActiveHouse
             <div>
               <span className="eyebrow">PROPERTY IMAGERY</span>
               <h3>{current?.address || 'Choose a mapped house'}</h3>
-              <p>Open the house on the public street map. In-app Street View stays off until Google Maps billing is enabled.</p>
+              <p>Street View uses the same Google Maps key as the lead map. If Google cannot load, open the house in Google Maps instead.</p>
             </div>
             <div className="streetview-house-nav">
               <button type="button" className="btn-outline" disabled={!houses.length} onClick={() => shiftHouse(-1)}><ChevronLeft size={15}/>Previous House</button>

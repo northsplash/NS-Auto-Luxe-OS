@@ -10,9 +10,10 @@ declare global {
 
 export const GOOGLE_MAPS_API_KEY = String(import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '').trim();
 export const GOOGLE_MAPS_MAP_ID = String(import.meta.env.VITE_GOOGLE_MAPS_MAP_ID || '').trim();
-export const GOOGLE_MAPS_ENABLED = String(import.meta.env.VITE_GOOGLE_MAPS_ENABLED || '').trim().toLowerCase() === 'true';
+/** Lead / territory maps use Google whenever a Maps JavaScript key is in the build. */
+export const GOOGLE_MAPS_ENABLED = Boolean(GOOGLE_MAPS_API_KEY);
 
-const BROKEN_KEY = 'ns-google-maps-auth-failed';
+const BROKEN_KEY = 'ns-google-maps-auth-failed-v2';
 const authListeners = new Set<() => void>();
 
 export function googleMapsUnavailable() {
@@ -26,9 +27,7 @@ export function googleMapsUnavailable() {
 }
 
 export function shouldUseGoogleMaps() {
-  // Production maps stay on OpenStreetMap. A billed Google key in Vercel must not
-  // bring back the Street View pegman or the "For development purposes only" watermark.
-  return false;
+  return GOOGLE_MAPS_ENABLED && !googleMapsUnavailable();
 }
 
 export function markGoogleMapsUnavailable() {
@@ -109,7 +108,7 @@ export function watchGoogleMapError(root: HTMLElement | null, onFail: () => void
 
 export function loadGoogleMaps(): Promise<any> {
   installAuthFailureHook();
-  if (!GOOGLE_MAPS_ENABLED) return Promise.reject(new Error('GOOGLE_MAPS_DISABLED'));
+  if (!GOOGLE_MAPS_API_KEY) return Promise.reject(new Error('GOOGLE_MAPS_API_KEY_MISSING'));
   if (googleMapsUnavailable()) return Promise.reject(new Error('GOOGLE_MAPS_AUTH_FAILURE'));
   if (window.google?.maps && !googleMapsUnavailable()) return Promise.resolve(window.google);
   if (window.__northSplashGoogleMapsPromise) return window.__northSplashGoogleMapsPromise;
@@ -185,10 +184,22 @@ export function loadGoogleMaps(): Promise<any> {
   return window.__northSplashGoogleMapsPromise;
 }
 
+export async function reverseGeocodeLatLng(lat: number, lng: number): Promise<string> {
+  const google = await loadGoogleMaps();
+  const geocoder = new google.maps.Geocoder();
+  const results = await new Promise<any[]>((resolve, reject) => {
+    geocoder.geocode({ location: { lat, lng } }, (res: any[] | null, status: string) => {
+      if (status === 'OK' && res?.length) resolve(res);
+      else reject(new Error(status || 'ZERO_RESULTS'));
+    });
+  });
+  return String(results[0]?.formatted_address || '');
+}
+
 export function googleMapsErrorMessage(error: unknown) {
   const code = error instanceof Error ? error.message : String(error || '');
-  if (code === 'GOOGLE_MAPS_DISABLED' || code === 'GOOGLE_MAPS_API_KEY_MISSING') return 'The street map uses OpenStreetMap. Google Maps stays off until billing is enabled.';
-  if (code === 'GOOGLE_MAPS_AUTH_FAILURE') return 'Google Maps is not billed or allowed for this site, so the street map is OpenStreetMap instead.';
+  if (code === 'GOOGLE_MAPS_DISABLED' || code === 'GOOGLE_MAPS_API_KEY_MISSING') return 'Add VITE_GOOGLE_MAPS_API_KEY on Vercel (Maps JavaScript API, Geocoding, Places). The map stays on OpenStreetMap until that key is in the build.';
+  if (code === 'GOOGLE_MAPS_AUTH_FAILURE') return 'Google Maps rejected this key. Check billing, HTTP-referrer restrictions, and that Maps JavaScript API is enabled.';
   if (code === 'GOOGLE_MAPS_LOAD_TIMEOUT') return 'Google Maps timed out while loading. Check the API key restrictions and enabled APIs.';
   return 'Google Maps could not load. The street map stays on so canvassing can continue.';
 }
