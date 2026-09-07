@@ -1,5 +1,5 @@
-const CACHE = 'north-splash-os-v86-customer-account';
-const SHELL = ['./', './index.html', './manifest.webmanifest', './ns-auto-luxe-mark.png', './ns-auto-luxe-logo.png', './ns-auto-luxe-full-logo.png', './ns-auto-luxe-watermark.svg', './icon-192.png'];
+const CACHE = 'north-splash-os-v87-logo';
+const SHELL = ['./', './index.html', './manifest.webmanifest', './ns-auto-luxe-mark.png', './ns-auto-luxe-logo.png', './ns-auto-luxe-full-logo.png', './ns-auto-luxe-watermark.svg', './icon-192.png', './og-image.png', './favicon.ico'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
