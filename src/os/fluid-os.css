@@ -225,9 +225,9 @@ html.nsos-active,
     overflow-x: hidden !important;
     overflow-y: auto !important;
     display: block !important;
-    height: auto !important;
-    flex: 1 1 auto !important;
+    flex: 1 1 0% !important;
     min-height: 0 !important;
+    height: 0 !important;
     padding-bottom: calc(108px + env(safe-area-inset-bottom)) !important;
   }
   .portal-layout.nsos-cream.os-tab-sales .nsos-sr {
@@ -524,6 +524,96 @@ html.nsos-active,
   }
   .sales-slide-heading h2 { font-size: 20px !important; }
   .sales-hero-copy h2 { font-size: 24px !important; }
+}
+
+/* Last-wins phone/tablet shell: 100dvh + overflow:hidden was cutting off the
+   bottom nav and workspace under the iOS/Android browser chrome. Lock the
+   app to the visible viewport (svh) and let the workspace pane scroll. */
+@media (max-width: 1180px) {
+  html, body, #root,
+  html.nsos-active,
+  html.nsos-active body,
+  html.nsos-active #root {
+    height: 100svh !important;
+    max-height: 100svh !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+  .portal-layout.nsos-cream,
+  .portal-layout.nsos-cream.nsos-admin-preview,
+  html.nsos-active .portal-layout.nsos-cream {
+    height: 100svh !important;
+    max-height: 100svh !important;
+    min-height: 100svh !important;
+  }
+  .portal-layout.nsos-cream .portal-main,
+  .nsos-cream .portal-main {
+    height: auto !important;
+    max-height: none !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+  .portal-layout.nsos-cream .portal-content,
+  .portal-layout.nsos-cream.os-tab-sales .portal-content,
+  .portal-layout.nsos-cream.os-tab-messages .portal-content,
+  .portal-layout.nsos-cream.os-tab-territories .portal-content,
+  .nsos-cream.os-tab-sales .portal-content,
+  .nsos-cream.os-tab-messages .portal-content {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    display: block !important;
+    flex: 1 1 0% !important;
+    min-height: 0 !important;
+    height: 0 !important;
+    max-height: none !important;
+    padding-bottom: calc(108px + env(safe-area-inset-bottom)) !important;
+  }
+  .portal-layout.nsos-cream .os-mobile-bottom-nav,
+  .portal-layout.nsos-cream .os-mobile-bottom-nav.mobile-app-nav-v25,
+  .nsos-cream .os-mobile-bottom-nav,
+  .nsos-cream .os-mobile-bottom-nav.mobile-app-nav-v25 {
+    position: fixed !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    height: calc(56px + env(safe-area-inset-bottom)) !important;
+    padding: 2px 0 env(safe-area-inset-bottom) !important;
+    z-index: 9600 !important;
+  }
+  .portal-layout.nsos-cream .owner-kpis-v17,
+  .portal-layout.nsos-cream .owner-glance-v17,
+  .portal-layout.nsos-cream .stripe-balances,
+  .nsos-cream .owner-kpis-v17 {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow: visible !important;
+    gap: 8px !important;
+  }
+  .portal-layout.nsos-cream .owner-kpis-v17 .phase-kpi,
+  .portal-layout.nsos-cream .owner-glance-v17 > div,
+  .portal-layout.nsos-cream .stripe-balances article,
+  .nsos-cream .owner-kpis-v17 .phase-kpi {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    width: auto !important;
+    flex: unset !important;
+    overflow: visible !important;
+  }
+  .portal-layout.nsos-cream .owner-kpis-v17 .phase-kpi span,
+  .portal-layout.nsos-cream .owner-kpis-v17 .phase-kpi small,
+  .portal-layout.nsos-cream .owner-kpis-v17 .phase-kpi strong,
+  .portal-layout.nsos-cream .owner-glance-v17 small,
+  .portal-layout.nsos-cream .owner-glance-v17 b {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+    overflow-wrap: anywhere !important;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
