@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { BRAND_LOGO } from '@/lib/brand';
+import { BRAND_LOCKUP } from '@/lib/brand';
 
 export default function WorkspaceGate({
   title,
@@ -21,7 +21,7 @@ export default function WorkspaceGate({
   return (
     <div className="workspace-gate nsos-cream">
       <span className="eyebrow">North Splash Auto Luxe</span>
-      <img className="auth-brand-logo" src={BRAND_LOGO} alt="North Splash Auto Luxe" />
+      <img className="auth-brand-logo" src={BRAND_LOCKUP} alt="NS Auto Luxe Premium Detailing" />
       {busy && <div className="portal-spinner" aria-hidden />}
       <strong>{title}</strong>
       <p>{body}</p>

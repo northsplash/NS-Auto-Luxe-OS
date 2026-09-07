@@ -6655,3 +6655,303 @@ html.ns-chat-kb .os-tab-messages .message-thread {
   grid-template-rows: auto minmax(0, 1fr) auto !important;
   width: 100% !important;
 }
+
+/* v73 — full NS Auto Luxe lockup on cream pages, readable dark cards, usable chat. */
+.portal-layout.nsos-cream .portal-main {
+  background-color: #efe8dc !important;
+  background-image:
+    radial-gradient(900px 420px at 8% -8%, rgba(184, 137, 58, .07), transparent 58%),
+    radial-gradient(720px 380px at 100% 0%, rgba(255, 253, 248, .42), transparent 46%) !important;
+}
+.portal-layout.nsos-cream .portal-main::before {
+  content: none !important;
+  background-image: none !important;
+  opacity: 0 !important;
+}
+.portal-layout.nsos-cream .portal-main::after {
+  content: "" !important;
+  display: block !important;
+  position: absolute !important;
+  inset: 0 !important;
+  background-image: var(--ns-brand-watermark) !important;
+  background-repeat: no-repeat !important;
+  background-position: center 28% !important;
+  background-size: min(78vw, 760px) auto !important;
+  opacity: .16 !important;
+  filter: none !important;
+  mask-image: none !important;
+  -webkit-mask-image: none !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+}
+.portal-layout.nsos-cream .portal-content,
+.portal-layout.nsos-cream .portal-topbar,
+.portal-layout.nsos-cream .os-secondary-nav,
+.portal-layout.nsos-cream .os-phone-subnav {
+  position: relative;
+  z-index: 1;
+}
+
+.auth-page.nsos-cream .auth-card::before,
+.workspace-gate.nsos-cream::before {
+  background-image: var(--ns-brand-watermark) !important;
+  background-size: min(72%, 420px) auto !important;
+  opacity: .2 !important;
+}
+
+.portal-layout.nsos-cream .sidebar-brand {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 8px !important;
+}
+.portal-layout.nsos-cream .portal-brand-logo,
+.portal-layout.nsos-cream .sidebar-header .portal-brand-logo,
+.portal-layout.nsos-cream .sidebar-brand .portal-brand-logo {
+  width: min(188px, 100%) !important;
+  height: auto !important;
+  max-width: 188px !important;
+  max-height: 118px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  object-fit: contain !important;
+  background: transparent !important;
+  filter: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+.auth-page .auth-brand-logo,
+.workspace-gate .auth-brand-logo,
+.route-loader .auth-brand-logo,
+.route-error-v27 .auth-brand-logo,
+.route-error-inline-v50 .auth-brand-logo {
+  width: min(220px, 72vw) !important;
+  height: auto !important;
+  max-height: 148px !important;
+  object-fit: contain !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+}
+
+/* Dark espresso fills keep cream type — contrast lock must not paint ink on ink. */
+.portal-layout.nsos-cream .conversion-funnel > div,
+.portal-layout.nsos-cream .conversion-funnel > div * {
+  color: #fffdf8 !important;
+  -webkit-text-fill-color: #fffdf8 !important;
+}
+.portal-layout.nsos-cream .conversion-funnel > div {
+  background: linear-gradient(90deg, #211710, #9d7651) !important;
+  padding: 12px 16px !important;
+  font-size: 15px !important;
+  font-weight: 750 !important;
+}
+.portal-layout.nsos-cream .route-summary.v16 {
+  background: #1c1814 !important;
+  -webkit-text-fill-color: unset !important;
+}
+.portal-layout.nsos-cream .route-summary.v16 strong,
+.portal-layout.nsos-cream .route-summary.v16 b {
+  color: #e8c96a !important;
+  -webkit-text-fill-color: #e8c96a !important;
+  font-size: 1.2rem !important;
+}
+.portal-layout.nsos-cream .route-summary.v16 span {
+  color: #f6f1e8 !important;
+  -webkit-text-fill-color: #f6f1e8 !important;
+  font-size: 11px !important;
+  letter-spacing: .08em !important;
+  text-transform: uppercase !important;
+}
+.portal-layout.nsos-cream .pay-card,
+.portal-layout.nsos-cream .pay-card * {
+  color: #f6f1e8 !important;
+  -webkit-text-fill-color: #f6f1e8 !important;
+}
+.portal-layout.nsos-cream .pay-card .eyebrow {
+  color: #e8c96a !important;
+  -webkit-text-fill-color: #e8c96a !important;
+}
+
+.portal-layout.nsos-cream .territory-summary-v13 > div,
+.portal-layout.nsos-cream .payroll-mini-grid > div,
+.portal-layout.nsos-cream .pay-setting-card,
+.portal-layout.nsos-cream .business-suite .payroll-mini-grid > div,
+.portal-layout.nsos-cream .business-suite .pay-setting-card {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  border: 1px solid #e4d9cc !important;
+  box-shadow: 0 8px 18px rgba(48, 38, 28, .04) !important;
+}
+.portal-layout.nsos-cream .territory-summary-v13 span,
+.portal-layout.nsos-cream .territory-summary-v13 small,
+.portal-layout.nsos-cream .payroll-mini-grid span {
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+}
+.portal-layout.nsos-cream .territory-summary-v13 strong,
+.portal-layout.nsos-cream .payroll-mini-grid strong,
+.portal-layout.nsos-cream .payroll-mini-grid b {
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+
+/* Chat: composer is a row — send sits beside the field, not a slab under it. */
+.portal-layout.nsos-cream .message-composer-box,
+.nsos-cream .message-composer-box {
+  display: flex !important;
+  flex-direction: column !important;
+}
+.portal-layout.nsos-cream .message-composer-row,
+.nsos-cream .message-composer-row {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-end !important;
+  gap: 10px !important;
+  padding: 8px 10px 10px !important;
+  width: 100% !important;
+}
+.portal-layout.nsos-cream .message-composer-row textarea,
+.nsos-cream .message-composer-row textarea,
+.portal-layout.nsos-cream .messaging-usable .message-composer-row textarea,
+.nsos-cream .messaging-usable .message-composer-row textarea {
+  flex: 1 1 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+  min-height: 52px !important;
+  max-height: 160px !important;
+  margin: 0 !important;
+  font-size: 16px !important;
+  line-height: 1.45 !important;
+}
+.portal-layout.nsos-cream .message-composer-row .message-send-btn,
+.nsos-cream .message-composer-row .message-send-btn,
+.portal-layout.nsos-cream .messaging-usable .message-send-btn,
+.nsos-cream .messaging-usable .message-send-btn {
+  flex: 0 0 auto !important;
+  align-self: flex-end !important;
+  width: auto !important;
+  min-width: 52px !important;
+  min-height: 52px !important;
+  height: 52px !important;
+  padding: 0 16px !important;
+  margin: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  border-radius: 14px !important;
+  background: #1c1814 !important;
+  color: #f6f1e8 !important;
+  -webkit-text-fill-color: #f6f1e8 !important;
+  font-size: 14px !important;
+  font-weight: 800 !important;
+}
+.portal-layout.nsos-cream .message-composer-hint,
+.nsos-cream .message-composer-hint {
+  margin: 0 !important;
+  padding: 0 12px 10px !important;
+  font-size: 12px !important;
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+}
+.portal-layout.nsos-cream .message-workspace-lockup,
+.nsos-cream .message-workspace-lockup {
+  width: 44px !important;
+  height: 44px !important;
+  object-fit: contain !important;
+  background: transparent !important;
+}
+.portal-layout.nsos-cream .message-empty-lockup,
+.nsos-cream .message-empty-lockup {
+  width: min(220px, 58vw) !important;
+  height: auto !important;
+  max-height: 160px !important;
+  object-fit: contain !important;
+  margin: 0 auto 8px !important;
+  opacity: .92;
+}
+.portal-layout.nsos-cream .message-workspace-brand,
+.nsos-cream .message-workspace-brand {
+  grid-template-columns: 48px minmax(0, 1fr) auto !important;
+  min-height: 64px !important;
+}
+.auth-page .auth-brand {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 8px !important;
+}
+
+@media (max-width: 1180px), (max-height: 900px) {
+  .portal-layout.nsos-cream.os-tab-messages .message-composer-hint,
+  .nsos-cream.os-tab-messages .message-composer-hint {
+    display: none !important;
+  }
+  .portal-layout.nsos-cream.os-tab-messages .messaging-usable .message-composer-row textarea,
+  .nsos-cream.os-tab-messages .messaging-usable .message-composer-row textarea {
+    min-height: 48px !important;
+    max-height: 112px !important;
+  }
+}
+
+@media (max-width: 1180px) {
+  .portal-layout.nsos-cream .portal-main::after {
+    background-size: min(92vw, 640px) auto !important;
+    background-position: center 22% !important;
+    opacity: .18 !important;
+  }
+  .portal-layout.nsos-cream .os-mobile-bottom-nav button,
+  .portal-layout.nsos-cream .mobile-app-nav-v25 button {
+    min-height: 52px !important;
+    font-size: 12px !important;
+  }
+  .portal-layout.nsos-cream .os-mobile-bottom-nav button svg,
+  .portal-layout.nsos-cream .mobile-app-nav-v25 button svg {
+    width: 22px !important;
+    height: 22px !important;
+  }
+  .portal-layout.nsos-cream .lead-card,
+  .portal-layout.nsos-cream .nsos-lead {
+    padding: 16px !important;
+  }
+  .portal-layout.nsos-cream .lead-card strong,
+  .portal-layout.nsos-cream .nsos-lead > strong,
+  .portal-layout.nsos-cream .nsos-lead-name {
+    font-size: 18px !important;
+  }
+  .portal-layout.nsos-cream .v2-page-head h2,
+  .portal-layout.nsos-cream .os-page-toolbar h2 {
+    font-size: 28px !important;
+  }
+  .portal-layout.nsos-cream .portal-main .btn-primary,
+  .portal-layout.nsos-cream .portal-main .btn-outline,
+  .portal-layout.nsos-cream .nsos-btn {
+    min-height: 44px !important;
+    font-size: 14px !important;
+  }
+  .portal-layout.nsos-cream .portal-main input,
+  .portal-layout.nsos-cream .portal-main select,
+  .portal-layout.nsos-cream .portal-main textarea {
+    min-height: 44px !important;
+    font-size: 16px !important;
+  }
+}
+
+@media (min-width: 760px) and (max-width: 1180px) {
+  .portal-layout.nsos-cream .message-channel,
+  .nsos-cream .message-channel {
+    min-height: 56px !important;
+    padding: 10px !important;
+  }
+  .portal-layout.nsos-cream .message-channel strong,
+  .nsos-cream .message-channel strong {
+    font-size: 14px !important;
+  }
+  .portal-layout.nsos-cream .message-thread-head h3,
+  .nsos-cream .message-thread-head h3 {
+    font-size: 18px !important;
+  }
+}

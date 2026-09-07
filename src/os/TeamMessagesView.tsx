@@ -7,6 +7,7 @@ import { prettyLabel } from '@/lib/data';
 import type { OsChat } from './demoData';
 import { useOs } from './osStore';
 import { bindChatViewport } from '@/lib/chatViewport';
+import { BRAND_LOCKUP } from '@/lib/brand';
 
 function Avatar({ initials, hue, size = 34, photo }: { initials: string; hue: string; size?: number; photo?: string }) {
   if (photo) return <img className="nsos-avatar message-avatar employee-message-avatar" src={photo} alt="" style={{ width: size, height: size }} />;
@@ -151,7 +152,7 @@ export default function TeamMessagesView() {
     <div className={`team-messaging messaging-v6 messaging-os messaging-usable ${showInfo ? 'with-info' : ''} ${mobileThreadOpen ? 'thread-open' : ''}`}>
       <aside className="message-channel-rail">
         <div className="message-workspace-brand">
-          <span className="message-workspace-mark">NS</span>
+          <img className="message-workspace-lockup" src={BRAND_LOCKUP} alt="" />
           <div><strong>North Splash</strong><small>Teams · activity · chat</small></div>
           <ChevronDown size={15} />
         </div>
@@ -259,7 +260,7 @@ export default function TeamMessagesView() {
               })}
               {!visibleMessages.length && (
                 <div className="message-thread-empty">
-                  <div className="message-empty-orbit"><MessageCircle /></div>
+                  <img className="message-empty-lockup" src={BRAND_LOCKUP} alt="" />
                   <strong>{messageSearch ? 'No matching messages' : 'Start the conversation'}</strong>
                   <span>{messageSearch ? 'Try a different search.' : `Share the first update in ${active.name}.`}</span>
                 </div>
@@ -274,24 +275,24 @@ export default function TeamMessagesView() {
                   <button type="button" title="Attach file"><Paperclip size={15} /></button>
                   <span>{kind && kind !== 'message' ? prettyLabel(kind) : 'Message'}</span>
                 </div>
-                <textarea
-                  ref={composerRef}
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                  onKeyDown={onComposerKeyDown}
-                  placeholder={`Message #${String(active.name || '').toLowerCase().replaceAll(' ', '-')}`}
-                  rows={1}
-                />
-                <div className="message-composer-bottom">
-                  <small>Enter to send · Shift+Enter for new line</small>
-                  <button className="message-send-btn" type="submit" disabled={!draft.trim()}><Send size={16} />Send</button>
+                <div className="message-composer-row">
+                  <textarea
+                    ref={composerRef}
+                    value={draft}
+                    onChange={(e) => setDraft(e.target.value)}
+                    onKeyDown={onComposerKeyDown}
+                    placeholder={`Message #${String(active.name || '').toLowerCase().replaceAll(' ', '-')}`}
+                    rows={1}
+                  />
+                  <button className="message-send-btn" type="submit" disabled={!draft.trim()}><Send size={18} /><span>Send</span></button>
                 </div>
+                <p className="message-composer-hint">Enter to send · Shift+Enter for a new line</p>
               </div>
             </form>
           </>
         ) : (
           <div className="message-thread-empty">
-            <MessageCircle />
+            <img className="message-empty-lockup" src={BRAND_LOCKUP} alt="" />
             <strong>Select a channel</strong>
             <span>Choose a team channel to start messaging.</span>
           </div>

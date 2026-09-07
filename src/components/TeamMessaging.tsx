@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabase';
 import type { Employee } from '@/lib/supabase';
 import EmployeeAvatar from '@/components/EmployeeAvatar';
 import { bindChatViewport } from '@/lib/chatViewport';
+import { BRAND_LOCKUP } from '@/lib/brand';
 
 type Channel = {
   id:string; name:string; slug:string; channel_type:string; audience_role?:string|null; crew_id?:string|null;
@@ -246,7 +247,7 @@ export default function TeamMessaging({employee,employees=[],portalKind='employe
 
   return <div className={`team-messaging messaging-v6 messaging-usable ${compact?'team-messaging-compact':''} ${showInfo?'with-info':''} ${mobileThreadOpen?'thread-open':''}`}>
     <aside className="message-channel-rail">
-      <div className="message-workspace-brand"><span className="message-workspace-mark">NS</span><div><strong>North Splash</strong><small>Field Communications</small></div><ChevronDown size={15}/></div>
+      <div className="message-workspace-brand"><img className="message-workspace-lockup" src={BRAND_LOCKUP} alt=""/><div><strong>North Splash</strong><small>Field Communications</small></div><ChevronDown size={15}/></div>
       <div className="message-search"><Search size={15}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Find a channel"/><kbd>⌘K</kbd></div>
       <div className="message-rail-filters" role="tablist" aria-label="Channel filter">
         {([['all','All'],['unread','Unread'],['chat','Chat'],['teams','Teams']] as const).map(([id,label])=>
@@ -281,15 +282,15 @@ export default function TeamMessaging({employee,employees=[],portalKind='employe
               <div className="message-body"><header>{!grouped&&<><strong>{m.sender_name}</strong><span>{new Date(m.created_at).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}</span></>}</header><p>{m.body}</p>{m.message_kind && m.message_kind!=='message'&&<small className={`message-kind kind-${m.message_kind}`}>{prettyLabel(m.message_kind)}</small>}<div className="message-hover-actions"><button type="button" title="React" onClick={()=>{setDraft(p=>`${p}${p?' ':''}👍`);composerRef.current?.focus()}}><Smile size={13}/></button><button type="button" title="Reply" onClick={()=>{setDraft(`@${m.sender_name} `);composerRef.current?.focus()}}><MessageCircle size={13}/></button></div></div>
             </article></div>;
           })}
-          {!visibleMessages.length&&!loading&&<div className="message-thread-empty"><div className="message-empty-orbit"><MessageCircle/></div><strong>{messageSearch?'No matching messages':'Start the conversation'}</strong><span>{messageSearch?'Try a different search.':`Share the first update in ${active.name}.`}</span></div>}
+          {!visibleMessages.length&&!loading&&<div className="message-thread-empty"><img className="message-empty-lockup" src={BRAND_LOCKUP} alt=""/><strong>{messageSearch?'No matching messages':'Start the conversation'}</strong><span>{messageSearch?'Try a different search.':`Share the first update in ${active.name}.`}</span></div>}
           <div ref={endRef}/>
         </div>
         <form className="message-composer" onSubmit={send}>
           {sendError&&<div className="message-send-error" role="alert">{sendError}</div>}
           {!user&&<div className="message-send-error" role="alert">You are not signed in, so messages cannot send.</div>}
-          <div className="message-composer-box"><div className="message-composer-toolbar"><button type="button" title="Add attachment"><Plus size={16}/></button><button type="button" title="Attach file"><Paperclip size={15}/></button><span>{kind && kind!=='message'?prettyLabel(kind):'Message'}</span></div><textarea ref={composerRef} value={draft} onChange={e=>setDraft(e.target.value)} onKeyDown={onComposerKeyDown} placeholder={`Message #${String(active.name||'').toLowerCase().replaceAll(' ','-')}`} rows={1}/><div className="message-composer-bottom"><small>Enter to send · Shift+Enter for new line</small><button type="submit" className="message-send-btn" disabled={sending||!draft.trim()}><Send size={16}/>{sending?'Sending':'Send'}</button></div></div>
+          <div className="message-composer-box"><div className="message-composer-toolbar"><button type="button" title="Add attachment"><Plus size={16}/></button><button type="button" title="Attach file"><Paperclip size={15}/></button><span>{kind && kind!=='message'?prettyLabel(kind):'Message'}</span></div><div className="message-composer-row"><textarea ref={composerRef} value={draft} onChange={e=>setDraft(e.target.value)} onKeyDown={onComposerKeyDown} placeholder={`Message #${String(active.name||'').toLowerCase().replaceAll(' ','-')}`} rows={1}/><button type="submit" className="message-send-btn" disabled={sending||!draft.trim()}><Send size={18}/><span>{sending?'Sending':'Send'}</span></button></div><p className="message-composer-hint">Enter to send · Shift+Enter for a new line</p></div>
         </form>
-      </>:<div className="message-thread-empty"><MessageCircle/><strong>Select a channel</strong><span>Choose a team channel to start messaging.</span></div>}
+      </>:<div className="message-thread-empty"><img className="message-empty-lockup" src={BRAND_LOCKUP} alt=""/><strong>Select a channel</strong><span>Choose a team channel to start messaging.</span></div>}
     </section>
 
     {showInfo&&active&&<aside className="message-info-rail">
