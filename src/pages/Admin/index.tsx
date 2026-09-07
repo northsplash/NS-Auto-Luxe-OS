@@ -772,7 +772,7 @@ const handleDeleteAvailability = async (id: string) => {
 
         {dataManagerOpen&&<AdminDataManager section={tab} label={navItems.find(n=>n.id===tab)?.label||'Workspace'} onClose={()=>setDataManagerOpen(false)}/>}
 
-        <div className="portal-content">
+        <div className="portal-content" key={tab}>
           {![
             'command_center','crm','dispatch','crews','leads','territories','training','communications','automations','client_photos',
             'recruiting','staff_schedule','timeclock','finance','sales','inventory','pay_settings',

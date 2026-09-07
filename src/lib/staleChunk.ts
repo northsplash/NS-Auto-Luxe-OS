@@ -1,4 +1,4 @@
-const RELOAD_KEY = 'ns-stale-chunk-reload-v75';
+const RELOAD_KEY = 'ns-stale-chunk-reload-v78';
 
 export function isStaleChunkError(message?: string | null) {
   return /Failed to fetch dynamically imported module|error loading dynamically imported module|Importing a module script failed|ChunkLoadError/i.test(String(message || ''));

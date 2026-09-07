@@ -6,6 +6,7 @@ import './ns-luxe-visual-overrides.css';
 import './os/os.css';
 import './os/cream-os.css';
 import './live-owner-polish.css';
+import './os/fluid-os.css';
 import App from './App';
 import { installStaleChunkRecovery } from './lib/staleChunk';
 

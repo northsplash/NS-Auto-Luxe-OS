@@ -103,9 +103,10 @@ export default function FieldTerritoryMapLegacy({
       touchZoom: true,
       dragging: true,
     }).setView([35.7796, -78.6382], 13);
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
       maxZoom: 20,
-      attribution: '&copy; OpenStreetMap contributors',
+      subdomains: 'abcd',
+      attribution: '&copy; OpenStreetMap &copy; CARTO',
     }).addTo(instance);
     layers.current = L.layerGroup().addTo(instance);
     drawLayer.current = L.layerGroup().addTo(instance);
@@ -120,8 +121,17 @@ export default function FieldTerritoryMapLegacy({
       }
     });
     map.current = instance;
-    setTimeout(() => instance.invalidateSize({ animate:false }), 80);
+    const fit = () => instance.invalidateSize({ animate: false });
+    window.setTimeout(fit, 80);
+    window.setTimeout(fit, 320);
+    const ro = typeof ResizeObserver !== 'undefined' && el.current
+      ? new ResizeObserver(fit)
+      : null;
+    if (el.current && ro) ro.observe(el.current);
+    window.addEventListener('orientationchange', fit);
     return () => {
+      ro?.disconnect();
+      window.removeEventListener('orientationchange', fit);
       instance.remove();
       map.current = null;
     };
@@ -433,6 +443,7 @@ export default function FieldTerritoryMapLegacy({
         {editable && <><button type="button" className="map-tool-btn" disabled={!points.current.length} onClick={undo}>Undo Point</button><button type="button" className="map-tool-btn" onClick={reset}>Clear</button></>}
       </div>
       <div ref={el} className="field-map-canvas" />
+      {!ready && <div className="field-map-skeleton" aria-live="polite">Loading the street map…</div>}
       {mobileGestureLock && !editable && !fullscreen && <div className={`map-interaction-toggle ${interactionEnabled?'active':''}`}><button type="button" onClick={()=>setInteractionEnabled(v=>!v)}>{interactionEnabled?'Done · Scroll Page':'Tap to Use Map'}</button></div>}
       {editable && <div className="field-map-tools"><span>Click the map to add boundary points. Drag numbered points to resize. Right-click a point to remove it.</span><strong>{points.current.length} points</strong></div>}
     </div>

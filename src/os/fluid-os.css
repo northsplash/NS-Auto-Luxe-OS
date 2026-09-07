@@ -1,0 +1,230 @@
+/* Professional motion + device chrome for the cream OS. */
+
+html.nsos-active,
+.portal-layout.nsos-cream {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  touch-action: manipulation;
+}
+
+.portal-layout.nsos-cream button,
+.portal-layout.nsos-cream a,
+.portal-layout.nsos-cream input,
+.portal-layout.nsos-cream select,
+.portal-layout.nsos-cream textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.portal-layout.nsos-cream .portal-sidebar {
+  transition: left .32s cubic-bezier(.16, 1, .3, 1), box-shadow .32s ease;
+}
+.portal-layout.nsos-cream .sidebar-backdrop {
+  transition: opacity .28s ease;
+}
+.portal-layout.nsos-cream .os-more-sheet {
+  transition: transform .36s cubic-bezier(.16, 1, .3, 1), opacity .28s ease;
+}
+
+.portal-layout.nsos-cream .tab-content,
+.portal-layout.nsos-cream .ws-hero,
+.portal-layout.nsos-cream .os-workspace-pulse,
+.portal-layout.nsos-cream .owner-command-v20,
+.portal-layout.nsos-cream .phase300 {
+  animation: nsWorkspaceIn .42s cubic-bezier(.16, 1, .3, 1);
+}
+@keyframes nsWorkspaceIn {
+  from { opacity: 0; transform: translate3d(0, 12px, 0); }
+  to { opacity: 1; transform: none; }
+}
+
+.portal-layout.nsos-cream .btn-primary,
+.portal-layout.nsos-cream .btn-outline,
+.portal-layout.nsos-cream .os-pinned-link,
+.portal-layout.nsos-cream .os-workspace-button,
+.portal-layout.nsos-cream .owner-field-mode-btn,
+.portal-layout.nsos-cream .os-mobile-bottom-nav button,
+.portal-layout.nsos-cream .os-phone-subnav button,
+.portal-layout.nsos-cream .os-secondary-nav-scroll button {
+  transition:
+    background .22s ease,
+    color .22s ease,
+    border-color .22s ease,
+    box-shadow .22s ease,
+    transform .22s cubic-bezier(.16, 1, .3, 1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .portal-layout.nsos-cream .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 22px rgba(28, 24, 20, .16);
+  }
+  .portal-layout.nsos-cream .btn-outline:hover {
+    transform: translateY(-1px);
+    background: #f7f1ea !important;
+  }
+  .portal-layout.nsos-cream .phase-panel:hover,
+  .portal-layout.nsos-cream .nsos-card:hover,
+  .portal-layout.nsos-cream .nsos-kpi:hover,
+  .portal-layout.nsos-cream .territory-analytics-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 32px rgba(48, 38, 28, .08);
+  }
+}
+
+.portal-layout.nsos-cream .btn-primary:active,
+.portal-layout.nsos-cream .btn-outline:active,
+.portal-layout.nsos-cream .os-mobile-bottom-nav button:active {
+  transform: scale(.98);
+}
+
+.portal-layout.nsos-cream .phase-panel,
+.portal-layout.nsos-cream .nsos-card,
+.portal-layout.nsos-cream .nsos-kpi,
+.portal-layout.nsos-cream .territory-analytics-card,
+.portal-layout.nsos-cream .owner-glance-v17,
+.portal-layout.nsos-cream .ws-hero-metrics > div {
+  transition: transform .28s cubic-bezier(.16, 1, .3, 1), box-shadow .28s ease, border-color .28s ease;
+}
+
+.field-map-wrap { position: relative; }
+.field-map-skeleton {
+  position: absolute;
+  inset: 48px 0 36px;
+  display: grid;
+  place-content: center;
+  gap: 10px;
+  background:
+    linear-gradient(180deg, rgba(239, 232, 220, .4), rgba(255, 253, 248, .9)),
+    repeating-linear-gradient(
+      90deg,
+      #efe8dc 0 28px,
+      #eadfd3 28px 29px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      #efe8dc 0 28px,
+      #eadfd3 28px 29px
+    );
+  color: #6f675e;
+  font-size: 13px;
+  font-weight: 650;
+  z-index: 2;
+  pointer-events: none;
+}
+.field-map-skeleton::before {
+  content: "";
+  width: 36px;
+  height: 36px;
+  margin: 0 auto;
+  border: 2px solid #eadfd3;
+  border-top-color: #b8893a;
+  border-radius: 50%;
+  animation: nsSpin .8s linear infinite;
+}
+@keyframes nsSpin { to { transform: rotate(360deg); } }
+
+.portal-layout.nsos-cream .leaflet-container {
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  background: #efe8dc !important;
+}
+.portal-layout.nsos-cream .leaflet-control-zoom a,
+.portal-layout.nsos-cream .leaflet-bar a {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  border-color: #eadfd3 !important;
+  width: 36px !important;
+  height: 36px !important;
+  line-height: 36px !important;
+}
+.portal-layout.nsos-cream .leaflet-control-attribution {
+  background: rgba(255, 253, 248, .92) !important;
+  color: #6f675e !important;
+}
+
+.portal-layout.nsos-cream .os-command-backdrop {
+  animation: nsFadeIn .2s ease;
+}
+.portal-layout.nsos-cream .os-command-palette {
+  animation: nsSheetIn .32s cubic-bezier(.16, 1, .3, 1);
+}
+@keyframes nsFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes nsSheetIn {
+  from { opacity: 0; transform: translate3d(0, 18px, 0) scale(.98); }
+  to { opacity: 1; transform: none; }
+}
+
+.auth-page.nsos-cream .auth-bg img {
+  animation: nsHeroDrift 18s ease-in-out infinite alternate;
+  transform-origin: center;
+}
+@keyframes nsHeroDrift {
+  from { transform: scale(1); }
+  to { transform: scale(1.06); }
+}
+.auth-page.nsos-cream .auth-card {
+  animation: nsSheetIn .5s cubic-bezier(.16, 1, .3, 1);
+}
+
+@media (max-width: 1180px) {
+  .portal-layout.nsos-cream .os-mobile-bottom-nav button,
+  .portal-layout.nsos-cream .os-phone-subnav button,
+  .portal-layout.nsos-cream .btn-primary,
+  .portal-layout.nsos-cream .btn-outline {
+    min-height: 44px;
+  }
+  .portal-layout.nsos-cream .os-phone-subnav {
+    padding-bottom: 12px;
+    scrollbar-width: none;
+  }
+  .portal-layout.nsos-cream .field-map-toolbar .map-tool-btn,
+  .portal-layout.nsos-cream .google-map-search {
+    min-height: 44px;
+  }
+}
+
+@media (min-width: 721px) and (max-width: 1180px) {
+  .portal-layout.nsos-cream .ws-hero-metrics,
+  .portal-layout.nsos-cream .owner-kpis-v17,
+  .portal-layout.nsos-cream .phase-kpi-row,
+  .portal-layout.nsos-cream .admin-stats-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  .portal-layout.nsos-cream .portal-content {
+    padding-bottom: calc(28px + env(safe-area-inset-bottom)) !important;
+  }
+  .portal-layout.nsos-cream .territory-command-layout-v13,
+  .portal-layout.nsos-cream .crm-command,
+  .portal-layout.nsos-cream .team-messaging {
+    gap: 12px !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .portal-layout.nsos-cream .btn-primary,
+  .portal-layout.nsos-cream .btn-outline {
+    width: 100%;
+    justify-content: center;
+  }
+  .portal-layout.nsos-cream .territory-primary-actions-v13,
+  .portal-layout.nsos-cream .owner-lead-assign {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+  }
+  .portal-layout.nsos-cream .leaflet-control-zoom {
+    margin-right: 12px !important;
+    margin-bottom: 56px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-layout.nsos-cream *,
+  .portal-layout.nsos-cream *::before,
+  .portal-layout.nsos-cream *::after,
+  .auth-page.nsos-cream * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+  .field-map-skeleton::before { animation: none !important; }
+}

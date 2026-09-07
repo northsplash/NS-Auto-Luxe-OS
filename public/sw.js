@@ -1,4 +1,4 @@
-const CACHE = 'north-splash-os-v77-cream-more';
+const CACHE = 'north-splash-os-v78-fluid';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './ns-auto-luxe-mark.png', './ns-auto-luxe-logo.png', './ns-auto-luxe-full-logo.png', './ns-auto-luxe-watermark.svg', './icon-192.png'];
 
 self.addEventListener('install', (event) => {

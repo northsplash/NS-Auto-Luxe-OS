@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { BRAND_LOCKUP } from '@/lib/brand';
 
-const HERO = 'https://images.pexels.com/photos/27968215/pexels-photo-27968215.jpeg?auto=compress&cs=tinysrgb&h=650&w=940';
+const HERO = 'https://images.pexels.com/photos/27968215/pexels-photo-27968215.jpeg?auto=compress&cs=tinysrgb&w=1600';
 
 const PORTALS = [
   { label: 'Owner', hint: 'Command' },
