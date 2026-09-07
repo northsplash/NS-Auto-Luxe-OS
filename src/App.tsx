@@ -1,6 +1,7 @@
 import { Component, lazy, Suspense, type ErrorInfo, type ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
 import { BRAND_LOGO } from './lib/brand';
+import { isStaleChunkError, recoverStaleChunkOnce } from './lib/staleChunk';
 
 const OsApp = lazy(() => import('@/os/OsApp'));
 const Login = lazy(() => import('@/pages/Login'));
@@ -25,8 +26,9 @@ function Loader() {
 
 function WorkspaceCrashScreen({ message, onRetry }: { message: string; onRetry: () => void }) {
   const hookCrash = /310|Rendered more hooks|fewer hooks/i.test(message || '');
+  const chunkCrash = isStaleChunkError(message);
   const retry = () => {
-    if (hookCrash) {
+    if (hookCrash || chunkCrash) {
       window.location.reload();
       return;
     }
@@ -38,8 +40,8 @@ function WorkspaceCrashScreen({ message, onRetry }: { message: string; onRetry: 
         <span className="eyebrow">North Splash Auto Luxe</span>
         <img className="auth-brand-logo" src={BRAND_LOGO} alt="North Splash Auto Luxe" />
         <h2>This screen could not load</h2>
-        <p>{hookCrash ? 'Reload this page to pick up the latest workspace.' : 'Try again. The rest of the company is still here.'}</p>
-        {message && <p className="empty-text">{message}</p>}
+        <p>{hookCrash || chunkCrash ? 'Reload this page to pick up the latest workspace.' : 'Try again. The rest of the company is still here.'}</p>
+        {message && !chunkCrash && <p className="empty-text">{message}</p>}
         <div className="route-error-actions-v27">
           <button type="button" className="btn-primary" onClick={retry}>
             Try again
@@ -53,7 +55,7 @@ function WorkspaceCrashScreen({ message, onRetry }: { message: string; onRetry: 
           <button
             type="button"
             className="btn-outline"
-            onClick={() => { if (hookCrash) { window.location.href = '/login'; return; } onRetry(); window.history.back(); }}
+            onClick={() => { if (hookCrash || chunkCrash) { window.location.href = '/login'; return; } onRetry(); window.history.back(); }}
           >
             Go back
           </button>
@@ -70,6 +72,7 @@ class RouteErrorBoundary extends Component<{ children: ReactNode; resetKey: stri
   }
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error('North Splash route error', error, info);
+    if (isStaleChunkError(error?.message)) recoverStaleChunkOnce();
   }
   componentDidUpdate(prevProps: { resetKey: string }) {
     if (prevProps.resetKey !== this.props.resetKey && this.state.failed) {

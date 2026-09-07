@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Archive, ArchiveRestore, CalendarPlus, ExternalLink, Eye, Plus, Search, Target, XCircle,
 } from 'lucide-react';
@@ -10,8 +10,7 @@ import { DOOR_STATUSES, doorStatus } from '@/lib/fieldOps';
 import { employeeCanD2D } from '@/lib/workCapabilities';
 import type { Appointment, Employee, Lead, TerritoryDoor } from '@/lib/supabase';
 import WorkspaceHero from '@/components/WorkspaceHero';
-
-const FieldTerritoryMap = lazy(() => import('@/components/FieldTerritoryMap'));
+import FieldTerritoryMap from '@/components/FieldTerritoryMap';
 
 type View = 'pipeline' | 'map' | 'list' | 'archive';
 type Attention = 'all' | 'due' | 'unassigned' | 'hot' | 'dupes';
@@ -344,8 +343,7 @@ export default function OwnerLeadPipeline({ employees, setAppointments, onNaviga
       {view === 'map' && (
         <div className="lead-command-layout v2-lead-map-layout">
           <div className="lead-map-card">
-            <Suspense fallback={<div className="ns-empty">Opening map…</div>}>
-              <FieldTerritoryMap
+            <FieldTerritoryMap
                 territories={[]}
                 leads={filtered}
                 doors={doors}
@@ -355,7 +353,6 @@ export default function OwnerLeadPipeline({ employees, setAppointments, onNaviga
                 }}
                 className="lead-command-map"
               />
-            </Suspense>
             <div className="lead-map-legend">{DOOR_STATUSES.slice(0, 10).map((s) => <span key={s.key}><i style={{ background: s.color }} />{s.label}</span>)}</div>
           </div>
           <LeadInspector

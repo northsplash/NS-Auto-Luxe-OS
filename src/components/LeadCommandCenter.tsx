@@ -1,13 +1,14 @@
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
-  CalendarPlus, ChevronRight, Flame, Layers3, List, Map, MapPin, Navigation, Phone, Search,
-  Target, TrendingUp, UserRound, X, RefreshCw
+  CalendarPlus, ChevronRight, Flame, Layers3, List, Map, Navigation, Phone, Search,
+  Target, TrendingUp, RefreshCw
 } from 'lucide-react';
 import { supabase, type Lead } from '@/lib/supabase';
 import { money, prettyLabel } from '@/lib/data';
 import { localDateTime, DOOR_STATUSES, doorStatus } from '@/lib/fieldOps';
-import { GOOGLE_MAPS_MAP_ID, googleMapsErrorMessage, loadGoogleMaps } from '@/lib/googleMaps';
+import { googleMapsErrorMessage, loadGoogleMaps } from '@/lib/googleMaps';
+import FieldTerritoryMap from '@/components/FieldTerritoryMap';
 
 type Props={leads:Lead[];onOpen:(lead:Lead)=>void;onSchedule?:(lead:Lead)=>void;repName?:string};
 const statusNames:Record<string,string>={unworked:'New',contacted:'Contacted',interested:'Interested',follow_up:'Follow Up',estimate:'Estimate',appointment_set:'Appointment',sold:'Sold',no_answer:'No Answer',revisit:'Revisit',do_not_knock:'DNK'};
@@ -17,38 +18,19 @@ const score=(l:Lead)=>{if(Number(l.lead_score||0)>0)return Number(l.lead_score);
 const temp=(l:Lead)=>l.lead_temperature&&l.lead_temperature!=='cold'?l.lead_temperature:(score(l)>=75?'hot':score(l)>=45?'warm':'cold');
 
 function LeadMap({leads,onOpen}:{leads:Lead[];onOpen:(lead:Lead)=>void}){
-  const host=useRef<HTMLDivElement|null>(null); const mapRef=useRef<any>(null); const markers=useRef<any[]>([]); const onOpenRef=useRef(onOpen);
-  const [error,setError]=useState(''); const [mapType,setMapType]=useState<'roadmap'|'satellite'>('roadmap');
-  useEffect(()=>{onOpenRef.current=onOpen},[onOpen]);
-  useEffect(()=>{mapRef.current?.setMapTypeId?.(mapType)},[mapType]);
-  const locate=()=>navigator.geolocation?.getCurrentPosition(p=>{const center={lat:p.coords.latitude,lng:p.coords.longitude};mapRef.current?.panTo?.(center);mapRef.current?.setZoom?.(16)},()=>{}, {enableHighAccuracy:true,timeout:9000,maximumAge:30000});
-  useEffect(()=>{let alive=true;loadGoogleMaps().then(google=>{
-    if(!alive||!host.current)return;
-    const valid=leads.filter(l=>Number.isFinite(Number(l.latitude))&&Number.isFinite(Number(l.longitude))&&Number(l.latitude)!==0&&Number(l.longitude)!==0);
-    const center=valid[0]?{lat:Number(valid[0].latitude),lng:Number(valid[0].longitude)}:{lat:35.7796,lng:-78.6382};
-    mapRef.current=new google.maps.Map(host.current,{center,zoom:valid.length?13:11,...(GOOGLE_MAPS_MAP_ID?{mapId:GOOGLE_MAPS_MAP_ID}:{}),mapTypeControl:false,streetViewControl:false,fullscreenControl:false,gestureHandling:'greedy',styles:[
-      {elementType:'geometry',stylers:[{color:'#101214'}]},{elementType:'labels.text.stroke',stylers:[{color:'#101214'}]},{elementType:'labels.text.fill',stylers:[{color:'#9aa0a6'}]},
-      {featureType:'road',elementType:'geometry',stylers:[{color:'#25292d'}]},{featureType:'road',elementType:'geometry.stroke',stylers:[{color:'#151719'}]},
-      {featureType:'road.highway',elementType:'geometry',stylers:[{color:'#353a40'}]},{featureType:'water',elementType:'geometry',stylers:[{color:'#0b1a24'}]},
-      {featureType:'poi',elementType:'labels.icon',stylers:[{visibility:'off'}]},{featureType:'transit',stylers:[{visibility:'off'}]}
-    ]});
-    const bounds=new google.maps.LatLngBounds();
-    markers.current=valid.map(l=>{
-      const color=stageColors[l.status]||'#d9ad4a';
-      const position={lat:Number(l.latitude),lng:Number(l.longitude)};
-      let marker:any;
-      if(GOOGLE_MAPS_MAP_ID&&google.maps.marker?.AdvancedMarkerElement){
-        const pin=document.createElement('button');pin.type='button';pin.className='lead-advanced-pin-v27';pin.style.setProperty('--pin-color',color);pin.title=l.customer_name||l.address||'Lead';
-        marker=new google.maps.marker.AdvancedMarkerElement({map:mapRef.current,position,title:l.customer_name||l.address||'Lead',content:pin});
-      }else{
-        marker=new google.maps.Marker({map:mapRef.current,position,title:l.customer_name||l.address||'Lead',icon:{path:google.maps.SymbolPath.CIRCLE,scale:9,fillColor:color,fillOpacity:1,strokeColor:'#0a0a0a',strokeWeight:3}});
-      }
-      marker.addListener('click',()=>onOpenRef.current(l)); bounds.extend(position); return marker;
-    });
-    if(valid.length>1)mapRef.current.fitBounds(bounds,60);
-    if(valid.length===1)mapRef.current.setZoom(16);
-  }).catch(e=>alive&&setError(googleMapsErrorMessage(e)));return()=>{alive=false;markers.current.forEach(m=>{if('map' in m)m.map=null;else m.setMap?.(null)});markers.current=[]}},[leads]);
-  return <div className="lead-map-v26">{error?<div className="lead-map-error"><MapPin/><strong>Google Maps needs attention</strong><span>{error}</span></div>:<><div ref={host} className="lead-map-canvas"/><div className="lead-map-controls-v26"><button type="button" onClick={locate} title="Use current location"><Navigation size={15}/></button><button type="button" onClick={()=>setMapType(t=>t==='roadmap'?'satellite':'roadmap')} title="Toggle satellite">{mapType==='roadmap'?'SAT':'MAP'}</button></div></>}<div className="lead-map-legend salesrabbit-legend-v29">{DOOR_STATUSES.slice(0,10).map(s=><span key={s.key}><i style={{background:s.color}}/>{s.short}</span>)}</div></div>;
+  return <div className="lead-map-v26">
+    <FieldTerritoryMap
+      className="lead-command-map"
+      fieldMode
+      territories={[]}
+      leads={leads}
+      onDoorClick={(door)=>{
+        const lead=leads.find(l=>l.id===door.lead_id)||leads.find(l=>l.address===door.address&&Number(l.latitude)===Number(door.latitude));
+        if(lead) onOpen(lead);
+      }}
+    />
+    <div className="lead-map-legend salesrabbit-legend-v29">{DOOR_STATUSES.slice(0,10).map(s=><span key={s.key}><i style={{background:s.color}}/>{s.short}</span>)}</div>
+  </div>;
 }
 
 function leadDistance(l:Lead,pos:{lat:number;lng:number}){const lat=Number(l.latitude),lng=Number(l.longitude);if(!Number.isFinite(lat)||!Number.isFinite(lng)||!lat||!lng)return Number.POSITIVE_INFINITY;const R=3958.8,toRad=(d:number)=>d*Math.PI/180;const dLat=toRad(lat-pos.lat),dLng=toRad(lng-pos.lng);const a=Math.sin(dLat/2)**2+Math.cos(toRad(pos.lat))*Math.cos(toRad(lat))*Math.sin(dLng/2)**2;return 2*R*Math.asin(Math.sqrt(a))}

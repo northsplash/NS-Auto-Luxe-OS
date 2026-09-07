@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Activity, ArrowRight, BarChart3, Bell, BookOpen, CalendarClock, CheckCircle2, ChevronRight, Clock3, Copy, DollarSign,
   GraduationCap, MapPinned, Mail, MapPin, Pause, Pencil, Play, Plus, Route,
@@ -19,11 +19,10 @@ import { hiredCrew } from '@/lib/ownerFieldMode';
 import { setOwnerBoardFilter } from '@/lib/ownerJump';
 import { isOnboardingOpen } from '@/lib/onboarding';
 import { BRAND_LOCKUP } from '@/lib/brand';
-
-const FieldTerritoryMap = lazy(() => import('@/components/FieldTerritoryMap'));
-const TerritoryStreetView = lazy(() => import('@/components/TerritoryStreetView'));
-const DispatchCommandCenter = lazy(() => import('@/components/DispatchCommandCenter'));
-const ClientPhotosSection = lazy(() => import('@/components/ClientPhotosSection'));
+import FieldTerritoryMap from '@/components/FieldTerritoryMap';
+import TerritoryStreetView from '@/components/TerritoryStreetView';
+import DispatchCommandCenter from '@/components/DispatchCommandCenter';
+import ClientPhotosSection from '@/components/ClientPhotosSection';
 
 type Section = 'command_center'|'crm'|'dispatch'|'crews'|'leads'|'territories'|'training'|'communications'|'automations';
 type Props = {
@@ -40,9 +39,6 @@ type Props = {
 type TerritoryForm = { id?:string; name:string; assigned_employee_id:string; status:string; notes:string; color:string; points:[number,number][] };
 const emptyTerritory = ():TerritoryForm => ({ name:'',assigned_employee_id:'',status:'active',notes:'',color:'#9d7651',points:[] });
 const dateKey = (d: Date | string = new Date()) => localDateKey(d) || localDateKey();
-function PanelLoader({ label }: { label: string }) {
-  return <div className="workspace-chunk-loader">{label}</div>;
-}
 const humanStatus=(s?:string|null)=>prettyLabel(s).replace(/\b\w/g,c=>c.toUpperCase());
 const time=(v?:string|null)=>v?new Date(v).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}):'—';
 const when=(v?:string|null)=>v?new Date(v).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'—';
@@ -55,13 +51,13 @@ function KPI({label,value,detail}:{label:string;value:string;detail?:string}){
 }
 
 export default function Phase300Suite({section,employees,appointments,setAppointments,customers,payments,onNavigate,ownerName}:Props){
-  if(section==='territories') return <Suspense fallback={<PanelLoader label="Opening territories…" />}><TerritoryCenter employees={employees}/></Suspense>;
-  if(section==='leads') return <Suspense fallback={<PanelLoader label="Opening leads…" />}><OwnerLeadPipeline employees={employees} setAppointments={setAppointments} onNavigate={onNavigate}/></Suspense>;
+  if(section==='territories') return <TerritoryCenter employees={employees}/>;
+  if(section==='leads') return <OwnerLeadPipeline employees={employees} setAppointments={setAppointments} onNavigate={onNavigate}/>;
   if(section==='training') return <TrainingCenter employees={employees}/>;
   if(section==='communications') return <CommunicationsCenter/>;
   if(section==='automations') return <AutomationCenter/>;
-  if(section==='crm') return <Suspense fallback={<PanelLoader label="Opening CRM…" />}><CRMCenter customers={customers} appointments={appointments}/></Suspense>;
-  if(section==='dispatch') return <Suspense fallback={<PanelLoader label="Opening dispatch…" />}><DispatchCenter employees={employees} appointments={appointments} setAppointments={setAppointments}/></Suspense>;
+  if(section==='crm') return <CRMCenter customers={customers} appointments={appointments}/>;
+  if(section==='dispatch') return <DispatchCenter employees={employees} appointments={appointments} setAppointments={setAppointments}/>;
   if(section==='crews') return <CrewCommandCenter employees={employees} appointments={appointments}/>;
   return <CommandCenter employees={employees} appointments={appointments} customers={customers} payments={payments} onNavigate={onNavigate} ownerName={ownerName}/>;
 }
@@ -281,7 +277,7 @@ function DispatchCenter({employees,appointments,setAppointments}:{employees:Empl
 function CRMCenter({customers,appointments}:{customers:Profile[];appointments:Appointment[]}){
  const [query,setQuery]=useState('');const [selected,setSelected]=useState<Profile|null>(null);const [notes,setNotes]=useState<any[]>([]);const [vehicles,setVehicles]=useState<any[]>([]);const filtered=customers.filter(c=>!query||[c.full_name,c.email,c.phone].filter(Boolean).join(' ').toLowerCase().includes(query.toLowerCase()));
  useEffect(()=>{if(!selected){setNotes([]);setVehicles([]);return;}Promise.all([supabase.from('crm_notes').select('*').eq('customer_id',selected.id).order('created_at',{ascending:false}),supabase.from('customer_vehicles').select('*').eq('user_id',selected.id).order('created_at',{ascending:false})]).then(([n,v])=>{setNotes(n.data??[]);setVehicles(v.data??[])})},[selected?.id]);
- return <div className="tab-content phase300"><Header tab="crm"/><div className="crm-command"><aside className="crm-customer-list"><div className="search-control"><Search size={16}/><input placeholder="Search customers" value={query} onChange={e=>setQuery(e.target.value)}/></div>{filtered.slice(0,300).map(c=>{const ca=appointments.filter(a=>a.user_id===c.id);const spend=ca.filter(a=>a.status==='completed').reduce((s,a)=>s+Number(a.price||0),0);return <button key={c.id} onClick={()=>setSelected(c)} className={selected?.id===c.id?'selected':''}><span className="crm-avatar">{(c.full_name||c.email||'C')[0].toUpperCase()}</span><span><strong>{c.full_name||'Customer'}</strong><small>{c.email||c.phone||'No contact'} · {money(spend)}</small></span></button>})}</aside><main className="crm-customer-detail">{selected?(()=>{const ca=appointments.filter(a=>a.user_id===selected.id).sort((a,b)=>+new Date(b.created_at)-+new Date(a.created_at));const spend=ca.filter(a=>a.status==='completed').reduce((s,a)=>s+Number(a.price||0),0);return <><div className="crm-detail-hero"><div className="crm-large-avatar">{(selected.full_name||selected.email||'C')[0].toUpperCase()}</div><div><span className="eyebrow">CUSTOMER</span><h2>{selected.full_name||'Customer'}</h2><p>{selected.email||'No email'} · {selected.phone||'No phone'}</p></div><div className="crm-value"><span>Lifetime service value</span><strong>{money(spend)}</strong></div></div><div className="phase-kpi-row"><KPI label="Bookings" value={String(ca.length)}/><KPI label="Completed" value={String(ca.filter(a=>a.status==='completed').length)}/><KPI label="Vehicles" value={String(vehicles.length|| (selected.vehicle_info?1:0))}/><KPI label="Last Service" value={ca.find(a=>a.status==='completed')?.scheduled_at?new Date(ca.find(a=>a.status==='completed')!.scheduled_at!).toLocaleDateString():'—'}/></div><div className="crm-detail-grid"><section className="phase-panel"><h3>Vehicles</h3>{vehicles.map(v=><div className="crm-line" key={v.id}><strong>{[v.year,v.make,v.model].filter(Boolean).join(' ')||v.nickname||'Vehicle'}</strong><span>{v.color||''} {v.size_class?`· ${v.size_class}`:''}</span></div>)}{!vehicles.length&&<div className="crm-line"><strong>{selected.vehicle_info||'No saved vehicle yet'}</strong></div>}</section><section className="phase-panel"><h3>CRM Notes</h3>{notes.slice(0,8).map(n=><div className="crm-line" key={n.id}><strong>{n.note_type||'Note'}</strong><span>{n.body||n.note} · {when(n.created_at)}</span></div>)}{!notes.length&&<p>No CRM notes yet.</p>}</section></div><section className="phase-panel"><h3>Service Timeline</h3>{ca.slice(0,20).map(a=><div className="timeline-row" key={a.id}><span className="timeline-dot"/><div><strong>{a.service_name}</strong><small>{when(a.scheduled_at||a.created_at)} · {humanStatus(a.status)} · {money(Number(a.price||0))}</small></div></div>)}</section><Suspense fallback={<PanelLoader label="Opening photos…" />}><ClientPhotosSection customers={customers} appointments={appointments} compactCustomer={selected}/></Suspense></>})():<div className="empty-inspector"><img className="message-empty-lockup" src={BRAND_LOCKUP} alt="NS Auto Luxe Premium Detailing"/><h3>Select a customer</h3><p>Open their complete North Splash relationship from one place.</p></div>}</main></div></div>;
+ return <div className="tab-content phase300"><Header tab="crm"/><div className="crm-command"><aside className="crm-customer-list"><div className="search-control"><Search size={16}/><input placeholder="Search customers" value={query} onChange={e=>setQuery(e.target.value)}/></div>{filtered.slice(0,300).map(c=>{const ca=appointments.filter(a=>a.user_id===c.id);const spend=ca.filter(a=>a.status==='completed').reduce((s,a)=>s+Number(a.price||0),0);return <button key={c.id} onClick={()=>setSelected(c)} className={selected?.id===c.id?'selected':''}><span className="crm-avatar">{(c.full_name||c.email||'C')[0].toUpperCase()}</span><span><strong>{c.full_name||'Customer'}</strong><small>{c.email||c.phone||'No contact'} · {money(spend)}</small></span></button>})}</aside><main className="crm-customer-detail">{selected?(()=>{const ca=appointments.filter(a=>a.user_id===selected.id).sort((a,b)=>+new Date(b.created_at)-+new Date(a.created_at));const spend=ca.filter(a=>a.status==='completed').reduce((s,a)=>s+Number(a.price||0),0);return <><div className="crm-detail-hero"><div className="crm-large-avatar">{(selected.full_name||selected.email||'C')[0].toUpperCase()}</div><div><span className="eyebrow">CUSTOMER</span><h2>{selected.full_name||'Customer'}</h2><p>{selected.email||'No email'} · {selected.phone||'No phone'}</p></div><div className="crm-value"><span>Lifetime service value</span><strong>{money(spend)}</strong></div></div><div className="phase-kpi-row"><KPI label="Bookings" value={String(ca.length)}/><KPI label="Completed" value={String(ca.filter(a=>a.status==='completed').length)}/><KPI label="Vehicles" value={String(vehicles.length|| (selected.vehicle_info?1:0))}/><KPI label="Last Service" value={ca.find(a=>a.status==='completed')?.scheduled_at?new Date(ca.find(a=>a.status==='completed')!.scheduled_at!).toLocaleDateString():'—'}/></div><div className="crm-detail-grid"><section className="phase-panel"><h3>Vehicles</h3>{vehicles.map(v=><div className="crm-line" key={v.id}><strong>{[v.year,v.make,v.model].filter(Boolean).join(' ')||v.nickname||'Vehicle'}</strong><span>{v.color||''} {v.size_class?`· ${v.size_class}`:''}</span></div>)}{!vehicles.length&&<div className="crm-line"><strong>{selected.vehicle_info||'No saved vehicle yet'}</strong></div>}</section><section className="phase-panel"><h3>CRM Notes</h3>{notes.slice(0,8).map(n=><div className="crm-line" key={n.id}><strong>{n.note_type||'Note'}</strong><span>{n.body||n.note} · {when(n.created_at)}</span></div>)}{!notes.length&&<p>No CRM notes yet.</p>}</section></div><section className="phase-panel"><h3>Service Timeline</h3>{ca.slice(0,20).map(a=><div className="timeline-row" key={a.id}><span className="timeline-dot"/><div><strong>{a.service_name}</strong><small>{when(a.scheduled_at||a.created_at)} · {humanStatus(a.status)} · {money(Number(a.price||0))}</small></div></div>)}</section><ClientPhotosSection customers={customers} appointments={appointments} compactCustomer={selected}/></>})():<div className="empty-inspector"><img className="message-empty-lockup" src={BRAND_LOCKUP} alt="NS Auto Luxe Premium Detailing"/><h3>Select a customer</h3><p>Open their complete North Splash relationship from one place.</p></div>}</main></div></div>;
 }
 
 function TrainingCenter({employees}:{employees:Employee[]}){
@@ -412,6 +408,7 @@ function CommandCenter({employees,appointments,customers,payments,onNavigate,own
    <a className="skip-to-workspace in-page" href="#owner-schedule">Skip to today’s schedule</a>
    <div className="owner-command-head">
      <div>
+       <img className="owner-command-lockup" src={BRAND_LOCKUP} alt="NS Auto Luxe Premium Detailing"/>
        <span className="eyebrow">OWNER / COMMAND CENTER</span>
        <h2>{greeting}, <em>{name}</em></h2>
        <p>Knock, book, assign, run, collect — then the numbers.</p>

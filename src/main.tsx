@@ -7,6 +7,9 @@ import './os/os.css';
 import './os/cream-os.css';
 import './live-owner-polish.css';
 import App from './App';
+import { installStaleChunkRecovery } from './lib/staleChunk';
+
+installStaleChunkRecovery();
 
 const assetBase = import.meta.env.BASE_URL;
 document.documentElement.style.setProperty('--ns-brand-mark', `url("${assetBase}ns-auto-luxe-mark.png")`);

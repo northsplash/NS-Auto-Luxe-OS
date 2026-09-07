@@ -169,3 +169,18 @@ export function buildGoogleMapsUrl(lat?: number | null, lng?: number | null, add
 export function percent(value: number, total: number) {
   return total > 0 ? Math.min(100, Math.round(value / total * 100)) : 0;
 }
+
+export function doorStreetLabel(
+  door?: {
+    address?: string | null;
+    house_number?: string | null;
+    street_name?: string | null;
+  } | null,
+  fallback = 'Mapped house',
+) {
+  if (!door) return fallback;
+  const composed = [door.house_number, door.street_name].filter(Boolean).join(' ').trim();
+  const address = String(door.address || '').trim();
+  if (address && !/^address pending$/i.test(address)) return address;
+  return composed || fallback;
+}

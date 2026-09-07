@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Calendar, CreditCard, UserCheck, Car,
@@ -20,12 +20,12 @@ import type { BusinessSection } from './BusinessSuite';
 import type { EnterpriseSection } from './EnterpriseSuite';
 import type { ExpansionSection } from './OperationsExpansion';
 import Phase300Suite from './Phase300Suite';
-const BusinessSuite = lazy(() => import('./BusinessSuite'));
-const EnterpriseSuite = lazy(() => import('./EnterpriseSuite'));
-const OperationsExpansion = lazy(() => import('./OperationsExpansion'));
-const OwnerProfitTracker = lazy(() => import('./OwnerProfitTracker'));
-const OwnerGrowthPlanner = lazy(() => import('./OwnerGrowthPlanner'));
-const OwnerPaymentTest = lazy(() => import('./OwnerPaymentTest'));
+import BusinessSuite from './BusinessSuite';
+import EnterpriseSuite from './EnterpriseSuite';
+import OperationsExpansion from './OperationsExpansion';
+import OwnerProfitTracker from './OwnerProfitTracker';
+import OwnerGrowthPlanner from './OwnerGrowthPlanner';
+import OwnerPaymentTest from './OwnerPaymentTest';
 import AdminTeamCalendar from '@/components/AdminTeamCalendar';
 import EmployeeAvatar from '@/components/EmployeeAvatar';
 import EmployeeProfileDrawer from '@/components/EmployeeProfileDrawer';

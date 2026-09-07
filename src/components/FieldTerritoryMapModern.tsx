@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { doorStatus } from '@/lib/fieldOps';
-import { GOOGLE_MAPS_MAP_ID, googleMapsErrorMessage, loadGoogleMaps } from '@/lib/googleMaps';
+import { GOOGLE_MAPS_MAP_ID, googleMapsErrorMessage, loadGoogleMaps, watchGoogleMapError } from '@/lib/googleMaps';
 import type { FieldDoor, FieldTerritoryMapProps } from './FieldTerritoryMap.types';
 
 type MarkerLike = { setMap?: (map: any) => void };
@@ -68,6 +68,7 @@ export default function FieldTerritoryMapModern({
 
   useEffect(() => {
     let cancelled = false;
+    let stopWatch: (() => void) | undefined;
     setReady(false); setEngineError('');
     loadGoogleMaps().then(google => {
       if (cancelled || !el.current) return;
@@ -96,6 +97,11 @@ export default function FieldTerritoryMapModern({
         } else onMapClick?.(lat, lng);
       });
       setReady(true);
+      stopWatch = watchGoogleMapError(el.current, () => {
+        if (cancelled) return;
+        if (onUnavailable) onUnavailable();
+        else setEngineError(googleMapsErrorMessage('GOOGLE_MAPS_AUTH_FAILURE'));
+      });
     }).catch(err => {
       if (cancelled) return;
       if (onUnavailable) onUnavailable();
@@ -103,6 +109,7 @@ export default function FieldTerritoryMapModern({
     });
     return () => {
       cancelled = true;
+      stopWatch?.();
       clearAll();
       map.current = null;
     };

@@ -7077,3 +7077,50 @@ html {
   width: min(240px, 56vw);
   max-height: 170px;
 }
+
+/* v75 — lockup stays visible on cream pages, including around maps. */
+.portal-layout.nsos-cream .portal-main::after {
+  background-image: var(--ns-brand-watermark) !important;
+  background-position: center 18% !important;
+  background-size: min(86vw, 860px) auto !important;
+  opacity: .22 !important;
+}
+.portal-layout.nsos-cream .portal-content {
+  min-height: min(68dvh, 760px);
+}
+.portal-layout.nsos-cream .owner-command-lockup {
+  display: block;
+  width: min(220px, 48vw);
+  max-height: 92px;
+  height: auto;
+  object-fit: contain;
+  margin: 0 0 10px;
+  background: transparent;
+}
+.portal-layout.nsos-cream .d2d-map-shell,
+.portal-layout.nsos-cream .territory-command-page,
+.portal-layout.nsos-cream .territory-command-layout-v13,
+.portal-layout.nsos-cream .lead-map-card,
+.portal-layout.nsos-cream .lead-map-v26 {
+  background-image: var(--ns-brand-watermark) !important;
+  background-repeat: no-repeat !important;
+  background-position: center 42% !important;
+  background-size: min(70%, 520px) auto !important;
+}
+.portal-layout.nsos-cream .ns-map-fallback {
+  background: #fffdf8 !important;
+  color: #3d3832 !important;
+  border-color: #e4d9cc !important;
+}
+@media (max-width: 1180px) {
+  .portal-layout.nsos-cream .portal-main::after {
+    background-image: var(--ns-brand-watermark) !important;
+    background-size: min(94vw, 720px) auto !important;
+    background-position: center 16% !important;
+    opacity: .26 !important;
+  }
+  .portal-layout.nsos-cream .owner-command-lockup {
+    width: min(180px, 56vw);
+    max-height: 78px;
+  }
+}

@@ -1,30 +1,132 @@
 declare global {
   interface Window {
     google?: any;
+    gm_authFailure?: () => void;
     __northSplashGoogleMapsPromise?: Promise<any>;
+    __northSplashGoogleMapsBroken?: boolean;
+    __nsGmAuthHooked?: boolean;
   }
 }
 
 export const GOOGLE_MAPS_API_KEY = String(import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '').trim();
 export const GOOGLE_MAPS_MAP_ID = String(import.meta.env.VITE_GOOGLE_MAPS_MAP_ID || '').trim();
 
+const BROKEN_KEY = 'ns-google-maps-auth-failed';
+const authListeners = new Set<() => void>();
+
+export function googleMapsUnavailable() {
+  if (typeof window === 'undefined') return false;
+  if (window.__northSplashGoogleMapsBroken) return true;
+  try {
+    return sessionStorage.getItem(BROKEN_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+export function markGoogleMapsUnavailable() {
+  if (typeof window === 'undefined') return;
+  window.__northSplashGoogleMapsBroken = true;
+  try { sessionStorage.setItem(BROKEN_KEY, '1'); } catch { /* ignore */ }
+  authListeners.forEach((fn) => {
+    try { fn(); } catch { /* ignore */ }
+  });
+}
+
+export function onGoogleMapsAuthFailure(fn: () => void) {
+  authListeners.add(fn);
+  if (googleMapsUnavailable()) queueMicrotask(fn);
+  return () => { authListeners.delete(fn); };
+}
+
+function installAuthFailureHook() {
+  if (typeof window === 'undefined' || window.__nsGmAuthHooked) return;
+  window.__nsGmAuthHooked = true;
+  const previous = window.gm_authFailure;
+  window.gm_authFailure = () => {
+    try { previous?.(); } catch { /* ignore */ }
+    markGoogleMapsUnavailable();
+  };
+}
+
+installAuthFailureHook();
+
+function hasGoogleErrorOverlay(root?: ParentNode | null) {
+  if (!root) return false;
+  return Boolean(root.querySelector?.('.gm-err-container, .gm-err-content'));
+}
+
+export function watchGoogleMapError(root: HTMLElement | null, onFail: () => void) {
+  if (!root) return () => {};
+  let fired = false;
+  const fire = () => {
+    if (fired) return;
+    fired = true;
+    markGoogleMapsUnavailable();
+    onFail();
+  };
+  if (googleMapsUnavailable() || hasGoogleErrorOverlay(root) || hasGoogleErrorOverlay(document.body)) {
+    queueMicrotask(fire);
+    return () => {};
+  }
+  const scan = () => {
+    if (hasGoogleErrorOverlay(root) || hasGoogleErrorOverlay(document.body)) fire();
+  };
+  const observer = new MutationObserver(scan);
+  observer.observe(root, { childList: true, subtree: true });
+  observer.observe(document.body, { childList: true, subtree: true });
+  const timer = window.setTimeout(scan, 1800);
+  const unsub = onGoogleMapsAuthFailure(fire);
+  return () => {
+    observer.disconnect();
+    window.clearTimeout(timer);
+    unsub();
+  };
+}
+
 export function loadGoogleMaps(): Promise<any> {
-  if (window.google?.maps) return Promise.resolve(window.google);
+  installAuthFailureHook();
+  if (googleMapsUnavailable()) return Promise.reject(new Error('GOOGLE_MAPS_AUTH_FAILURE'));
+  if (window.google?.maps && !googleMapsUnavailable()) return Promise.resolve(window.google);
   if (window.__northSplashGoogleMapsPromise) return window.__northSplashGoogleMapsPromise;
   if (!GOOGLE_MAPS_API_KEY) return Promise.reject(new Error('GOOGLE_MAPS_API_KEY_MISSING'));
 
   window.__northSplashGoogleMapsPromise = new Promise((resolve, reject) => {
+    const fail = (error: Error) => {
+      window.__northSplashGoogleMapsPromise = undefined;
+      if (error.message === 'GOOGLE_MAPS_AUTH_FAILURE') markGoogleMapsUnavailable();
+      reject(error);
+    };
+
+    const previous = window.gm_authFailure;
+    window.gm_authFailure = () => {
+      try { previous?.(); } catch { /* ignore */ }
+      fail(new Error('GOOGLE_MAPS_AUTH_FAILURE'));
+    };
+
+    const finish = () => {
+      if (googleMapsUnavailable()) {
+        fail(new Error('GOOGLE_MAPS_AUTH_FAILURE'));
+        return;
+      }
+      if (window.google?.maps) resolve(window.google);
+      else fail(new Error('GOOGLE_MAPS_LOAD_FAILED'));
+    };
+
     const existing = document.querySelector<HTMLScriptElement>('script[data-ns-google-maps="true"]');
     if (existing) {
       const timer = window.setInterval(() => {
-        if (window.google?.maps) {
+        if (googleMapsUnavailable()) {
           window.clearInterval(timer);
-          resolve(window.google);
+          fail(new Error('GOOGLE_MAPS_AUTH_FAILURE'));
+        } else if (window.google?.maps) {
+          window.clearInterval(timer);
+          window.setTimeout(finish, 350);
         }
       }, 75);
       window.setTimeout(() => {
         window.clearInterval(timer);
-        if (!window.google?.maps) reject(new Error('GOOGLE_MAPS_LOAD_TIMEOUT'));
+        if (!window.google?.maps) fail(new Error('GOOGLE_MAPS_LOAD_TIMEOUT'));
       }, 15000);
       return;
     }
@@ -34,13 +136,8 @@ export function loadGoogleMaps(): Promise<any> {
       try { delete (window as any)[callbackName]; } catch { (window as any)[callbackName] = undefined; }
     };
     (window as any)[callbackName] = () => {
-      if (window.google?.maps) {
-        cleanup();
-        resolve(window.google);
-      } else {
-        cleanup();
-        reject(new Error('GOOGLE_MAPS_LOAD_FAILED'));
-      }
+      cleanup();
+      window.setTimeout(finish, 350);
     };
 
     const script = document.createElement('script');
@@ -50,12 +147,12 @@ export function loadGoogleMaps(): Promise<any> {
     script.dataset.nsGoogleMaps = 'true';
     script.onerror = () => {
       cleanup();
-      reject(new Error('GOOGLE_MAPS_LOAD_FAILED'));
+      fail(new Error('GOOGLE_MAPS_LOAD_FAILED'));
     };
     window.setTimeout(() => {
-      if (!window.google?.maps) {
+      if (!window.google?.maps && !googleMapsUnavailable()) {
         cleanup();
-        reject(new Error('GOOGLE_MAPS_LOAD_TIMEOUT'));
+        fail(new Error('GOOGLE_MAPS_LOAD_TIMEOUT'));
       }
     }, 20000);
     document.head.appendChild(script);
@@ -67,6 +164,7 @@ export function loadGoogleMaps(): Promise<any> {
 export function googleMapsErrorMessage(error: unknown) {
   const code = error instanceof Error ? error.message : String(error || '');
   if (code === 'GOOGLE_MAPS_API_KEY_MISSING') return 'Google Maps is ready in the OS code, but VITE_GOOGLE_MAPS_API_KEY has not been added in Vercel yet.';
+  if (code === 'GOOGLE_MAPS_AUTH_FAILURE') return 'Google Maps is not billed or allowed for this site. The street map stays on so canvassing can continue.';
   if (code === 'GOOGLE_MAPS_LOAD_TIMEOUT') return 'Google Maps timed out while loading. Check the API key restrictions and enabled APIs.';
-  return 'Google Maps could not load. Check Vercel environment variables, Google API restrictions, and billing.';
+  return 'Google Maps could not load. The street map stays on so canvassing can continue.';
 }
