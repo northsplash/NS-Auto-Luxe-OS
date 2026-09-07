@@ -174,6 +174,7 @@ type OsApi = OsSnapshot & {
   assignLead: (id: string, rep: string) => void;
   addLeadNote: (id: string, body: string) => void;
   convertLead: (id: string, opts?: { time?: string; service?: string; price?: number; detailer?: string }) => string | null;
+  patchLead: (id: string, patch: Partial<OsLead>) => void;
   addCustomerNote: (id: string, body: string) => void;
   moveShift: (shiftId: string, day: Weekday) => void;
   addShift: (employeeId: string, day: Weekday) => void;
@@ -188,7 +189,7 @@ type OsApi = OsSnapshot & {
   renameChat: (id: string, name: string) => void;
   shareToChat: (chatId: string, body: string) => void;
   createJob: (draft: JobDraft) => string;
-  addLead: (name: string, address: string, extra?: { phone?: string; value?: number; rep?: string }) => string;
+  addLead: (name: string, address: string, extra?: { phone?: string; value?: number; rep?: string; status?: LeadStatus }) => string;
   toggleMember: (customerId: string) => void;
   rescheduleJob: (id: string, time: string) => void;
 };
@@ -491,6 +492,17 @@ export function OsProvider({ children }: { children: ReactNode }) {
         ...l, notes: body, activity: [{ id: uid(), at: clockNow(), author: 'You', body }, ...list(l.activity)],
       }),
     })),
+    patchLead: (id, patch) => {
+      setState((s) => ({
+        ...s,
+        leads: s.leads.map((l) => l.id !== id ? l : {
+          ...l,
+          ...patch,
+          activity: [{ id: uid(), at: clockNow(), author: 'You', body: patch.notes || `Updated ${l.name}.` }, ...list(l.activity)],
+        }),
+      }));
+      flash('Lead updated', 'Household and offer are on this door.');
+    },
     convertLead: (id, opts) => {
       const jobId = `j_${id}`;
       setState((s) => {
@@ -661,7 +673,7 @@ export function OsProvider({ children }: { children: ReactNode }) {
       const id = `l_${Date.now()}`;
       setState((s) => ({
         ...s,
-        leads: [normalizeLead({ id, name, address, status: 'new', temp: 'warm', rep: extra?.rep || 'Unassigned', value: extra?.value ?? 275, phone: extra?.phone || '' }), ...s.leads],
+        leads: [normalizeLead({ id, name, address, status: extra?.status || 'new', temp: extra?.status === 'interested' || extra?.status === 'appointment' ? 'hot' : 'warm', rep: extra?.rep || 'Unassigned', value: extra?.value ?? 275, phone: extra?.phone || '' }), ...s.leads],
         activity: [{ id: uid(), at: clockNow(), kind: 'sales', text: `New door logged: ${name} · ${address}.` }, ...s.activity],
       }));
       flash('Door added', `${name} is on the pipeline`);

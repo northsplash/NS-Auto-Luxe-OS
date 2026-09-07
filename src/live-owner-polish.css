@@ -4438,6 +4438,31 @@
   -webkit-text-fill-color: #1c1814 !important;
   border-color: #e4d9cc !important;
 }
+.portal-layout.nsos-cream .d2d-presentation-launch h3,
+.portal-layout.nsos-cream .d2d-presentation-launch strong {
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .d2d-presentation-launch p {
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+}
+.portal-layout.nsos-cream .d2d-presentation-preview {
+  background: #f7f1e8 !important;
+  border-color: #e4d9cc !important;
+}
+.portal-layout.nsos-cream .d2d-presentation-preview strong {
+  color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .d2d-add-lead-fab {
+  background: #1c1814 !important;
+  color: #f6f1e8 !important;
+}
+.portal-layout.nsos-cream .d2d-applied-offer {
+  background: #fff8e7 !important;
+  color: #5c4718 !important;
+  border-color: #ead7a8 !important;
+}
 .portal-layout.nsos-cream .employee-welcome h2,
 .portal-layout.nsos-cream .next-job-card h3,
 .portal-layout.nsos-cream .assigned-job-card h3,

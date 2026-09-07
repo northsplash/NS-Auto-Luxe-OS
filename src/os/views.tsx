@@ -1129,7 +1129,7 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
   const os = useOs();
   const [active, setActive] = useState<string | null>(os.leads[0]?.id || null);
   const [note, setNote] = useState('');
-  const [door, setDoor] = useState({ name: '', address: '' });
+  const [door, setDoor] = useState({ name: '', address: '', phone: '' });
   const [zone, setZone] = useState<'all' | 'west' | 'central' | 'east'>('all');
   const [pane, setPane] = useState<'map' | 'pitch' | 'list'>(() => {
     const next = new URLSearchParams(window.location.search).get('pane');
@@ -1158,6 +1158,28 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
     if (!lead) return;
     const id = os.convertLead(lead.id, { time, service, price, detailer });
     if (id) onBook?.(id);
+  };
+  const applyOfferToLead = (offer: { name: string; amount: number; household?: { name?: string; phone?: string; address?: string } }) => {
+    const hh = offer.household || {};
+    if (!lead) {
+      if (!hh.name && !hh.address && !hh.phone) return;
+      const id = os.addLead(hh.name?.trim() || 'New household', hh.address?.trim() || 'Address pending', {
+        phone: hh.phone?.trim() || '',
+        value: offer.amount,
+        status: 'interested',
+      });
+      setActive(id);
+      return;
+    }
+    os.patchLead(lead.id, {
+      name: hh.name?.trim() || lead.name,
+      address: hh.address?.trim() || lead.address,
+      phone: hh.phone?.trim() || lead.phone,
+      value: offer.amount,
+      status: 'interested',
+      temp: 'hot',
+      notes: `${offer.name} · ${money(offer.amount)}`,
+    });
   };
   return (
     <div className="nsos-sr">
@@ -1193,8 +1215,12 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
           <SalesPresentation
             embedded
             customerName={lead?.name}
+            customerPhone={lead?.phone}
+            customerAddress={lead?.address}
             slots={slots}
-            onBookSlot={(offer, slot) => bookLead(slot.window, offer.name, offer.amount, slot.tech)}
+            onBookSlot={(offer, slot) => { applyOfferToLead(offer); bookLead(slot.window, offer.name, offer.amount, slot.tech); }}
+            onSelectOffer={applyOfferToLead}
+            onApplyAndSave={applyOfferToLead}
           />
         </div>
       ) : pane === 'list' ? (
@@ -1289,17 +1315,22 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
               <button className="nsos-btn" style={{ marginTop: 10, width: '100%', justifyContent: 'center' }} onClick={() => setPane('pitch')}>Pitch & book a window</button>
             </div>
           )}
-          <form className="nsos-card" onSubmit={(e) => {
+          <form className="nsos-card nsos-add-door" onSubmit={(e) => {
             e.preventDefault();
-            if (!door.name.trim() || !door.address.trim()) return;
-            const id = os.addLead(door.name.trim(), door.address.trim());
-            setDoor({ name: '', address: '' });
+            if (!door.name.trim() && !door.phone.trim() && !door.address.trim()) return;
+            const id = os.addLead(door.name.trim() || 'New household', door.address.trim() || 'Address pending', {
+              phone: door.phone.trim(),
+              status: 'interested',
+            });
+            setDoor({ name: '', address: '', phone: '' });
             setActive(id);
           }}>
-            <span className="nsos-eyebrow">Log a door</span>
+            <span className="nsos-eyebrow">Add a lead</span>
+            <h3>Name, phone, street</h3>
             <label className="nsos-field">Name<input value={door.name} onChange={(e) => setDoor({ ...door, name: e.target.value })} placeholder="Resident" /></label>
-            <label className="nsos-field">Address<input value={door.address} onChange={(e) => setDoor({ ...door, address: e.target.value })} placeholder="Street" /></label>
-            <button className="nsos-btn ghost" type="submit">Drop pin</button>
+            <label className="nsos-field">Phone<input value={door.phone} onChange={(e) => setDoor({ ...door, phone: e.target.value })} placeholder="919-555-0100" inputMode="tel" /></label>
+            <label className="nsos-field">Address<input value={door.address} onChange={(e) => setDoor({ ...door, address: e.target.value })} placeholder="Street, Raleigh NC" /></label>
+            <button className="nsos-btn" type="submit"><Plus size={15} />Save lead</button>
           </form>
           <div className="nsos-sr-doors">
             {pins.map((l) => (

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   Award, BarChart3, CalendarDays, ChevronDown, ClipboardCheck, Clock3, Crosshair, DollarSign, Gauge,
   History, ListChecks, LogOut, MapPin, Menu, Navigation, Pause, Phone,
-  Play, Plus, RefreshCw, Route, Search, Target, TrendingUp, UserRound,
+  Play, Plus, RefreshCw, Route, Search, Sparkles, Target, TrendingUp, UserRound,
   WifiOff, X, Eye, MessageCircle, Presentation,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
@@ -54,6 +54,7 @@ export default function D2DPortal(){
   const [tab,setTab]=useState<Tab>('territory');
   const [sidebar,setSidebar]=useState(false);
   const [pitchOpen,setPitchOpen]=useState(false);
+  const [pitchMode,setPitchMode]=useState<'presentation'|'quote'|'account'>('presentation');
   const [groups,setGroups]=useState<Record<string,boolean>>({field:true,performance:true,account:false});
   const [employee,setEmployee]=useState<Employee|null>(null);
   const [leads,setLeads]=useState<Lead[]>([]);
@@ -271,8 +272,8 @@ export default function D2DPortal(){
     const geo=await lookupAddress(lat,lng);setForm(p=>({...p,address:geo?.address||''}));
   };
 
-  const checkDuplicate=async()=>{
-    const phone=form.phone.replace(/\D/g,'').slice(-10);const address=form.address.trim().toLowerCase().replace(/\s+/g,' ');
+  const checkDuplicate=async(phoneRaw?:string,addressRaw?:string)=>{
+    const phone=(phoneRaw??form.phone).replace(/\D/g,'').slice(-10);const address=(addressRaw??form.address).trim().toLowerCase().replace(/\s+/g,' ');
     if(!phone&&!address)return null;
     let query=supabase.from('leads').select('id,customer_name,address,phone,status,assigned_employee_id,archived_at,cooldown_until,archive_reason').limit(5);
     if(phone)query=query.eq('normalized_phone',phone);else query=query.eq('normalized_address',address);
@@ -312,46 +313,51 @@ export default function D2DPortal(){
     localStorage.setItem(OFFLINE_KEY,JSON.stringify(remaining));setOfflineCount(remaining.length);if(remaining.length!==q.length)await load();
   };
 
-  const saveLead=async(e?:React.FormEvent,forcedStatus?:string):Promise<boolean>=>{
-    e?.preventDefault();if(!employee||!selectedDoor)return false;setSaving(true);
-    const nextStatus=forcedStatus||form.status||'unworked';
-    if(nextStatus==='appointment_set'&&!form.appointment_at){setSaving(false);alert('Set the appointment time before saving. Dispatch needs a window.');return false;}
-    const duplicates=await checkDuplicate();
+  const saveLead=async(e?:React.FormEvent,forcedStatus?:string,override?:Partial<ReturnType<typeof emptyForm>>,doorOverride?:typeof selectedDoor):Promise<boolean>=>{
+    e?.preventDefault();if(!employee)return false;
+    const door=doorOverride||selectedDoor;
+    if(!door)return false;setSaving(true);
+    const data={...form,...override};
+    const nextStatus=forcedStatus||data.status||'unworked';
+    const isManual=!door.id;
+    if(nextStatus==='appointment_set'&&!data.appointment_at){setSaving(false);alert('Set the appointment time before saving. Dispatch needs a window.');return false;}
+    if(isManual&&!String(data.customer_name||data.phone||data.address||'').trim()){setSaving(false);alert('Add a name, phone, or street before saving this lead.');return false;}
+    const duplicates=await checkDuplicate(data.phone,data.address);
     const protectedDuplicate=duplicates?.find((x:any)=>x.status==='do_not_knock'||(x.cooldown_until&&new Date(x.cooldown_until)>new Date()));
     if(protectedDuplicate){setSaving(false);alert(protectedDuplicate.status==='do_not_knock'?'This address/contact is permanently Do Not Knock.':'This lead is in the 6-month archive cooldown and cannot be reused yet.');return false;}
     if(duplicates?.length&&!window.confirm(`Possible duplicate lead found: ${duplicates[0].customer_name||duplicates[0].address||duplicates[0].phone}. Save anyway?`)){setSaving(false);return false;}
-    const territory_id=selectedDoor.territory_id||(!manual?selectedTerritory:null)||null;
+    const territory_id=door.territory_id||(!isManual?selectedTerritory:null)||null;
     const payload:any={
-      ...(selectedDoor.lead_id?{id:selectedDoor.lead_id}:{}),assigned_employee_id:employee.id,territory_id,territory_door_id:selectedDoor.id||null,
-      customer_name:form.customer_name||null,address:form.address||null,phone:form.phone||null,email:form.email||null,status:nextStatus,
-      service_interest:form.service_interest||null,vehicle_info:form.vehicle_info||null,estimated_value:Number(form.estimated_value||0),
-      follow_up_at:form.follow_up_at?new Date(form.follow_up_at).toISOString():null,notes:form.notes||null,
-      latitude:selectedDoor.latitude??null,longitude:selectedDoor.longitude??null,last_contacted_at:new Date().toISOString(),
+      ...(door.lead_id?{id:door.lead_id}:{}),assigned_employee_id:employee.id,territory_id,territory_door_id:door.id||null,
+      customer_name:data.customer_name||null,address:data.address||null,phone:data.phone||null,email:data.email||null,status:nextStatus,
+      service_interest:data.service_interest||null,vehicle_info:data.vehicle_info||null,estimated_value:Number(data.estimated_value||0),
+      follow_up_at:data.follow_up_at?new Date(data.follow_up_at).toISOString():null,notes:data.notes||null,
+      latitude:door.latitude??null,longitude:door.longitude??null,last_contacted_at:new Date().toISOString(),
       next_action:nextStatus==='follow_up'?'follow_up':nextStatus==='estimate'?'send_estimate':nextStatus==='appointment_set'?'appointment':null,
-      next_action_at:form.follow_up_at?new Date(form.follow_up_at).toISOString():null,
+      next_action_at:data.follow_up_at?new Date(data.follow_up_at).toISOString():null,
       ...(['not_interested','cancelled','lost'].includes(nextStatus)?(()=>{const d=new Date();d.setMonth(d.getMonth()+6);return{archived_at:new Date().toISOString(),archive_reason:nextStatus,cooldown_until:d.toISOString(),reactivation_status:'cooldown'}})():{}),
       ...(nextStatus==='do_not_knock'?{archived_at:new Date().toISOString(),archive_reason:'do_not_knock',cooldown_until:null,reactivation_status:'permanent_dnk'}:{}),
     };
     try{
       if(!navigator.onLine)throw new Error('offline');
       let saved:any;
-      if(selectedDoor.lead_id){const r=await supabase.from('leads').update(payload).eq('id',selectedDoor.lead_id).select().single();if(r.error)throw r.error;saved=r.data;setLeads(p=>p.map(x=>x.id===saved.id?saved:x));}
+      if(door.lead_id){const r=await supabase.from('leads').update(payload).eq('id',door.lead_id).select().single();if(r.error)throw r.error;saved=r.data;setLeads(p=>p.map(x=>x.id===saved.id?saved:x));}
       else{const r=await supabase.from('leads').insert(payload).select().single();if(r.error)throw r.error;saved=r.data;setLeads(p=>[saved,...p]);}
-      try{await supabase.from('lead_contact_attempts').insert({lead_id:saved.id,employee_id:employee.id,channel:manual?'other':'door',outcome:nextStatus,notes:form.notes||null,attempted_at:new Date().toISOString()});}catch{/* optional intelligence table */}
-      try{await supabase.from('lead_activities').insert({lead_id:saved.id,employee_id:employee.id,activity_type:'field_update',previous_status:selectedDoor.status||null,new_status:nextStatus,notes:form.notes||null});}catch{/* keep field work moving */}
-      if(selectedDoor.id){
-        const patch:any={lead_id:saved.id,status:nextStatus,last_visited_at:new Date().toISOString(),last_employee_id:employee.id,notes:form.notes,next_follow_up_at:form.follow_up_at?new Date(form.follow_up_at).toISOString():null,...(nextStatus==='do_not_knock'?{do_not_knock:true}:{})};
-        const d=await supabase.from('territory_doors').update(patch).eq('id',selectedDoor.id).select().single();if(d.error)throw d.error;setDoors(p=>{const next=p.map(x=>x.id===selectedDoor.id?d.data:x);cacheTerritoryDoors(next);return next;});
-        if(route?.id){await supabase.from('territory_route_stops').update({status:'completed',completed_at:new Date().toISOString()}).eq('route_id',route.id).eq('door_id',selectedDoor.id);setRouteDoorIds(p=>p.filter(id=>id!==selectedDoor.id));}
+      try{await supabase.from('lead_contact_attempts').insert({lead_id:saved.id,employee_id:employee.id,channel:isManual?'other':'door',outcome:nextStatus,notes:data.notes||null,attempted_at:new Date().toISOString()});}catch{/* optional intelligence table */}
+      try{await supabase.from('lead_activities').insert({lead_id:saved.id,employee_id:employee.id,activity_type:'field_update',previous_status:door.status||null,new_status:nextStatus,notes:data.notes||null});}catch{/* keep field work moving */}
+      if(door.id){
+        const patch:any={lead_id:saved.id,status:nextStatus,last_visited_at:new Date().toISOString(),last_employee_id:employee.id,notes:data.notes,next_follow_up_at:data.follow_up_at?new Date(data.follow_up_at).toISOString():null,...(nextStatus==='do_not_knock'?{do_not_knock:true}:{})};
+        const d=await supabase.from('territory_doors').update(patch).eq('id',door.id).select().single();if(d.error)throw d.error;setDoors(p=>{const next=p.map(x=>x.id===door.id?d.data:x);cacheTerritoryDoors(next);return next;});
+        if(route?.id){await supabase.from('territory_route_stops').update({status:'completed',completed_at:new Date().toISOString()}).eq('route_id',route.id).eq('door_id',door.id);setRouteDoorIds(p=>p.filter(id=>id!==door.id));}
       }
-      if(nextStatus==='appointment_set'&&form.appointment_at)await createAppointment(saved);
+      if(nextStatus==='appointment_set'&&data.appointment_at)await createAppointment(saved,data);
       setSelectedDoor(null);setManual(false);setHistory([]);setSaving(false);return true;
     }catch(error:any){
       if(!navigator.onLine||String(error?.message||'').toLowerCase().includes('network')){
-        const leadId=payload.id||selectedDoor.lead_id||crypto.randomUUID();
+        const leadId=payload.id||door.lead_id||crypto.randomUUID();
         queueOffline({id:crypto.randomUUID(),type:'save_lead',payload:{...payload,id:leadId},created_at:new Date().toISOString()});
-        if(selectedDoor.id)queueOffline({id:crypto.randomUUID(),type:'door_status',payload:{id:selectedDoor.id,patch:{status:nextStatus,last_visited_at:new Date().toISOString(),last_employee_id:employee.id,notes:form.notes,lead_id:leadId}},created_at:new Date().toISOString()});
-        if(nextStatus==='appointment_set'&&form.appointment_at)queueOffline({id:crypto.randomUUID(),type:'create_appointment',payload:appointmentDraft({...payload,id:leadId},employee,form,selectedDoor),created_at:new Date().toISOString()});
+        if(door.id)queueOffline({id:crypto.randomUUID(),type:'door_status',payload:{id:door.id,patch:{status:nextStatus,last_visited_at:new Date().toISOString(),last_employee_id:employee.id,notes:data.notes,lead_id:leadId}},created_at:new Date().toISOString()});
+        if(nextStatus==='appointment_set'&&data.appointment_at)queueOffline({id:crypto.randomUUID(),type:'create_appointment',payload:appointmentDraft({...payload,id:leadId},employee,data,door),created_at:new Date().toISOString()});
         alert('Saved offline. North Splash will sync this lead when your connection returns.');setSelectedDoor(null);setManual(false);setSaving(false);return true;
       }else alert(error?.message||'Unable to save lead.');setSaving(false);return false;
     }
@@ -367,12 +373,12 @@ export default function D2DPortal(){
     alert('Estimate created. It is now attached to this lead.');
   };
 
-  const createAppointment=async(lead:Lead)=>{
-    if(!employee||!form.appointment_at)return;
+  const createAppointment=async(lead:Lead,source:ReturnType<typeof emptyForm>=form)=>{
+    if(!employee||!source.appointment_at)return;
     const {data,error}=await supabase.from('appointments').insert({
-      user_id:lead.converted_customer_id||null,customer_name:form.customer_name||lead.customer_name,customer_email:form.email||lead.email,customer_phone:form.phone||lead.phone,
-      service_name:form.service_interest||lead.service_interest||'Detailing Service',package_name:form.service_interest||lead.service_interest||null,add_ons:[],vehicle_info:form.vehicle_info||lead.vehicle_info||'',
-      scheduled_at:new Date(form.appointment_at).toISOString(),status:'pending',price:Number(form.estimated_value||lead.estimated_value||0),notes:form.notes||lead.notes||'',
+      user_id:lead.converted_customer_id||null,customer_name:source.customer_name||lead.customer_name,customer_email:source.email||lead.email,customer_phone:source.phone||lead.phone,
+      service_name:source.service_interest||lead.service_interest||'Detailing Service',package_name:source.service_interest||lead.service_interest||null,add_ons:[],vehicle_info:source.vehicle_info||lead.vehicle_info||'',
+      scheduled_at:new Date(source.appointment_at).toISOString(),status:'pending',price:Number(source.estimated_value||lead.estimated_value||0),notes:source.notes||lead.notes||'',
       service_address:form.address||lead.address,latitude:selectedDoor?.latitude??lead.latitude,longitude:selectedDoor?.longitude??lead.longitude,
       sales_rep_employee_id:employee.id,lead_id:lead.id,source_channel:'d2d',dispatch_status:'unassigned',field_status:'scheduled',
     }).select().single();if(error)throw error;
@@ -408,8 +414,43 @@ export default function D2DPortal(){
     if(candidates[0])setTimeout(()=>pickDoor(candidates[0]),80);
   };
 
-  const manualLead=()=>{setManual(true);setSelectedDoor({territory_id:undefined,latitude:live?.latitude,longitude:live?.longitude});setHistory([]);setForm(emptyForm())};
+  const manualLead=()=>{setManual(true);setSelectedDoor({territory_id:selectedTerritory||undefined,latitude:live?.latitude,longitude:live?.longitude});setHistory([]);setForm({...emptyForm(),status:'interested'});};
+  const openPitch=(source:string,mode:'presentation'|'quote'|'account'='presentation')=>{setPitchMode(mode);setPitchOpen(true);logPresentationEvent('presentation_opened',{source,mode});};
+  const offerPatch=(offer:{type:'service'|'membership';name:string;amount:number;detail:string;household?:{name?:string;phone?:string;email?:string;address?:string}})=>{
+    const hh=offer.household||{};
+    const note=offer.name?(offer.type==='membership'?`Membership interest: ${offer.name} at ${money(offer.amount)}/mo`:`Presented ${offer.name} estimate at ${money(offer.amount)}`):'Household captured from presentation';
+    const nextStatus=['unworked','no_answer','revisit','contacted'].includes(form.status)?(offer.name?(offer.type==='membership'?'interested':'estimate'):'interested'):form.status;
+    return {
+      customer_name:hh.name?.trim()||form.customer_name,
+      phone:hh.phone?.trim()||form.phone,
+      email:hh.email?.trim()||form.email,
+      address:hh.address?.trim()||form.address,
+      service_interest:offer.name||form.service_interest,
+      estimated_value:offer.amount?String(offer.amount):form.estimated_value,
+      notes:[form.notes,note].filter(Boolean).join('\n'),
+      status:nextStatus,
+    };
+  };
+  const useSalesOffer=(offer:{type:'service'|'membership';name:string;amount:number;detail:string;household?:{name?:string;phone?:string;email?:string;address?:string}})=>{
+    const patch=offerPatch(offer);
+    setForm(f=>({...f,...patch}));
+    setPitchOpen(false);
+    if(!selectedDoor&&!manual){setManual(true);setSelectedDoor({territory_id:selectedTerritory||undefined,latitude:live?.latitude,longitude:live?.longitude});}
+  };
+  const applyAndSaveOffer=async(offer:{type:'service'|'membership';name:string;amount:number;detail:string;household?:{name?:string;phone?:string;email?:string;address?:string}})=>{
+    const patch=offerPatch(offer);
+    setForm(f=>({...f,...patch}));
+    setPitchOpen(false);
+    const door=selectedDoor||{territory_id:selectedTerritory||undefined,latitude:live?.latitude,longitude:live?.longitude};
+    if(!selectedDoor){setManual(true);setSelectedDoor(door);}
+    const ok=await saveLead(undefined,patch.status,patch,door);
+    if(ok)setTab('leads');
+  };
   const useCurrentLocation=()=>navigator.geolocation?.getCurrentPosition(async p=>{const lat=p.coords.latitude,lng=p.coords.longitude;setSelectedDoor(d=>({...d,latitude:lat,longitude:lng}));window.dispatchEvent(new CustomEvent('northsplash:center-map',{detail:{latitude:lat,longitude:lng,zoom:19}}));const geo=await lookupAddress(lat,lng);if(geo?.address)setForm(f=>({...f,address:geo.address}))},()=>alert('Allow location access to pin this lead.'),{enableHighAccuracy:true,timeout:15000,maximumAge:5000});
+  const logPresentationEvent=(event:string,detail:Record<string,unknown>={})=>{
+    if(!employee)return;
+    void supabase.from('d2d_presentation_events').insert({employee_id:employee.id,lead_id:selectedDoor?.lead_id||null,territory_id:selectedTerritory||null,event_type:event,event_data:detail}).then(()=>{},()=>{});
+  };
 
   const clock=async()=>{if(!employee)return;if(openEntry){const pos=await getPosition();const {data,error}=await supabase.from('time_entries').update({clock_out:new Date().toISOString(),clock_out_latitude:pos?.latitude??null,clock_out_longitude:pos?.longitude??null}).eq('id',openEntry.id).select().single();if(error)return alert(error.message);setTimes(p=>p.map(t=>t.id===openEntry.id?data:t));}
     else{const pos=await getPosition();const {data,error}=await supabase.from('time_entries').insert({employee_id:employee.id,clock_in:new Date().toISOString(),clock_in_latitude:pos?.latitude??null,clock_in_longitude:pos?.longitude??null,status:'pending'}).select().single();if(error)return alert(error.message);setTimes(p=>[data,...p]);}};
@@ -457,16 +498,6 @@ export default function D2DPortal(){
     return rankNextBestHouse(start,eligible)[0];
   })();
 
-  const useSalesOffer=(offer:{type:'service'|'membership';name:string;amount:number;detail:string})=>{
-    setForm(f=>({...f,service_interest:offer.name,estimated_value:String(offer.amount),notes:[f.notes,offer.type==='membership'?`Membership interest: ${offer.name} at ${money(offer.amount)}/mo`:`Presented ${offer.name} estimate at ${money(offer.amount)}`].filter(Boolean).join('\n')}));
-    setPitchOpen(false);
-    if(!selectedDoor&&!manual){setManual(true);setSelectedDoor({territory_id:selectedTerritory||undefined,latitude:live?.latitude,longitude:live?.longitude});}
-  };
-  const logPresentationEvent=(event:string,detail:Record<string,unknown>={})=>{
-    if(!employee)return;
-    void supabase.from('d2d_presentation_events').insert({employee_id:employee.id,lead_id:selectedDoor?.lead_id||null,territory_id:selectedTerritory||null,event_type:event,event_data:detail}).then(()=>{},()=>{});
-  };
-
   return <div className={`portal-layout d2d-os nsos-cream${tab==='messages'?' os-tab-messages':''}`}>
     <a className="skip-to-workspace" href="#portal-workspace">Skip to workspace</a>
     <aside className={`portal-sidebar ${sidebar?'sidebar-open':''}`}>
@@ -484,7 +515,7 @@ export default function D2DPortal(){
         {isOnboardingOpen(employee.onboarding_status)&&tab!=='onboarding'&&<button type="button" className="portal-notice" onClick={()=>setTab('onboarding')}><ClipboardCheck size={17}/><div><strong>Finish your Gusto hire packet</strong><span>Personal details, W-4, payment method, I-9, and emergency contact.</span></div><small>Open</small></button>}
         {tab==='onboarding'&&<div className="tab-content v2-page"><EmployeeOnboardingTab employee={employee} audience="self" onUpdated={setEmployee} onOpenTraining={()=>setTab('training')}/></div>}
         {tab==='territory'&&<div className="tab-content d2d-field-page v2-page">
-          <div className="v2-page-head"><div><span className="eyebrow">SalesRabbit</span><h2>Work your territory</h2><p>Map, pins, knock colors, and the next door. Tap a house, log the outcome, then move to the next best stop.</p></div><div className="v2-head-actions"><button className="btn-outline" onClick={manualLead}><Plus size={15}/> Outside Territory Lead</button><button className="btn-primary" onClick={nextBest}><Target size={15}/> Next Best House</button></div></div>
+          <div className="v2-page-head"><div><span className="eyebrow">Field sales</span><h2>Work your territory</h2><p>Tap a house, capture the household, pitch, then save. Add a lead in a few fields if they are not on the map.</p></div><div className="v2-head-actions"><button className="btn-outline" onClick={()=>openPitch('territory_quote','quote')}><Presentation size={15}/> Quote</button><button className="btn-outline" onClick={manualLead}><Plus size={15}/> Add Lead</button><button className="btn-primary" onClick={nextBest}><Target size={15}/> Next Best House</button></div></div>
           <div className="d2d-field-commandbar">
             <div className="d2d-command-territory"><MapPin size={19}/><div><strong>{territories.find(t=>t.id===selectedTerritory)?.name||'Assigned Territory'}</strong><span>{territoryDoors.filter(d=>d.status!=='unworked').length} / {territoryDoors.length} houses completed · {territoryProgress}%</span></div></div>
             <div className="d2d-command-next"><Target size={18}/><div><small>NEXT BEST HOUSE</small><strong>{doorStreetLabel(nextSuggestedDoor,'Choose next mapped house')}</strong></div><button onClick={nextBest}>Open <Navigation size={14}/></button></div>
@@ -504,13 +535,32 @@ export default function D2DPortal(){
 
         {tab==='route'&&<div className="tab-content"><div className="route-hero"><div><span className="eyebrow">FIELD ROUTE</span><h2>{route?route.status==='paused'?'Route Paused':'Route Active':'No Active Route'}</h2><p>{route?`${routeDoorIds.length} stops remaining`:'Start an optimized route from the Territory screen.'}</p></div>{route&&<div className="route-actions"><button className="btn-outline" onClick={toggleRoute}>{route.status==='paused'?<Play size={15}/>:<Pause size={15}/>} {route.status==='paused'?'Resume':'Pause'}</button><button className="btn-primary" onClick={nextBest}><Navigation size={15}/> Next Stop</button><button className="btn-outline" onClick={finishRoute}>Finish Route</button></div>}</div>{route&&<><FieldTerritoryMap territories={territories.filter(t=>t.id===route.territory_id)} doors={doors.filter(d=>d.territory_id===route.territory_id)} liveLocation={live} routeDoorIds={routeDoorIds} onDoorClick={pickDoor}/><div className="route-stop-list">{routeDoorIds.slice(0,12).map((id,i)=>{const d=doors.find(x=>x.id===id);return d?<button key={id} onClick={()=>pickDoor(d)}><span>{i+1}</span><div><strong>{doorStreetLabel(d)}</strong><small>{doorStatus(d.status).label}</small></div><Navigation size={16}/></button>:null})}</div></>}</div>}
 
-        {tab==='leads'&&<div className="tab-content v2-page"><div className="v2-page-head"><div><span className="eyebrow">Leads</span><h2>My leads</h2><p>Every knock, follow-up, and booked visit on one pipeline.</p></div><div className="v2-head-actions"><button className="btn-primary" onClick={manualLead}><Plus size={15}/> Add Lead</button></div></div><LeadCommandCenter leads={leads} onOpen={l=>pickDoor({id:l.territory_door_id||undefined,lead_id:l.id,latitude:Number(l.latitude||0),longitude:Number(l.longitude||0),address:l.address,territory_id:l.territory_id,status:l.status})}/></div>}
+        {tab==='leads'&&<div className="tab-content v2-page"><div className="v2-page-head"><div><span className="eyebrow">Leads</span><h2>My leads</h2><p>Name, phone, and street first. Open any card to pitch, quote, or book.</p></div><div className="v2-head-actions"><button className="btn-outline" onClick={()=>openPitch('leads_quote','quote')}><Presentation size={15}/> Quote</button><button className="btn-primary" onClick={manualLead}><Plus size={15}/> Add Lead</button></div></div><LeadCommandCenter leads={leads} onOpen={l=>pickDoor({id:l.territory_door_id||undefined,lead_id:l.id,latitude:Number(l.latitude||0),longitude:Number(l.longitude||0),address:l.address,territory_id:l.territory_id,status:l.status})}/></div>}
 
         {tab==='calendar'&&<div className="tab-content v2-page"><SharedCalendar mode="rep" appointments={appointments} employees={employee?[employee]:[]} employeeId={employee.id} leads={leads} title="My Customer Calendar" onCreate={createCalendarAppointment} onUpdate={updateCalendarAppointment}/></div>}
 
         {tab==='followups'&&<div className="tab-content"><div className="v2-page-head"><div><span className="eyebrow">Callbacks</span><h2>Follow-up queue</h2><p>Highest-priority callbacks and revisits first.</p></div></div><div className="followup-grid">{dueFollowups.sort((a,b)=>new Date(a.follow_up_at||0).getTime()-new Date(b.follow_up_at||0).getTime()).map(l=><div className="followup-card" key={l.id}><div><span className="eyebrow">{l.follow_up_at&&new Date(l.follow_up_at)<new Date()?'OVERDUE':'FOLLOW UP'}</span><h3>{l.customer_name||l.address}</h3><p>{l.address}</p></div><div className="followup-meta"><span>{l.follow_up_at?localDateTime(l.follow_up_at):'No date set'}</span><strong>{money(Number(l.estimated_value||0))}</strong></div><div className="followup-actions">{l.phone&&<a className="btn-outline" href={`tel:${l.phone}`}><Phone size={14}/> Call</a>}<button className="btn-primary" onClick={()=>{const door=doors.find(d=>d.id===l.territory_door_id)||doors.find(d=>d.lead_id===l.id);setTab('territory');void pickDoor(door||{id:l.territory_door_id||undefined,lead_id:l.id,latitude:Number(l.latitude||0),longitude:Number(l.longitude||0),address:l.address,territory_id:l.territory_id,status:l.status,notes:l.notes})}}>Open house</button></div></div>)}{!dueFollowups.length&&<div className="ns-empty"><strong>You're caught up</strong><p>No follow-ups are due. New revisits from the map land here automatically.</p></div>}</div></div>}
 
-        {tab==='presentation'&&<div className="tab-content d2d-presentation-page v2-page"><div className="v2-page-head"><div><span className="eyebrow">Pitch</span><h2>Sales presentation</h2><p>Walk the customer through the North Splash difference, then build the offer without leaving the door.</p></div><div className="v2-head-actions"><button className="btn-primary" onClick={()=>{setPitchOpen(true);logPresentationEvent('presentation_opened',{source:'d2d_tab'})}}><Presentation size={15}/> Present to Customer</button></div></div><div className="d2d-presentation-launch"><div><span className="eyebrow">8-SLIDE CLOSE SYSTEM</span><h3>From introduction to offer in a few minutes.</h3><p>Designed for the rep to hand the phone or iPad toward the customer. It covers why detailing matters, how North Splash compares with express washes, package choices, membership value and a live quote builder.</p><button className="btn-primary" onClick={()=>{setPitchOpen(true);logPresentationEvent('presentation_opened',{source:'launch_card'})}}><Presentation size={17}/> Start Customer Presentation</button></div><div className="d2d-presentation-preview"><span>01</span><strong>Why North Splash?</strong><i/><span>04</span><strong>Services</strong><i/><span>06</span><strong>Membership</strong><i/><span>08</span><strong>Close & Quote</strong></div></div></div>}
+        {tab==='presentation'&&<div className="tab-content d2d-presentation-page v2-page"><div className="v2-page-head"><div><span className="eyebrow">Pitch</span><h2>Sales presentation</h2><p>Hand the screen to the customer, then capture the household and apply the offer without leaving the door.</p></div><div className="v2-head-actions"><button className="btn-outline" onClick={()=>openPitch('d2d_tab_account','account')}><UserRound size={15}/> Customer account</button><button className="btn-primary" onClick={()=>openPitch('d2d_tab')}><Presentation size={15}/> Present to customer</button></div></div>
+          <div className="d2d-presentation-launch">
+            <div>
+              <span className="eyebrow">CLOSE AT THE DOOR</span>
+              <h3>Pitch, quote, and save the household in one flow.</h3>
+              <p>Walk through why North Splash, build a live quote, capture name and phone, then apply that offer onto the lead. No extra screens after the handshake.</p>
+              <div className="d2d-presentation-cta">
+                <button className="btn-primary" onClick={()=>openPitch('launch_card')}><Presentation size={17}/> Start presentation</button>
+                <button className="btn-outline" onClick={()=>openPitch('launch_quote','quote')}>Jump to quote</button>
+                <button className="btn-outline" onClick={manualLead}><Plus size={15}/> Add lead first</button>
+              </div>
+            </div>
+            <div className="d2d-presentation-preview">
+              <span>01</span><strong>Introduce North Splash</strong><i/>
+              <span>02</span><strong>Build the quote</strong><i/>
+              <span>03</span><strong>Capture the household</strong><i/>
+              <span>04</span><strong>Apply & save the lead</strong>
+            </div>
+          </div>
+        </div>}
 
         {tab==='messages'&&<div className="tab-content v2-page"><TeamMessaging employee={employee} portalKind="d2d"/></div>}
 
@@ -522,42 +572,55 @@ export default function D2DPortal(){
       </div>
     </main>
     <nav className="os-mobile-bottom-nav mobile-app-nav-v25" aria-label="D2D mobile navigation">
-      {[['territory','Territory',MapPin],['leads','Leads',Target],['calendar','Calendar',CalendarDays],['messages','Chat',MessageCircle],['performance','More',BarChart3]].map(([id,label,Icon]:any)=><button key={id} className={tab===id?'active':''} onClick={()=>setTab(id as Tab)}><Icon size={20}/><span>{label}</span>{id==='leads'&&dueFollowups.length>0&&<b>{dueFollowups.length}</b>}</button>)}
+      {[['territory','Map',MapPin],['leads','Leads',Target],['presentation','Pitch',Presentation],['calendar','Calendar',CalendarDays],['messages','More',MessageCircle]].map(([id,label,Icon]:any)=><button key={id} className={tab===id?'active':''} onClick={()=>setTab(id as Tab)}><Icon size={20}/><span>{label}</span>{id==='leads'&&dueFollowups.length>0&&<b>{dueFollowups.length}</b>}</button>)}
     </nav>
+    {!selectedDoor&&!manual&&(tab==='territory'||tab==='leads')&&<button type="button" className="d2d-add-lead-fab" onClick={manualLead}><Plus size={20}/><span>Add lead</span></button>}
 
-    {(selectedDoor||manual)&&<HouseDrawer door={selectedDoor} form={form} setForm={setForm} history={history} manual={manual} saving={saving} onClose={()=>{setSelectedDoor(null);setManual(false);setHistory([])}} onSave={saveLead} onSaveNext={saveAndNext} onEstimate={createEstimate} onLocation={useCurrentLocation} onPitch={()=>{setPitchOpen(true);logPresentationEvent('presentation_opened',{source:'lead_drawer'})}}/>} 
-    {pitchOpen&&<SalesPresentation customerName={form.customer_name||undefined} onClose={()=>setPitchOpen(false)} onSelectOffer={useSalesOffer} onEvent={logPresentationEvent}/>}
+    {(selectedDoor||manual)&&<HouseDrawer door={selectedDoor} form={form} setForm={setForm} history={history} manual={manual} saving={saving} onClose={()=>{setSelectedDoor(null);setManual(false);setHistory([])}} onSave={saveLead} onSaveNext={saveAndNext} onEstimate={createEstimate} onLocation={useCurrentLocation} onPitch={()=>openPitch('lead_drawer')} onQuote={()=>openPitch('lead_drawer_quote','quote')}/>} 
+    {pitchOpen&&<SalesPresentation key={pitchMode} customerName={form.customer_name||undefined} customerPhone={form.phone||undefined} customerEmail={form.email||undefined} customerAddress={form.address||undefined} initialMode={pitchMode} onClose={()=>setPitchOpen(false)} onSelectOffer={useSalesOffer} onApplyAndSave={applyAndSaveOffer} onEvent={logPresentationEvent}/>}
   </div>;
 }
 
-function HouseDrawer({door,form,setForm,history,manual,saving,onClose,onSave,onSaveNext,onEstimate,onLocation,onPitch}:{door:any;form:any;setForm:any;history:TerritoryDoorHistory[];manual:boolean;saving:boolean;onClose:()=>void;onSave:(e?:React.FormEvent,status?:string)=>Promise<boolean>|void;onSaveNext:()=>Promise<void>|void;onEstimate:()=>void;onLocation:()=>void;onPitch:()=>void}){
+function HouseDrawer({door,form,setForm,history,manual,saving,onClose,onSave,onSaveNext,onEstimate,onLocation,onPitch,onQuote}:{door:any;form:any;setForm:any;history:TerritoryDoorHistory[];manual:boolean;saving:boolean;onClose:()=>void;onSave:(e?:React.FormEvent,status?:string)=>Promise<boolean>|void;onSaveNext:()=>Promise<void>|void;onEstimate:()=>void;onLocation:()=>void;onPitch:()=>void;onQuote:()=>void}){
   const [panel,setPanel]=useState<'quick'|'details'|'history'>('quick');
   const protectedDNK=door?.do_not_knock||door?.status==='do_not_knock';
   const statusMeta=doorStatus(form.status);
+  const hasOffer=Boolean(form.service_interest||form.estimated_value);
   return <div className="house-drawer-backdrop" onClick={onClose}><form className="house-drawer field-house-sheet" onSubmit={e=>onSave(e)} onClick={e=>e.stopPropagation()}>
     <div className="house-drawer-handle"/>
     <div className="house-drawer-head field-house-head">
       <div className="field-house-address">
-        <span className="eyebrow">{manual?'OUTSIDE TERRITORY':'CANVASS HOUSE'}</span>
-        <h2>{form.address||'Mapped house'}</h2>
+        <span className="eyebrow">{manual?'NEW LEAD':'CANVASS HOUSE'}</span>
+        <h2>{form.customer_name||form.address||(manual?'Add this household':'Mapped house')}</h2>
         <div className="house-title-meta"><div className="house-status-pill" style={{background:statusMeta.color}}>{statusMeta.label}</div>{history.length>0&&<span className="house-visit-pill">{history.length} previous visit{history.length===1?'':'s'}</span>}</div>
       </div>
       <button type="button" className="icon-btn light" onClick={onClose}><X/></button>
     </div>
 
-    {!manual&&<div className="field-house-actions">
+    <div className="field-house-actions">
       {form.phone&&<><a href={`tel:${form.phone}`}><Phone size={15}/>Call</a><a href={`sms:${form.phone}`}><MessageCircle size={15}/>Text</a></>}
-      {door?.latitude&&door?.longitude&&<><a target="_blank" rel="noreferrer" href={`https://www.google.com/maps/dir/?api=1&destination=${door.latitude},${door.longitude}`}><Navigation size={15}/>Navigate</a><button type="button" onClick={()=>setPanel('history')}><History size={15}/>History</button></>}<button type="button" className="house-pitch-btn" onClick={onPitch}><Presentation size={15}/>Sales Presentation</button>
-    </div>}
+      {door?.latitude&&door?.longitude&&<a target="_blank" rel="noreferrer" href={`https://www.google.com/maps/dir/?api=1&destination=${door.latitude},${door.longitude}`}><Navigation size={15}/>Navigate</a>}
+      {!manual&&<button type="button" onClick={()=>setPanel('history')}><History size={15}/>History</button>}
+      {manual&&<button type="button" onClick={onLocation}><Crosshair size={15}/> Pin GPS</button>}
+      <button type="button" className="house-pitch-btn" onClick={onPitch}><Presentation size={15}/> Present</button>
+      <button type="button" className="house-quote-btn" onClick={onQuote}><Target size={15}/> Quote</button>
+    </div>
 
-    {manual&&<div className="house-manual-tools"><button type="button" className="btn-outline" onClick={onLocation}><Crosshair size={15}/> Use Current Location</button><input required placeholder="Street address" value={form.address} onChange={e=>setForm((p:any)=>({...p,address:e.target.value}))}/></div>}
+    <div className="field-contact-strip">
+      <label><span>Name</span><input autoComplete="name" placeholder="Who you met" value={form.customer_name} onChange={e=>setForm((p:any)=>({...p,customer_name:e.target.value}))}/></label>
+      <label><span>Phone</span><input autoComplete="tel" type="tel" inputMode="tel" placeholder="919-555-0100" value={form.phone} onChange={e=>setForm((p:any)=>({...p,phone:e.target.value}))}/></label>
+      <label className="wide"><span>Address</span><input required={manual} autoComplete="street-address" placeholder={manual?'Street, city, ZIP':'Street if missing'} value={form.address} onChange={e=>setForm((p:any)=>({...p,address:e.target.value}))}/></label>
+    </div>
+
+    {hasOffer&&<div className="d2d-applied-offer"><Sparkles size={16}/><div><strong>{form.service_interest||'Offer applied'}</strong><span>{form.estimated_value?money(Number(form.estimated_value)): 'Quote on this household'}</span></div><button type="button" onClick={onQuote}>Change</button></div>}
+
     {protectedDNK&&<div className="dnk-warning">Permanent Do Not Knock. Only a manager/admin should clear this property.</div>}
 
     {panel==='history'?<div className="house-history-panel">
       <div className="house-panel-title"><div><span className="eyebrow">PROPERTY HISTORY</span><h3>Previous activity</h3></div><button type="button" className="btn-outline" onClick={()=>setPanel('quick')}>Back to marking</button></div>
       <div className="house-history-list">{history.map(h=><div key={h.id}><i style={{background:doorStatus(h.new_status).color}}/><div><strong>{doorStatus(h.new_status).label}</strong><span>{localDateTime(h.created_at)}</span><p>{h.notes||'Status updated'}</p></div></div>)}{!history.length&&<div className="ns-empty">No previous activity at this house.</div>}</div>
     </div>:<>
-      <div className="field-quick-label"><span>Mark this house</span><small>One tap sets the outcome. Save & Next keeps you moving.</small></div>
+      <div className="field-quick-label"><span>{manual?'Stage this lead':'Mark this house'}</span><small>{manual?'Interested is the default. Change it if this was a knock outcome.':'One tap sets the outcome. Save keeps you moving.'}</small></div>
       <div className="house-quick-grid field-quick-grid">{STATUS_QUICK.map(status=>{
         const meta=doorStatus(status);
         return <button type="button" disabled={protectedDNK&&status!=='do_not_knock'} key={status} className={form.status===status?'active':''} style={{'--status-color':meta.color} as any} onClick={()=>setForm((p:any)=>({...p,status}))}><i style={{background:meta.color}}/><strong>{meta.short}</strong></button>
@@ -565,14 +628,16 @@ function HouseDrawer({door,form,setForm,history,manual,saving,onClose,onSave,onS
       {form.status==='appointment_set'&&<div className="field-book-now"><label><span>Appointment time</span><input type="datetime-local" value={form.appointment_at} onChange={e=>setForm((p:any)=>({...p,appointment_at:e.target.value}))}/></label><p>Set the window, then Save. Dispatch gets this stop unassigned.</p></div>}
 
       <div className="field-save-bar">
-        <button type="button" className="btn-primary field-save-next" disabled={saving||protectedDNK} onClick={onSaveNext}>{saving?'Saving…':'Save & Next House'}</button>
-        <button type="submit" className="btn-outline" disabled={saving||protectedDNK}>Save</button>
+        {manual
+          ? <button type="submit" className="btn-primary field-save-next" disabled={saving||protectedDNK}>{saving?'Saving…':'Save lead'}</button>
+          : <><button type="button" className="btn-primary field-save-next" disabled={saving||protectedDNK} onClick={onSaveNext}>{saving?'Saving…':'Save & Next House'}</button><button type="submit" className="btn-outline" disabled={saving||protectedDNK}>Save</button></>}
       </div>
+      {manual&&<button type="button" className="btn-outline field-save-stay" disabled={saving||protectedDNK} onClick={()=>onSave()}>Save and stay</button>}
 
-      <button type="button" className="field-expand-details" onClick={()=>setPanel(panel==='details'?'quick':'details')}><Plus size={15}/>{panel==='details'?'Hide Lead Details':'Add Customer / Lead Details'}</button>
+      <button type="button" className="field-expand-details" onClick={()=>setPanel(panel==='details'?'quick':'details')}><Plus size={15}/>{panel==='details'?'Hide extra details':'Email, vehicle, notes'}</button>
 
       {panel==='details'&&<div className="field-lead-details">
-        <div className="house-form-grid"><label><span>Name</span><input value={form.customer_name} onChange={e=>setForm((p:any)=>({...p,customer_name:e.target.value}))}/></label><label><span>Phone</span><input type="tel" value={form.phone} onChange={e=>setForm((p:any)=>({...p,phone:e.target.value}))}/></label><label><span>Email</span><input type="email" value={form.email} onChange={e=>setForm((p:any)=>({...p,email:e.target.value}))}/></label><label><span>Vehicle</span><input value={form.vehicle_info} onChange={e=>setForm((p:any)=>({...p,vehicle_info:e.target.value}))}/></label><label><span>Service Interest</span><ServiceMenuSelect allowEmpty value={form.service_interest} onChange={(name,pkg)=>setForm((p:any)=>({...p,service_interest:name,...(pkg?{estimated_value:String(pkg.price)}:{})}))}/></label><label><span>Estimated Value</span><input type="number" min="0" value={form.estimated_value} onChange={e=>setForm((p:any)=>({...p,estimated_value:e.target.value}))}/></label><label><span>Follow-Up</span><input type="datetime-local" value={form.follow_up_at} onChange={e=>setForm((p:any)=>({...p,follow_up_at:e.target.value}))}/></label><label><span>Appointment Time</span><input type="datetime-local" value={form.appointment_at} onChange={e=>setForm((p:any)=>({...p,appointment_at:e.target.value}))}/></label></div>
+        <div className="house-form-grid"><label><span>Email</span><input type="email" value={form.email} onChange={e=>setForm((p:any)=>({...p,email:e.target.value}))}/></label><label><span>Vehicle</span><input value={form.vehicle_info} onChange={e=>setForm((p:any)=>({...p,vehicle_info:e.target.value}))}/></label><label><span>Service Interest</span><ServiceMenuSelect allowEmpty value={form.service_interest} onChange={(name,pkg)=>setForm((p:any)=>({...p,service_interest:name,...(pkg?{estimated_value:String(pkg.price)}:{})}))}/></label><label><span>Estimated Value</span><input type="number" min="0" value={form.estimated_value} onChange={e=>setForm((p:any)=>({...p,estimated_value:e.target.value}))}/></label><label><span>Follow-Up</span><input type="datetime-local" value={form.follow_up_at} onChange={e=>setForm((p:any)=>({...p,follow_up_at:e.target.value}))}/></label><label><span>Appointment Time</span><input type="datetime-local" value={form.appointment_at} onChange={e=>setForm((p:any)=>({...p,appointment_at:e.target.value}))}/></label></div>
         <label className="house-notes"><span>Notes</span><textarea value={form.notes} onChange={e=>setForm((p:any)=>({...p,notes:e.target.value}))}/></label>
         <div className="house-drawer-actions"><button type="button" className="btn-outline" onClick={onEstimate}>Create Estimate</button>{form.status==='appointment_set'&&form.appointment_at&&<span className="field-inline-note">Saving will create the appointment.</span>}</div>
       </div>}

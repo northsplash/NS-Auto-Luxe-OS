@@ -1034,6 +1034,16 @@ html.nsos-active #root {
   overflow: hidden;
   border: 1px solid #1c1814;
 }
+.nsos-add-door h3 {
+  margin: 4px 0 10px;
+  font-size: 18px;
+  color: #1c1814;
+}
+.nsos-add-door .nsos-btn {
+  width: 100%;
+  justify-content: center;
+  margin-top: 8px;
+}
 .sales-slot-board {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
