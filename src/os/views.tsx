@@ -1279,6 +1279,25 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
               <button key={id} className={zone === id ? 'active' : ''} onClick={() => setZone(id)}>{label}</button>
             ))}
           </div>
+          <form className="nsos-card nsos-add-door" onSubmit={(e) => {
+            e.preventDefault();
+            if (!door.name.trim() && !door.phone.trim() && !door.address.trim()) return;
+            const id = os.addLead(door.name.trim() || 'New household', door.address.trim() || 'Address pending', {
+              phone: door.phone.trim(),
+              status: 'interested',
+            });
+            setDoor({ name: '', address: '', phone: '' });
+            setActive(id);
+          }}>
+            <span className="nsos-eyebrow">Add a lead</span>
+            <h3>Name, phone, street</h3>
+            <div className="nsos-add-door-grid">
+              <label className="nsos-field">Name<input value={door.name} onChange={(e) => setDoor({ ...door, name: e.target.value })} placeholder="Resident" /></label>
+              <label className="nsos-field">Phone<input value={door.phone} onChange={(e) => setDoor({ ...door, phone: e.target.value })} placeholder="919-555-0100" inputMode="tel" /></label>
+              <label className="nsos-field wide">Address<input value={door.address} onChange={(e) => setDoor({ ...door, address: e.target.value })} placeholder="Street, Raleigh NC" /></label>
+            </div>
+            <button className="nsos-btn" type="submit"><Plus size={15} />Save lead</button>
+          </form>
           {lead && (
             <div className="nsos-card nsos-sr-card">
               <span className="nsos-eyebrow">{territory(lead.x)} territory</span>
@@ -1315,23 +1334,6 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
               <button className="nsos-btn" style={{ marginTop: 10, width: '100%', justifyContent: 'center' }} onClick={() => setPane('pitch')}>Pitch & book a window</button>
             </div>
           )}
-          <form className="nsos-card nsos-add-door" onSubmit={(e) => {
-            e.preventDefault();
-            if (!door.name.trim() && !door.phone.trim() && !door.address.trim()) return;
-            const id = os.addLead(door.name.trim() || 'New household', door.address.trim() || 'Address pending', {
-              phone: door.phone.trim(),
-              status: 'interested',
-            });
-            setDoor({ name: '', address: '', phone: '' });
-            setActive(id);
-          }}>
-            <span className="nsos-eyebrow">Add a lead</span>
-            <h3>Name, phone, street</h3>
-            <label className="nsos-field">Name<input value={door.name} onChange={(e) => setDoor({ ...door, name: e.target.value })} placeholder="Resident" /></label>
-            <label className="nsos-field">Phone<input value={door.phone} onChange={(e) => setDoor({ ...door, phone: e.target.value })} placeholder="919-555-0100" inputMode="tel" /></label>
-            <label className="nsos-field">Address<input value={door.address} onChange={(e) => setDoor({ ...door, address: e.target.value })} placeholder="Street, Raleigh NC" /></label>
-            <button className="nsos-btn" type="submit"><Plus size={15} />Save lead</button>
-          </form>
           <div className="nsos-sr-doors">
             {pins.map((l) => (
               <button className={`nsos-sr-door ${l.id === lead?.id ? 'active-row' : ''}`} key={l.id} onClick={() => setActive(l.id)}>

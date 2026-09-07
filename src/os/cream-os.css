@@ -1044,6 +1044,14 @@ html.nsos-active #root {
   justify-content: center;
   margin-top: 8px;
 }
+.nsos-add-door-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.nsos-add-door-grid .wide {
+  grid-column: 1 / -1;
+}
 .sales-slot-board {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
