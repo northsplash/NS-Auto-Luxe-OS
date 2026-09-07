@@ -469,7 +469,18 @@ function OsShell() {
           <div><p>North Splash Admin</p><span>Owner</span></div>
         </div>
         <nav className="sidebar-nav os-workspace-nav">
-          <div className="os-sidebar-section-label">WORKSPACES</div>
+          <div className="os-sidebar-section-label">PINNED</div>
+          {(['command_center', 'appointments', 'leads', 'messages'] as OsTab[]).map((id) => {
+            const item = nav(id);
+            if (!item) return null;
+            const { Icon, label } = item;
+            return (
+              <button key={id} className={`os-pinned-link ${tab === id ? 'active' : ''}`} onClick={() => go(id)}>
+                <Icon size={16} /><span>{label}</span>
+              </button>
+            );
+          })}
+          <div className="os-sidebar-section-label os-sidebar-section-gap">WORKSPACES</div>
           {WORKSPACES.map((w) => {
             const active = currentWorkspace.id === w.id;
             return (
@@ -506,17 +517,6 @@ function OsShell() {
                   </div>
                 )}
               </div>
-            );
-          })}
-          <div className="os-sidebar-section-label os-sidebar-section-gap">PINNED</div>
-          {(['command_center', 'appointments', 'leads', 'messages'] as OsTab[]).map((id) => {
-            const item = nav(id);
-            if (!item) return null;
-            const { Icon, label } = item;
-            return (
-              <button key={id} className={`os-pinned-link ${tab === id ? 'active' : ''}`} onClick={() => go(id)}>
-                <Icon size={16} /><span>{label}</span>
-              </button>
             );
           })}
         </nav>

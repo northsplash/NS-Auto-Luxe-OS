@@ -1636,3 +1636,36 @@ html.nsos-active #root {
   .detail-selves-grid, .detail-menu-board { grid-template-columns: 1fr; }
   .detail-selves-families { grid-template-columns: 1fr; }
 }
+
+/* Keep Command Center in view and stop workspace rows from clipping. */
+.nsos-cream .os-workspace-nav {
+  scroll-snap-type: y proximity;
+  overscroll-behavior: contain;
+}
+.nsos-cream .os-workspace-block,
+.nsos-cream .os-pinned-link {
+  scroll-snap-align: start;
+  scroll-margin-top: 8px;
+}
+.nsos-cream .os-workspace-button {
+  min-height: 40px;
+}
+.nsos-cream .owner-field-switch-v26,
+.nsos-cream .portal-switch-grid {
+  margin: 4px 8px 6px !important;
+  padding: 8px 7px !important;
+  gap: 5px !important;
+}
+.nsos-cream .owner-field-mode-btn,
+.nsos-cream .os-mode-grid a,
+.nsos-cream .os-mode-grid button {
+  min-height: 38px !important;
+  padding: 6px 8px !important;
+}
+.nsos-cream .sidebar-footer {
+  flex-shrink: 0;
+  padding: 8px 8px max(8px, env(safe-area-inset-bottom)) !important;
+}
+.nsos-cream .sidebar-footer .sidebar-item {
+  min-height: 36px !important;
+}
