@@ -26,7 +26,7 @@ The app serves at `http://127.0.0.1:43127`. Demo state lives in this browser (`l
 
 Open **Owner → Command Center**. Each push to `main` rebuilds Vercel and GitHub Pages. Hard-refresh once after a deploy so the service worker drops the previous shell. If a screen says a JavaScript chunk could not load, reload once — the OS now recovers from stale hashed files after a deploy.
 
-Territory maps use Google Maps when the key is billed and allowed. If Google shows “This page can't load Google Maps correctly,” the OS switches to the OpenStreetMap street map automatically. Do not paste a Maps key into chat; set `VITE_GOOGLE_MAPS_API_KEY` in Vercel if you want satellite pins.
+Territory maps use OpenStreetMap by default so the console is not filled with Google billing errors. Address search runs through Nominatim. To turn Google Maps back on after billing is enabled, set `VITE_GOOGLE_MAPS_ENABLED=true` and `VITE_GOOGLE_MAPS_API_KEY` in Vercel. Do not paste a Maps key into chat.
 
 ## How it is modeled
 
