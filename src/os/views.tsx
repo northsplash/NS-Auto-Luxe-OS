@@ -2051,17 +2051,6 @@ export function HireView({ onHire, onOpen }: { onHire: (name?: string, title?: s
           <p>Open a Website card to read the answers they typed. Convert when you are ready to onboard.</p>
         </div>
       )}
-      {onboard.length > 0 && (
-        <div className="nsos-hire-onboard">
-          {onboard.map((e) => (
-            <button key={e.id} type="button" className="nsos-card" onClick={() => onOpen?.(e.id)}>
-              <strong>{e.name}</strong>
-              <small>{e.title} · {e.onboarding}% · next {remainingStepLabels(e.onboarding_packet)[0] || 'done'}</small>
-              <i className="nsos-onboard"><b style={{ width: `${e.onboarding}%` }} /></i>
-            </button>
-          ))}
-        </div>
-      )}
       <div className="nsos-hire-stages" role="tablist" aria-label="Hiring stages">
         {stages.map((stage) => (
           <button
