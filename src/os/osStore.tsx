@@ -177,6 +177,7 @@ type OsApi = OsSnapshot & {
   addLeadNote: (id: string, body: string) => void;
   convertLead: (id: string, opts?: { time?: string; service?: string; price?: number; detailer?: string }) => string | null;
   patchLead: (id: string, patch: Partial<OsLead>) => void;
+  ensureCustomer: (incoming: Partial<OsCustomer> & { name: string }) => string;
   addCustomerNote: (id: string, body: string) => void;
   moveShift: (shiftId: string, day: Weekday) => void;
   addShift: (employeeId: string, day: Weekday) => void;
@@ -505,6 +506,28 @@ export function OsProvider({ children }: { children: ReactNode }) {
         }),
       }));
       flash('Lead updated', 'Household and offer are on this door.');
+    },
+    ensureCustomer: (incoming) => {
+      const email = incoming.email?.trim().toLowerCase();
+      const existing = state.customers.find((c) => c.id === incoming.id)
+        || (email ? state.customers.find((c) => c.email.toLowerCase() === email) : undefined);
+      if (existing) {
+        setState((s) => ({
+          ...s,
+          customers: s.customers.map((c) => c.id === existing.id ? normalizeCustomer({ ...c, ...incoming, id: existing.id }) : c),
+        }));
+        flash('Customer account ready', `${incoming.email || incoming.name} can sign in at /login`);
+        return existing.id;
+      }
+      const id = incoming.id || `cu_${Date.now()}`;
+      const next = normalizeCustomer({ ...incoming, id });
+      setState((s) => ({
+        ...s,
+        customers: [next, ...s.customers],
+        activity: [{ id: uid(), at: clockNow(), kind: 'sales', text: `Customer account opened: ${next.name}${next.email ? ` · ${next.email}` : ''}.` }, ...s.activity],
+      }));
+      flash('Customer account ready', `${incoming.email || incoming.name} can sign in at /login`);
+      return id;
     },
     convertLead: (id, opts) => {
       const jobId = `j_${id}`;

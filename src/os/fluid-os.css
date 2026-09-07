@@ -494,6 +494,7 @@ html.nsos-active,
     -webkit-overflow-scrolling: touch;
   }
   .sales-household-grid { grid-template-columns: 1fr !important; }
+  .sales-addr-row { grid-template-columns: 1fr !important; }
   .sales-household-inline { grid-template-columns: 1fr 1fr !important; }
   .sales-household-form {
     margin: 12px 0 24px !important;

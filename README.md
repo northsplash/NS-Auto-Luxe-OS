@@ -63,7 +63,7 @@ The two cores: **SalesRabbit** for territory maps, pins, knocks, and canvassing;
 - Rippling-style people directory (search) and Gusto-style onboarding packet (headshot, legal name, tax last-four, deposit, I-9)
 - Deputy staff schedule: Sunday–Saturday week grid per person, plus shift editor
 - ServiceTitan dispatch: unassigned rail, tech columns, drag-to-assign
-- SalesRabbit D2D: tall map, West / Central / East areas, knock outcomes, door list, book-the-door
+- SalesRabbit D2D: tall map, West / Central / East areas, knock outcomes, door list, book-the-door. The sales presentation **Account** tab opens a real customer portal login at the door (email + password) without signing the rep out. Apply writes the household onto the lead and links `converted_customer_id`.
 - HubSpot pipeline: exceptions first, New Lead, drag between stages, assign a rep, and book a job from the inspector
 - Every Owner/Admin workspace item is on `/os`: Sales (map, pipeline, territories, campaigns, follow-up), Customers (directory, records, photos, calendar, windows, slots, history, fleets), Operations (jobs through approvals), People (team through training), Finance (payroll, ledger, analytics, pay mix), and Admin (access through traffic)
 - Client photos: import before/after and portfolio shots onto a customer. Open **Customers → Client photos**, or import from a CRM record. Attach to a visit when the job already exists.
@@ -82,3 +82,11 @@ After pulling, run `supabase/migrations/20260906120000_v29_employee_onboarding_p
 ## Supabase
 
 SQL lives in `supabase/migrations`. Apply the latest migration for communication template seeds after pulling. Without keys, the OS still runs on demo data.
+
+Live D2D **Apply customer account** calls the `create-customer-account` Edge Function so the rep session is not replaced by the new customer login. Deploy it with the other functions:
+
+```bash
+supabase functions deploy create-customer-account
+```
+
+D2D and Owner can create the login. The function refuses emails that already belong to team accounts. Demo OS (`/os`) creates an in-memory customer instead.

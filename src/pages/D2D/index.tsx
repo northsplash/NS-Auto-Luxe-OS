@@ -21,6 +21,12 @@ import TrainingPortal from '@/components/TrainingPortal';
 import TeamMessaging from '@/components/TeamMessaging';
 import EmployeeOnboardingTab from '@/components/EmployeeOnboardingTab';
 import SalesPresentation from '@/components/SalesPresentation';
+import {
+  createDoorCustomerAccount,
+  householdAsLeadFields,
+  type ApplyOfferResult,
+  type OfferSelection,
+} from '@/lib/customerAccount';
 import LeadCommandCenter from '@/components/LeadCommandCenter';
 import SharedCalendar from '@/components/SharedCalendar';
 import {
@@ -50,7 +56,7 @@ const STATUS_QUICK = SR_KNOCK_KEYS;
 const emptyForm=()=>({
   ...emptySrLeadFields(),
   customer_name:'',address:'',status:'unworked',service_interest:'',vehicle_info:'',
-  estimated_value:'',
+  estimated_value:'',converted_customer_id:'',
 });
 
 export default function D2DPortal(){
@@ -275,6 +281,7 @@ export default function D2DPortal(){
       service_interest:fields.service,
       vehicle_info:fields.vehicle,
       estimated_value:fields.value,
+      converted_customer_id:lead?.converted_customer_id||'',
     });
     if(door.id){const h=await supabase.from('territory_door_history').select('*').eq('door_id',door.id).order('created_at',{ascending:false}).limit(20);setHistory(h.data??[])}
     if(!address&&Number.isFinite(Number(door.latitude))&&Number.isFinite(Number(door.longitude))){
@@ -356,6 +363,7 @@ export default function D2DPortal(){
       service_interest:data.service_interest||data.service||null,vehicle_info:data.vehicle_info||data.vehicle||null,estimated_value:Number(data.estimated_value||data.value||0),
       follow_up_at:data.follow_up_at?new Date(data.follow_up_at).toISOString():null,
       notes:[data.alt_phone?`Alt phone: ${data.alt_phone}`:'',data.notes].filter(Boolean).join('\n')||null,
+      ...(data.converted_customer_id?{converted_customer_id:data.converted_customer_id}:{}),
       latitude:door.latitude??null,longitude:door.longitude??null,last_contacted_at:new Date().toISOString(),
       next_action:nextStatus==='follow_up'?'follow_up':nextStatus==='estimate'?'send_estimate':nextStatus==='appointment_set'?'appointment':null,
       next_action_at:data.follow_up_at?new Date(data.follow_up_at).toISOString():null,
@@ -440,41 +448,75 @@ export default function D2DPortal(){
 
   const manualLead=()=>{setManual(true);setSelectedDoor({territory_id:selectedTerritory||undefined,latitude:live?.latitude,longitude:live?.longitude});setHistory([]);setForm({...emptyForm(),status:'interested'});};
   const openPitch=(source:string,mode:'presentation'|'quote'|'account'='presentation')=>{setPitchMode(mode);setPitchOpen(true);logPresentationEvent('presentation_opened',{source,mode});};
-  const offerPatch=(offer:{type:'service'|'membership';name:string;amount:number;detail:string;household?:{name?:string;phone?:string;email?:string;address?:string}})=>{
-    const hh=offer.household||{};
-    const note=offer.name?(offer.type==='membership'?`Membership interest: ${offer.name} at ${money(offer.amount)}/mo`:`Presented ${offer.name} estimate at ${money(offer.amount)}`):'Household captured from presentation';
-    const nextStatus=['unworked','no_answer','revisit','contacted'].includes(form.status)?(offer.name?(offer.type==='membership'?'interested':'estimate'):'interested'):form.status;
+  const offerPatch=(offer:OfferSelection)=>{
+    const hh=offer.household;
+    const fields=householdAsLeadFields(hh);
+    const identity=composedLeadIdentity(fields, hh.name, hh.address);
+    const note=offer.name
+      ?(offer.type==='membership'?`Membership interest: ${offer.name} at ${money(offer.amount)}/mo`:`Presented ${offer.name} estimate at ${money(offer.amount)}`)
+      :(offer.createPortalAccount?'Customer portal account from presentation':'Household captured from presentation');
+    const nextStatus=['unworked','no_answer','revisit','contacted'].includes(form.status)
+      ?(offer.createPortalAccount&&!offer.name?'customer':offer.name?(offer.type==='membership'?'interested':'estimate'):'interested')
+      :form.status;
     return {
-      customer_name:hh.name?.trim()||form.customer_name||composedLeadIdentity(form, form.customer_name).name,
-      first_name:hh.name?fieldsFromLead({customer_name:hh.name}).first_name:form.first_name,
-      last_name:hh.name?fieldsFromLead({customer_name:hh.name}).last_name:form.last_name,
-      phone:hh.phone?.trim()||form.phone,
-      email:hh.email?.trim()||form.email,
-      address:hh.address?.trim()||form.address,
-      street1:hh.address?fieldsFromLead({address:hh.address}).street1:form.street1,
-      city:hh.address?fieldsFromLead({address:hh.address}).city||form.city:form.city,
-      state:hh.address?fieldsFromLead({address:hh.address}).state||form.state:form.state,
-      postal_code:hh.address?fieldsFromLead({address:hh.address}).postal_code||form.postal_code:form.postal_code,
+      customer_name:identity.name||form.customer_name,
+      first_name:fields.first_name||form.first_name,
+      last_name:fields.last_name||form.last_name,
+      phone:fields.phone||form.phone,
+      alt_phone:fields.alt_phone||form.alt_phone,
+      email:fields.email||form.email,
+      address:identity.address||form.address,
+      street1:fields.street1||form.street1,
+      street2:fields.street2||form.street2,
+      city:fields.city||form.city,
+      state:fields.state||form.state,
+      postal_code:fields.postal_code||form.postal_code,
+      vehicle_info:fields.vehicle||form.vehicle_info,
+      vehicle:fields.vehicle||form.vehicle,
       service_interest:offer.name||form.service_interest,
       estimated_value:offer.amount?String(offer.amount):form.estimated_value,
       notes:[form.notes,note].filter(Boolean).join('\n'),
       status:nextStatus,
+      converted_customer_id:form.converted_customer_id,
     };
   };
-  const useSalesOffer=(offer:{type:'service'|'membership';name:string;amount:number;detail:string;household?:{name?:string;phone?:string;email?:string;address?:string}})=>{
+  const useSalesOffer=(offer:OfferSelection)=>{
     const patch=offerPatch(offer);
     setForm(f=>({...f,...patch}));
     setPitchOpen(false);
     if(!selectedDoor&&!manual){setManual(true);setSelectedDoor({territory_id:selectedTerritory||undefined,latitude:live?.latitude,longitude:live?.longitude});}
   };
-  const applyAndSaveOffer=async(offer:{type:'service'|'membership';name:string;amount:number;detail:string;household?:{name?:string;phone?:string;email?:string;address?:string}})=>{
+  const applyAndSaveOffer=async(offer:OfferSelection):Promise<ApplyOfferResult>=>{
     const patch=offerPatch(offer);
     setForm(f=>({...f,...patch}));
-    setPitchOpen(false);
     const door=selectedDoor||{territory_id:selectedTerritory||undefined,latitude:live?.latitude,longitude:live?.longitude};
     if(!selectedDoor){setManual(true);setSelectedDoor(door);}
+    let account:ApplyOfferResult['account'];
+    if(offer.createPortalAccount){
+      try{
+        account=await createDoorCustomerAccount({
+          email:offer.household.email,
+          password:offer.portalPassword,
+          full_name:offer.household.name||composedLeadIdentity(householdAsLeadFields(offer.household)).name,
+          phone:offer.household.phone,
+          vehicle_info:offer.household.vehicle,
+          address:offer.household.address,
+          lead_id:selectedDoor?.lead_id||null,
+          send_email:offer.sendInviteEmail,
+          membership:offer.type==='membership'&&offer.name?{name:offer.name,price:offer.amount}:null,
+        });
+        patch.converted_customer_id=account.user_id;
+        setForm(f=>({...f,...patch,converted_customer_id:account!.user_id,email:account!.email||patch.email}));
+      }catch(err){
+        return {saved:false,error:err instanceof Error?err.message:'Unable to create the customer portal account.'};
+      }
+    }
     const ok=await saveLead(undefined,patch.status,patch,door);
-    if(ok)setTab('leads');
+    if(!ok)return {saved:false,error:'Household was captured, but the lead could not be saved.'};
+    if(account)return {saved:true,account};
+    setPitchOpen(false);
+    setTab('leads');
+    return {saved:true};
   };
   const useCurrentLocation=()=>navigator.geolocation?.getCurrentPosition(async p=>{const lat=p.coords.latitude,lng=p.coords.longitude;setSelectedDoor(d=>({...d,latitude:lat,longitude:lng}));window.dispatchEvent(new CustomEvent('northsplash:center-map',{detail:{latitude:lat,longitude:lng,zoom:19}}));const geo=await lookupAddress(lat,lng);if(geo?.address)setForm(f=>({...f,address:geo.address,street1:geo.street||f.street1,city:geo.city||f.city,state:geo.state||f.state,postal_code:geo.postal_code||f.postal_code}))},()=>alert('Allow location access to pin this lead.'),{enableHighAccuracy:true,timeout:15000,maximumAge:5000});
   const logPresentationEvent=(event:string,detail:Record<string,unknown>={})=>{
@@ -568,12 +610,12 @@ export default function D2DPortal(){
 
         {tab==='followups'&&<div className="tab-content"><div className="v2-page-head"><div><span className="eyebrow">Callbacks</span><h2>Follow-up queue</h2><p>Highest-priority callbacks and revisits first.</p></div></div><div className="followup-grid">{dueFollowups.sort((a,b)=>new Date(a.follow_up_at||0).getTime()-new Date(b.follow_up_at||0).getTime()).map(l=><div className="followup-card" key={l.id}><div><span className="eyebrow">{l.follow_up_at&&new Date(l.follow_up_at)<new Date()?'OVERDUE':'FOLLOW UP'}</span><h3>{l.customer_name||l.address}</h3><p>{l.address}</p></div><div className="followup-meta"><span>{l.follow_up_at?localDateTime(l.follow_up_at):'No date set'}</span><strong>{money(Number(l.estimated_value||0))}</strong></div><div className="followup-actions">{l.phone&&<a className="btn-outline" href={`tel:${l.phone}`}><Phone size={14}/> Call</a>}<button className="btn-primary" onClick={()=>{const door=doors.find(d=>d.id===l.territory_door_id)||doors.find(d=>d.lead_id===l.id);setTab('territory');void pickDoor(door||{id:l.territory_door_id||undefined,lead_id:l.id,latitude:Number(l.latitude||0),longitude:Number(l.longitude||0),address:l.address,territory_id:l.territory_id,status:l.status,notes:l.notes})}}>Open house</button></div></div>)}{!dueFollowups.length&&<div className="ns-empty"><strong>You're caught up</strong><p>No follow-ups are due. New revisits from the map land here automatically.</p></div>}</div></div>}
 
-        {tab==='presentation'&&<div className="tab-content d2d-presentation-page v2-page"><div className="v2-page-head"><div><span className="eyebrow">Pitch</span><h2>Sales presentation</h2><p>Hand the screen to the customer, then capture the household and apply the offer without leaving the door.</p></div><div className="v2-head-actions"><button className="btn-outline" onClick={()=>openPitch('d2d_tab_account','account')}><UserRound size={15}/> Customer account</button><button className="btn-primary" onClick={()=>openPitch('d2d_tab')}><Presentation size={15}/> Present to customer</button></div></div>
+        {tab==='presentation'&&<div className="tab-content d2d-presentation-page v2-page"><div className="v2-page-head"><div><span className="eyebrow">Pitch</span><h2>Sales presentation</h2><p>Hand the screen to the customer, then open their portal account and apply the offer without leaving the door.</p></div><div className="v2-head-actions"><button className="btn-outline" onClick={()=>openPitch('d2d_tab_account','account')}><UserRound size={15}/> Customer account</button><button className="btn-primary" onClick={()=>openPitch('d2d_tab')}><Presentation size={15}/> Present to customer</button></div></div>
           <div className="d2d-presentation-launch">
             <div>
               <span className="eyebrow">CLOSE AT THE DOOR</span>
-              <h3>Pitch, quote, and save the household in one flow.</h3>
-              <p>Walk through why North Splash, build a live quote, capture name and phone, then apply that offer onto the lead. No extra screens after the handshake.</p>
+              <h3>Pitch, quote, and open their customer account in one flow.</h3>
+              <p>Walk through why North Splash, build a live quote, then apply a customer portal login onto this door. The rep stays signed in. The customer leaves with email, password, and /login.</p>
               <div className="d2d-presentation-cta">
                 <button className="btn-primary" onClick={()=>openPitch('launch_card')}><Presentation size={17}/> Start presentation</button>
                 <button className="btn-outline" onClick={()=>openPitch('launch_quote','quote')}>Jump to quote</button>
@@ -583,8 +625,8 @@ export default function D2DPortal(){
             <div className="d2d-presentation-preview">
               <span>01</span><strong>Introduce North Splash</strong><i/>
               <span>02</span><strong>Build the quote</strong><i/>
-              <span>03</span><strong>Capture the household</strong><i/>
-              <span>04</span><strong>Apply & save the lead</strong>
+              <span>03</span><strong>Create the customer account</strong><i/>
+              <span>04</span><strong>Apply & save</strong>
             </div>
           </div>
         </div>}
@@ -603,12 +645,12 @@ export default function D2DPortal(){
     </nav>
     {!selectedDoor&&!manual&&tab==='leads'&&<button type="button" className="d2d-add-lead-fab" onClick={manualLead}><Plus size={20}/><span>Add lead</span></button>}
 
-    {(selectedDoor||manual)&&<HouseDrawer door={selectedDoor} form={form} setForm={setForm} history={history} manual={manual} saving={saving} onClose={()=>{setSelectedDoor(null);setManual(false);setHistory([])}} onSave={saveLead} onSaveNext={saveAndNext} onEstimate={createEstimate} onLocation={useCurrentLocation} onPitch={()=>openPitch('lead_drawer')} onQuote={()=>openPitch('lead_drawer_quote','quote')}/>} 
-    {pitchOpen&&<SalesPresentation key={pitchMode} customerName={form.customer_name||undefined} customerPhone={form.phone||undefined} customerEmail={form.email||undefined} customerAddress={form.address||undefined} initialMode={pitchMode} onClose={()=>setPitchOpen(false)} onSelectOffer={useSalesOffer} onApplyAndSave={applyAndSaveOffer} onEvent={logPresentationEvent}/>}
+    {(selectedDoor||manual)&&<HouseDrawer door={selectedDoor} form={form} setForm={setForm} history={history} manual={manual} saving={saving} onClose={()=>{setSelectedDoor(null);setManual(false);setHistory([])}} onSave={saveLead} onSaveNext={saveAndNext} onEstimate={createEstimate} onLocation={useCurrentLocation} onPitch={()=>openPitch('lead_drawer')} onQuote={()=>openPitch('lead_drawer_quote','quote')} onAccount={()=>openPitch('lead_drawer_account','account')}/>} 
+    {pitchOpen&&<SalesPresentation key={pitchMode} householdSeed={form} leadId={selectedDoor?.lead_id||null} customerName={form.customer_name||undefined} customerPhone={form.phone||undefined} customerEmail={form.email||undefined} customerAddress={form.address||undefined} initialMode={pitchMode} onClose={()=>{setPitchOpen(false);if(form.converted_customer_id)setTab('leads');}} onSelectOffer={useSalesOffer} onApplyAndSave={applyAndSaveOffer} onEvent={logPresentationEvent}/>}
   </div>;
 }
 
-function HouseDrawer({door,form,setForm,history,manual,saving,onClose,onSave,onSaveNext,onEstimate,onLocation,onPitch,onQuote}:{door:any;form:any;setForm:any;history:TerritoryDoorHistory[];manual:boolean;saving:boolean;onClose:()=>void;onSave:(e?:React.FormEvent,status?:string)=>Promise<boolean>|void;onSaveNext:()=>Promise<void>|void;onEstimate:()=>void;onLocation:()=>void;onPitch:()=>void;onQuote:()=>void}){
+function HouseDrawer({door,form,setForm,history,manual,saving,onClose,onSave,onSaveNext,onEstimate,onLocation,onPitch,onQuote,onAccount}:{door:any;form:any;setForm:any;history:TerritoryDoorHistory[];manual:boolean;saving:boolean;onClose:()=>void;onSave:(e?:React.FormEvent,status?:string)=>Promise<boolean>|void;onSaveNext:()=>Promise<void>|void;onEstimate:()=>void;onLocation:()=>void;onPitch:()=>void;onQuote:()=>void;onAccount:()=>void}){
   const [panel,setPanel]=useState<'sheet'|'history'>('sheet');
   const protectedDNK=door?.do_not_knock||door?.status==='do_not_knock';
   const statusMeta=doorStatus(form.status);
@@ -633,6 +675,7 @@ function HouseDrawer({door,form,setForm,history,manual,saving,onClose,onSave,onS
       {manual&&<button type="button" onClick={onLocation}><Crosshair size={15}/> Pin GPS</button>}
       <button type="button" className="house-pitch-btn" onClick={onPitch}><Presentation size={15}/> Present</button>
       <button type="button" className="house-quote-btn" onClick={onQuote}><Target size={15}/> Quote</button>
+      <button type="button" className="house-pitch-btn" onClick={onAccount}><UserRound size={15}/> Account</button>
     </div>
 
     <div className="field-contact-strip sr-lead-sheet">
@@ -649,6 +692,7 @@ function HouseDrawer({door,form,setForm,history,manual,saving,onClose,onSave,onS
     </div>
 
     {hasOffer&&<div className="d2d-applied-offer"><Sparkles size={16}/><div><strong>{form.service_interest||'Offer applied'}</strong><span>{form.estimated_value?money(Number(form.estimated_value)): 'Quote on this household'}</span></div><button type="button" onClick={onQuote}>Change</button></div>}
+    {form.converted_customer_id&&<div className="d2d-applied-offer"><UserRound size={16}/><div><strong>Customer portal linked</strong><span>{form.email||'They can sign in at /login with the password from the presentation.'}</span></div><button type="button" onClick={onAccount}>Open</button></div>}
 
     {protectedDNK&&<div className="dnk-warning">Permanent Do Not Knock. Only a manager/admin should clear this property.</div>}
 

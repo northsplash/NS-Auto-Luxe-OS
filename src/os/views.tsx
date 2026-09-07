@@ -13,6 +13,7 @@ import { DETAIL_FAMILY_COPY, packagesForFamily } from '@/lib/detailCatalog';
 import { ServiceMenuSelect } from '@/components/DetailSelfPicker';
 import { remainingStepLabels } from '@/lib/onboarding';
 import { SR_STATUSES, composedLeadIdentity, fieldsFromLead, srStatus } from '@/lib/salesRabbitLeads';
+import { householdAsLeadFields, type ApplyOfferResult, type OfferSelection } from '@/lib/customerAccount';
 import {
   JOB_STEP_LABELS, JOB_STEPS, LEAD_STAGES, SHIFT_DAYS, WEEKDAYS, initialsOf, payLine, revenueDays,
   type JobStatus, type OsChat, type OsEmployee, type OsJob, type OsLead,
@@ -1216,29 +1217,65 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
     const id = os.convertLead(lead.id, { time, service, price, detailer });
     if (id) onBook?.(id);
   };
-  const applyOfferToLead = (offer: { name: string; amount: number; household?: { name?: string; phone?: string; address?: string } }) => {
-    const hh = offer.household || {};
-    if (!lead) {
-      if (!hh.name && !hh.address && !hh.phone) return;
-      const id = os.addLead(hh.name?.trim() || 'New household', hh.address?.trim() || 'Address pending', {
-        phone: hh.phone?.trim() || '',
-        value: offer.amount,
-        status: 'interested',
-        service: offer.name,
-      });
-      setActive(id);
-      return;
+  const applyOfferToLead = async (offer: OfferSelection): Promise<ApplyOfferResult> => {
+    const hh = offer.household;
+    const fields = householdAsLeadFields(hh);
+    const identity = composedLeadIdentity(fields, hh.name, hh.address);
+    if (!lead && !identity.name && !identity.address && !fields.phone) {
+      return { saved: false, error: 'Add a name, phone, or street before saving.' };
     }
-    os.patchLead(lead.id, {
-      name: hh.name?.trim() || lead.name,
-      address: hh.address?.trim() || lead.address,
-      phone: hh.phone?.trim() || lead.phone,
-      value: offer.amount,
-      status: 'interested',
+    const extra: Partial<OsLead> = {
+      first_name: fields.first_name,
+      last_name: fields.last_name,
+      phone: fields.phone || lead?.phone || '',
+      alt_phone: fields.alt_phone,
+      email: fields.email,
+      street1: fields.street1,
+      street2: fields.street2,
+      city: fields.city,
+      state: fields.state,
+      postal_code: fields.postal_code,
+      vehicle: fields.vehicle,
+      value: offer.amount || lead?.value,
+      service: offer.name || lead?.service,
+      status: offer.createPortalAccount && !offer.name ? 'customer' : 'interested',
       temp: 'hot',
-      service: offer.name,
-      notes: `${offer.name} · ${money(offer.amount)}`,
+      notes: offer.name ? `${offer.name} · ${money(offer.amount)}` : (offer.createPortalAccount ? 'Customer portal account opened at the door.' : lead?.notes || ''),
+    };
+    let leadId = lead?.id;
+    if (!leadId) {
+      leadId = os.addLead(identity.name || 'New household', identity.address || 'Address pending', extra);
+      setActive(leadId);
+    } else {
+      os.patchLead(leadId, {
+        name: identity.name || lead!.name,
+        address: identity.address || lead!.address,
+        ...extra,
+      });
+    }
+    if (!offer.createPortalAccount) return { saved: true };
+    if (!fields.email.trim()) return { saved: false, error: 'Email is required to open their customer portal login.' };
+    const userId = os.ensureCustomer({
+      name: identity.name || fields.email,
+      email: fields.email,
+      phone: fields.phone,
+      vehicle: fields.vehicle,
+      address: identity.address,
+      member: offer.type === 'membership' && Boolean(offer.name),
     });
+    os.patchLead(leadId, { portal_user_id: userId, email: fields.email, status: extra.status });
+    return {
+      saved: true,
+      account: {
+        user_id: userId,
+        email: fields.email.trim().toLowerCase(),
+        created: true,
+        existing: false,
+        emailed: false,
+        password: offer.portalPassword,
+        login_url: `${window.location.origin}/login`,
+      },
+    };
   };
   const saveLeadFields = (patch: Partial<OsLead>) => {
     if (!lead) return;
@@ -1280,7 +1317,7 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
           <div className="nsos-pitch-lead">
             <span className="nsos-eyebrow">{lead ? `${territory(lead.x)} door · ${leadPin?.abbr}` : 'No door selected'}</span>
             <h3>{lead?.name || 'Pick a household on the map'}</h3>
-            <p>{lead ? `${lead.address} · Next open window ${slots[0]?.window || 'TBD'}` : 'Add a lead on Map, or tap Account in the pitch to capture the household here.'}</p>
+            <p>{lead ? `${lead.address} · Next open window ${slots[0]?.window || 'TBD'}` : 'Add a lead on Map, or tap Account in the pitch to open their customer portal here.'}</p>
             {lead && (
               <div className="nsos-pitch-slots">
                 {slots.slice(0, 4).map((slot) => (
@@ -1295,12 +1332,15 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
           <SalesPresentation
             embedded
             initialMode={typeof window !== 'undefined' && window.innerWidth <= 860 ? 'quote' : 'presentation'}
+            householdSeed={lead ? fieldsFromLead(lead) : undefined}
             customerName={lead?.name}
             customerPhone={lead?.phone}
+            customerEmail={lead?.email}
             customerAddress={lead?.address}
+            leadId={lead?.id}
             slots={slots}
-            onBookSlot={(offer, slot) => { applyOfferToLead(offer); bookLead(slot.window, offer.name, offer.amount, slot.tech); }}
-            onSelectOffer={applyOfferToLead}
+            onBookSlot={(offer, slot) => { void applyOfferToLead(offer); bookLead(slot.window, offer.name, offer.amount, slot.tech); }}
+            onSelectOffer={(offer) => { void applyOfferToLead(offer); }}
             onApplyAndSave={applyOfferToLead}
           />
         </div>

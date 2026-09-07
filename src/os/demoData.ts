@@ -124,6 +124,7 @@ export type OsLead = {
   service: string;
   follow_up_at: string;
   appointment_at: string;
+  portal_user_id: string;
 };
 
 export type OsMessage = { id: string; from: string; mine?: boolean; body: string; at: string };
@@ -653,6 +654,7 @@ export function normalizeLead(l: Partial<OsLead> & { id?: string; name?: string 
     service: merged.service || '',
     follow_up_at: merged.follow_up_at || '',
     appointment_at: merged.appointment_at || '',
+    portal_user_id: merged.portal_user_id || '',
     temp: merged.temp || srTemp(status),
     activity: Array.isArray(l.activity) ? l.activity : [],
   };
