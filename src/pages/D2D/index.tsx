@@ -574,7 +574,7 @@ export default function D2DPortal(){
     <nav className="os-mobile-bottom-nav mobile-app-nav-v25" aria-label="D2D mobile navigation">
       {[['territory','Map',MapPin],['leads','Leads',Target],['presentation','Pitch',Presentation],['calendar','Calendar',CalendarDays],['messages','More',MessageCircle]].map(([id,label,Icon]:any)=><button key={id} className={tab===id?'active':''} onClick={()=>setTab(id as Tab)}><Icon size={20}/><span>{label}</span>{id==='leads'&&dueFollowups.length>0&&<b>{dueFollowups.length}</b>}</button>)}
     </nav>
-    {!selectedDoor&&!manual&&(tab==='territory'||tab==='leads')&&<button type="button" className="d2d-add-lead-fab" onClick={manualLead}><Plus size={20}/><span>Add lead</span></button>}
+    {!selectedDoor&&!manual&&tab==='leads'&&<button type="button" className="d2d-add-lead-fab" onClick={manualLead}><Plus size={20}/><span>Add lead</span></button>}
 
     {(selectedDoor||manual)&&<HouseDrawer door={selectedDoor} form={form} setForm={setForm} history={history} manual={manual} saving={saving} onClose={()=>{setSelectedDoor(null);setManual(false);setHistory([])}} onSave={saveLead} onSaveNext={saveAndNext} onEstimate={createEstimate} onLocation={useCurrentLocation} onPitch={()=>openPitch('lead_drawer')} onQuote={()=>openPitch('lead_drawer_quote','quote')}/>} 
     {pitchOpen&&<SalesPresentation key={pitchMode} customerName={form.customer_name||undefined} customerPhone={form.phone||undefined} customerEmail={form.email||undefined} customerAddress={form.address||undefined} initialMode={pitchMode} onClose={()=>setPitchOpen(false)} onSelectOffer={useSalesOffer} onApplyAndSave={applyAndSaveOffer} onEvent={logPresentationEvent}/>}
