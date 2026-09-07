@@ -789,6 +789,7 @@ html.nsos-active .portal-layout.nsos-cream {
   .portal-layout.nsos-cream .owner-kpis-v17 .phase-kpi {
     padding: 10px 12px !important;
     min-height: 0 !important;
+    grid-column: auto !important;
   }
   .portal-layout.nsos-cream .owner-kpis-v17 .phase-kpi strong {
     font-family: Inter, system-ui, sans-serif !important;
