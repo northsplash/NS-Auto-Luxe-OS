@@ -1107,83 +1107,41 @@ const handleDeleteAvailability = async (id: string) => {
           
 {/* AVAILABILITY */}
 {tab === 'availability' && (
-  <div className="tab-content">
-    <form
-      className="availability-card"
-      onSubmit={handleSaveAvailability}
-      style={{
-        background: '#fffdf8',
-        color: '#1c1814',
-        border: '1px solid #e4d9cc',
-        borderRadius: '14px',
-        padding: '24px',
-        marginBottom: '30px',
-        boxShadow: '0 10px 28px rgba(61,42,26,.06)',
-      }}
-    >
-      <h3 style={{ marginTop: 0 }}>Set Availability</h3>
-
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-          gap: '16px',
-        }}
-      >
-        <div className="form-group">
-          <label>Date</label>
+  <div className="tab-content v2-page owner-availability">
+    <form className="phase-panel caramel availability-card" onSubmit={handleSaveAvailability}>
+      <div className="phase-panel-head">
+        <div>
+          <span className="eyebrow">BOOKING HOURS</span>
+          <h3>Set Availability</h3>
+        </div>
+      </div>
+      <div className="availability-form-grid">
+        <label className="form-group">Date
           <input
             type="date"
             required
             value={availabilityForm.date}
-            onChange={e =>
-              setAvailabilityForm(prev => ({
-                ...prev,
-                date: e.target.value,
-              }))
-            }
+            onChange={e => setAvailabilityForm(prev => ({ ...prev, date: e.target.value }))}
           />
-        </div>
-
-        <div className="form-group">
-          <label>Start Time</label>
+        </label>
+        <label className="form-group">Start time
           <input
             type="time"
             value={availabilityForm.start_time}
-            onChange={e =>
-              setAvailabilityForm(prev => ({
-                ...prev,
-                start_time: e.target.value,
-              }))
-            }
+            onChange={e => setAvailabilityForm(prev => ({ ...prev, start_time: e.target.value }))}
           />
-        </div>
-
-        <div className="form-group">
-          <label>End Time</label>
+        </label>
+        <label className="form-group">End time
           <input
             type="time"
             value={availabilityForm.end_time}
-            onChange={e =>
-              setAvailabilityForm(prev => ({
-                ...prev,
-                end_time: e.target.value,
-              }))
-            }
+            onChange={e => setAvailabilityForm(prev => ({ ...prev, end_time: e.target.value }))}
           />
-        </div>
-
-        <div className="form-group">
-          <label>Appointment Length</label>
-
+        </label>
+        <label className="form-group">Appointment length
           <select
             value={availabilityForm.slot_minutes}
-            onChange={e =>
-              setAvailabilityForm(prev => ({
-                ...prev,
-                slot_minutes: Number(e.target.value),
-              }))
-            }
+            onChange={e => setAvailabilityForm(prev => ({ ...prev, slot_minutes: Number(e.target.value) }))}
           >
             <option value={30}>30 minutes</option>
             <option value={60}>1 hour</option>
@@ -1192,134 +1150,74 @@ const handleDeleteAvailability = async (id: string) => {
             <option value={180}>3 hours</option>
             <option value={240}>4 hours</option>
           </select>
-        </div>
+        </label>
       </div>
-
-      <div
-        style={{
-          margin: '20px 0',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px',
-        }}
-      >
+      <label className="availability-bookable">
         <input
           type="checkbox"
           checked={availabilityForm.is_available}
-          onChange={e =>
-            setAvailabilityForm(prev => ({
-              ...prev,
-              is_available: e.target.checked,
-            }))
-          }
+          onChange={e => setAvailabilityForm(prev => ({ ...prev, is_available: e.target.checked }))}
         />
-
-        <span>
-          {availabilityForm.is_available
-            ? 'Customers can book this day'
-            : 'Block this entire day'}
-        </span>
-      </div>
-
-      <button type="submit" className="btn-primary">
-        Save Availability
-      </button>
+        <span>{availabilityForm.is_available ? 'Customers can book this day' : 'Block this entire day'}</span>
+      </label>
+      <button type="submit" className="btn-primary">Save Availability</button>
     </form>
 
-    <div
-      className="availability-card"
-      style={{
-        background: '#fffdf8',
-        color: '#1c1814',
-        border: '1px solid #e4d9cc',
-        borderRadius: '14px',
-        padding: '24px',
-        boxShadow: '0 10px 28px rgba(61,42,26,.06)',
-      }}
-    >
-      <h3>Upcoming Availability</h3>
-
+    <section className="phase-panel caramel availability-card">
+      <div className="phase-panel-head">
+        <div>
+          <span className="eyebrow">CALENDAR</span>
+          <h3>Upcoming Availability</h3>
+        </div>
+      </div>
       {availability.length === 0 ? (
-        <p className="ns-empty">
-          No availability has been added yet.
-        </p>
+        <div className="ns-empty">
+          <Calendar size={28} />
+          <h3>No availability has been added yet</h3>
+          <p>Add an open day above so customers and the calendar have hours to book.</p>
+        </div>
       ) : (
-        <div style={{ display: 'grid', gap: '12px' }}>
+        <div className="availability-list">
           {availability.map(item => (
-            <div
-              key={item.id}
-              style={{
-                border: '1px solid #e7ddd4',
-                borderRadius: '10px',
-                padding: '16px',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                gap: '15px',
-                flexWrap: 'wrap',
-              }}
-            >
+            <article className="availability-row" key={item.id}>
               <div>
                 <strong>
-                  {new Date(
-                    `${item.date}T12:00:00`
-                  ).toLocaleDateString('en-US', {
+                  {new Date(`${item.date}T12:00:00`).toLocaleDateString('en-US', {
                     weekday: 'long',
                     month: 'long',
                     day: 'numeric',
                     year: 'numeric',
                   })}
                 </strong>
-
-                <div
-                  style={{
-                    color: '#7d7065',
-                    marginTop: '5px',
-                  }}
-                >
+                <small>
                   {item.is_available
-                    ? `${item.start_time?.slice(0, 5)||'09:00'} – ${item.end_time?.slice(0, 5)||'17:00'} • ${item.slot_minutes||60} minute slots`
+                    ? `${item.start_time?.slice(0, 5) || '09:00'} – ${item.end_time?.slice(0, 5) || '17:00'} · ${item.slot_minutes || 60} minute slots`
                     : 'Closed / unavailable'}
-                </div>
+                </small>
               </div>
-
-              <div
-                style={{
-                  display: 'flex',
-                  gap: '8px',
-                }}
-              >
+              <div className="availability-row-actions">
                 <button
                   type="button"
                   className="btn-outline"
-                  onClick={() =>
-                    setAvailabilityForm({
-                      date: item.date,
-                      start_time: item.start_time?.slice(0, 5)||'09:00',
-                      end_time: item.end_time?.slice(0, 5)||'17:00',
-                      slot_minutes: Number(item.slot_minutes||60),
-                      is_available: item.is_available,
-                    })
-                  }
+                  onClick={() => setAvailabilityForm({
+                    date: item.date,
+                    start_time: item.start_time?.slice(0, 5) || '09:00',
+                    end_time: item.end_time?.slice(0, 5) || '17:00',
+                    slot_minutes: Number(item.slot_minutes || 60),
+                    is_available: item.is_available,
+                  })}
                 >
                   Edit
                 </button>
-
-                <button
-                  type="button"
-                  className="btn-outline"
-                  onClick={() =>
-                    handleDeleteAvailability(item.id)
-                  }
-                >
+                <button type="button" className="btn-outline" onClick={() => handleDeleteAvailability(item.id)}>
                   Delete
                 </button>
               </div>
-            </div>
+            </article>
           ))}
         </div>
       )}
-    </div>
+    </section>
   </div>
 )}
           

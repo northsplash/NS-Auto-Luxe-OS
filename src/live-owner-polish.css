@@ -7033,12 +7033,90 @@ html {
 .portal-layout.nsos-cream .client-photo-main,
 .portal-layout.nsos-cream .territory-setup-card-v13,
 .portal-layout.nsos-cream .territory-form-section-v13,
-.portal-layout.nsos-cream .availability-card {
+.portal-layout.nsos-cream .tab-content > form[style],
+.portal-layout.nsos-cream .tab-content > div[style],
+.portal-layout.nsos-cream .tab-content > section[style],
+.portal-layout.nsos-cream .availability-card,
+.portal-layout.nsos-cream .phase-panel.availability-card {
   background: #fffdf8 !important;
+  background-color: #fffdf8 !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  border: 1px solid #e4d9cc !important;
+  box-shadow: 0 10px 28px rgba(48, 38, 28, .05) !important;
+  position: relative;
+  z-index: 1;
+}
+.portal-layout.nsos-cream .owner-availability {
+  display: grid;
+  gap: 16px;
+}
+.portal-layout.nsos-cream .availability-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin: 4px 0 14px;
+}
+.portal-layout.nsos-cream .availability-form-grid .form-group,
+.portal-layout.nsos-cream .availability-form-grid label {
+  display: grid;
+  gap: 6px;
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+  font-size: 11px;
+  font-weight: 700;
+}
+.portal-layout.nsos-cream .availability-bookable {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 16px;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  font-size: 14px;
+  font-weight: 600;
+}
+.portal-layout.nsos-cream .availability-bookable input {
+  width: 18px;
+  height: 18px;
+  accent-color: #b8893a;
+}
+.portal-layout.nsos-cream .availability-list {
+  display: grid;
+  gap: 10px;
+}
+.portal-layout.nsos-cream .availability-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 14px 16px;
+  border: 1px solid #eadfd3;
+  border-radius: 12px;
+  background: #fff !important;
+}
+.portal-layout.nsos-cream .availability-row strong {
+  display: block;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .availability-row small {
+  display: block;
+  margin-top: 4px;
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+}
+.portal-layout.nsos-cream .availability-row-actions {
+  display: flex;
+  gap: 8px;
+}
+.portal-layout.nsos-cream .tab-content [style*="#fff"],
+.portal-layout.nsos-cream .tab-content [style*="rgb(255"] {
+  background-color: #fffdf8 !important;
   color: #1c1814 !important;
   -webkit-text-fill-color: #1c1814 !important;
   border-color: #e4d9cc !important;
-  box-shadow: 0 10px 28px rgba(48, 38, 28, .05) !important;
 }
 .portal-layout.nsos-cream .crm-customer-list button,
 .portal-layout.nsos-cream .crm-customer-list strong,
