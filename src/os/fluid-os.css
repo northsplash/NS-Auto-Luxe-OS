@@ -645,6 +645,21 @@ html.nsos-active,
     overflow: visible !important;
     text-overflow: unset !important;
   }
+  .portal-layout.nsos-cream .nsos-hire-stages button {
+    color: #1c1814 !important;
+    font-size: 13px !important;
+    font-weight: 650 !important;
+    white-space: nowrap !important;
+    padding: 0 12px !important;
+  }
+  .portal-layout.nsos-cream .nsos-hire-stages button.active {
+    background: #1c1814 !important;
+    color: #f6f1e8 !important;
+    -webkit-text-fill-color: #f6f1e8 !important;
+  }
+  .portal-layout.nsos-cream .nsos-today-strip {
+    display: flex !important;
+  }
   .os-phone-fab {
     display: grid !important;
     place-items: center;

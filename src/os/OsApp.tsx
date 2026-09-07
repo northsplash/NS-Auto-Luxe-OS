@@ -682,7 +682,7 @@ function OsShell() {
         </div>
       </main>
 
-      {!moreOpen && !newWorkOpen && (
+      {!moreOpen && !newWorkOpen && !['command_center', 'dashboard', 'recruiting', 'messages', 'sales'].includes(tab) && (
         <button type="button" className="os-phone-fab" aria-label="New work" onClick={() => setNewWorkOpen(true)}>
           <Plus size={22} />
         </button>

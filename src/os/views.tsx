@@ -188,7 +188,7 @@ export function OwnerDashboard({
         <div>
           <span className="eyebrow">OWNER / COMMAND CENTER</span>
           <h2>{greeting}, <em>{ownerName}</em></h2>
-          <p>Needs-you first. Then cash, today’s jobs, and the pipeline.</p>
+          <p>Today’s run first, then what still needs you.</p>
         </div>
         <div className="nsos-quick">
           <button type="button" onClick={onNewLead}><Target size={16} />New Lead</button>
@@ -198,13 +198,28 @@ export function OwnerDashboard({
         </div>
       </div>
       <nav className="nsos-owner-jump" aria-label="Jump to owner sections">
-        <a href="#ns-exceptions">Needs you</a>
         <a href="#ns-today">Today</a>
+        <a href="#ns-exceptions">Needs you</a>
         <a href="#ns-revenue">Revenue</a>
         <a href="#ns-pipeline">Pipeline</a>
         <button type="button" onClick={onOpenSchedule}>Open calendar</button>
         <button type="button" onClick={onOpenTeam}>Open team</button>
       </nav>
+
+      {today.length > 0 && (
+        <div className="nsos-today-strip" aria-label="Today’s jobs">
+          {today.slice(0, 4).map((j) => (
+            <button type="button" key={j.id} onClick={() => onOpenJob?.(j.id)}>
+              <time>{jobClock(j.time)}</time>
+              <b>{j.customer}</b>
+              <small>{j.service} · {money(j.price)}</small>
+            </button>
+          ))}
+          {today.length > 4 && (
+            <button type="button" className="nsos-today-more" onClick={onOpenSchedule}>+{today.length - 4} more</button>
+          )}
+        </div>
+      )}
 
       <div className="nsos-alerts" id="ns-exceptions">
         {exceptions.length === 0 && <div className="ns-empty">Nothing needs you right now. The board is clean.</div>}
@@ -2020,13 +2035,7 @@ export function HireView({ onHire, onOpen }: { onHire: (name?: string, title?: s
           <>
             {c.startDate ? <p className="nsos-hire-meta">Can start {c.startDate}</p> : null}
             {c.notes ? <p className="nsos-hire-notes">{c.notes}</p> : <p className="nsos-hire-empty">No written answers on this card yet.</p>}
-            <div className="nsos-hire-bar"><i style={{ width: `${c.progress}%` }} /></div>
-            {c.checklist?.map((item) => (
-              <button key={item.id} className="nsos-check" onClick={() => os.toggleChecklist(c.id, item.id)}>
-                <span className={item.done ? 'on' : ''}><Check size={12} /></span>
-                {item.label}
-              </button>
-            ))}
+            <p className="nsos-hire-meta">Next: {c.checklist?.find((item) => !item.done)?.label || 'Convert to employee'}</p>
             <button className="nsos-btn" style={{ marginTop: 10, width: '100%', justifyContent: 'center' }} onClick={() => onHire(c.name, c.role)}>Convert to employee</button>
           </>
         )}
@@ -2038,19 +2047,11 @@ export function HireView({ onHire, onOpen }: { onHire: (name?: string, title?: s
     <div className="nsos-hire">
       <div className="nsos-hire-head">
         <div>
-          <span className="nsos-eyebrow">People · Hiring</span>
-          <h2>Applications land here</h2>
-          <p>northsplash.com/apply writes a Website card with the answers they typed. Read that first, then convert when you are ready to onboard.</p>
+          <span className="nsos-eyebrow">Hiring</span>
+          <h2>{website.length ? `${website.length} from /apply` : 'Hiring board'}</h2>
         </div>
         <button className="nsos-btn" onClick={() => onHire()}>Add hire</button>
       </div>
-      {website.length > 0 && (
-        <div className="nsos-hire-web">
-          <span className="nsos-eyebrow">Website apply</span>
-          <strong>{website.length} open from the public apply page</strong>
-          <p>Open a Website card to read the answers they typed. Convert when you are ready to onboard.</p>
-        </div>
-      )}
       <div className="nsos-hire-stages" role="tablist" aria-label="Hiring stages">
         {stages.map((stage) => (
           <button
@@ -2059,9 +2060,12 @@ export function HireView({ onHire, onOpen }: { onHire: (name?: string, title?: s
             role="tab"
             aria-selected={focus === stage}
             className={focus === stage ? 'active' : ''}
-            onClick={() => { setFocus(stage); setOpenId(null); }}
+            onClick={() => {
+              setFocus(stage);
+              setOpenId(stage === 'Onboarding' ? null : (rowsFor(stage)[0]?.id || null));
+            }}
           >
-            {stage}<em>{count(stage)}</em>
+            {stage} {count(stage)}
           </button>
         ))}
       </div>
