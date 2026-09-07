@@ -83,10 +83,11 @@ After pulling, run `supabase/migrations/20260906120000_v29_employee_onboarding_p
 
 SQL lives in `supabase/migrations`. Apply the latest migration for communication template seeds after pulling. Without keys, the OS still runs on demo data.
 
-Live D2D **Apply customer account** calls the `create-customer-account` Edge Function so the rep session is not replaced by the new customer login. Deploy it with the other functions:
+Live D2D **Apply customer account** calls the `create-customer-account` Edge Function so the rep session is not replaced by the new customer login. Public-site job applications call `submit-job-application`. Deploy both with the other functions, and apply `supabase/migrations/20260907090000_v36_website_job_applications.sql` so website applicants can also insert as `anon` if the function is down:
 
 ```bash
 supabase functions deploy create-customer-account
+supabase functions deploy submit-job-application --no-verify-jwt
 ```
 
-D2D and Owner can create the login. The function refuses emails that already belong to team accounts. Demo OS (`/os`) creates an in-memory customer instead.
+D2D and Owner can create the login. The function refuses emails that already belong to team accounts. Demo OS (`/os`) creates an in-memory customer instead. Website applications from the public apply page appear on Owner **People → Hiring** and Manager **Hiring** as source Website.

@@ -412,13 +412,13 @@ export default function BusinessSuite({ section, employees, setEmployees, comple
           <div className="ops-list">
             {candidates.map(c => (
               <div className="ops-list-row" key={c.id}>
-                <div className="ops-primary"><strong>{c.full_name}</strong><span>{roleLabel(c.position)} · {c.email || c.phone || 'No contact'}</span></div>
+                <div className="ops-primary"><strong>{c.full_name}</strong><span>{roleLabel(c.position)} · {c.email || c.phone || 'No contact'}{c.city ? ` · ${c.city}` : ''}{c.source === 'Website' ? ' · Website application' : c.source ? ` · ${c.source}` : ''}</span></div>
                 <div><span className="ops-label">Background</span><strong>{prettyLabel(c.background_status)}</strong></div>
                 <div><span className="ops-label">Stage</span><select value={c.stage} onChange={e=>updateCandidateStage(c.id,e.target.value)}>{RECRUITING_STAGES.map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></div>
                 <div className="ops-actions">{c.stage !== 'employed' && <button className="btn-sm btn-primary" onClick={()=>hireCandidate(c)}>Hire</button>}<button className="btn-sm btn-outline" type="button" onClick={()=>startEditCandidate(c)}>Edit</button><button className="btn-sm btn-outline" onClick={()=>updateCandidateStage(c.id,'archived')}>Archive</button></div>
               </div>
             ))}
-            {candidates.length===0 && <p className="empty-text">No recruiting candidates yet.</p>}
+            {candidates.length===0 && <p className="empty-text">No recruiting candidates yet. Public site applications from /apply land here as Website.</p>}
           </div>
         </div>
         <div className="hire-kanban-v29" aria-label="Hiring pipeline">
@@ -428,7 +428,7 @@ export default function BusinessSuite({ section, employees, setEmployees, comple
               <header><strong>{label}</strong><span>{rows.length}</span></header>
               {rows.map(c=><article key={c.id}>
                 <strong>{c.full_name}</strong>
-                <small>{roleLabel(c.position)}{c.source?` · ${c.source}`:''}</small>
+                <small>{roleLabel(c.position)}{c.city ? ` · ${c.city}` : ''}{c.source === 'Website' ? ' · Website' : c.source ? ` · ${c.source}` : ''}</small>
                 <div className="hire-kanban-actions">
                   <button type="button" className="btn-sm btn-outline" onClick={()=>startEditCandidate(c)}>Edit</button>
                   {id!=='offer_accepted'&&id!=='scheduled_to_start'&&<button type="button" className="btn-sm btn-outline" onClick={()=>updateCandidateStage(c.id, id==='applied'?'review':id==='review'?'first_interview_pending':id.includes('interview')?'job_offer_pending':'offer_accepted')}>Advance</button>}

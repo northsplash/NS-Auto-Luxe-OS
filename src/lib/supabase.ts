@@ -158,6 +158,10 @@ export type RecruitingCandidate = {
   start_date: string | null;
   background_status: string;
   notes: string | null;
+  desired_schedule: string | null;
+  city: string | null;
+  years_experience: number | null;
+  authorized_to_work: boolean | null;
   created_at: string;
   updated_at: string;
 };
