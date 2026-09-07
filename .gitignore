@@ -5,3 +5,5 @@ dist
 .DS_Store
 *.log
 agent-tools
+supabase/.temp
+

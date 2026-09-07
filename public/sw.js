@@ -1,4 +1,4 @@
-const CACHE = 'north-splash-os-v97-pay';
+const CACHE = 'north-splash-os-v98-apply';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './ns-auto-luxe-mark.png', './ns-auto-luxe-logo.png', './ns-auto-luxe-full-logo.png', './ns-auto-luxe-watermark.svg', './icon-192.png', './og-image.png', './favicon.ico'];
 
 self.addEventListener('install', (event) => {

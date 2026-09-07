@@ -380,11 +380,17 @@ export default function BusinessSuite({ section, employees, setEmployees, comple
     return (
       <div className="tab-content business-suite">
         <SectionHeader tab="recruiting" />
-        {candidates.filter(c=>c.source==='Website' && !['rejected','withdrawn','archived','employed'].includes(c.stage)).length>0 && (
+        {candidates.filter(c=>c.source==='Website' && !['rejected','withdrawn','archived','employed'].includes(c.stage)).length>0 ? (
           <div className="nsos-hire-web" style={{marginBottom:16}}>
             <span className="nsos-eyebrow">Website apply</span>
             <strong>{candidates.filter(c=>c.source==='Website' && !['rejected','withdrawn','archived','employed'].includes(c.stage)).length} open from northsplash.com/apply</strong>
             <p>Read the notes on the card. Those are the answers they typed on the public apply page.</p>
+          </div>
+        ) : (
+          <div className="nsos-hire-web" style={{marginBottom:16}}>
+            <span className="nsos-eyebrow">Website apply</span>
+            <strong>No website applications on this board yet</strong>
+            <p>northsplash.com/apply lands here as source Website. If the public form cannot send, run <code>supabase/migrations/20260907180000_website_apply_rpc.sql</code> in the live Supabase SQL editor and deploy <code>submit-job-application</code> with <code>--no-verify-jwt</code>.</p>
           </div>
         )}
         {hireNotice && <HireInviteCard result={hireNotice} onClose={() => setHireNotice(null)} />}
