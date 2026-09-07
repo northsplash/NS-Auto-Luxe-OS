@@ -217,6 +217,194 @@ html.nsos-active,
   }
 }
 
+/* Phone: let every workspace scroll. Maps, pitch, and add-lead were clipped
+   because sales/messages locked overflow to the viewport height. */
+@media (max-width: 860px) {
+  .portal-layout.nsos-cream.os-tab-sales .portal-content {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    display: block !important;
+    height: auto !important;
+    padding-bottom: calc(88px + env(safe-area-inset-bottom)) !important;
+  }
+  .portal-layout.nsos-cream.os-tab-sales .nsos-sr {
+    flex: none !important;
+    height: auto !important;
+    min-height: 0 !important;
+    display: grid !important;
+    gap: 8px !important;
+  }
+  .nsos-sr-kpis {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 6px !important;
+  }
+  .nsos-sr-kpis .nsos-kpi,
+  .nsos-cream .nsos-sr-kpis .nsos-kpi {
+    padding: 8px 10px !important;
+  }
+  .nsos-sr-kpis strong { font-size: 18px !important; }
+  .nsos-sr-layout {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+  .nsos-sr-map,
+  .nsos-cream .nsos-sr-map,
+  .nsos-admin-preview .nsos-sr-map {
+    height: min(34dvh, 240px) !important;
+    min-height: 180px !important;
+  }
+  .nsos-sr-legend {
+    max-width: calc(100% - 16px);
+    font-size: 10px;
+    gap: 6px;
+    padding: 5px 8px;
+  }
+  .nsos-seg {
+    display: flex !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    gap: 4px;
+    scrollbar-width: none;
+  }
+  .nsos-seg::-webkit-scrollbar { display: none; }
+  .nsos-seg button,
+  .nsos-seg .nsos-seg-link {
+    flex: 1 0 auto;
+    min-width: 68px;
+    white-space: nowrap;
+  }
+  .nsos-pitch {
+    height: auto !important;
+    min-height: 0 !important;
+  }
+  .nsos-pitch .sales-presentation-embedded {
+    min-height: 0 !important;
+    height: auto !important;
+  }
+  .nsos-pitch-slots { grid-template-columns: 1fr 1fr !important; }
+  .nsos-add-door-grid { grid-template-columns: 1fr !important; }
+  .nsos-add-door h3 { font-size: 15px; margin: 0 0 8px; }
+
+  .portal-layout.d2d-os .portal-content {
+    padding: 8px 10px calc(108px + env(safe-area-inset-bottom)) !important;
+  }
+  .portal-layout.d2d-os .v2-page-head p { display: none !important; }
+  .portal-layout.d2d-os .v2-head-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    width: 100% !important;
+    gap: 6px !important;
+  }
+  .portal-layout.d2d-os .v2-head-actions > * {
+    min-width: 0 !important;
+    width: 100% !important;
+    font-size: 12px !important;
+  }
+  .d2d-field-commandbar { display: none !important; }
+  .d2d-os .d2d-kpi-strip,
+  .portal-layout.nsos-cream .d2d-kpi-strip {
+    display: flex !important;
+    overflow-x: auto !important;
+    gap: 8px !important;
+    padding-bottom: 4px;
+  }
+  .d2d-os .d2d-kpi,
+  .portal-layout.nsos-cream .d2d-kpi-strip .d2d-kpi {
+    min-width: 132px !important;
+    flex: 0 0 auto;
+    padding: 10px 12px !important;
+  }
+  .d2d-os .d2d-kpi strong { font-size: 20px !important; }
+  .d2d-os .d2d-primary-map .field-map-canvas,
+  .portal-layout.nsos-cream .d2d-primary-map .field-map-canvas,
+  .portal-layout.nsos-cream .territory-command-map .field-map-canvas,
+  .portal-layout.nsos-cream .lead-map-card .field-map-canvas {
+    height: min(42dvh, 300px) !important;
+    min-height: 200px !important;
+  }
+  .d2d-field-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 6px !important;
+  }
+  .d2d-add-lead-fab {
+    width: 48px !important;
+    height: 48px !important;
+    min-height: 48px !important;
+    padding: 0 !important;
+    right: 12px !important;
+    bottom: calc(76px + env(safe-area-inset-bottom)) !important;
+  }
+  .d2d-add-lead-fab span { display: none !important; }
+  .house-drawer.field-house-sheet {
+    max-height: min(88dvh, 100%) !important;
+    width: 100% !important;
+    padding-bottom: max(14px, env(safe-area-inset-bottom)) !important;
+  }
+  .field-contact-strip { grid-template-columns: 1fr !important; }
+  .house-quick-grid.field-quick-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .lead-command-kpis { grid-template-columns: 1fr 1fr !important; }
+  .nsos-kanban {
+    display: flex !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    gap: 10px;
+    padding-bottom: 12px;
+  }
+  .nsos-kanban .nsos-col {
+    flex: 0 0 min(78vw, 280px);
+    min-width: min(78vw, 280px);
+  }
+
+  .sales-presentation-overlay {
+    height: 100dvh !important;
+    overflow: auto !important;
+    padding: 0 !important;
+  }
+  .sales-presentation-shell { min-height: 100% !important; }
+  .sales-presentation-body {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    padding: 14px 12px !important;
+    align-items: flex-start !important;
+  }
+  .sales-slide,
+  .sales-slide-hero,
+  .sales-close-slide {
+    min-height: 0 !important;
+    justify-content: flex-start !important;
+  }
+  .sales-slide-heading h2 { font-size: 26px !important; }
+  .sales-hero-copy h2 { font-size: 30px !important; line-height: 1.05 !important; }
+  .sales-close-main h2 { font-size: 30px !important; }
+  .sales-quote-mode {
+    padding: 14px 12px 24px !important;
+    gap: 12px !important;
+  }
+  .sales-presentation-mode {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .sales-household-grid,
+  .sales-household-inline { grid-template-columns: 1fr !important; }
+}
+
+@media (max-width: 430px) {
+  .nsos-sr-map,
+  .nsos-cream .nsos-sr-map,
+  .nsos-admin-preview .nsos-sr-map {
+    height: min(30dvh, 200px) !important;
+    min-height: 160px !important;
+  }
+  .os-phone-subnav { padding: 6px 8px 8px !important; }
+  .portal-layout.nsos-cream .portal-content {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+  .sales-slide-heading h2 { font-size: 22px !important; }
+  .sales-hero-copy h2 { font-size: 26px !important; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .portal-layout.nsos-cream *,
   .portal-layout.nsos-cream *::before,
