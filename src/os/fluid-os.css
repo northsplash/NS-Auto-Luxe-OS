@@ -774,6 +774,7 @@ html.nsos-active .portal-layout.nsos-cream {
   .portal-layout.nsos-cream .owner-command-v17 .nsos-alert em {
     font-size: 18px !important;
     line-height: 1 !important;
+    font-family: Inter, system-ui, sans-serif !important;
   }
   .portal-layout.nsos-cream .owner-command-v17 .nsos-alert b {
     font-size: 12px !important;

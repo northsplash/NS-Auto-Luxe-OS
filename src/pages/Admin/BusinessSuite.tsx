@@ -438,9 +438,10 @@ export default function BusinessSuite({ section, employees, setEmployees, comple
                 <small>{roleLabel(c.position)}{c.city ? ` · ${c.city}` : ''}{c.source === 'Website' ? ' · Website' : c.source ? ` · ${c.source}` : ''}</small>
                 {c.notes ? <p className="hire-kanban-notes">{c.notes}</p> : null}
                 <div className="hire-kanban-actions">
+                  {c.phone ? <a className="btn-sm btn-outline" href={`tel:${String(c.phone).replace(/\D/g, '')}`}>Call</a> : null}
                   <button type="button" className="btn-sm btn-outline" onClick={()=>startEditCandidate(c)}>Edit</button>
                   {id!=='offer_accepted'&&id!=='scheduled_to_start'&&<button type="button" className="btn-sm btn-outline" onClick={()=>updateCandidateStage(c.id, id==='applied'?'review':id==='review'?'first_interview_pending':id.includes('interview')?'job_offer_pending':'offer_accepted')}>Advance</button>}
-                  <button type="button" className="btn-sm btn-primary" onClick={()=>hireCandidate(c)}>Convert / Hire</button>
+                  <button type="button" className={id==='applied' ? 'btn-sm btn-outline' : 'btn-sm btn-primary'} onClick={()=>hireCandidate(c)}>{id==='applied' ? 'Convert' : 'Hire'}</button>
                 </div>
               </article>)}
               {!rows.length&&<p className="empty-text">Empty</p>}

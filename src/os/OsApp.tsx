@@ -718,7 +718,6 @@ function OsShell() {
               <button type="button" onClick={() => { setMoreOpen(false); setNewWorkOpen(true); }}><Plus size={16} /><span>New work</span></button>
               <button type="button" onClick={() => go('sales')}><Target size={16} /><span>New lead</span></button>
               <button type="button" onClick={() => go('appointments')}><Calendar size={16} /><span>Book job</span></button>
-              <button type="button" onClick={() => go('recruiting')}><BriefcaseBusiness size={16} /><span>Hiring</span></button>
             </div>
             <div className="os-more-sheet-label">Pinned</div>
             <div className="os-more-sheet-pins">
