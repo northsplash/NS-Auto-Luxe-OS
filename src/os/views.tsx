@@ -1200,7 +1200,7 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
           <div className="nsos-pitch-lead">
             <span className="nsos-eyebrow">{lead ? `${territory(lead.x)} door` : 'No door selected'}</span>
             <h3>{lead?.name || 'Pick a household on the map'}</h3>
-            <p>{lead ? `${lead.address} · Next open window ${slots[0]?.window || 'TBD'}` : 'Open Map, tap a pin, then come back to Pitch.'}</p>
+            <p>{lead ? `${lead.address} · Next open window ${slots[0]?.window || 'TBD'}` : 'Add a lead on Map, or tap Account in the pitch to capture the household here.'}</p>
             {lead && (
               <div className="nsos-pitch-slots">
                 {slots.slice(0, 4).map((slot) => (
