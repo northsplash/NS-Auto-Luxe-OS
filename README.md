@@ -83,7 +83,7 @@ After pulling, run `supabase/migrations/20260906120000_v29_employee_onboarding_p
 
 SQL lives in `supabase/migrations`. Apply the latest migration for communication template seeds after pulling. Without keys, the OS still runs on demo data.
 
-Live D2D **Apply customer account** calls the `create-customer-account` Edge Function so the rep session is not replaced by the new customer login. Public-site job applications call `submit-job-application`. Deploy both with the other functions, and apply `supabase/migrations/20260907090000_v36_website_job_applications.sql` so website applicants can also insert as `anon` if the function is down:
+Live D2D **Apply customer account** calls the `create-customer-account` Edge Function so the rep session is not replaced by the new customer login. Public-site job applications post to `/api/job-application` on Vercel, then fall back to `submit-job-application` and a guest insert (anon key, not a signed-in portal session). Deploy the function with `--no-verify-jwt` and apply `supabase/migrations/20260907090000_v36_website_job_applications.sql` plus `20260907120000_website_apply_while_signed_in.sql` so website applicants can insert even if they already have a portal login:
 
 ```bash
 supabase functions deploy create-customer-account
