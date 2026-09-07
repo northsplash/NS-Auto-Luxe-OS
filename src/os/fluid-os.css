@@ -742,7 +742,9 @@ html.nsos-active .portal-layout.nsos-cream {
   .portal-layout.nsos-cream .nsos-owner-jump {
     display: none !important;
   }
-  .portal-layout.nsos-cream.os-tab-recruiting .os-phone-subnav {
+  .portal-layout.nsos-cream.os-tab-recruiting .os-phone-subnav,
+  .portal-layout.nsos-cream.os-tab-command_center .os-phone-subnav,
+  .portal-layout.nsos-cream.os-tab-dashboard .os-phone-subnav {
     display: none !important;
   }
   .portal-layout.nsos-cream .nsos-hire-head {
