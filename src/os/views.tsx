@@ -1182,7 +1182,7 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
     });
   };
   return (
-    <div className="nsos-sr">
+    <div className="nsos-sr" data-pane={pane}>
       <div className="nsos-seg" role="tablist" aria-label="Leads view">
         {([['map', 'Map'], ['pitch', 'Pitch'], ['list', 'Doors']] as const).map(([id, label]) => (
           <button key={id} type="button" role="tab" aria-selected={pane === id} className={pane === id ? 'active' : ''} onClick={() => setPane(id)}>{label}</button>
@@ -1214,6 +1214,7 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
           </div>
           <SalesPresentation
             embedded
+            initialMode={typeof window !== 'undefined' && window.innerWidth <= 860 ? 'quote' : 'presentation'}
             customerName={lead?.name}
             customerPhone={lead?.phone}
             customerAddress={lead?.address}

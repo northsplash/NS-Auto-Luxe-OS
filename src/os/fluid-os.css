@@ -264,8 +264,14 @@ html.nsos-active,
     gap: 8px !important;
   }
   .nsos-sr-side { display: contents !important; }
-  .nsos-add-door { order: 1; }
-  .nsos-sr-map-wrap { order: 2; }
+  .nsos-add-door { order: 1; flex: 0 0 auto; }
+  .nsos-sr-map-wrap {
+    order: 2;
+    flex: 0 0 auto;
+    height: min(22dvh, 160px);
+    min-height: 120px;
+    position: relative;
+  }
   .nsos-sr-layout > .nsos-tabs,
   .nsos-sr-side > .nsos-tabs { order: 3; }
   .nsos-sr-card { order: 4; }
@@ -273,8 +279,19 @@ html.nsos-active,
   .nsos-sr-map,
   .nsos-cream .nsos-sr-map,
   .nsos-admin-preview .nsos-sr-map {
-    height: min(22dvh, 160px) !important;
+    height: 100% !important;
     min-height: 120px !important;
+  }
+  .nsos-sr[data-pane="pitch"] .nsos-sr-kpis { display: none !important; }
+  .nsos-sr[data-pane="pitch"] .nsos-pitch-slots { display: none !important; }
+  .nsos-sr[data-pane="pitch"] .nsos-pitch-lead { padding: 8px 10px !important; }
+  .nsos-sr[data-pane="pitch"] .sales-presentation-embedded {
+    padding-bottom: 12px;
+  }
+  .nsos-sr[data-pane="pitch"] .sales-presentation-body,
+  .nsos-sr[data-pane="pitch"] .sales-quote-mode,
+  .nsos-sr[data-pane="pitch"] .sales-account-mode {
+    padding-bottom: 96px !important;
   }
   .nsos-sr-legend {
     max-width: calc(100% - 16px);
