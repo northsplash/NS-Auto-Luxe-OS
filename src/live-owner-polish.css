@@ -6875,8 +6875,15 @@ html.ns-chat-kb .os-tab-messages .message-thread {
 }
 .portal-layout.nsos-cream .message-workspace-brand,
 .nsos-cream .message-workspace-brand {
-  grid-template-columns: 48px minmax(0, 1fr) auto !important;
+  grid-template-columns: 76px minmax(0, 1fr) auto !important;
   min-height: 64px !important;
+}
+.portal-layout.nsos-cream .message-workspace-lockup,
+.nsos-cream .message-workspace-lockup {
+  width: 72px !important;
+  height: 52px !important;
+  object-fit: contain !important;
+  background: transparent !important;
 }
 .auth-page .auth-brand {
   display: flex !important;
