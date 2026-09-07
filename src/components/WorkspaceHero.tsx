@@ -12,12 +12,6 @@ export default function WorkspaceHero({
   const ref = workspaceRef(tab)
   return (
     <header className="ws-hero">
-      <div className="ws-hero-copy">
-        <p className="ws-hero-kicker">{ref.kicker}</p>
-        <h1 className="ws-hero-title">{ref.title}</h1>
-        <p className="ws-hero-lead">{ref.lead}</p>
-      </div>
-      {actions ? <div className="ws-hero-actions">{actions}</div> : null}
       {metrics?.length ? (
         <dl className="ws-hero-metrics">
           {metrics.map(m => (
@@ -28,6 +22,12 @@ export default function WorkspaceHero({
           ))}
         </dl>
       ) : null}
+      <div className="ws-hero-copy">
+        <p className="ws-hero-kicker">{ref.kicker}</p>
+        <h1 className="ws-hero-title">{ref.title}</h1>
+        <p className="ws-hero-lead">{ref.lead}</p>
+      </div>
+      {actions ? <div className="ws-hero-actions">{actions}</div> : null}
     </header>
   )
 }
