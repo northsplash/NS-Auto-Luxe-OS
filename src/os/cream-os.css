@@ -1375,11 +1375,25 @@ html.nsos-active #root {
 .nsos-hire-head {
   display: flex;
   justify-content: space-between;
-  gap: 16px;
-  align-items: flex-end;
+  gap: 12px;
+  align-items: flex-start;
   margin-bottom: 16px;
 }
 .nsos-hire-head h2 { margin: 4px 0 0; font-size: clamp(22px, 4vw, 32px); letter-spacing: -.03em; }
+.nsos-hire-head h2 span {
+  display: block;
+  margin-top: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: #6f675e;
+}
+.nsos-hire-head > .nsos-btn {
+  flex-shrink: 0;
+  width: auto;
+  min-height: 40px;
+  padding: 8px 12px;
+}
 .nsos-today-strip {
   display: flex;
   gap: 8px;
@@ -1588,7 +1602,7 @@ html.nsos-active #root {
 
 @media (max-width: 860px) {
   .nsos-onboard-steps { grid-template-columns: 1fr 1fr; }
-  .nsos-hire-head, .nsos-cal-toolbar, .nsos-sr-doors-head { flex-direction: column; align-items: stretch; }
+  .nsos-cal-toolbar, .nsos-sr-doors-head { flex-direction: column; align-items: stretch; }
   .nsos-onboard-hero { align-items: flex-start; }
   .nsos-onboard-done { flex-wrap: wrap; }
   .nsos-onboard-done .btn-primary { margin-left: 0; width: 100%; justify-content: center; }

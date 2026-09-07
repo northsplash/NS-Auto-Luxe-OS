@@ -737,6 +737,25 @@ html.nsos-active .portal-layout.nsos-cream {
   .os-phone-fab { display: none !important; }
 }
 
+@media (max-width: 720px) {
+  .portal-layout.nsos-cream .portal-main .nsos-quick,
+  .portal-layout.nsos-cream .nsos-owner-jump {
+    display: none !important;
+  }
+  .portal-layout.nsos-cream.os-tab-recruiting .os-phone-subnav {
+    display: none !important;
+  }
+  .portal-layout.nsos-cream .nsos-hire-head {
+    flex-direction: row !important;
+    align-items: flex-start !important;
+  }
+  .portal-layout.nsos-cream .nsos-hire-head .nsos-btn {
+    width: auto !important;
+    min-height: 40px !important;
+    padding: 8px 12px !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .portal-layout.nsos-cream *,
   .portal-layout.nsos-cream *::before,

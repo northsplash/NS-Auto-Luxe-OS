@@ -2033,10 +2033,10 @@ export function HireView({ onHire, onOpen }: { onHire: (name?: string, title?: s
         </button>
         {open && (
           <>
-            {c.startDate ? <p className="nsos-hire-meta">Can start {c.startDate}</p> : null}
+            {c.startDate && !(c.notes && /start/i.test(c.notes)) ? <p className="nsos-hire-meta">Can start {c.startDate}</p> : null}
             {c.notes ? <p className="nsos-hire-notes">{c.notes}</p> : <p className="nsos-hire-empty">No written answers on this card yet.</p>}
-            <p className="nsos-hire-meta">Next: {c.checklist?.find((item) => !item.done)?.label || 'Convert to employee'}</p>
-            <button className="nsos-btn" style={{ marginTop: 10, width: '100%', justifyContent: 'center' }} onClick={() => onHire(c.name, c.role)}>Convert to employee</button>
+            <p className="nsos-hire-meta">Next: {c.checklist?.find((item) => !item.done)?.label || 'Convert to teammate'}</p>
+            <button className="nsos-btn ghost" style={{ marginTop: 10, width: '100%', justifyContent: 'center' }} onClick={() => onHire(c.name, c.role)}>Convert to teammate</button>
           </>
         )}
       </div>
@@ -2048,9 +2048,12 @@ export function HireView({ onHire, onOpen }: { onHire: (name?: string, title?: s
       <div className="nsos-hire-head">
         <div>
           <span className="nsos-eyebrow">Hiring</span>
-          <h2>{website.length ? `${website.length} from /apply` : 'Hiring board'}</h2>
+          <h2>
+            {website.length ? `${website.length} website ${website.length === 1 ? 'application' : 'applications'}` : 'Hiring board'}
+            <span>{os.candidates.length} in pipeline</span>
+          </h2>
         </div>
-        <button className="nsos-btn" onClick={() => onHire()}>Add hire</button>
+        <button className="nsos-btn ghost" onClick={() => onHire()}>+ Add hire</button>
       </div>
       <div className="nsos-hire-stages" role="tablist" aria-label="Hiring stages">
         {stages.map((stage) => (
