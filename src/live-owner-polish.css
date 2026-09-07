@@ -7646,3 +7646,62 @@ html {
   -webkit-text-fill-color: #1c1814 !important;
   border-color: #eadfd3 !important;
 }
+
+.portal-layout.nsos-cream .status-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.portal-layout.nsos-cream .status-filter b {
+  font-size: 11px;
+  letter-spacing: .04em;
+}
+.portal-layout.nsos-cream .status-filter-name {
+  font-size: 9px;
+  font-weight: 700;
+  opacity: .78;
+}
+.portal-layout.nsos-cream .lead-status-actions.sr-knock-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin: 10px 0 14px;
+}
+.portal-layout.nsos-cream .lead-status-actions.sr-knock-grid button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 54px;
+  border-radius: 14px;
+  border: 1px solid #e4d9cc;
+  background: #fffdf8;
+  color: #1c1814;
+  -webkit-text-fill-color: #1c1814;
+}
+.portal-layout.nsos-cream .lead-status-actions.sr-knock-grid button strong {
+  font-size: 12px;
+  letter-spacing: .04em;
+}
+.portal-layout.nsos-cream .lead-status-actions.sr-knock-grid button small {
+  font-size: 9px;
+  font-weight: 700;
+  opacity: .82;
+}
+.portal-layout.nsos-cream .lead-status-actions.sr-knock-grid button.active {
+  background: var(--status-color, #1c1814);
+  border-color: var(--status-color, #1c1814);
+  color: #fff;
+  -webkit-text-fill-color: #fff;
+}
+.portal-layout.nsos-cream .lead-status-actions.sr-knock-grid button.active small {
+  color: #fff;
+  -webkit-text-fill-color: #fff;
+  opacity: .9;
+}
+@media (max-width: 720px) {
+  .portal-layout.nsos-cream .status-filter-name {
+    display: none;
+  }
+}

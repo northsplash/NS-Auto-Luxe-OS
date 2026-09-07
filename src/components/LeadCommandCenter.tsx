@@ -9,7 +9,7 @@ import { money } from '@/lib/data';
 import { localDateTime, doorStatus } from '@/lib/fieldOps';
 import { SR_PIPELINE_KEYS, SR_STATUSES, srStatus } from '@/lib/salesRabbitLeads';
 import { googleMapsErrorMessage, loadGoogleMaps, shouldUseGoogleMaps } from '@/lib/googleMaps';
-import { geocodeOsmAddress } from '@/lib/osmGeocode';
+import { geocodeOsmAddress, osmDirectionsUrl } from '@/lib/osmGeocode';
 import FieldTerritoryMap from '@/components/FieldTerritoryMap';
 
 type Props={leads:Lead[];onOpen:(lead:Lead)=>void;onSchedule?:(lead:Lead)=>void;repName?:string};
@@ -81,7 +81,10 @@ export default function LeadCommandCenter({leads,onOpen,onSchedule,repName}:Prop
   const pipeline=active.filter(l=>!['sold','do_not_knock'].includes(l.status)).reduce((n,l)=>n+Number(l.estimated_value||0),0);
   const mapped=rows.filter(l=>Number(l.latitude)&&Number(l.longitude)).length;
   const unmapped=active.filter(l=>l.address&&(!Number(l.latitude)||!Number(l.longitude))).length;
-  const openMaps=(l:Lead)=>{const q=l.latitude&&l.longitude?`${l.latitude},${l.longitude}`:l.address||'';window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(q)}`,'_blank','noopener,noreferrer')};
+  const openMaps=(l:Lead)=>{
+    const url=osmDirectionsUrl({lat:l.latitude,lng:l.longitude,query:l.address});
+    if(url) window.open(url,'_blank','noopener,noreferrer');
+  };
 
   return <div className="lead-command-v26">
     <section className="lead-mobile-command-v26"><div><span className="eyebrow">FIELD SALES</span><h3>{repName?`${repName}'s pipeline`:'Lead Command'}</h3><p>{rows.length} active leads · {mapped} mapped</p></div><div className="lead-view-switch-v26"><button className={view==='map'?'active':''} onClick={()=>setView('map')}><Map size={16}/>Map</button><button className={view==='pipeline'?'active':''} onClick={()=>setView('pipeline')}><Layers3 size={16}/>Pipeline</button><button className={view==='list'?'active':''} onClick={()=>setView('list')}><List size={16}/>List</button></div></section>

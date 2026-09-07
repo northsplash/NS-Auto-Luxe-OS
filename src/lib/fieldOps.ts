@@ -1,4 +1,4 @@
-import { SR_STATUSES, type DoorStatus } from './salesRabbitLeads';
+import { SR_STATUSES, doorStatusKey, type DoorStatus } from './salesRabbitLeads';
 
 export type { DoorStatus };
 
@@ -11,7 +11,7 @@ export const DOOR_STATUSES: Array<{key: DoorStatus; label: string; short: string
 }));
 
 export const doorStatus = (value?: string | null) =>
-  DOOR_STATUSES.find(item => item.key === value) ?? DOOR_STATUSES[0];
+  DOOR_STATUSES.find(item => item.key === doorStatusKey(value)) ?? DOOR_STATUSES[0];
 
 export const CONTACTED_STATUSES = new Set<DoorStatus>([
   'contacted','interested','follow_up','estimate','appointment_set','sold','customer','not_interested','do_not_knock','cancelled','lost'

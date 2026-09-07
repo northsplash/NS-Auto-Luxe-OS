@@ -1,4 +1,4 @@
-const CACHE = 'north-splash-os-v83-nc';
+const CACHE = 'north-splash-os-v85-mime';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './ns-auto-luxe-mark.png', './ns-auto-luxe-logo.png', './ns-auto-luxe-full-logo.png', './ns-auto-luxe-watermark.svg', './icon-192.png'];
 
 self.addEventListener('install', (event) => {
@@ -11,8 +11,20 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-function offlinePage() {
-  return caches.match('./index.html').then((cached) => cached || new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain' } }));
+function isAssetRequest(url) {
+  return /\.(?:js|mjs|css|map|woff2?|png|jpe?g|gif|svg|webp|ico)$/i.test(url.pathname) || url.pathname.startsWith('/assets/');
+}
+
+function looksLikeHtml(response) {
+  const type = response.headers.get('content-type') || '';
+  return type.includes('text/html');
+}
+
+function missingAsset() {
+  return new Response('/* missing asset */', {
+    status: 404,
+    headers: { 'Content-Type': 'application/javascript; charset=utf-8', 'Cache-Control': 'no-store' },
+  });
 }
 
 self.addEventListener('fetch', (event) => {
@@ -26,36 +38,40 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(req)
         .then((r) => {
-          const copy = r.clone();
-          caches.open(CACHE).then((c) => c.put('./index.html', copy));
+          if (r.ok && looksLikeHtml(r)) {
+            const copy = r.clone();
+            caches.open(CACHE).then((c) => c.put('./index.html', copy));
+          }
           return r;
         })
-        .catch(() => offlinePage())
+        .catch(() => caches.match('./index.html').then((cached) => cached || new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain' } })))
     );
     return;
   }
 
-  if (['script', 'style'].includes(req.destination)) {
+  if (['script', 'style', 'worker'].includes(req.destination) || isAssetRequest(url)) {
     event.respondWith(
       fetch(req)
         .then((r) => {
-          if (r.ok) {
-            const copy = r.clone();
-            caches.open(CACHE).then((c) => c.put(req, copy));
-          }
+          if (!r.ok || looksLikeHtml(r)) return missingAsset();
+          const copy = r.clone();
+          caches.open(CACHE).then((c) => c.put(req, copy));
           return r;
         })
-        .catch(() => caches.match(req).then((cached) => cached || offlinePage()))
+        .catch(() => caches.match(req).then((cached) => {
+          if (cached && !looksLikeHtml(cached)) return cached;
+          return missingAsset();
+        }))
     );
     return;
   }
 
   event.respondWith(
     caches.match(req).then((cached) => {
-      if (cached) return cached;
+      if (cached && !looksLikeHtml(cached)) return cached;
       return fetch(req)
         .then((r) => {
-          if (r.ok && ['image', 'font'].includes(req.destination)) {
+          if (r.ok && ['image', 'font'].includes(req.destination) && !looksLikeHtml(r)) {
             const copy = r.clone();
             caches.open(CACHE).then((c) => c.put(req, copy));
           }

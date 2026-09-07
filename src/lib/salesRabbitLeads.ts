@@ -200,6 +200,21 @@ export function splitStreetAddress(address?: string | null) {
   return { street1, street2, city, state, postal_code };
 }
 
+export function altPhoneFromNotes(notes?: string | null) {
+  const match = String(notes || '').match(/^Alt phone:\s*(.+)$/m);
+  return match ? match[1].trim() : '';
+}
+
+export function notesWithoutAltPhone(notes?: string | null) {
+  return String(notes || '').replace(/^Alt phone:\s*.+\n?/m, '').trim();
+}
+
+export function notesWithAltPhone(notes: string, altPhone: string) {
+  const body = notesWithoutAltPhone(notes);
+  const alt = String(altPhone || '').trim();
+  return [alt ? `Alt phone: ${alt}` : '', body].filter(Boolean).join('\n');
+}
+
 export function fieldsFromLead(lead: {
   customer_name?: string | null;
   name?: string | null;
@@ -232,14 +247,14 @@ export function fieldsFromLead(lead: {
     first_name: lead.first_name || names.first_name,
     last_name: lead.last_name || names.last_name,
     phone: lead.phone || '',
-    alt_phone: lead.alt_phone || '',
+    alt_phone: lead.alt_phone || altPhoneFromNotes(lead.notes),
     email: lead.email || '',
     street1: lead.street1 || street.street1,
     street2: lead.street2 || street.street2,
     city: lead.city || street.city,
     state: lead.state || street.state,
     postal_code: lead.postal_code || street.postal_code,
-    notes: lead.notes || '',
+    notes: notesWithoutAltPhone(lead.notes),
     vehicle: lead.vehicle || lead.vehicle_info || '',
     service: lead.service || lead.service_interest || '',
     value: value != null && value !== '' ? String(value) : '',

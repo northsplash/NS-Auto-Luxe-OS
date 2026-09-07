@@ -42,3 +42,23 @@ export async function geocodeOsmAddress(address: string): Promise<{ lat: number;
   const place = await searchOsmPlace(address);
   return place ? { lat: place.lat, lng: place.lng } : null;
 }
+
+export function osmPropertyUrl(opts: { lat?: number | null; lng?: number | null; query?: string | null }) {
+  const lat = Number(opts.lat);
+  const lng = Number(opts.lng);
+  if (Number.isFinite(lat) && Number.isFinite(lng) && (lat !== 0 || lng !== 0)) {
+    return `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=19/${lat}/${lng}`;
+  }
+  const query = String(opts.query || '').trim();
+  if (query) return `https://www.openstreetmap.org/search?query=${encodeURIComponent(query)}`;
+  return '';
+}
+
+export function osmDirectionsUrl(opts: { lat?: number | null; lng?: number | null; query?: string | null }) {
+  const lat = Number(opts.lat);
+  const lng = Number(opts.lng);
+  if (Number.isFinite(lat) && Number.isFinite(lng) && (lat !== 0 || lng !== 0)) {
+    return `https://www.openstreetmap.org/directions?engine=fossgis_osrm_car&route=${lat}%2C${lng}`;
+  }
+  return osmPropertyUrl(opts);
+}

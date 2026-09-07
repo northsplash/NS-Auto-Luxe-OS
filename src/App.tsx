@@ -1,4 +1,4 @@
-import { Component, lazy, Suspense, type ErrorInfo, type ReactNode } from 'react';
+import { Component, lazy, Suspense, useEffect, type ErrorInfo, type ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
 import { BRAND_LOGO } from './lib/brand';
 import { isStaleChunkError, recoverStaleChunkOnce } from './lib/staleChunk';
@@ -27,9 +27,12 @@ function Loader() {
 function WorkspaceCrashScreen({ message, onRetry }: { message: string; onRetry: () => void }) {
   const hookCrash = /310|Rendered more hooks|fewer hooks/i.test(message || '');
   const chunkCrash = isStaleChunkError(message);
+  useEffect(() => {
+    if (chunkCrash) recoverStaleChunkOnce();
+  }, [chunkCrash]);
   const retry = () => {
     if (hookCrash || chunkCrash) {
-      window.location.reload();
+      recoverStaleChunkOnce() || window.location.reload();
       return;
     }
     onRetry();
@@ -40,8 +43,8 @@ function WorkspaceCrashScreen({ message, onRetry }: { message: string; onRetry: 
         <span className="eyebrow">North Splash Auto Luxe</span>
         <img className="auth-brand-logo" src={BRAND_LOGO} alt="North Splash Auto Luxe" />
         <h2>This screen could not load</h2>
-        <p>{hookCrash || chunkCrash ? 'Reload this page to pick up the latest workspace.' : 'Try again. The rest of the company is still here.'}</p>
-        {message && !chunkCrash && <p className="empty-text">{message}</p>}
+        <p>{hookCrash || chunkCrash ? 'Reloading to pick up the latest workspace…' : 'Try again. The rest of the company is still here.'}</p>
+        {message && !chunkCrash && !hookCrash && <p className="empty-text">{message}</p>}
         <div className="route-error-actions-v27">
           <button type="button" className="btn-primary" onClick={retry}>
             Try again

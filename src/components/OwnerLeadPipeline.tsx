@@ -1,13 +1,17 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import {
   Archive, ArchiveRestore, CalendarPlus, ExternalLink, Eye, Plus, Search, Target, XCircle,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { money, prettyLabel } from '@/lib/data';
+import { money } from '@/lib/data';
 import { notifyCustomer } from '@/lib/communications';
 import { ServiceMenuSelect } from '@/components/DetailSelfPicker';
 import { DOOR_STATUSES, doorStatus } from '@/lib/fieldOps';
-import { SR_PIPELINE_KEYS, srStatus } from '@/lib/salesRabbitLeads';
+import {
+  composedLeadIdentity, emptySrLeadFields, fieldsFromLead, notesWithAltPhone, SR_KNOCK_KEYS, SR_PIPELINE_KEYS, srStatus,
+  type SrLeadFields,
+} from '@/lib/salesRabbitLeads';
+import { osmDirectionsUrl, osmPropertyUrl } from '@/lib/osmGeocode';
 import { leadAssignableEmployees, leadRepLabel, selfEmployeeForUser } from '@/lib/workCapabilities';
 import { ensureOwnerFieldEmployee } from '@/lib/ownerFieldMode';
 import { useAuth } from '@/hooks/useAuth';
@@ -31,17 +35,36 @@ const STAGES = SR_PIPELINE_KEYS.map((key) => ({
 
 const CLOSED = new Set(['sold', 'lost', 'not_interested', 'do_not_knock', 'existing_customer']);
 const COMPOSE_KEY = 'ns-compose-lead';
-const emptyDraft = () => ({
-  customer_name: '',
-  phone: '',
-  address: '',
-  service_interest: 'Luxe Signature',
-  estimated_value: '275',
+const emptyDraft = (): SrLeadFields & { assigned_employee_id: string } => ({
+  ...emptySrLeadFields(),
+  service: 'Luxe Signature',
+  value: '275',
   assigned_employee_id: '',
-  notes: '',
 });
 
-const humanStatus = (s?: string | null) => prettyLabel(s).replace(/\b\w/g, (c) => c.toUpperCase());
+function persistFromFields(fields: SrLeadFields, extra: Record<string, unknown> = {}) {
+  const identity = composedLeadIdentity(fields);
+  return {
+    customer_name: identity.name || null,
+    phone: fields.phone.trim() || null,
+    email: fields.email.trim() || null,
+    address: identity.address || null,
+    city: fields.city.trim() || null,
+    state: fields.state.trim() || null,
+    postal_code: fields.postal_code.trim() || null,
+    service_interest: fields.service.trim() || null,
+    vehicle_info: fields.vehicle.trim() || null,
+    estimated_value: Number(fields.value || 0),
+    notes: notesWithAltPhone(fields.notes, fields.alt_phone) || null,
+    follow_up_at: fields.follow_up_at ? new Date(fields.follow_up_at).toISOString() : null,
+    ...extra,
+  };
+}
+
+const humanStatus = (s?: string | null) => {
+  const pin = srStatus(s);
+  return `${pin.abbr} · ${pin.name}`;
+};
 const when = (v?: string | null) => v ? new Date(v).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '—';
 function toLocalInput(value?: string | Date | null) {
   const d = value instanceof Date ? value : value ? new Date(value) : null;
@@ -160,7 +183,7 @@ export default function OwnerLeadPipeline({ employees, setAppointments, onNaviga
     if (attention === 'unassigned' && (l.assigned_employee_id || CLOSED.has(l.status))) return false;
     if (attention === 'hot' && !(isHot(l) && !CLOSED.has(l.status))) return false;
     if (attention === 'dupes' && !dupeKeys.has(dupeKey(l))) return false;
-    if (query && ![l.customer_name, l.address, l.phone, l.service_interest].filter(Boolean).join(' ').toLowerCase().includes(query.toLowerCase())) return false;
+    if (query && ![l.customer_name, l.address, l.city, l.phone, l.email, l.service_interest, l.notes].filter(Boolean).join(' ').toLowerCase().includes(query.toLowerCase())) return false;
     return true;
   });
 
@@ -213,22 +236,17 @@ export default function OwnerLeadPipeline({ employees, setAppointments, onNaviga
 
   const createLead = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!draft.customer_name.trim() && !draft.address.trim() && !draft.phone.trim()) {
+    const identity = composedLeadIdentity(draft);
+    if (!identity.name && !identity.address && !draft.phone.trim()) {
       return alert('Add a name, address, or phone.');
     }
     setSaving(true);
-    const payload = {
-      customer_name: draft.customer_name.trim() || null,
-      phone: draft.phone.trim() || null,
-      address: draft.address.trim() || null,
-      service_interest: draft.service_interest.trim() || null,
-      estimated_value: Number(draft.estimated_value || 0),
+    const payload = persistFromFields(draft, {
       assigned_employee_id: draft.assigned_employee_id || null,
-      notes: draft.notes.trim() || null,
       status: 'unworked',
       source: 'owner',
       lead_temperature: 'warm',
-    };
+    });
     const { data, error } = await supabase.from('leads').insert(payload).select().single();
     setSaving(false);
     if (error) return alert(error.message);
@@ -294,12 +312,19 @@ export default function OwnerLeadPipeline({ employees, setAppointments, onNaviga
           <div className="phase-panel-head">
             <div><span className="eyebrow">NEW LEAD</span><h3>Log a household</h3></div>
           </div>
-          <div className="owner-lead-compose-grid">
-            <label>Name<input value={draft.customer_name} onChange={(e) => setDraft((p) => ({ ...p, customer_name: e.target.value }))} placeholder="Resident" /></label>
-            <label>Phone<input value={draft.phone} onChange={(e) => setDraft((p) => ({ ...p, phone: e.target.value }))} placeholder="919-555-0100" /></label>
-            <label className="wide">Address<input value={draft.address} onChange={(e) => setDraft((p) => ({ ...p, address: e.target.value }))} placeholder="Street, city" /></label>
-            <label>Service<ServiceMenuSelect value={draft.service_interest} onChange={(name,pkg)=>setDraft((p)=>({...p,service_interest:name,estimated_value:String(pkg?.price||p.estimated_value)}))}/></label>
-            <label>Value<input type="number" min="0" value={draft.estimated_value} onChange={(e) => setDraft((p) => ({ ...p, estimated_value: e.target.value }))} /></label>
+          <div className="owner-lead-compose-grid sr-lead-sheet">
+            <label>First name<input value={draft.first_name} onChange={(e) => setDraft((p) => ({ ...p, first_name: e.target.value }))} placeholder="First" autoComplete="given-name" /></label>
+            <label>Last name<input value={draft.last_name} onChange={(e) => setDraft((p) => ({ ...p, last_name: e.target.value }))} placeholder="Last" autoComplete="family-name" /></label>
+            <label>Phone<input value={draft.phone} onChange={(e) => setDraft((p) => ({ ...p, phone: e.target.value }))} placeholder="919-555-0100" inputMode="tel" autoComplete="tel" /></label>
+            <label>Alt phone<input value={draft.alt_phone} onChange={(e) => setDraft((p) => ({ ...p, alt_phone: e.target.value }))} placeholder="Optional" inputMode="tel" /></label>
+            <label className="wide">Email<input value={draft.email} onChange={(e) => setDraft((p) => ({ ...p, email: e.target.value }))} placeholder="name@email.com" autoComplete="email" /></label>
+            <label className="wide">Street 1<input value={draft.street1} onChange={(e) => setDraft((p) => ({ ...p, street1: e.target.value }))} placeholder="210 Forest Pines Dr" autoComplete="address-line1" /></label>
+            <label>Street 2<input value={draft.street2} onChange={(e) => setDraft((p) => ({ ...p, street2: e.target.value }))} placeholder="Apt / unit" autoComplete="address-line2" /></label>
+            <label>City<input value={draft.city} onChange={(e) => setDraft((p) => ({ ...p, city: e.target.value }))} autoComplete="address-level2" /></label>
+            <label>State<input value={draft.state} onChange={(e) => setDraft((p) => ({ ...p, state: e.target.value }))} autoComplete="address-level1" /></label>
+            <label>ZIP<input value={draft.postal_code} onChange={(e) => setDraft((p) => ({ ...p, postal_code: e.target.value }))} autoComplete="postal-code" /></label>
+            <label>Service<ServiceMenuSelect value={draft.service} onChange={(name, pkg) => setDraft((p) => ({ ...p, service: name, value: String(pkg?.price || p.value) }))} /></label>
+            <label>Value<input type="number" min="0" value={draft.value} onChange={(e) => setDraft((p) => ({ ...p, value: e.target.value }))} /></label>
             <label className="wide">Rep
               <AssignRepControls
                 value={draft.assigned_employee_id}
@@ -313,7 +338,7 @@ export default function OwnerLeadPipeline({ employees, setAppointments, onNaviga
                 }}
               />
             </label>
-            <label className="wide">Notes<input value={draft.notes} onChange={(e) => setDraft((p) => ({ ...p, notes: e.target.value }))} placeholder="How they found us, vehicle, gate code" /></label>
+            <label className="wide">Notes<textarea value={draft.notes} onChange={(e) => setDraft((p) => ({ ...p, notes: e.target.value }))} placeholder="How they found us, vehicle, gate code" rows={3} /></label>
           </div>
           <button className="btn-primary" disabled={saving}>{saving ? 'Saving…' : 'Add to pipeline'}</button>
         </form>
@@ -397,7 +422,7 @@ export default function OwnerLeadPipeline({ employees, setAppointments, onNaviga
                 }}
                 className="lead-command-map"
               />
-            <div className="lead-map-legend">{DOOR_STATUSES.slice(0, 10).map((s) => <span key={s.key}><i style={{ background: s.color }} />{s.label}</span>)}</div>
+            <div className="lead-map-legend">{DOOR_STATUSES.slice(0, 12).map((s) => <span key={s.key}><i style={{ background: s.color }} />{s.short} {s.label}</span>)}</div>
           </div>
           <LeadInspector
             selected={selected}
@@ -538,25 +563,17 @@ function LeadInspector({
   restoreLead: (l: Lead) => void;
   clear: () => void;
 }) {
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [address, setAddress] = useState('');
-  const [service, setService] = useState('');
-  const [value, setValue] = useState('');
-  const [notes, setNotes] = useState('');
-  const [followUp, setFollowUp] = useState('');
+  const [fields, setFields] = useState(emptySrLeadFields);
   const [bookAt, setBookAt] = useState('');
   const [booking, setBooking] = useState(false);
+  const setField = (patch: Partial<SrLeadFields>) => setFields((p) => ({ ...p, ...patch }));
 
   useEffect(() => {
     if (!selected) return;
-    setName(selected.customer_name || '');
-    setPhone(selected.phone || '');
-    setAddress(selected.address || '');
-    setService(selected.service_interest || '');
-    setValue(String(selected.estimated_value || 0));
-    setNotes(selected.notes || '');
-    setFollowUp(toLocalInput(selected.follow_up_at));
+    setFields({
+      ...fieldsFromLead(selected),
+      follow_up_at: toLocalInput(selected.follow_up_at),
+    });
     const next = new Date();
     next.setDate(next.getDate() + 1);
     next.setHours(10, 0, 0, 0);
@@ -571,27 +588,16 @@ function LeadInspector({
     );
   }
 
+  const pin = srStatus(selected.status);
   const archived = Boolean(selected.archived_at || selected.cooldown_until || selected.status === 'do_not_knock');
-  const lat = selected.latitude;
-  const lng = selected.longitude;
-  const streetViewUrl = lat != null && lng != null
-    ? `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`
-    : selected.address
-      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selected.address)}`
-      : '';
+  const mapUrl = osmPropertyUrl({ lat: selected.latitude, lng: selected.longitude, query: selected.address });
+  const directionsUrl = osmDirectionsUrl({ lat: selected.latitude, lng: selected.longitude, query: selected.address });
   const overdue = Boolean(selected.follow_up_at && new Date(selected.follow_up_at) <= new Date());
+  const identity = composedLeadIdentity(fields, selected.customer_name || '', selected.address || '');
 
   const saveDetails = async (e: React.FormEvent) => {
     e.preventDefault();
-    await patchLead(selected, {
-      customer_name: name.trim() || null,
-      phone: phone.trim() || null,
-      address: address.trim() || null,
-      service_interest: service.trim() || null,
-      estimated_value: Number(value || 0),
-      notes: notes.trim() || null,
-      follow_up_at: followUp ? new Date(followUp).toISOString() : null,
-    }, { type: 'updated', notes: 'Owner updated lead details' });
+    await patchLead(selected, persistFromFields(fields), { type: 'updated', notes: 'Owner updated lead details' });
   };
 
   const bookJob = async (e: React.FormEvent) => {
@@ -599,18 +605,18 @@ function LeadInspector({
     if (!bookAt) return alert('Pick a date and time.');
     setBooking(true);
     const { data, error } = await supabase.from('appointments').insert({
-      customer_name: name || selected.customer_name,
-      customer_email: selected.email,
-      customer_phone: phone || selected.phone,
-      service_name: service || selected.service_interest || 'Detailing Service',
-      package_name: service || selected.service_interest || null,
+      customer_name: identity.name || selected.customer_name,
+      customer_email: fields.email || selected.email,
+      customer_phone: fields.phone || selected.phone,
+      service_name: fields.service || selected.service_interest || 'Detailing Service',
+      package_name: fields.service || selected.service_interest || null,
       add_ons: [],
-      vehicle_info: selected.vehicle_info || '',
+      vehicle_info: fields.vehicle || selected.vehicle_info || '',
       scheduled_at: new Date(bookAt).toISOString(),
       status: 'scheduled',
-      price: Number(value || selected.estimated_value || 0),
-      notes: notes || selected.notes || '',
-      service_address: address || selected.address,
+      price: Number(fields.value || selected.estimated_value || 0),
+      notes: notesWithAltPhone(fields.notes, fields.alt_phone) || selected.notes || '',
+      service_address: identity.address || selected.address,
       latitude: selected.latitude,
       longitude: selected.longitude,
       sales_rep_employee_id: selected.assigned_employee_id,
@@ -630,11 +636,11 @@ function LeadInspector({
   return (
     <aside className="lead-inspector phase-panel caramel">
       <div className="phase-panel-head">
-        <div><span className="eyebrow">LEAD DETAILS</span><h3>{selected.address || selected.customer_name || 'Lead'}</h3></div>
+        <div><span className="eyebrow">LEAD DETAILS</span><h3>{identity.address || identity.name || 'Lead'}</h3></div>
         <button className="icon-btn" type="button" onClick={clear}><XCircle size={18} /></button>
       </div>
       <div className="lead-inspector-status">
-        <span>{humanStatus(selected.status)}</span>
+        <span style={{ color: pin.color }}>{pin.abbr} · {pin.name}</span>
         <strong>{money(Number(selected.actual_sale_amount || selected.estimated_value || 0))}</strong>
       </div>
       <div className="lead-health-row">
@@ -642,19 +648,27 @@ function LeadInspector({
         {overdue && <span className="overdue-pill">Follow-up overdue</span>}
         {archived && <span className="archive-pill">Archived / protected</span>}
       </div>
-      {streetViewUrl && (
+      {mapUrl && (
         <div className="property-preview-card">
-          <div><Eye size={17} /><div><strong>Property Preview</strong><small>Open Street View to confirm the property before contact.</small></div></div>
-          <a href={streetViewUrl} target="_blank" rel="noreferrer">Street View <ExternalLink size={14} /></a>
+          <div><Eye size={17} /><div><strong>Property Preview</strong><small>Open the street map to confirm the property before contact.</small></div></div>
+          <a href={mapUrl} target="_blank" rel="noreferrer">Open map <ExternalLink size={14} /></a>
         </div>
       )}
-      <form className="owner-lead-edit" onSubmit={saveDetails}>
-        <label>Name<input value={name} onChange={(e) => setName(e.target.value)} /></label>
-        <label>Phone<input value={phone} onChange={(e) => setPhone(e.target.value)} /></label>
-        <label>Address<input value={address} onChange={(e) => setAddress(e.target.value)} /></label>
-        <label>Service<input value={service} onChange={(e) => setService(e.target.value)} /></label>
-        <label>Value<input type="number" min="0" value={value} onChange={(e) => setValue(e.target.value)} /></label>
-        <label>Follow-up<input type="datetime-local" value={followUp} onChange={(e) => setFollowUp(e.target.value)} /></label>
+      <form className="owner-lead-edit sr-lead-sheet" onSubmit={saveDetails}>
+        <label>First name<input value={fields.first_name} onChange={(e) => setField({ first_name: e.target.value })} autoComplete="given-name" /></label>
+        <label>Last name<input value={fields.last_name} onChange={(e) => setField({ last_name: e.target.value })} autoComplete="family-name" /></label>
+        <label>Phone<input value={fields.phone} onChange={(e) => setField({ phone: e.target.value })} inputMode="tel" autoComplete="tel" /></label>
+        <label>Alt phone<input value={fields.alt_phone} onChange={(e) => setField({ alt_phone: e.target.value })} inputMode="tel" /></label>
+        <label className="wide">Email<input value={fields.email} onChange={(e) => setField({ email: e.target.value })} autoComplete="email" /></label>
+        <label className="wide">Street 1<input value={fields.street1} onChange={(e) => setField({ street1: e.target.value })} autoComplete="address-line1" /></label>
+        <label>Street 2<input value={fields.street2} onChange={(e) => setField({ street2: e.target.value })} autoComplete="address-line2" /></label>
+        <label>City<input value={fields.city} onChange={(e) => setField({ city: e.target.value })} autoComplete="address-level2" /></label>
+        <label>State<input value={fields.state} onChange={(e) => setField({ state: e.target.value })} autoComplete="address-level1" /></label>
+        <label>ZIP<input value={fields.postal_code} onChange={(e) => setField({ postal_code: e.target.value })} autoComplete="postal-code" /></label>
+        <label>Service<input value={fields.service} onChange={(e) => setField({ service: e.target.value })} /></label>
+        <label>Value<input type="number" min="0" value={fields.value} onChange={(e) => setField({ value: e.target.value })} /></label>
+        <label>Follow-up<input type="datetime-local" value={fields.follow_up_at} onChange={(e) => setField({ follow_up_at: e.target.value })} /></label>
+        <label>Vehicle<input value={fields.vehicle} onChange={(e) => setField({ vehicle: e.target.value })} placeholder="Year / make / model" /></label>
         <label className="wide">Rep
           <AssignRepControls
             value={selected.assigned_employee_id || ''}
@@ -668,18 +682,24 @@ function LeadInspector({
             }}
           />
         </label>
-        <label className="wide">Notes<textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} /></label>
+        <label className="wide">Notes<textarea value={fields.notes} onChange={(e) => setField({ notes: e.target.value })} rows={3} /></label>
         <button className="btn-primary" type="submit">Save details</button>
       </form>
       <div className="lead-direct-actions">
-        {selected.phone && <><a href={`tel:${selected.phone}`}>Call</a><a href={`sms:${selected.phone}`}>Text</a></>}
-        {selected.address && <a target="_blank" rel="noreferrer" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selected.address)}`}>Map</a>}
+        {fields.phone && <><a href={`tel:${fields.phone}`}>Call</a><a href={`sms:${fields.phone}`}>Text</a></>}
+        {mapUrl && <a target="_blank" rel="noreferrer" href={directionsUrl || mapUrl}>Map</a>}
       </div>
       {!archived && (
-        <div className="lead-status-actions">
-          {['interested', 'follow_up', 'estimate', 'appointment_set', 'sold', 'not_interested', 'do_not_knock', 'lost'].map((s) => (
-            <button type="button" key={s} className={selected.status === s ? 'active' : ''} onClick={() => updateStatus(selected, s)}>{humanStatus(s)}</button>
-          ))}
+        <div className="lead-status-actions sr-knock-grid">
+          {SR_KNOCK_KEYS.map((key) => {
+            const s = srStatus(key);
+            return (
+              <button type="button" key={key} className={selected.status === key ? 'active' : ''} style={{ '--status-color': s.color } as CSSProperties} onClick={() => updateStatus(selected, key)}>
+                <strong>{s.abbr}</strong>
+                <small>{s.name}</small>
+              </button>
+            );
+          })}
         </div>
       )}
       {!archived && (
