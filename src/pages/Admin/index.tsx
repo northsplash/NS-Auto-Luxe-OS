@@ -327,7 +327,7 @@ const [availabilityForm, setAvailabilityForm] = useState({
   // Owners sit above Admin operationally: the Owner workspace adds owner-only planning/payment tools,
   // then exposes every Admin workspace instead of a reduced subset.
   const ownerWorkspaces = [
-    {id:'owner',label:'Owner',Icon:ShieldCheck,items:['command_center','owner_growth','owner_profits','payment_test'] as AdminTab[]},
+    {id:'owner',label:'Owner',Icon:ShieldCheck,items:['command_center','owner_growth','owner_profits'] as AdminTab[]},
     ...adminWorkspaces.filter(workspace => workspace.id !== 'home'),
   ];
   const workspaces = ownerMode ? ownerWorkspaces : adminWorkspaces;
@@ -783,7 +783,7 @@ const handleDeleteAvailability = async (id: string) => {
         </div>
         {ownerMode && <PortalSwitchRail allow />}
         <div className="os-phone-subnav" aria-label="Workspace pages">
-          {currentWorkspace.items.map(id=>{const item=navItems.find(n=>n.id===id);if(!item)return null;return <button key={id} type="button" className={tab===id?'active':''} onClick={()=>setTab(id)}>{id==='command_center'||id==='dashboard'?'Home':id==='payment_test'?'Pay test':item.label}</button>})}
+          {currentWorkspace.items.filter(id=>id!=='payment_test').map(id=>{const item=navItems.find(n=>n.id===id);if(!item)return null;return <button key={id} type="button" className={tab===id?'active':''} onClick={()=>setTab(id)}>{id==='command_center'||id==='dashboard'?'Home':item.label}</button>})}
         </div>
         <div className="os-secondary-nav">
           <div className="os-secondary-nav-scroll">

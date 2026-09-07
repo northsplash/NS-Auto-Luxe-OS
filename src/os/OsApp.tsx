@@ -84,7 +84,7 @@ const NAV: NavItem[] = [
 ];
 
 const WORKSPACES = [
-  { id: 'owner', label: 'Owner', Icon: ShieldCheck, items: ['command_center', 'owner_growth', 'owner_profits', 'payment_test'] as OsTab[] },
+  { id: 'owner', label: 'Owner', Icon: ShieldCheck, items: ['command_center', 'owner_growth', 'owner_profits'] as OsTab[] },
   { id: 'sales', label: 'Sales', Icon: Target, items: ['sales', 'leads', 'territories', 'marketing', 'retention'] as OsTab[] },
   { id: 'customers', label: 'Customers', Icon: Users, items: ['customers', 'crm', 'client_photos', 'appointments', 'schedule', 'availability', 'archived', 'fleet'] as OsTab[] },
   { id: 'operations', label: 'Operations', Icon: ListChecks, items: ['jobs', 'dispatch', 'job_assignments', 'inventory', 'equipment', 'tasks', 'documents', 'notifications', 'purchasing', 'incidents', 'approvals'] as OsTab[] },
@@ -471,7 +471,7 @@ function OsShell() {
         </div>
         <nav className="sidebar-nav os-workspace-nav">
           <div className="os-sidebar-section-label">PINNED</div>
-          {(['command_center', 'appointments', 'leads', 'messages'] as OsTab[]).map((id) => {
+          {(['command_center', 'jobs', 'dispatch', 'sales'] as OsTab[]).map((id) => {
             const item = nav(id);
             if (!item) return null;
             const { Icon, label } = item;
@@ -573,10 +573,10 @@ function OsShell() {
           <button type="button" className={mode === 'admin' ? 'active' : ''} onClick={() => switchMode('admin')}><Settings2 size={14} />Admin</button>
         </nav>
         <div className="os-phone-subnav" aria-label="Workspace pages">
-          {currentWorkspace.items.map((id) => {
+          {currentWorkspace.items.filter((id) => id !== 'payment_test').map((id) => {
             const item = nav(id);
             if (!item) return null;
-            return <button key={id} type="button" className={tab === id ? 'active' : ''} onClick={() => go(id)}>{id === 'command_center' || id === 'dashboard' ? 'Home' : id === 'payment_test' ? 'Pay test' : (TAB_SHORT[id] || item.label)}</button>;
+            return <button key={id} type="button" className={tab === id ? 'active' : ''} onClick={() => go(id)}>{id === 'command_center' || id === 'dashboard' ? 'Home' : (TAB_SHORT[id] || item.label)}</button>;
           })}
         </div>
         {mode !== 'owner' && (
@@ -681,6 +681,11 @@ function OsShell() {
         </div>
       </main>
 
+      {!moreOpen && !newWorkOpen && (
+        <button type="button" className="os-phone-fab" aria-label="New work" onClick={() => setNewWorkOpen(true)}>
+          <Plus size={22} />
+        </button>
+      )}
       <nav className="os-mobile-bottom-nav mobile-app-nav-v25" aria-label="Mobile workspace navigation">
         <button type="button" className={!moreOpen && phoneHome ? 'active' : ''} onClick={() => go(homeTab)}><LayoutDashboard size={19} /><span>Home</span></button>
         <button type="button" className={!moreOpen && phoneChat ? 'active' : ''} onClick={() => go('messages')}><MessageCircle size={19} /><span>Chat</span></button>
@@ -707,9 +712,16 @@ function OsShell() {
                 </button>
               ))}
             </div>
+            <div className="os-more-sheet-label">New work</div>
+            <div className="os-more-sheet-pins">
+              <button type="button" onClick={() => { setMoreOpen(false); setNewWorkOpen(true); }}><Plus size={16} /><span>New work</span></button>
+              <button type="button" onClick={() => go('sales')}><Target size={16} /><span>New lead</span></button>
+              <button type="button" onClick={() => go('appointments')}><Calendar size={16} /><span>Book job</span></button>
+              <button type="button" onClick={() => go('recruiting')}><BriefcaseBusiness size={16} /><span>Hiring</span></button>
+            </div>
             <div className="os-more-sheet-label">Pinned</div>
             <div className="os-more-sheet-pins">
-              {(['command_center', 'appointments', 'leads', 'employees', 'communications'] as OsTab[]).map((id) => {
+              {(['jobs', 'dispatch', 'recruiting', 'sales'] as OsTab[]).map((id) => {
                 const item = nav(id);
                 if (!item) return null;
                 const { Icon, label } = item;

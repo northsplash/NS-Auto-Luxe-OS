@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
-  Activity, BarChart2, Bell, Calendar, CalendarClock, CalendarDays, Car, Check, ChevronRight, Clock3, CreditCard, DollarSign, GripVertical, MapPin, MessageCircle, Navigation, Plus, Search, Send, Smartphone, Target, Trash2, TrendingUp, UserCheck, Users,
+  BarChart2, Bell, Calendar, CalendarClock, CalendarDays, Car, Check, ChevronRight, Clock3, CreditCard, DollarSign, GripVertical, MapPin, MessageCircle, Navigation, Plus, Search, Send, Smartphone, Target, Trash2, TrendingUp, UserCheck, Users,
 } from 'lucide-react';
 import AddEmployeeForm from '@/components/AddEmployeeForm';
 import SalesPresentation from '@/components/SalesPresentation';
@@ -84,8 +84,16 @@ function isClosedLead(status: string) {
   return key === 'do_not_knock' || key === 'sold' || key === 'customer' || key === 'not_interested' || key === 'cancelled' || key === 'lost';
 }
 
-function StripeKpi({ label, value, delta }: { label: string; value: string; delta?: string }) {
-  return <div className="phase-kpi"><span>{label}</span><strong>{value}</strong>{delta ? <small className="nsos-delta">{delta}</small> : null}</div>;
+function StripeKpi({ label, value, delta, onOpen }: { label: string; value: string; delta?: string; onOpen?: () => void }) {
+  const body = (
+    <>
+      <span>{label}</span>
+      <strong>{value}</strong>
+      {delta ? <small className="nsos-delta">{delta}</small> : null}
+    </>
+  );
+  if (!onOpen) return <div className="phase-kpi">{body}</div>;
+  return <button type="button" className="phase-kpi nsos-kpi-link" onClick={onOpen}>{body}</button>;
 }
 
 function OwnerRevenueChart({ days }: { days: { label: string; rev: number }[] }) {
@@ -180,7 +188,7 @@ export function OwnerDashboard({
         <div>
           <span className="eyebrow">OWNER / COMMAND CENTER</span>
           <h2>{greeting}, <em>{ownerName}</em></h2>
-          <p>Exceptions first. Then the numbers. Then the run.</p>
+          <p>Needs-you first. Then cash, today’s jobs, and the pipeline.</p>
         </div>
         <div className="nsos-quick">
           <button type="button" onClick={onNewLead}><Target size={16} />New Lead</button>
@@ -210,10 +218,10 @@ export function OwnerDashboard({
       </div>
 
       <div className="owner-kpis-v17">
-        <StripeKpi label="Collected" value={money(collected)} delta={trendLabel(todayCollected, earlierCollected)} />
-        <StripeKpi label="Jobs completed" value={String(completed.length)} />
-        <StripeKpi label="New leads" value={String(newLeads)} />
-        <StripeKpi label="Avg completed job" value={money(avgTicket)} />
+        <StripeKpi label="Collected" value={money(collected)} delta={trendLabel(todayCollected, earlierCollected)} onOpen={onOpenPayments} />
+        <StripeKpi label="Jobs completed" value={String(completed.length)} onOpen={onOpenSchedule} />
+        <StripeKpi label="New leads" value={String(newLeads)} onOpen={onOpenPipeline} />
+        <StripeKpi label="Avg completed job" value={money(avgTicket)} onOpen={onOpenPayments} />
       </div>
 
       <section className="owner-glance-v17">
@@ -384,8 +392,8 @@ export function OwnerStripeDashboard({
           <strong>{employees.length}</strong>
         </div>
         <div className="admin-stat">
-          <div className="admin-stat-header"><span>Site Visits (30d)</span><div className="admin-stat-icon"><Activity size={16} /></div></div>
-          <strong>141</strong>
+          <div className="admin-stat-header"><span>Open jobs</span><div className="admin-stat-icon"><CalendarClock size={16} /></div></div>
+          <strong>{jobs.filter((j) => j.status !== 'completed').length}</strong>
         </div>
       </div>
 
@@ -1994,7 +2002,7 @@ export function HireView({ onHire, onOpen }: { onHire: (name?: string, title?: s
         <div>
           <span className="nsos-eyebrow">Hiring packet</span>
           <h3>Hiring pipeline</h3>
-          <p>Move a candidate through screen → offer, then convert. The hire lands in an onboarding packet: headshot, legal name, tax, and deposit.</p>
+          <p>Website applications from northsplash.com/apply land here as Applied, source Website, with the notes they submitted. Convert when you are ready to onboard.</p>
         </div>
         <button className="nsos-btn" onClick={() => onHire()}>Add hire</button>
       </div>
@@ -2024,9 +2032,11 @@ export function HireView({ onHire, onOpen }: { onHire: (name?: string, title?: s
               ))}
               {rows.map((c) => (
                 <div className="nsos-card nsos-hire-card" key={c.id}>
-                  <span className="nsos-eyebrow">{c.role}</span>
+                  <span className="nsos-eyebrow">{c.role}{c.source ? ` · ${c.source}` : ''}</span>
                   <h3>{c.name}</h3>
-                  <p>{c.email}</p>
+                  <p>{[c.email, c.city, c.phone].filter(Boolean).join(' · ') || 'No contact yet'}</p>
+                  {c.startDate ? <p className="nsos-hire-meta">Can start {c.startDate}</p> : null}
+                  {c.notes ? <p className="nsos-hire-notes">{c.notes}</p> : null}
                   <div className="nsos-hire-bar"><i style={{ width: `${c.progress}%` }} /></div>
                   {c.checklist?.map((item) => (
                     <button key={item.id} className="nsos-check" onClick={() => os.toggleChecklist(c.id, item.id)}>
@@ -2037,6 +2047,7 @@ export function HireView({ onHire, onOpen }: { onHire: (name?: string, title?: s
                   <button className="nsos-btn" style={{ marginTop: 10, width: '100%', justifyContent: 'center' }} onClick={() => onHire(c.name, c.role)}>Convert to employee</button>
                 </div>
               ))}
+              {!rows.length && stage !== 'Onboarding' && <p className="nsos-hire-empty">No candidates in this stage.</p>}
             </div>
           );
         })}

@@ -52,10 +52,10 @@ function Row({ title, sub, meta, action }: { title: string; sub?: string; meta?:
 }
 
 const STOCK = [
-  { id: 'ceramic', name: 'Ceramic coating kit', bin: 'Raleigh locker', qty: 4, par: 6 },
+  { id: 'ceramic', name: 'Ceramic coating kit', bin: 'Charlotte locker', qty: 4, par: 6 },
   { id: 'compound', name: 'Paint correction compound', bin: 'Cary van', qty: 8, par: 4 },
   { id: 'interior', name: 'Interior APC / extract fluid', bin: 'Durham locker', qty: 2, par: 5 },
-  { id: 'towels', name: 'Microfiber towels (50)', bin: 'Raleigh locker', qty: 11, par: 8 },
+  { id: 'towels', name: 'Microfiber towels (50)', bin: 'Wilmington locker', qty: 11, par: 8 },
 ];
 
 const ASSETS = [
@@ -78,19 +78,19 @@ const BUYS = [
 
 const ISSUES = [
   { id: 'i1', title: 'Water spot on Macan hood', type: 'Quality', who: 'Marcus Hale', job: 'Priya Shah', status: 'open' },
-  { id: 'i2', title: 'Late arrival · Forest Pines', type: 'Late', who: 'Marcus Hale', job: 'Matthew Renner', status: 'reviewed' },
+  { id: 'i2', title: 'Late arrival · Forest Hills', type: 'Late', who: 'Marcus Hale', job: 'Matthew Renner', status: 'reviewed' },
 ];
 
 const SHOPS = [
-  { id: 'raleigh', name: 'Triangle locker', city: 'Raleigh, NC', radius: '20 mi', manager: 'Jordan Miles' },
+  { id: 'triangle', name: 'Triangle locker', city: 'Durham, NC', radius: '20 mi', manager: 'Jordan Miles' },
   { id: 'cary', name: 'Cary staging', city: 'Cary, NC', radius: '18 mi', manager: 'Noah Patel' },
-  { id: 'durham', name: 'Durham locker', city: 'Durham, NC', radius: '20 mi', manager: 'Sofia Reyes' },
+  { id: 'charlotte', name: 'Charlotte locker', city: 'Charlotte, NC', radius: '22 mi', manager: 'Sofia Reyes' },
 ];
 
 const CAMPAIGNS = [
   { id: 'm1', name: 'Neighborhood ceramic week', channel: 'D2D + SMS', budget: 800, booked: 4 },
   { id: 'm2', name: 'Member spring gloss', channel: 'Email', budget: 240, booked: 2 },
-  { id: 'm3', name: 'West Raleigh doors', channel: 'Canvass', budget: 0, booked: 6 },
+  { id: 'm3', name: 'West Charlotte doors', channel: 'Canvass', budget: 0, booked: 6 },
 ];
 
 function InventoryPage() {

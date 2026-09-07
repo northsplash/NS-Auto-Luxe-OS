@@ -19,7 +19,7 @@ function list<T>(value: T[] | undefined | null): T[] {
   return Array.isArray(value) ? value : [];
 }
 
-const KEY = 'ns-os-v8';
+const KEY = 'ns-os-v9';
 
 export type Toast = { id: string; title: string; body: string };
 

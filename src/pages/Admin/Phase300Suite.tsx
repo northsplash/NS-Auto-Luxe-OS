@@ -48,8 +48,10 @@ const when=(v?:string|null)=>v?new Date(v).toLocaleString('en-US',{month:'short'
 function Header({tab, action}:{tab:string;action?:React.ReactNode}){
   return <WorkspaceHero tab={tab} actions={action} />;
 }
-function KPI({label,value,detail}:{label:string;value:string;detail?:string}){
-  return <div className="phase-kpi"><span>{label}</span><strong>{value}</strong>{detail&&<small>{detail}</small>}</div>;
+function KPI({label,value,detail,onOpen}:{label:string;value:string;detail?:string;onOpen?:()=>void}){
+  const body=<><span>{label}</span><strong>{value}</strong>{detail&&<small>{detail}</small>}</>;
+  if(!onOpen) return <div className="phase-kpi">{body}</div>;
+  return <button type="button" className="phase-kpi nsos-kpi-link" onClick={onOpen}>{body}</button>;
 }
 
 export default function Phase300Suite({section,employees,appointments,setAppointments,customers,payments,onNavigate,ownerName}:Props){
@@ -465,10 +467,10 @@ function CommandCenter({employees,appointments,customers,payments,onNavigate,own
      {exceptions.map(item=><button className={`nsos-alert ${item.hot?'hot':''}`} key={item.title} onClick={()=>go(item.view,item.title.includes('Unpaid')?'collect':item.view==='dispatch'&&item.title.includes('Unassigned')?'unassigned':undefined)}><em>{item.n}</em><span><b>{item.title}</b><small>{item.sub}</small></span><ChevronRight size={16}/></button>)}
    </div>
    <div className="owner-kpis-v17">
-     <KPI label="Collected" value={money(collected)} detail={trendLabel(todayCollected,earlierCollected)}/>
-     <KPI label="Jobs completed" value={String(completedToday.length)} detail={completedToday.length?`${completedToday.length} today`:'None finished today'}/>
-     <KPI label="New leads" value={String(leadSnap.neu)} detail={leadSnap.open?`${leadSnap.open} open in pipeline`:undefined}/>
-     <KPI label="Avg completed job" value={money(avgTicket)} detail={`${completed.length} completed`}/>
+     <KPI label="Collected" value={money(collected)} detail={trendLabel(todayCollected,earlierCollected)} onOpen={()=>go('payments')}/>
+     <KPI label="Jobs completed" value={String(completedToday.length)} detail={completedToday.length?`${completedToday.length} today`:'None finished today'} onOpen={()=>go('appointments')}/>
+     <KPI label="New leads" value={String(leadSnap.neu)} detail={leadSnap.open?`${leadSnap.open} open in pipeline`:undefined} onOpen={()=>go('leads')}/>
+     <KPI label="Avg completed job" value={money(avgTicket)} detail={`${completed.length} completed`} onOpen={()=>go('reports')}/>
    </div>
    <section id="owner-glance" className="owner-glance-v17">
      <div><CalendarClock/><span><b>{jobs.length}</b><small>Jobs today</small></span></div>

@@ -152,6 +152,21 @@
 }
 .hire-kanban-v29 article strong { font-size: 13px; }
 .hire-kanban-v29 article small { color: #6f675e; }
+.hire-kanban-v29 article .hire-kanban-notes {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #6f675e;
+  white-space: pre-wrap;
+}
+.hire-list-notes {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  font-style: normal;
+  color: #6f675e;
+  line-height: 1.4;
+}
 .hire-kanban-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 
 .live-onboard-card {
