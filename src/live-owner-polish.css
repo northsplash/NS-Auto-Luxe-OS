@@ -5995,3 +5995,517 @@ html, body, #root {
     gap: 6px;
   }
 }
+
+/* =========================================================
+   Usable Messages — last-wins. Fill the remaining viewport,
+   enlarge type/composer, and stop the half-height card on tablets.
+   Cream paper + espresso type stay in force.
+   ========================================================= */
+.portal-layout.nsos-cream.os-tab-messages,
+.nsos-cream.os-tab-messages {
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  overflow: hidden !important;
+}
+.portal-layout.nsos-cream.os-tab-messages .v2-page-head,
+.nsos-cream.os-tab-messages .v2-page-head {
+  display: none !important;
+}
+.portal-layout.nsos-cream.os-tab-messages .portal-main,
+.nsos-cream.os-tab-messages .portal-main {
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  overflow: hidden !important;
+  padding-bottom: 0 !important;
+}
+.portal-layout.nsos-cream.os-tab-messages .portal-content,
+.nsos-cream.os-tab-messages .portal-content,
+.portal-layout.nsos-cream.os-tab-messages .tab-content,
+.nsos-cream.os-tab-messages .tab-content,
+.portal-layout.nsos-cream.os-tab-messages .v2-page,
+.nsos-cream.os-tab-messages .v2-page,
+.portal-layout.nsos-cream.os-tab-messages .v2-card:has(.team-messaging),
+.nsos-cream.os-tab-messages .v2-card:has(.team-messaging) {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  gap: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+.portal-layout.nsos-cream.os-tab-messages .portal-content,
+.nsos-cream.os-tab-messages .portal-content {
+  padding: 0 !important;
+}
+
+.portal-layout.nsos-cream.os-tab-messages .team-messaging,
+.portal-layout.nsos-cream.os-tab-messages .team-messaging.messaging-v6,
+.portal-layout.nsos-cream.os-tab-messages .team-messaging.messaging-os,
+.portal-layout.nsos-cream.os-tab-messages .team-messaging.with-info,
+.portal-layout.nsos-cream.os-tab-messages .team-messaging.thread-open,
+.portal-layout.nsos-cream.os-tab-messages .team-messaging.messaging-usable,
+.nsos-cream.os-tab-messages .team-messaging,
+.nsos-cream.os-tab-messages .team-messaging.messaging-v6,
+.nsos-cream.os-tab-messages .team-messaging.messaging-usable {
+  flex: 1 1 auto !important;
+  align-self: stretch !important;
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  border-radius: 0 !important;
+  border-left: 0 !important;
+  border-right: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+}
+
+.portal-layout.nsos-cream .team-messaging.messaging-usable,
+.nsos-cream .team-messaging.messaging-usable {
+  display: grid !important;
+  grid-template-columns: minmax(280px, 320px) minmax(0, 1fr) !important;
+  grid-template-rows: minmax(0, 1fr) !important;
+}
+.portal-layout.nsos-cream .team-messaging.messaging-usable.with-info,
+.nsos-cream .team-messaging.messaging-usable.with-info {
+  grid-template-columns: minmax(260px, 300px) minmax(0, 1fr) minmax(240px, 280px) !important;
+}
+
+.portal-layout.nsos-cream .messaging-usable .message-channel-rail,
+.portal-layout.nsos-cream .messaging-usable .message-thread,
+.portal-layout.nsos-cream .messaging-usable .message-info-rail {
+  min-height: 0 !important;
+  height: 100% !important;
+  overflow: hidden !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-channel-rail {
+  display: flex !important;
+  flex-direction: column !important;
+  min-width: 0 !important;
+  width: auto !important;
+  max-width: none !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-thread {
+  display: grid !important;
+  grid-template-rows: auto auto minmax(0, 1fr) auto !important;
+  min-width: 0 !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-channel-list,
+.portal-layout.nsos-cream .messaging-usable .message-scroll,
+.portal-layout.nsos-cream .messaging-usable .message-info-rail {
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+.portal-layout.nsos-cream .messaging-usable .message-workspace-brand strong,
+.nsos-cream .messaging-usable .message-workspace-brand strong {
+  font-size: 16px !important;
+  line-height: 1.2 !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-workspace-brand small,
+.nsos-cream .messaging-usable .message-workspace-brand small {
+  font-size: 12px !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-search,
+.nsos-cream .messaging-usable .message-search {
+  min-height: 46px !important;
+  margin: 12px 12px 8px !important;
+  border-radius: 12px !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-search input,
+.portal-layout.nsos-cream .messaging-usable .message-thread-search input,
+.nsos-cream .messaging-usable .message-search input,
+.nsos-cream .messaging-usable .message-thread-search input {
+  font-size: 16px !important;
+  line-height: 1.35 !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-rail-filters button,
+.nsos-cream .messaging-usable .message-rail-filters button {
+  min-height: 40px !important;
+  padding: 0 14px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  border-radius: 999px !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-rail-actions button,
+.nsos-cream .messaging-usable .message-rail-actions button {
+  min-height: 42px !important;
+  font-size: 13px !important;
+  border-radius: 10px !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-section-label,
+.nsos-cream .messaging-usable .message-section-label {
+  font-size: 12px !important;
+  letter-spacing: .08em !important;
+  padding: 14px 10px 8px !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-channel,
+.nsos-cream .messaging-usable .message-channel {
+  min-height: 64px !important;
+  padding: 12px 10px !important;
+  gap: 10px !important;
+  border-radius: 12px !important;
+  grid-template-columns: 40px minmax(0, 1fr) auto !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-channel-icon,
+.nsos-cream .messaging-usable .message-channel-icon {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 12px !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-channel strong,
+.nsos-cream .messaging-usable .message-channel strong {
+  font-size: 15px !important;
+  line-height: 1.25 !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-channel small,
+.nsos-cream .messaging-usable .message-channel small {
+  font-size: 13px !important;
+  line-height: 1.3 !important;
+  white-space: nowrap !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-channel-title-v27 time,
+.nsos-cream .messaging-usable .message-channel-title-v27 time {
+  font-size: 12px !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-rail-footer strong,
+.nsos-cream .messaging-usable .message-rail-footer strong {
+  font-size: 14px !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-rail-footer small,
+.nsos-cream .messaging-usable .message-rail-footer small {
+  font-size: 12px !important;
+}
+
+.portal-layout.nsos-cream .messaging-usable .message-thread-head,
+.nsos-cream .messaging-usable .message-thread-head {
+  min-height: 72px !important;
+  padding: 14px 16px !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-thread-head h3,
+.nsos-cream .messaging-usable .message-thread-title h3,
+.nsos-cream .messaging-usable .message-thread-head h3 {
+  font-size: 20px !important;
+  line-height: 1.2 !important;
+  letter-spacing: -.02em !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-thread-head p,
+.nsos-cream .messaging-usable .message-thread-head p {
+  font-size: 13px !important;
+  max-width: none !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-thread-symbol,
+.nsos-cream .messaging-usable .message-thread-symbol {
+  width: 42px !important;
+  height: 42px !important;
+  border-radius: 12px !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-thread-tools > button,
+.portal-layout.nsos-cream .messaging-usable .message-mobile-back,
+.nsos-cream .messaging-usable .message-thread-tools > button,
+.nsos-cream .messaging-usable .message-mobile-back {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  border-radius: 12px !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-thread-search,
+.nsos-cream .messaging-usable .message-thread-search {
+  height: 44px !important;
+  border-radius: 12px !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-quick-row,
+.nsos-cream .messaging-usable .message-quick-row {
+  padding: 10px 14px !important;
+  gap: 8px !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-quick-row > span,
+.nsos-cream .messaging-usable .message-quick-row > span {
+  font-size: 12px !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-quick-row button,
+.nsos-cream .messaging-usable .message-quick-row button {
+  min-height: 40px !important;
+  padding: 8px 14px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  border-radius: 999px !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-bubble header strong,
+.nsos-cream .messaging-usable .message-bubble header strong {
+  font-size: 14px !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-bubble header span,
+.nsos-cream .messaging-usable .message-bubble header span {
+  font-size: 12px !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-bubble p,
+.portal-layout.nsos-cream .messaging-usable .message-body p,
+.nsos-cream .messaging-usable .message-bubble p,
+.nsos-cream .messaging-usable .message-body p {
+  font-size: 16px !important;
+  line-height: 1.45 !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-kind,
+.nsos-cream .messaging-usable .message-kind {
+  font-size: 12px !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-day-divider span,
+.nsos-cream .messaging-usable .message-day-divider span {
+  font-size: 12px !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-thread-empty,
+.nsos-cream .messaging-usable .message-thread-empty {
+  display: grid !important;
+  place-items: center !important;
+  align-content: center !important;
+  gap: 10px !important;
+  min-height: 240px !important;
+  padding: 32px 20px !important;
+  text-align: center !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-empty-orbit,
+.nsos-cream .messaging-usable .message-empty-orbit {
+  width: 88px !important;
+  height: 88px !important;
+  border-radius: 28px !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-empty-orbit svg,
+.nsos-cream .messaging-usable .message-empty-orbit svg {
+  width: 36px !important;
+  height: 36px !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-thread-empty strong,
+.nsos-cream .messaging-usable .message-thread-empty strong {
+  font-size: 20px !important;
+  color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-thread-empty span,
+.nsos-cream .messaging-usable .message-thread-empty span {
+  font-size: 15px !important;
+  color: #6f675e !important;
+}
+
+.portal-layout.nsos-cream .messaging-usable .message-composer,
+.nsos-cream .messaging-usable .message-composer {
+  padding: 12px 14px 14px !important;
+  background: #fffdf8 !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-composer-box,
+.nsos-cream .messaging-usable .message-composer-box {
+  border-radius: 16px !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-composer-toolbar,
+.nsos-cream .messaging-usable .message-composer-toolbar {
+  height: 44px !important;
+  padding: 0 10px !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-composer-toolbar button,
+.nsos-cream .messaging-usable .message-composer-toolbar button {
+  width: 40px !important;
+  height: 40px !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-composer-toolbar span,
+.nsos-cream .messaging-usable .message-composer-toolbar span {
+  font-size: 12px !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-composer textarea,
+.nsos-cream .messaging-usable .message-composer textarea {
+  min-height: 88px !important;
+  max-height: 220px !important;
+  padding: 12px 14px 8px !important;
+  font-size: 16px !important;
+  line-height: 1.45 !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-composer-bottom,
+.nsos-cream .messaging-usable .message-composer-bottom {
+  padding: 8px 10px 10px 14px !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-composer-bottom small,
+.nsos-cream .messaging-usable .message-composer-bottom small {
+  font-size: 12px !important;
+}
+.portal-layout.nsos-cream .messaging-usable .message-send-btn,
+.nsos-cream .messaging-usable .message-send-btn {
+  min-height: 44px !important;
+  min-width: 96px !important;
+  padding: 0 16px !important;
+  border-radius: 12px !important;
+  font-size: 14px !important;
+  font-weight: 800 !important;
+  background: #1c1814 !important;
+  color: #f6f1e8 !important;
+}
+
+@media (min-width: 1181px) and (pointer: fine) {
+  .portal-layout.nsos-cream.os-tab-messages,
+  .nsos-cream.os-tab-messages {
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    overflow: hidden !important;
+  }
+  .portal-layout.nsos-cream.os-tab-messages .portal-content,
+  .nsos-cream.os-tab-messages .portal-content {
+    padding: 0 !important;
+    max-width: none !important;
+    overflow: hidden !important;
+  }
+  .portal-layout.nsos-cream.os-tab-messages .team-messaging.messaging-usable,
+  .portal-layout.nsos-cream.os-tab-messages .team-messaging.messaging-usable.with-info,
+  .nsos-cream.os-tab-messages .team-messaging.messaging-usable {
+    border-radius: 0 !important;
+    height: 100% !important;
+    max-height: none !important;
+    min-height: 0 !important;
+  }
+  .portal-layout.nsos-cream .messaging-usable .message-mobile-back {
+    display: none !important;
+  }
+}
+
+@media (max-width: 1180px), (pointer: coarse) and (max-width: 1366px) {
+  .portal-layout.nsos-cream.os-tab-messages .portal-content,
+  .nsos-cream.os-tab-messages .portal-content {
+    padding: 0 0 calc(56px + env(safe-area-inset-bottom)) !important;
+    overflow: hidden !important;
+  }
+  .portal-layout.nsos-cream.os-tab-messages .team-messaging,
+  .portal-layout.nsos-cream.os-tab-messages .team-messaging.messaging-v6,
+  .portal-layout.nsos-cream.os-tab-messages .team-messaging.messaging-os,
+  .portal-layout.nsos-cream.os-tab-messages .team-messaging.with-info,
+  .portal-layout.nsos-cream.os-tab-messages .team-messaging.thread-open,
+  .portal-layout.nsos-cream.os-tab-messages .team-messaging.messaging-usable,
+  .nsos-cream.os-tab-messages .team-messaging,
+  .nsos-cream.os-tab-messages .team-messaging.messaging-v6,
+  .nsos-cream.os-tab-messages .team-messaging.messaging-usable,
+  .nsos-cream.os-tab-messages .team-messaging.messaging-usable.thread-open,
+  .nsos-cream.os-tab-messages .team-messaging.messaging-usable.with-info {
+    display: grid !important;
+    grid-template-columns: minmax(240px, 300px) minmax(0, 1fr) !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    border-radius: 0 !important;
+  }
+  .portal-layout.nsos-cream.os-tab-messages .messaging-usable .message-info-rail,
+  .nsos-cream.os-tab-messages .messaging-usable .message-info-rail {
+    display: none !important;
+  }
+  .portal-layout.nsos-cream.os-tab-messages .messaging-usable .message-channel-rail,
+  .portal-layout.nsos-cream.os-tab-messages .messaging-usable.thread-open .message-channel-rail,
+  .nsos-cream.os-tab-messages .messaging-usable .message-channel-rail,
+  .nsos-cream.os-tab-messages .messaging-usable.thread-open .message-channel-rail {
+    display: flex !important;
+    flex-direction: column !important;
+    width: auto !important;
+    max-width: none !important;
+  }
+  .portal-layout.nsos-cream.os-tab-messages .messaging-usable .message-thread,
+  .portal-layout.nsos-cream.os-tab-messages .messaging-usable.thread-open .message-thread,
+  .nsos-cream.os-tab-messages .messaging-usable .message-thread,
+  .nsos-cream.os-tab-messages .messaging-usable.thread-open .message-thread {
+    display: grid !important;
+    width: auto !important;
+    min-height: 0 !important;
+  }
+  .portal-layout.nsos-cream.os-tab-messages .messaging-usable .message-mobile-back,
+  .nsos-cream.os-tab-messages .messaging-usable .message-mobile-back {
+    display: none !important;
+  }
+  .portal-layout.nsos-cream.os-tab-messages .messaging-usable .message-search kbd,
+  .nsos-cream.os-tab-messages .messaging-usable .message-search kbd {
+    display: none !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .portal-layout.nsos-cream.os-tab-messages .portal-content,
+  .nsos-cream.os-tab-messages .portal-content {
+    padding: 0 0 calc(56px + env(safe-area-inset-bottom)) !important;
+  }
+  .portal-layout.nsos-cream.os-tab-messages .team-messaging,
+  .portal-layout.nsos-cream.os-tab-messages .team-messaging.messaging-v6,
+  .portal-layout.nsos-cream.os-tab-messages .team-messaging.with-info,
+  .portal-layout.nsos-cream.os-tab-messages .team-messaging.thread-open,
+  .portal-layout.nsos-cream.os-tab-messages .team-messaging.messaging-usable,
+  .nsos-cream.os-tab-messages .team-messaging,
+  .nsos-cream.os-tab-messages .team-messaging.messaging-usable,
+  .nsos-cream.os-tab-messages .team-messaging.messaging-usable.thread-open,
+  .nsos-cream.os-tab-messages .team-messaging.messaging-usable.with-info {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+  }
+  .portal-layout.nsos-cream.os-tab-messages .messaging-usable .message-channel-rail,
+  .nsos-cream.os-tab-messages .messaging-usable .message-channel-rail {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    min-height: 0 !important;
+  }
+  .portal-layout.nsos-cream.os-tab-messages .messaging-usable .message-thread,
+  .nsos-cream.os-tab-messages .messaging-usable .message-thread {
+    display: none !important;
+  }
+  .portal-layout.nsos-cream.os-tab-messages .messaging-usable.thread-open .message-channel-rail,
+  .nsos-cream.os-tab-messages .messaging-usable.thread-open .message-channel-rail {
+    display: none !important;
+  }
+  .portal-layout.nsos-cream.os-tab-messages .messaging-usable.thread-open .message-thread,
+  .nsos-cream.os-tab-messages .messaging-usable.thread-open .message-thread {
+    display: grid !important;
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    min-height: 0 !important;
+    grid-template-rows: auto auto minmax(0, 1fr) auto !important;
+  }
+  .portal-layout.nsos-cream.os-tab-messages .messaging-usable .message-info-rail,
+  .portal-layout.nsos-cream.os-tab-messages .messaging-usable .message-workspace-brand,
+  .portal-layout.nsos-cream.os-tab-messages .messaging-usable .message-rail-footer,
+  .nsos-cream.os-tab-messages .messaging-usable .message-info-rail {
+    display: none !important;
+  }
+  .portal-layout.nsos-cream.os-tab-messages .messaging-usable .message-mobile-back,
+  .nsos-cream.os-tab-messages .messaging-usable .message-mobile-back {
+    display: grid !important;
+  }
+  .portal-layout.nsos-cream.os-tab-messages .messaging-usable .message-thread-search,
+  .nsos-cream.os-tab-messages .messaging-usable .message-thread-search {
+    display: none !important;
+  }
+  .portal-layout.nsos-cream.os-tab-messages .messaging-usable .message-composer,
+  .nsos-cream.os-tab-messages .messaging-usable .message-composer {
+    position: sticky !important;
+    bottom: 0 !important;
+    z-index: 4 !important;
+    padding: 10px 10px max(10px, env(safe-area-inset-bottom)) !important;
+  }
+  .portal-layout.nsos-cream.os-tab-messages .messaging-usable .message-composer textarea,
+  .nsos-cream.os-tab-messages .messaging-usable .message-composer textarea {
+    min-height: 96px !important;
+    font-size: 16px !important;
+  }
+  .portal-layout.nsos-cream.os-tab-messages .messaging-usable .message-composer-bottom small,
+  .nsos-cream.os-tab-messages .messaging-usable .message-composer-bottom small {
+    display: none !important;
+  }
+}

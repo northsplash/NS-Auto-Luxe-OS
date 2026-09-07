@@ -145,7 +145,7 @@ export default function TeamMessagesView() {
   );
 
   return (
-    <div className={`team-messaging messaging-v6 messaging-os ${showInfo ? 'with-info' : ''} ${mobileThreadOpen ? 'thread-open' : ''}`}>
+    <div className={`team-messaging messaging-v6 messaging-os messaging-usable ${showInfo ? 'with-info' : ''} ${mobileThreadOpen ? 'thread-open' : ''}`}>
       <aside className="message-channel-rail">
         <div className="message-workspace-brand">
           <span className="message-workspace-mark">NS</span>
@@ -277,7 +277,7 @@ export default function TeamMessagesView() {
                   onChange={(e) => setDraft(e.target.value)}
                   onKeyDown={onComposerKeyDown}
                   placeholder={`Message #${String(active.name || '').toLowerCase().replaceAll(' ', '-')}`}
-                  rows={2}
+                  rows={3}
                 />
                 <div className="message-composer-bottom">
                   <small>Enter to send · Shift+Enter for new line</small>

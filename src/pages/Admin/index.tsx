@@ -677,7 +677,7 @@ const handleDeleteAvailability = async (id: string) => {
   const maxRevenue = Math.max(...cashflowData.map(m => m.revenue), 1);
 
   return (
-    <div className="portal-layout nsos-cream">
+    <div className={`portal-layout nsos-cream${tab === 'messages' ? ' os-tab-messages' : ''}`}>
       <a className="skip-to-workspace" href="#portal-workspace">Skip to workspace</a>
       <aside className={`portal-sidebar admin-sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <div className="sidebar-header">

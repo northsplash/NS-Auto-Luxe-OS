@@ -467,7 +467,7 @@ export default function D2DPortal(){
     void supabase.from('d2d_presentation_events').insert({employee_id:employee.id,lead_id:selectedDoor?.lead_id||null,territory_id:selectedTerritory||null,event_type:event,event_data:detail}).then(()=>{},()=>{});
   };
 
-  return <div className="portal-layout d2d-os nsos-cream">
+  return <div className={`portal-layout d2d-os nsos-cream${tab==='messages'?' os-tab-messages':''}`}>
     <a className="skip-to-workspace" href="#portal-workspace">Skip to workspace</a>
     <aside className={`portal-sidebar ${sidebar?'sidebar-open':''}`}>
       <div className="sidebar-header"><Link to="/" className="sidebar-brand"><img className="portal-brand-logo" src={BRAND_LOGO} alt="North Splash Auto Luxe"/><div><strong>D2D SALES</strong><small>NORTH SPLASH</small></div></Link><button className="sidebar-close" onClick={()=>setSidebar(false)}><X size={18}/></button></div>

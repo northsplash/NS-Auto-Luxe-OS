@@ -72,8 +72,8 @@ export default function TeamMessaging({employee,employees=[],portalKind='employe
   const [showCreate,setShowCreate]=useState(false);
   const [newName,setNewName]=useState('');
   const [newMembers,setNewMembers]=useState<string[]>([]);
-  const [showInfo,setShowInfo]=useState(true);
-  const [mobileThreadOpen,setMobileThreadOpen]=useState(false);
+  const [showInfo,setShowInfo]=useState(()=>typeof window!=='undefined' && window.innerWidth>=1280);
+  const [mobileThreadOpen,setMobileThreadOpen]=useState(()=>typeof window!=='undefined' && window.innerWidth>760);
   const [favorites,setFavorites]=useState<string[]>(()=>readFavorites());
   const [channelMeta,setChannelMeta]=useState<Record<string,ChannelMeta>>({});
   const endRef=useRef<HTMLDivElement|null>(null);
@@ -164,6 +164,18 @@ export default function TeamMessaging({employee,employees=[],portalKind='employe
     return()=>{supabase.removeChannel(sub)};
   },[activeId,user?.id]);
   useEffect(()=>{endRef.current?.scrollIntoView({behavior:'smooth',block:'nearest'})},[messages.length,activeId]);
+  useEffect(()=>{
+    const phone=window.matchMedia('(max-width: 760px)');
+    const wide=window.matchMedia('(min-width: 1280px)');
+    const apply=()=>{
+      setShowInfo(wide.matches);
+      if(!phone.matches) setMobileThreadOpen(true);
+    };
+    apply();
+    phone.addEventListener('change',apply);
+    wide.addEventListener('change',apply);
+    return()=>{phone.removeEventListener('change',apply);wide.removeEventListener('change',apply)};
+  },[]);
 
   const isTeamChannel=(c:Channel)=>['company','role','crew'].includes(c.channel_type);
   const isChatChannel=(c:Channel)=>c.channel_type==='custom';
@@ -230,7 +242,7 @@ export default function TeamMessaging({employee,employees=[],portalKind='employe
     {Number(meta.unread||0)>0?<b className="message-unread-v27">{Number(meta.unread)>99?'99+':meta.unread}</b>:<span className="message-channel-dot"/>}
   </button>};
 
-  return <div className={`team-messaging messaging-v6 ${compact?'team-messaging-compact':''} ${showInfo?'with-info':''} ${mobileThreadOpen?'thread-open':''}`}>
+  return <div className={`team-messaging messaging-v6 messaging-usable ${compact?'team-messaging-compact':''} ${showInfo?'with-info':''} ${mobileThreadOpen?'thread-open':''}`}>
     <aside className="message-channel-rail">
       <div className="message-workspace-brand"><span className="message-workspace-mark">NS</span><div><strong>North Splash</strong><small>Field Communications</small></div><ChevronDown size={15}/></div>
       <div className="message-search"><Search size={15}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Find a channel"/><kbd>⌘K</kbd></div>
@@ -273,7 +285,7 @@ export default function TeamMessaging({employee,employees=[],portalKind='employe
         <form className="message-composer" onSubmit={send}>
           {sendError&&<div className="message-send-error" role="alert">{sendError}</div>}
           {!user&&<div className="message-send-error" role="alert">You are not signed in, so messages cannot send.</div>}
-          <div className="message-composer-box"><div className="message-composer-toolbar"><button type="button" title="Add attachment"><Plus size={16}/></button><button type="button" title="Attach file"><Paperclip size={15}/></button><span>{kind && kind!=='message'?prettyLabel(kind):'Message'}</span></div><textarea ref={composerRef} value={draft} onChange={e=>setDraft(e.target.value)} onKeyDown={onComposerKeyDown} placeholder={`Message #${String(active.name||'').toLowerCase().replaceAll(' ','-')}`} rows={2}/><div className="message-composer-bottom"><small>Enter to send · Shift+Enter for new line</small><button type="submit" className="message-send-btn" disabled={sending||!draft.trim()}><Send size={16}/>{sending?'Sending':'Send'}</button></div></div>
+          <div className="message-composer-box"><div className="message-composer-toolbar"><button type="button" title="Add attachment"><Plus size={16}/></button><button type="button" title="Attach file"><Paperclip size={15}/></button><span>{kind && kind!=='message'?prettyLabel(kind):'Message'}</span></div><textarea ref={composerRef} value={draft} onChange={e=>setDraft(e.target.value)} onKeyDown={onComposerKeyDown} placeholder={`Message #${String(active.name||'').toLowerCase().replaceAll(' ','-')}`} rows={3}/><div className="message-composer-bottom"><small>Enter to send · Shift+Enter for new line</small><button type="submit" className="message-send-btn" disabled={sending||!draft.trim()}><Send size={16}/>{sending?'Sending':'Send'}</button></div></div>
         </form>
       </>:<div className="message-thread-empty"><MessageCircle/><strong>Select a channel</strong><span>Choose a team channel to start messaging.</span></div>}
     </section>
