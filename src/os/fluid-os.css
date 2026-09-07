@@ -250,8 +250,8 @@ html.nsos-active,
   .nsos-sr-map,
   .nsos-cream .nsos-sr-map,
   .nsos-admin-preview .nsos-sr-map {
-    height: min(34dvh, 240px) !important;
-    min-height: 180px !important;
+    height: min(28dvh, 210px) !important;
+    min-height: 150px !important;
   }
   .nsos-sr-legend {
     max-width: calc(100% - 16px);
@@ -282,7 +282,7 @@ html.nsos-active,
     height: auto !important;
   }
   .nsos-pitch-slots { grid-template-columns: 1fr 1fr !important; }
-  .nsos-add-door-grid { grid-template-columns: 1fr !important; }
+  .nsos-add-door-grid { grid-template-columns: 1fr 1fr !important; }
   .nsos-add-door h3 { font-size: 15px; margin: 0 0 8px; }
 
   .portal-layout.d2d-os .portal-content {
@@ -393,8 +393,8 @@ html.nsos-active,
   .nsos-sr-map,
   .nsos-cream .nsos-sr-map,
   .nsos-admin-preview .nsos-sr-map {
-    height: min(30dvh, 200px) !important;
-    min-height: 160px !important;
+    height: min(24dvh, 170px) !important;
+    min-height: 140px !important;
   }
   .os-phone-subnav { padding: 6px 8px 8px !important; }
   .portal-layout.nsos-cream .portal-content {
