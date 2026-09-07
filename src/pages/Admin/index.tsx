@@ -16,6 +16,7 @@ import { isSettledPayment, money, prettyLabel } from '@/lib/data';
 import { sameLocalDay } from '@/lib/fieldOps';
 import { sendCommunication, notifyCustomer } from '@/lib/communications';
 import { canCollectJob, markJobCollected, type CollectMethod } from '@/lib/collectPayment';
+import { toLocalInput } from '@/lib/scheduling';
 import type { BusinessSection } from './BusinessSuite';
 import type { EnterpriseSection } from './EnterpriseSuite';
 import type { ExpansionSection } from './OperationsExpansion';
@@ -144,6 +145,7 @@ export default function Admin() {
   const [profileInitialTab,setProfileInitialTab]=useState<'onboarding'|'overview'|undefined>(undefined);
   const [customerQuery,setCustomerQuery]=useState('');
   const [appointmentStage,setAppointmentStage]=useState<'all'|'upcoming'|'confirmed'|'in_progress'|'unpaid'|'completed'>('all');
+  const [scheduleDraft,setScheduleDraft]=useState<Record<string,string>>({});
   const [teamQuery,setTeamQuery]=useState('');
   const [dataLoading, setDataLoading] = useState(true);
   const [teamCalendarEmployee,setTeamCalendarEmployee]=useState('');
@@ -424,7 +426,35 @@ const [availabilityForm, setAvailabilityForm] = useState({
     const email = data?.customer_email || current?.customer_email;
     const event = status === 'confirmed' ? 'booking_confirmed' : status === 'cancelled' ? 'appointment_cancelled' : status === 'completed' ? 'job_completed' : null;
     if (event && email && !(event === 'job_completed' && current && canCollectJob(current))) {
-      sendCommunication(event, { appointment_id:id, recipient_email:email, variables:{ customer_name:data?.customer_name||current?.customer_name||'Customer', service_name:data?.service_name||current?.service_name||'Detailing service', appointment_time:data?.scheduled_at?new Date(data.scheduled_at).toLocaleString():'' } }).catch(console.warn);
+      const when = data?.scheduled_at || current?.scheduled_at;
+      sendCommunication(event, { appointment_id:id, recipient_email:email, variables:{ customer_name:data?.customer_name||current?.customer_name||'Customer', service_name:data?.service_name||current?.service_name||'Detailing service', appointment_time:when?new Date(when).toLocaleString('en-US',{ weekday:'short', month:'short', day:'numeric', hour:'numeric', minute:'2-digit' }):'window to be confirmed' } }).catch(console.warn);
+    }
+  };
+
+  const handleScheduleAndConfirm = async (id: string) => {
+    const current = appointments.find((a) => a.id === id);
+    const raw = scheduleDraft[id];
+    if (!raw) return alert('Choose a date and time first.');
+    const when = new Date(raw);
+    if (Number.isNaN(when.getTime())) return alert('Choose a valid appointment window.');
+    const { data, error } = await supabase.from('appointments').update({
+      scheduled_at: when.toISOString(),
+      status: 'confirmed',
+      field_status: 'scheduled',
+    }).eq('id', id).select().single();
+    if (error) return alert(error.message);
+    setAppointments((prev) => prev.map((a) => a.id === id ? data : a));
+    const email = data?.customer_email || current?.customer_email;
+    if (email) {
+      sendCommunication('booking_confirmed', {
+        appointment_id: id,
+        recipient_email: email,
+        variables: {
+          customer_name: data?.customer_name || current?.customer_name || 'Customer',
+          service_name: data?.service_name || current?.service_name || 'Detailing service',
+          appointment_time: when.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }),
+        },
+      }).catch(console.warn);
     }
   };
 
@@ -1004,7 +1034,16 @@ const handleDeleteAvailability = async (id: string) => {
                       <span className="dt-cell">
                         {a.scheduled_at
                           ? new Date(a.scheduled_at).toLocaleString('en-US', { weekday:'short', month:'short', day:'numeric', hour:'numeric', minute:'2-digit' })
-                          : 'Unscheduled'}
+                          : (
+                            <input
+                              type="datetime-local"
+                              step={1800}
+                              className="jobber-schedule-input"
+                              value={scheduleDraft[a.id] || toLocalInput()}
+                              onChange={(e) => setScheduleDraft((p) => ({ ...p, [a.id]: e.target.value }))}
+                              aria-label={`Preferred window for ${a.customer_name || 'customer'}`}
+                            />
+                          )}
                       </span>
                       <span className="dt-cell"><StatusBadge status={a.field_status || a.status} /></span>
                       <span className="dt-cell"><strong>{money(a.price)}</strong></span>
@@ -1019,7 +1058,9 @@ const handleDeleteAvailability = async (id: string) => {
                         )}
                         {a.status !== 'completed' && a.status !== 'cancelled' && !canCollectJob(a) && (
                           <>
-                            <button className="btn-sm btn-outline" onClick={() => handleUpdateAptStatus(a.id, 'confirmed')}>Confirm</button>
+                            {!a.scheduled_at && <button className="btn-sm btn-primary" onClick={() => handleScheduleAndConfirm(a.id)}>Schedule & confirm</button>}
+                            {a.scheduled_at && a.status !== 'confirmed' && <button className="btn-sm btn-outline" onClick={() => handleUpdateAptStatus(a.id, 'confirmed')}>Send confirmation</button>}
+                            {a.scheduled_at && a.status === 'confirmed' && <button className="btn-sm btn-outline" onClick={() => handleUpdateAptStatus(a.id, 'confirmed')}>Resend confirmation</button>}
                             <button className="btn-sm btn-outline" onClick={() => handleUpdateAptStatus(a.id, 'cancelled')}>Decline</button>
                             <button className="btn-sm btn-outline" onClick={() => handleArchiveAppointment(a.id)}>Archive</button>
                             <button className="btn-sm btn-primary" onClick={() => handleUpdateAptStatus(a.id, 'completed')}>Complete</button>

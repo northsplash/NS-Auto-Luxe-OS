@@ -1409,6 +1409,29 @@ html.nsos-active #root {
   gap: 12px;
   margin-bottom: 12px;
 }
+.nsos-cal-date { margin: 4px 0 0; color: #6f675e; font-size: 13px; }
+.nsos-book-hint { color: #6f675e; font-size: 13px; margin: 0 0 12px; }
+.nsos-book-error {
+  background: #f6e8e4;
+  color: #7a3b32;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+}
+.nsos-confirm-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin: 14px 0;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: #f4eadc;
+  border: 1px solid #e4d4c0;
+}
+.nsos-confirm-banner strong { display: block; }
+.nsos-confirm-banner p { margin: 4px 0 0; color: #6f675e; font-size: 13px; }
+.nsos-confirm-banner.done { background: #e8f0ea; border-color: #c9dccf; }
 .nsos-cal .nsos-week {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));

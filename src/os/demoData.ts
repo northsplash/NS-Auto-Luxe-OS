@@ -6,6 +6,19 @@ import { emptyOnboarding as emptyHirePacket, type OnboardingPacket as HirePacket
 export type OnboardingPacket = HirePacket;
 export const emptyOnboarding = emptyHirePacket;
 
+function windowOn(daysFromToday: number, time: string) {
+  const d = new Date();
+  d.setHours(12, 0, 0, 0);
+  d.setDate(d.getDate() + daysFromToday);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} · ${time}`;
+}
+
+function windowOnWeekday(weekday: number, time: string) {
+  const d = new Date();
+  const diff = (weekday - d.getDay() + 7) % 7;
+  return windowOn(diff, time);
+}
+
 export type OsEmployee = {
   id: string;
   name: string;
@@ -205,7 +218,7 @@ export const seedEmployees: OsEmployee[] = [
 
 export const seedJobs: OsJob[] = [
   {
-    id: 'j1', customer: 'Matthew Renner', email: 'matthew@renner.co', phone: '919-555-2210', service: 'Luxe Signature', vehicle: '2022 BMW 330i', address: '412 Forest Pines Dr, Raleigh NC 27616', time: 'Today · 10:30 AM', status: 'en_route', detailer: 'Marcus Hale', price: 275, payment: 'due', eta: '10:42 AM',
+    id: 'j1', customer: 'Matthew Renner', email: 'matthew@renner.co', phone: '919-555-2210', service: 'Luxe Signature', vehicle: '2022 BMW 330i', address: '412 Forest Pines Dr, Raleigh NC 27616', time: windowOn(0, '10:30 AM'), status: 'en_route', detailer: 'Marcus Hale', price: 275, payment: 'due', eta: '10:42 AM',
     internal_notes: 'Gate code 4412. Customer asked for extra interior vacuum on the rear seats.',
     notes: [{ id: uid(), at: 'Yesterday', author: 'Avery Chen', body: 'Confirmed window 10:30–12:00. BMW is in the driveway.' }],
     photos: [
@@ -214,28 +227,28 @@ export const seedJobs: OsJob[] = [
     comms: [{ id: uid(), channel: 'sms', name: 'Detailer en route', preview: 'Marcus is on the way. ETA 10:42 AM.', at: '10:18 AM' }],
   },
   {
-    id: 'j2', customer: 'Priya Shah', email: 'priya.shah@email.com', phone: '919-555-8831', service: 'Luxe Ceramic Coating', vehicle: '2024 Porsche Macan', address: '88 Sumner Blvd, Raleigh NC 27616', time: 'Today · 1:00 PM', status: 'confirmed', detailer: 'Marcus Hale', price: 650, payment: 'paid',
+    id: 'j2', customer: 'Priya Shah', email: 'priya.shah@email.com', phone: '919-555-8831', service: 'Luxe Ceramic Coating', vehicle: '2024 Porsche Macan', address: '88 Sumner Blvd, Raleigh NC 27616', time: windowOn(0, '1:00 PM'), status: 'confirmed', detailer: 'Marcus Hale', price: 650, payment: 'paid',
     internal_notes: 'Ceramic kit staged at Raleigh locker. Keep the Macan in shade.',
     notes: [{ id: uid(), at: 'Mon', author: 'Noah Patel', body: 'Deposit collected. Full day slot.' }],
     photos: [],
     comms: [{ id: uid(), channel: 'email', name: 'Booking confirmation', preview: 'Your North Splash detail is confirmed', at: 'Mon · 4:02 PM' }],
   },
   {
-    id: 'j3', customer: 'James Cole', email: 'james.cole@email.com', phone: '919-555-0199', service: 'Exterior Signature', vehicle: '2021 Tesla Model Y', address: '19 Spring Forest Rd, Raleigh NC 27616', time: 'Tomorrow · 9:00 AM', status: 'scheduled', detailer: 'Noah Patel', price: 175, payment: 'due',
+    id: 'j3', customer: 'James Cole', email: 'james.cole@email.com', phone: '919-555-0199', service: 'Exterior Signature', vehicle: '2021 Tesla Model Y', address: '19 Spring Forest Rd, Raleigh NC 27616', time: windowOn(1, '9:00 AM'), status: 'scheduled', detailer: 'Noah Patel', price: 175, payment: 'due',
     internal_notes: '',
     notes: [],
     photos: [],
     comms: [],
   },
   {
-    id: 'j4', customer: 'Hannah Brooks', email: 'hannah@brooks.family', phone: '919-555-4402', service: 'Paint Correction', vehicle: '2019 Mercedes C300', address: 'Cary · Preston Village', time: 'Fri · 11:00 AM', status: 'scheduled', detailer: 'Marcus Hale', price: 350, payment: 'due',
+    id: 'j4', customer: 'Hannah Brooks', email: 'hannah@brooks.family', phone: '919-555-4402', service: 'Paint Correction', vehicle: '2019 Mercedes C300', address: 'Cary · Preston Village', time: windowOnWeekday(5, '11:00 AM'), status: 'scheduled', detailer: 'Marcus Hale', price: 350, payment: 'due',
     internal_notes: 'Water-spot heavy on hood. Bring compound kit.',
     notes: [],
     photos: [],
     comms: [],
   },
   {
-    id: 'j5', customer: 'Luis Ortega', email: 'luis.ortega@email.com', phone: '919-555-7720', service: 'Luxe Signature', vehicle: '2023 Audi Q5', address: 'Durham · Trinity Park', time: 'Yesterday', status: 'completed', detailer: 'Marcus Hale', price: 275, payment: 'paid',
+    id: 'j5', customer: 'Luis Ortega', email: 'luis.ortega@email.com', phone: '919-555-7720', service: 'Luxe Signature', vehicle: '2023 Audi Q5', address: 'Durham · Trinity Park', time: windowOn(-1, '3:00 PM'), status: 'completed', detailer: 'Marcus Hale', price: 275, payment: 'paid',
     internal_notes: '',
     notes: [{ id: uid(), at: 'Yesterday', author: 'Marcus Hale', body: 'Customer loved the interior. Rebook in 30 days.' }],
     photos: [
@@ -245,7 +258,7 @@ export const seedJobs: OsJob[] = [
     comms: [{ id: uid(), channel: 'email', name: 'Thank-you', preview: 'Thank you for trusting North Splash', at: 'Yesterday · 4:40 PM' }],
   },
   {
-    id: 'j6', customer: 'Sam Wright', email: 'sam.wright@email.com', phone: '919-555-1881', service: 'Interior Signature', vehicle: '2020 Lexus GX', address: 'Cary · MacGregor Downs', time: 'Today · 4:00 PM', status: 'scheduled', detailer: '', price: 200, payment: 'due',
+    id: 'j6', customer: 'Sam Wright', email: 'sam.wright@email.com', phone: '919-555-1881', service: 'Interior Signature', vehicle: '2020 Lexus GX', address: 'Cary · MacGregor Downs', time: windowOn(0, '4:00 PM'), status: 'scheduled', detailer: '', price: 200, payment: 'due',
     internal_notes: 'Needs a tech. Customer prefers after school pickup.',
     notes: [],
     photos: [],
@@ -604,4 +617,6 @@ export type JobDraft = {
   price: number;
   detailer: string;
   phone?: string;
+  email?: string;
+  confirm?: boolean;
 };

@@ -12,12 +12,13 @@ import {
   type OsCustomer, type OsEmployee, type OsJob, type OsLead, type OsPayment, type OsSettings,
   type OsShift, type OsTimeOff, type Weekday,
 } from './demoData';
+import { liveOpenSlots, localYmd } from './appointmentSlots';
 
 function list<T>(value: T[] | undefined | null): T[] {
   return Array.isArray(value) ? value : [];
 }
 
-const KEY = 'ns-os-v7';
+const KEY = 'ns-os-v8';
 
 export type Toast = { id: string; title: string; body: string };
 
@@ -110,7 +111,7 @@ function persist(state: OsSnapshot) {
 
 function load(): OsSnapshot {
   try {
-    const raw = localStorage.getItem(KEY) || localStorage.getItem('ns-os-v6') || localStorage.getItem('ns-os-v2');
+    const raw = localStorage.getItem(KEY) || localStorage.getItem('ns-os-v7') || localStorage.getItem('ns-os-v6') || localStorage.getItem('ns-os-v2');
     if (!raw) return seed();
     const parsed = JSON.parse(raw) as { v?: number; data?: Partial<OsSnapshot> };
     return migrate(parsed?.data || (parsed as Partial<OsSnapshot>));
@@ -249,6 +250,7 @@ export function OsProvider({ children }: { children: ReactNode }) {
     dismissToast: () => setToast(null),
     resetDemo: () => {
       localStorage.removeItem(KEY);
+      localStorage.removeItem('ns-os-v7');
       localStorage.removeItem('ns-os-v6');
       localStorage.removeItem('ns-os-v2');
       setState(seed());
@@ -531,25 +533,26 @@ export function OsProvider({ children }: { children: ReactNode }) {
           service: opts?.service || (lead.value >= 500 ? 'Luxe Ceramic Coating' : 'Luxe Signature'),
           vehicle: 'Vehicle TBD',
           address: lead.address,
-          time: opts?.time || 'Fri · 11:00 AM',
+          time: opts?.time || liveOpenSlots(s.jobs, s.employees, 1)[0]?.window || `${localYmd(new Date(Date.now() + 86400000))} · 10:00 AM`,
           status: 'scheduled',
           detailer: opts?.detailer || 'Marcus Hale',
           price: opts?.price || lead.value || 275,
           payment: 'due',
           internal_notes: `Converted from D2D lead (${lead.rep}). ${lead.notes}`.trim(),
         });
+        const extra = fireComms(job, 'scheduled', s.templates);
         const customer: OsCustomer = {
           id: `cu_${id}`, name: lead.name, email: '', phone: lead.phone, vehicle: 'Vehicle TBD', address: lead.address, member: false, notes: [],
         };
         return {
           ...s,
-          jobs: [job, ...s.jobs],
+          jobs: [{ ...job, comms: extra }, ...s.jobs],
           leads: s.leads.map((l) => l.id === id ? { ...l, status: 'sold' as const, temp: 'hot' as const } : l),
           customers: s.customers.some((c) => c.name === lead.name) ? s.customers : [customer, ...s.customers],
           activity: [{ id: `act_book_${id}`, at: clockNow(), kind: 'sales', text: `Booked ${lead.name} from D2D · ${money(job.price)}.` }, ...s.activity],
         };
       });
-      flash('Lead booked', 'The door is now on the appointment board.');
+      flash('Lead booked', 'Confirmation request sent. The door is on the appointment board.');
       return jobId;
     },
     addCustomerNote: (id, body) => setState((s) => ({
@@ -640,6 +643,7 @@ export function OsProvider({ children }: { children: ReactNode }) {
     }),
     createJob: (draft) => {
       const id = `j_${Date.now()}`;
+      const status = draft.confirm ? 'confirmed' : 'scheduled';
       const job = normalizeJob({
         id,
         customer: draft.customer,
@@ -650,23 +654,26 @@ export function OsProvider({ children }: { children: ReactNode }) {
         price: draft.price,
         detailer: draft.detailer,
         phone: draft.phone || '',
-        status: 'scheduled',
+        email: draft.email || '',
+        status,
         payment: 'due',
       });
       setState((s) => {
         const customer = s.customers.some((c) => c.name === draft.customer) ? null : {
-          id: uid(), name: draft.customer, email: '', phone: draft.phone || '', vehicle: draft.vehicle,
+          id: uid(), name: draft.customer, email: draft.email || '', phone: draft.phone || '', vehicle: draft.vehicle,
           address: draft.address, member: false, notes: [],
         };
-        const extra = fireComms(job, 'scheduled', s.templates);
+        const extra = fireComms(job, status, s.templates);
         return {
           ...s,
           jobs: [{ ...job, comms: extra }, ...s.jobs],
           customers: customer ? [customer, ...s.customers] : s.customers,
-          activity: [{ id: uid(), at: clockNow(), kind: 'ops', text: `Booked ${draft.customer} · ${draft.service}.` }, ...s.activity],
+          activity: [{ id: uid(), at: clockNow(), kind: 'ops', text: `${draft.confirm ? 'Confirmed' : 'Booked'} ${draft.customer} · ${draft.service}.` }, ...s.activity],
         };
       });
-      flash('Appointment booked', `${draft.customer} · confirmation queued`);
+      flash(draft.confirm ? 'Appointment confirmed' : 'Confirmation requested', draft.confirm
+        ? `${draft.customer} · booking confirmation sent`
+        : `${draft.customer} · ask them to confirm ${draft.time}`);
       return id;
     },
     addLead: (name, address, extra) => {

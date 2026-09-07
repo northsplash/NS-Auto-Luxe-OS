@@ -5,7 +5,7 @@ import {
 import AddEmployeeForm from '@/components/AddEmployeeForm';
 import SalesPresentation from '@/components/SalesPresentation';
 import OnboardingTab from './OnboardingTab';
-import { liveOpenSlots } from './appointmentSlots';
+import { APPT_SLOTS, formatJobWindow, jobMatchesDay, liveOpenSlots, slotConflict } from './appointmentSlots';
 import { channelLabel, COMM_GROUPS, COMM_VARIABLES, fillTemplate, SAMPLE_VARS } from '@/lib/communicationCatalog';
 import { emptyEmployeeDraft, SYSTEM_ROLES, type EmployeeDraft } from '@/lib/rolePresets';
 import { firstWord, isSettledPayment, money, prettyLabel, trendLabel } from '@/lib/data';
@@ -749,32 +749,35 @@ export function CalendarView({ onOpen }: { onOpen: (id: string) => void }) {
   const os = useOs();
   const [q, setQ] = useState('');
   const [open, setOpen] = useState(false);
+  const [bookError, setBookError] = useState('');
   const today = new Date();
   const calDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const [picked, setPicked] = useState(today.getDay());
   const [filter, setFilter] = useState<'all' | 'jobs' | 'leads' | 'shifts'>('all');
   const weekStart = new Date(today);
+  weekStart.setHours(12, 0, 0, 0);
   weekStart.setDate(today.getDate() - today.getDay());
   const week = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(weekStart);
     d.setDate(weekStart.getDate() + i);
     return d;
   });
+  const pickedDate = week[picked];
   const dayLabel = (offset: number) => {
     if (offset === today.getDay()) return 'Today';
     if (offset === (today.getDay() + 1) % 7) return 'Tomorrow';
     return calDays[offset];
   };
   const [draft, setDraft] = useState({
-    customer: '', service: 'Luxe Signature', vehicle: '', address: '', time: '10:00 AM',
+    customer: '', email: '', phone: '', service: 'Luxe Signature', vehicle: '', address: '', time: '10:00 AM',
     price: 275, detailer: os.employees.find((e) => e.role === 'detailer')?.name || 'Marcus Hale',
   });
   const query = q.toLowerCase();
   const label = dayLabel(picked);
-  const weekday = (calDays[picked] === 'Sun' ? 'Sun' : calDays[picked] === 'Sat' ? 'Sat' : calDays[picked]) as typeof WEEKDAYS[number];
+  const weekday = calDays[picked] as typeof WEEKDAYS[number];
   const jobsToday = os.jobs.filter((j) => {
-    const hit = `${j.customer} ${j.service} ${j.vehicle}`.toLowerCase().includes(query);
-    return hit && String(j.time || '').split('·')[0].trim() === label;
+    const hit = `${j.customer} ${j.service} ${j.vehicle} ${j.address}`.toLowerCase().includes(query);
+    return hit && jobMatchesDay(j, pickedDate);
   });
   const leadsToday = os.leads.filter((l) => `${l.name} ${l.address}`.toLowerCase().includes(query) && (l.status === 'appointment' || l.status === 'interested' || l.status === 'sold'));
   const shiftsToday = os.shifts.filter((s) => s.day === weekday);
@@ -786,15 +789,31 @@ export function CalendarView({ onOpen }: { onOpen: (id: string) => void }) {
     m.set(clock, [...(m.get(clock) || []), j]);
     return m;
   }, new Map<string, OsJob[]>());
-  const slotChoices = ['8:00 AM', '9:30 AM', '10:00 AM', '11:00 AM', '1:00 PM', '2:30 PM', '4:00 PM'];
+  const bookAppointment = (confirm: boolean) => {
+    if (!draft.customer.trim()) return;
+    if (slotConflict(os.jobs, draft.detailer, pickedDate, draft.time)) {
+      setBookError(`${draft.detailer} already has ${draft.time} on ${label}. Pick another window or tech.`);
+      return;
+    }
+    setBookError('');
+    const id = os.createJob({
+      ...draft,
+      time: formatJobWindow(pickedDate, draft.time),
+      confirm,
+    });
+    setOpen(false);
+    setDraft({ ...draft, customer: '', email: '', phone: '', vehicle: '', address: '' });
+    onOpen(id);
+  };
   return (
     <div className="nsos-cal">
       <div className="nsos-cal-toolbar">
         <div>
           <span className="nsos-eyebrow">Appointment calendar</span>
           <h3>{label}</h3>
+          <p className="nsos-cal-date">{pickedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
         </div>
-        <button className="nsos-btn" onClick={() => setOpen((v) => !v)}><Plus size={14} />New appointment</button>
+        <button className="nsos-btn" onClick={() => { setOpen((v) => !v); setBookError(''); }}><Plus size={14} />New appointment</button>
       </div>
       <div className="nsos-week" role="tablist" aria-label="This week">
         {week.map((d, i) => (
@@ -811,27 +830,24 @@ export function CalendarView({ onOpen }: { onOpen: (id: string) => void }) {
       </div>
       <div className="nsos-search" style={{ marginBottom: 12 }}><Search size={14} /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search the day" /></div>
       {open && (
-        <form className="nsos-card" style={{ marginBottom: 14 }} onSubmit={(e) => {
-          e.preventDefault();
-          if (!draft.customer.trim()) return;
-          const slot = String(draft.time || '').includes('·') ? draft.time.split('·')[1].trim() : (draft.time || '10:00 AM');
-          const id = os.createJob({ ...draft, time: `${label} · ${slot}` });
-          setOpen(false);
-          setDraft({ ...draft, customer: '', vehicle: '', address: '' });
-          onOpen(id);
-        }}>
+        <form className="nsos-card nsos-book-form" style={{ marginBottom: 14 }} onSubmit={(e) => { e.preventDefault(); bookAppointment(false); }}>
           <span className="nsos-eyebrow">Book into {label}</span>
+          <p className="nsos-book-hint">Sends a confirmation request. Use Confirm now only after the customer agrees to the window.</p>
           <div className="form-row">
-            <label className="nsos-field">Customer<input required value={draft.customer} onChange={(e) => setDraft({ ...draft, customer: e.target.value })} /></label>
+            <label className="nsos-field">Customer<input required autoComplete="name" value={draft.customer} onChange={(e) => setDraft({ ...draft, customer: e.target.value })} /></label>
             <label className="nsos-field">Vehicle<input value={draft.vehicle} onChange={(e) => setDraft({ ...draft, vehicle: e.target.value })} placeholder="Year make model" /></label>
+          </div>
+          <div className="form-row">
+            <label className="nsos-field">Phone<input type="tel" autoComplete="tel" value={draft.phone} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} placeholder="919-000-0000" /></label>
+            <label className="nsos-field">Email<input type="email" autoComplete="email" value={draft.email} onChange={(e) => setDraft({ ...draft, email: e.target.value })} placeholder="name@email.com" /></label>
           </div>
           <label className="nsos-field">Service
             <ServiceMenuSelect value={draft.service} onChange={(name, pkg) => setDraft({ ...draft, service: name, price: pkg?.price ?? draft.price })} />
           </label>
           <div className="form-row">
             <label className="nsos-field">When
-              <select value={String(draft.time || '').includes('·') ? draft.time.split('·')[1].trim() : draft.time} onChange={(e) => setDraft({ ...draft, time: e.target.value })}>
-                {slotChoices.map((t) => <option key={t}>{t}</option>)}
+              <select value={draft.time} onChange={(e) => setDraft({ ...draft, time: e.target.value })}>
+                {APPT_SLOTS.map((t) => <option key={t}>{t}</option>)}
               </select>
             </label>
             <label className="nsos-field">Detailer
@@ -841,8 +857,12 @@ export function CalendarView({ onOpen }: { onOpen: (id: string) => void }) {
               </select>
             </label>
           </div>
-          <label className="nsos-field">Address<input value={draft.address} onChange={(e) => setDraft({ ...draft, address: e.target.value })} placeholder="Street, Raleigh NC 27616" /></label>
-          <button className="nsos-btn" type="submit">Book and confirm</button>
+          <label className="nsos-field">Address<input required value={draft.address} onChange={(e) => setDraft({ ...draft, address: e.target.value })} placeholder="Street, Raleigh NC 27616" /></label>
+          {bookError && <div className="nsos-book-error" role="alert">{bookError}</div>}
+          <div className="nsos-actions">
+            <button className="nsos-btn" type="submit">Send confirmation request</button>
+            <button className="nsos-btn ghost" type="button" onClick={() => bookAppointment(true)}>Confirm now</button>
+          </div>
         </form>
       )}
       {showLeads && leadsToday.length > 0 && <div className="nsos-eyebrow">Lead follow-ups</div>}
@@ -1612,6 +1632,23 @@ export function JobDetail({ job }: { job: OsJob }) {
         <span className="nsos-eyebrow">{job.time}</span>
         <h2>{job.service}</h2>
         <p style={{ color: 'var(--os-muted)' }}>{job.customer} · {job.vehicle}</p>
+        {job.status === 'scheduled' && (
+          <div className="nsos-confirm-banner">
+            <div>
+              <strong>Waiting on confirmation</strong>
+              <p>Confirmation request {job.email || job.phone ? `sent to ${job.email || job.phone}` : 'queued'}. The window is not locked until you mark it confirmed.</p>
+            </div>
+            <button type="button" className="nsos-btn" onClick={() => os.setJobStatus(job.id, 'confirmed')}>Mark confirmed</button>
+          </div>
+        )}
+        {job.status === 'confirmed' && (
+          <div className="nsos-confirm-banner done">
+            <div>
+              <strong>Confirmed</strong>
+              <p>Booking confirmation sent. {job.time}{job.detailer ? ` · ${job.detailer}` : ''}.</p>
+            </div>
+          </div>
+        )}
         <div className="nsos-status">
           {JOB_STEP_LABELS.map((label, i) => (
             <button
