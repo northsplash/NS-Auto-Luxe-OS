@@ -6,6 +6,7 @@ import {
 import { prettyLabel } from '@/lib/data';
 import type { OsChat } from './demoData';
 import { useOs } from './osStore';
+import { bindChatViewport } from '@/lib/chatViewport';
 
 function Avatar({ initials, hue, size = 34, photo }: { initials: string; hue: string; size?: number; photo?: string }) {
   if (photo) return <img className="nsos-avatar message-avatar employee-message-avatar" src={photo} alt="" style={{ width: size, height: size }} />;
@@ -56,9 +57,11 @@ export default function TeamMessagesView() {
     };
     phone.addEventListener('change', apply);
     tablet.addEventListener('change', apply);
+    const unbind = bindChatViewport();
     return () => {
       phone.removeEventListener('change', apply);
       tablet.removeEventListener('change', apply);
+      unbind();
     };
   }, []);
 
@@ -277,7 +280,7 @@ export default function TeamMessagesView() {
                   onChange={(e) => setDraft(e.target.value)}
                   onKeyDown={onComposerKeyDown}
                   placeholder={`Message #${String(active.name || '').toLowerCase().replaceAll(' ', '-')}`}
-                  rows={3}
+                  rows={1}
                 />
                 <div className="message-composer-bottom">
                   <small>Enter to send · Shift+Enter for new line</small>

@@ -6563,3 +6563,95 @@ html, body, #root {
   -webkit-text-fill-color: #6f675e !important;
   font-size: 13px !important;
 }
+
+/* Messages: size to the visible viewport and give the thread the leftover height. */
+.portal-layout.nsos-cream.os-tab-messages,
+.nsos-cream.os-tab-messages {
+  height: var(--ns-vvh, 100dvh) !important;
+  max-height: var(--ns-vvh, 100dvh) !important;
+}
+.portal-layout.nsos-cream.os-tab-messages .message-scroll,
+.nsos-cream.os-tab-messages .message-scroll {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+}
+
+@media (max-width: 1180px), (max-height: 900px) {
+  .portal-layout.nsos-cream.os-tab-messages .message-quick-row,
+  .nsos-cream.os-tab-messages .message-quick-row,
+  .portal-layout.nsos-cream.os-tab-messages .message-workspace-brand,
+  .nsos-cream.os-tab-messages .message-workspace-brand,
+  .portal-layout.nsos-cream.os-tab-messages .message-rail-footer,
+  .nsos-cream.os-tab-messages .message-rail-footer,
+  .portal-layout.nsos-cream.os-tab-messages .message-rail-actions,
+  .nsos-cream.os-tab-messages .message-rail-actions,
+  .portal-layout.nsos-cream.os-tab-messages .message-composer-toolbar,
+  .nsos-cream.os-tab-messages .message-composer-toolbar,
+  .portal-layout.nsos-cream.os-tab-messages .message-composer-bottom small,
+  .nsos-cream.os-tab-messages .message-composer-bottom small,
+  .portal-layout.nsos-cream.os-tab-messages .message-thread-head p,
+  .nsos-cream.os-tab-messages .message-thread-head p,
+  .portal-layout.nsos-cream.os-tab-messages .message-thread-search,
+  .nsos-cream.os-tab-messages .message-thread-search {
+    display: none !important;
+  }
+  .portal-layout.nsos-cream.os-tab-messages .messaging-usable .message-thread-head,
+  .nsos-cream.os-tab-messages .messaging-usable .message-thread-head {
+    min-height: 52px !important;
+    padding: 8px 12px !important;
+  }
+  .portal-layout.nsos-cream.os-tab-messages .messaging-usable .message-thread-head h3,
+  .nsos-cream.os-tab-messages .messaging-usable .message-thread-head h3 {
+    font-size: 17px !important;
+  }
+  .portal-layout.nsos-cream.os-tab-messages .messaging-usable .message-composer,
+  .nsos-cream.os-tab-messages .messaging-usable .message-composer {
+    padding: 8px 10px !important;
+  }
+  .portal-layout.nsos-cream.os-tab-messages .messaging-usable .message-composer textarea,
+  .nsos-cream.os-tab-messages .messaging-usable .message-composer textarea {
+    min-height: 48px !important;
+    max-height: 112px !important;
+    padding: 10px 12px !important;
+    font-size: 16px !important;
+  }
+  .portal-layout.nsos-cream.os-tab-messages .messaging-usable .message-composer-bottom,
+  .nsos-cream.os-tab-messages .messaging-usable .message-composer-bottom {
+    padding: 6px 8px 8px 10px !important;
+  }
+  .portal-layout.nsos-cream.os-tab-messages .messaging-usable .message-channel,
+  .nsos-cream.os-tab-messages .messaging-usable .message-channel {
+    min-height: 52px !important;
+    padding: 8px !important;
+  }
+  .portal-layout.nsos-cream.os-tab-messages .messaging-usable .message-empty-orbit,
+  .nsos-cream.os-tab-messages .messaging-usable .message-empty-orbit {
+    width: 56px !important;
+    height: 56px !important;
+  }
+}
+
+html.ns-chat-kb .os-tab-messages .portal-switch-rail,
+html.ns-chat-kb .os-tab-messages .os-phone-subnav,
+html.ns-chat-kb .os-tab-messages .os-mobile-bottom-nav,
+html.ns-chat-kb .os-tab-messages .mobile-app-nav-v25,
+html.ns-chat-kb .os-tab-messages .message-channel-rail,
+html.ns-chat-kb .os-tab-messages .message-quick-row {
+  display: none !important;
+}
+html.ns-chat-kb .os-tab-messages .portal-main {
+  padding-bottom: 0 !important;
+}
+html.ns-chat-kb .os-tab-messages .team-messaging,
+html.ns-chat-kb .os-tab-messages .team-messaging.messaging-usable,
+html.ns-chat-kb .os-tab-messages .team-messaging.thread-open,
+html.ns-chat-kb .os-tab-messages .team-messaging.with-info {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+html.ns-chat-kb .os-tab-messages .message-thread {
+  display: grid !important;
+  grid-template-rows: auto minmax(0, 1fr) auto !important;
+  width: 100% !important;
+}

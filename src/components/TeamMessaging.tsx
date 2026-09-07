@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
 import type { Employee } from '@/lib/supabase';
 import EmployeeAvatar from '@/components/EmployeeAvatar';
+import { bindChatViewport } from '@/lib/chatViewport';
 
 type Channel = {
   id:string; name:string; slug:string; channel_type:string; audience_role?:string|null; crew_id?:string|null;
@@ -174,7 +175,8 @@ export default function TeamMessaging({employee,employees=[],portalKind='employe
     apply();
     phone.addEventListener('change',apply);
     wide.addEventListener('change',apply);
-    return()=>{phone.removeEventListener('change',apply);wide.removeEventListener('change',apply)};
+    const unbind=bindChatViewport();
+    return()=>{phone.removeEventListener('change',apply);wide.removeEventListener('change',apply);unbind()};
   },[]);
 
   const isTeamChannel=(c:Channel)=>['company','role','crew'].includes(c.channel_type);
@@ -285,7 +287,7 @@ export default function TeamMessaging({employee,employees=[],portalKind='employe
         <form className="message-composer" onSubmit={send}>
           {sendError&&<div className="message-send-error" role="alert">{sendError}</div>}
           {!user&&<div className="message-send-error" role="alert">You are not signed in, so messages cannot send.</div>}
-          <div className="message-composer-box"><div className="message-composer-toolbar"><button type="button" title="Add attachment"><Plus size={16}/></button><button type="button" title="Attach file"><Paperclip size={15}/></button><span>{kind && kind!=='message'?prettyLabel(kind):'Message'}</span></div><textarea ref={composerRef} value={draft} onChange={e=>setDraft(e.target.value)} onKeyDown={onComposerKeyDown} placeholder={`Message #${String(active.name||'').toLowerCase().replaceAll(' ','-')}`} rows={3}/><div className="message-composer-bottom"><small>Enter to send · Shift+Enter for new line</small><button type="submit" className="message-send-btn" disabled={sending||!draft.trim()}><Send size={16}/>{sending?'Sending':'Send'}</button></div></div>
+          <div className="message-composer-box"><div className="message-composer-toolbar"><button type="button" title="Add attachment"><Plus size={16}/></button><button type="button" title="Attach file"><Paperclip size={15}/></button><span>{kind && kind!=='message'?prettyLabel(kind):'Message'}</span></div><textarea ref={composerRef} value={draft} onChange={e=>setDraft(e.target.value)} onKeyDown={onComposerKeyDown} placeholder={`Message #${String(active.name||'').toLowerCase().replaceAll(' ','-')}`} rows={1}/><div className="message-composer-bottom"><small>Enter to send · Shift+Enter for new line</small><button type="submit" className="message-send-btn" disabled={sending||!draft.trim()}><Send size={16}/>{sending?'Sending':'Send'}</button></div></div>
         </form>
       </>:<div className="message-thread-empty"><MessageCircle/><strong>Select a channel</strong><span>Choose a team channel to start messaging.</span></div>}
     </section>
