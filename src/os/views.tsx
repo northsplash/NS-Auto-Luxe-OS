@@ -904,7 +904,7 @@ export function CalendarView({ onOpen }: { onOpen: (id: string) => void }) {
               </select>
             </label>
           </div>
-          <label className="nsos-field">Address<input required value={draft.address} onChange={(e) => setDraft({ ...draft, address: e.target.value })} placeholder="Street, Raleigh NC 27616" /></label>
+          <label className="nsos-field">Address<input required value={draft.address} onChange={(e) => setDraft({ ...draft, address: e.target.value })} placeholder="Street, city, NC" /></label>
           {bookError && <div className="nsos-book-error" role="alert">{bookError}</div>}
           <div className="nsos-actions">
             <button className="nsos-btn" type="submit">Send confirmation request</button>
@@ -1190,7 +1190,7 @@ export function TerritoriesView({ onMap, onPipeline }: { onMap?: () => void; onP
 
 const emptyDoorDraft = () => ({
   first_name: '', last_name: '', phone: '', alt_phone: '', email: '',
-  street1: '', street2: '', city: 'Raleigh', state: 'NC', postal_code: '27616',
+  street1: '', street2: '', city: '', state: 'NC', postal_code: '',
 });
 
 export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => void; onPipeline?: () => void }) {
@@ -1502,7 +1502,7 @@ export function PipelineView({ onBook }: { onBook?: (jobId: string) => void }) {
   const [q, setQ] = useState('');
   const [focus, setFocus] = useState<'all' | 'hot' | 'unassigned'>('all');
   const [compose, setCompose] = useState(false);
-  const [draft, setDraft] = useState({ first_name: '', last_name: '', phone: '', email: '', street1: '', city: 'Raleigh', state: 'NC', postal_code: '27616', value: '275' });
+  const [draft, setDraft] = useState({ first_name: '', last_name: '', phone: '', email: '', street1: '', city: '', state: 'NC', postal_code: '', value: '275' });
   const [dropStage, setDropStage] = useState('');
   const needle = q.trim().toLowerCase();
   const match = (l: { name?: string; address?: string; rep?: string; phone?: string }) =>
@@ -1545,7 +1545,7 @@ export function PipelineView({ onBook }: { onBook?: (jobId: string) => void }) {
             value: Number(draft.value || 0),
             status: 'unworked',
           });
-          setDraft({ first_name: '', last_name: '', phone: '', email: '', street1: '', city: 'Raleigh', state: 'NC', postal_code: '27616', value: '275' });
+          setDraft({ first_name: '', last_name: '', phone: '', email: '', street1: '', city: '', state: 'NC', postal_code: '', value: '275' });
           setCompose(false);
         }}
       >
@@ -1741,7 +1741,7 @@ export function PremiumEmail({
       <div className="nsos-status nsos-status-light">
         {JOB_STEP_LABELS.map((s, i) => <span key={s} className={i < step ? 'done' : i === step ? 'now' : ''}>{s}</span>)}
       </div>
-      <footer>North Splash Auto Luxe · Raleigh, NC 27616 · hello@northsplash.com · 330-990-3956</footer>
+      <footer>North Splash Auto Luxe · North Carolina · hello@northsplash.com · 330-990-3956</footer>
     </div>
   );
 }

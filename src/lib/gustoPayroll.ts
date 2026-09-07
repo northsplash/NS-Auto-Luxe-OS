@@ -4,7 +4,7 @@ function last4(value?: string | null) {
   return String(value || '').replace(/\D/g, '').slice(-4);
 }
 
-/** Gusto People → Add employee / employee self-onboarding. North Splash payroll is North Carolina (27616). */
+/** Gusto People → Add employee / employee self-onboarding. North Splash payroll is North Carolina. */
 export const GUSTO_FILING_STATUSES = [
   'Single or Married filing separately',
   'Married filing jointly',

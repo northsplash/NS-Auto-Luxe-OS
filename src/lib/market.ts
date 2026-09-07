@@ -1,13 +1,13 @@
-/** Home market for maps, hire packets, and demo data. */
+/** Default map pin only. Marketing copy is statewide North Carolina — never advertise a single ZIP. */
 export const MARKET = {
-  city: 'Raleigh',
+  city: '',
   state: 'NC',
-  zip: '27616',
-  county: 'Wake County',
-  label: 'Raleigh, NC 27616',
-  region: 'Raleigh, NC',
+  zip: '',
+  county: '',
+  label: 'North Carolina',
+  region: 'North Carolina',
   phonePlaceholder: '919-000-0000',
-  /** Northeast Raleigh / 27616 (Falls of Neuse · Wakefield). */
+  /** Default map pin (Triangle). Not a service-area claim — we work all over NC. */
   lat: 35.8722,
   lng: -78.5378,
   zoom: 13,

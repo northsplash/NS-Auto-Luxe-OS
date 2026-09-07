@@ -53,7 +53,7 @@ export const PACKET_TASK_TITLE = '__onboarding_packet__';
 export function emptyOnboarding(): OnboardingPacket {
   return {
     legal_first: '', legal_middle: '', legal_last: '', preferred: '', dob: '',
-    ssn_last4: '', ssn_on_file: false, street: '', apartment: '', city: 'Raleigh', state: 'NC', zip: '27616',
+    ssn_last4: '', ssn_on_file: false, street: '', apartment: '', city: '', state: 'NC', zip: '',
     personal_email: '', personal_phone: '',
     work_auth: '', i9_uscis: '', i9_work_until: '',
     filing_status: '', allowances: '', extra_withholding: '', two_jobs: false, other_income: '', w4_deductions: '',

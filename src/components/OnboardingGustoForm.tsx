@@ -134,13 +134,13 @@ export default function OnboardingGustoForm({
               <input value={packet.apartment} onChange={(e) => onPatch({ apartment: e.target.value })} placeholder="Optional" />
             </Field>
             <Field label="City" gusto="City">
-              <input value={packet.city} onChange={(e) => onPatch({ city: e.target.value })} placeholder="Raleigh" required />
+              <input value={packet.city} onChange={(e) => onPatch({ city: e.target.value })} placeholder="City" required />
             </Field>
             <Field label="State" gusto="State">
               <input value={packet.state} onChange={(e) => onPatch({ state: e.target.value })} placeholder="NC" maxLength={2} required />
             </Field>
             <Field label="ZIP" gusto="ZIP">
-              <input value={packet.zip} onChange={(e) => onPatch({ zip: e.target.value })} placeholder="27616" required />
+              <input value={packet.zip} onChange={(e) => onPatch({ zip: e.target.value })} placeholder="ZIP" required />
             </Field>
           </div>
           <div className="form-row">

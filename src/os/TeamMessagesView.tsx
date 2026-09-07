@@ -347,7 +347,7 @@ export default function TeamMessagesView() {
               <div><span className="eyebrow">NEW TEAM</span><h3>Create a team</h3></div>
               <button type="button" className="message-icon-btn" onClick={() => setShowCreate(false)}><X size={17} /></button>
             </header>
-            <label>Team name<input required value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Raleigh D2D Crew" /></label>
+            <label>Team name<input required value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="NC D2D Crew" /></label>
             <div className="message-member-picker">
               <span>Members</span>
               {os.employees.filter((e) => e.status === 'active').map((e) => (

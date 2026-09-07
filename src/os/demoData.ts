@@ -414,7 +414,7 @@ export const seedCustomers: OsCustomer[] = [
 
 export const seedSettings: OsSettings = {
   company: 'North Splash Auto Luxe',
-  market: 'Raleigh, NC 27616',
+  market: 'North Carolina',
   phone: '330-990-3956',
   timezone: 'America/New_York',
   depositPercent: 25,
@@ -625,9 +625,9 @@ export function normalizeLead(l: Partial<OsLead> & { id?: string; name?: string 
     email: l.email || fields.email,
     street1: fields.street1,
     street2: fields.street2,
-    city: fields.city || 'Raleigh',
+    city: fields.city || '',
     state: fields.state || 'NC',
-    postal_code: fields.postal_code || '27616',
+    postal_code: fields.postal_code || '',
     vehicle: fields.vehicle,
     service: fields.service,
     follow_up_at: fields.follow_up_at,
