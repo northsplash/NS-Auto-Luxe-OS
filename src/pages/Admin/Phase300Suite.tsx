@@ -137,7 +137,7 @@ function TerritoryCenter({employees}:{employees:Employee[]}){
   };
   useEffect(()=>{load()},[]);
   const selectedTerritory=territories.find(t=>t.id===selected);
-  const selectedDoors=selected?doors.filter(d=>d.territory_id===selected):doors;
+  const selectedTerritoryDoors=selected?doors.filter(d=>d.territory_id===selected):[];
   const stats=(tid:string)=>{const ds=doors.filter(d=>d.territory_id===tid);const worked=ds.filter(d=>!['unworked','new'].includes(d.status)).length;const sold=ds.filter(d=>['sold','customer','existing_customer'].includes(d.status)).length;return{total:ds.length,worked,sold,pct:percent(worked,ds.length)}};
   const beginNew=()=>{setSelected('');setForm(emptyTerritory());setPreview(null);setStreetViewHouse(null)};
   const editTerritory=(t:LeadTerritory)=>{setSelected(t.id);setPreview(null);setStreetViewHouse(null);const poly=(t.polygon_geojson as any)?.coordinates?.[0]??[];setForm({id:t.id,name:t.name,assigned_employee_id:t.assigned_employee_id||'',status:t.status||'active',notes:t.notes||'',color:(t as any).color||'#9d7651',points:poly.map((p:number[])=>[Number(p[1]),Number(p[0])])})};
@@ -155,7 +155,17 @@ function TerritoryCenter({employees}:{employees:Employee[]}){
   const remove=async(t:LeadTerritory)=>{if(!confirm(`Archive ${t.name}? Houses and history will remain.`))return;await supabase.from('lead_territories').update({status:'inactive'}).eq('id',t.id);await load();if(selected===t.id)beginNew()};
   const loadHouses=async(t:LeadTerritory)=>{const poly=(t.polygon_geojson as any)?.coordinates?.[0];if(!poly?.length)return alert('This territory does not have a polygon.');setBusy(true);try{const lats=poly.map((p:number[])=>p[1]),lngs=poly.map((p:number[])=>p[0]);const bbox=`${Math.min(...lats)},${Math.min(...lngs)},${Math.max(...lats)},${Math.max(...lngs)}`;const elements=await fetchTerritoryHouseData(bbox,poly.map((p:number[])=>[Number(p[1]),Number(p[0])] as [number,number]));const isInside=(lat:number,lng:number)=>pointInPolygon(lat,lng,poly.map((p:number[])=>[p[1],p[0]]));const found=(elements??[]).map((e:any)=>{const lat=Number(e.lat??e.center?.lat),lng=Number(e.lon??e.center?.lon);const tags=e.tags??{};return{lat,lng,address:[tags['addr:housenumber'],tags['addr:street']].filter(Boolean).join(' ')||null,source:`osm:${e.type}:${e.id}`}}).filter((x:any)=>Number.isFinite(x.lat)&&Number.isFinite(x.lng)&&isInside(x.lat,x.lng));const existing=doors.filter(d=>d.territory_id===t.id);const inserts=found.filter((x:any)=>!existing.some(d=>Math.abs(Number(d.latitude)-x.lat)<.000015&&Math.abs(Number(d.longitude)-x.lng)<.000015)).map((x:any)=>({territory_id:t.id,latitude:x.lat,longitude:x.lng,address:x.address,status:'unworked',source:x.source}));if(inserts.length){const chunks=[];for(let i=0;i<inserts.length;i+=300)chunks.push(inserts.slice(i,i+300));for(const chunk of chunks){const {error}=await supabase.from('territory_doors').insert(chunk);if(error)throw error;}}await load();alert(`${inserts.length} new houses loaded. ${found.length} buildings/address points found in the boundary.`)}catch(err:any){alert(err.message||'Unable to load houses.')}finally{setBusy(false)}};
   const drawnMappedDoors=form.points.length>=3?doors.filter(d=>pointInPolygon(Number(d.latitude),Number(d.longitude),form.points)): [];
-  const drawnStreets=new Set(drawnMappedDoors.map(d=>d.street_name||String(d.address||'').replace(/^\s*\d+[A-Za-z-]*\s+/,'').trim()).filter(Boolean));
+  const mapDoors = preview?.properties?.length
+    ? preview.properties.map((p, i) => ({
+        id: `preview-${i}`,
+        address: p.address,
+        latitude: p.latitude,
+        longitude: p.longitude,
+        status: p.status || 'unworked',
+        source: p.source,
+      }))
+    : (selected ? selectedTerritoryDoors : drawnMappedDoors);
+  const mapStreets=new Set(mapDoors.map((d:any)=>d.street_name||String(d.address||'').replace(/^\s*\d+[A-Za-z-]*\s+/,'').trim()).filter(Boolean));
   const previewHouses=async()=>{
     if(form.points.length<3)return alert('Draw at least 3 boundary points first.');
     setPreviewBusy(true);
@@ -169,9 +179,9 @@ function TerritoryCenter({employees}:{employees:Employee[]}){
     }catch(err:any){alert(err.message||'Unable to preview houses.')}finally{setPreviewBusy(false)}
   };
   const visible=territories.filter(t=>!query||String(t.name||'').toLowerCase().includes(query.toLowerCase())||reps.find(e=>e.id===t.assigned_employee_id)?.name?.toLowerCase().includes(query.toLowerCase()));
-  const streetViewHouses=(preview?.properties?.length?preview.properties:drawnMappedDoors.map(d=>({id:d.id,address:d.address,latitude:Number(d.latitude),longitude:Number(d.longitude),status:d.status,source:d.source}))).filter(h=>Number.isFinite(h.latitude)&&Number.isFinite(h.longitude));
-  const currentHouseCount=preview?.houses??drawnMappedDoors.length;
-  const currentStreetCount=preview?.streets??drawnStreets.size;
+  const streetViewHouses=(preview?.properties?.length?preview.properties:mapDoors.map((d:any)=>({id:d.id,address:d.address,latitude:Number(d.latitude),longitude:Number(d.longitude),status:d.status,source:d.source}))).filter(h=>Number.isFinite(h.latitude)&&Number.isFinite(h.longitude));
+  const currentHouseCount=preview?.houses??mapDoors.length;
+  const currentStreetCount=preview?.streets??mapStreets.size;
   return <div className="tab-content phase300 territory-command-page territory-command-v13">
     <Header
       tab="territories"
@@ -200,7 +210,7 @@ function TerritoryCenter({employees}:{employees:Employee[]}){
         <div className="territory-map-stage territory-map-stage-v13">
           <FieldTerritoryMap
             territories={visible}
-            doors={selectedDoors}
+            doors={mapDoors as TerritoryDoor[]}
             editable
             initialPolygon={form.points}
             selectedTerritoryId={selected||undefined}
@@ -210,7 +220,7 @@ function TerritoryCenter({employees}:{employees:Employee[]}){
             showDoorLabels={false}
             className="territory-admin-map"
           />
-          <div className="territory-map-counter territory-map-counter-v13"><strong>{currentHouseCount}</strong><span>{preview?'houses found':'houses marked'}</span><i/><strong>{currentStreetCount}</strong><span>streets</span></div>
+          <div className="territory-map-counter territory-map-counter-v13"><strong>{currentHouseCount}</strong><span>{preview?'houses found':'houses in area'}</span><i/><strong>{currentStreetCount}</strong><span>streets</span></div>
         </div>
         <div className="territory-map-help-v13">
           <span><b>1.</b> Search an address or neighborhood</span>

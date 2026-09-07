@@ -28,7 +28,7 @@ export default function FieldTerritoryMap(props: FieldTerritoryMapProps) {
   return (
     <div className={`ns-map-shell ${className}`}>
       {engine === 'leaflet' && fallbackReason && (
-        <div className="ns-map-fallback">Street map is on. Google Maps is not available on this site yet.</div>
+        <div className="ns-map-fallback">Street map is on. Google Maps is watermarked or not billed for this site, so OpenStreetMap is used instead.</div>
       )}
       {map}
     </div>
