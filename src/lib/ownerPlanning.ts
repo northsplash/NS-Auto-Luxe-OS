@@ -89,7 +89,7 @@ export const OWNER_PLAN_DEFAULTS: OwnerPlanningConfig = {
   startingDetailers: 0,
   startingD2D: 0,
   startingManagers: 0,
-  detailerWage: 18,
+  detailerWage: 17,
   detailerHoursPerWeek: 32,
   detailerCapacityJobs: 14,
   d2dBase: 300,
