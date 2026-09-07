@@ -839,3 +839,347 @@ html.nsos-active .portal-layout.nsos-cream {
   }
   .field-map-skeleton::before { animation: none !important; }
 }
+
+/* Cream paper pitch: customer deck matches the OS, and covers the bottom bar. */
+.portal-layout.nsos-cream:has(.sales-presentation-overlay) .os-mobile-bottom-nav,
+.portal-layout.nsos-cream:has(.sales-presentation-overlay) .os-mobile-bottom-nav.mobile-app-nav-v25,
+.portal-layout.nsos-cream:has(.sales-presentation-overlay) .d2d-add-lead-fab {
+  display: none !important;
+}
+
+.nsos-cream .sales-presentation-overlay,
+.portal-layout.nsos-cream .sales-presentation-overlay {
+  z-index: 12000;
+  background: #efe8dc;
+  align-items: stretch;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.nsos-cream .sales-presentation-shell,
+.portal-layout.nsos-cream .sales-presentation-shell,
+.nsos-cream .sales-presentation-embedded {
+  background: #fffdf8;
+  color: #1c1814;
+}
+.nsos-cream .sales-presentation-overlay .sales-presentation-shell {
+  min-height: 100%;
+  height: 100%;
+}
+.nsos-cream .sales-presentation-overlay .sales-presentation-body,
+.nsos-cream .sales-presentation-overlay .sales-quote-mode,
+.nsos-cream .sales-presentation-overlay .sales-account-mode {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.nsos-cream .sales-presentation-shell:before,
+.portal-layout.nsos-cream .sales-presentation-shell:before {
+  background: radial-gradient(circle at 88% 12%, rgba(184, 137, 58, .1), transparent 28%),
+    radial-gradient(circle at 8% 88%, rgba(28, 24, 20, .04), transparent 24%);
+}
+
+.nsos-cream .sales-presentation-header,
+.portal-layout.nsos-cream .sales-presentation-header {
+  background: rgba(255, 253, 248, .94);
+  border-bottom: 1px solid #e4d9cc;
+}
+.nsos-cream .sales-presentation-brand > b {
+  border-color: #b8893a;
+  color: #b8893a;
+  background: #fff8ea;
+}
+.nsos-cream .sales-presentation-brand strong { color: #1c1814; }
+.nsos-cream .sales-presentation-brand small { color: #6f675e; }
+
+.nsos-cream .sales-presentation-mode {
+  background: #f7f1ea;
+  border: 1px solid #e4d9cc;
+}
+.nsos-cream .sales-presentation-mode button { color: #6f675e; }
+.nsos-cream .sales-presentation-mode button.active {
+  background: #1c1814;
+  color: #fffdf8;
+}
+.nsos-cream .sales-presentation-tools button {
+  border: 1px solid #e4d9cc;
+  background: #fff;
+  color: #1c1814;
+}
+
+.nsos-cream .sales-slide-progress { background: #efe8dc; }
+.nsos-cream .sales-slide-progress i { background: #b8893a; }
+
+.nsos-cream .sales-kicker { color: #b8893a; }
+.nsos-cream .sales-slide-heading h2,
+.nsos-cream .sales-hero-copy h2,
+.nsos-cream .sales-close-main h2,
+.nsos-cream .sales-quote-summary h3,
+.nsos-cream .sales-quote-summary > strong,
+.nsos-cream .sales-product-grid article > strong,
+.nsos-cream .sales-account-success h2 {
+  color: #1c1814;
+}
+.nsos-cream .sales-slide-heading > p,
+.nsos-cream .sales-lead,
+.nsos-cream .sales-hero-copy > p:first-of-type,
+.nsos-cream .sales-close-main > p,
+.nsos-cream .sales-footnote,
+.nsos-cream .sales-account-success > p {
+  color: #6f675e;
+}
+
+.nsos-cream .sales-benefit-grid article,
+.nsos-cream .sales-proof-grid article,
+.nsos-cream .sales-compare-col,
+.nsos-cream .sales-product-grid article,
+.nsos-cream .sales-membership-flow article,
+.nsos-cream .sales-quote-toggle button,
+.nsos-cream .sales-quote-plan-picker button,
+.nsos-cream .sales-close-options button,
+.nsos-cream .sales-account-success dl > div {
+  background: #fff;
+  border: 1px solid #e4d9cc;
+  color: #1c1814;
+}
+.nsos-cream .sales-benefit-grid svg,
+.nsos-cream .sales-proof-grid svg,
+.nsos-cream .sales-hero-pills svg,
+.nsos-cream .sales-product-grid li svg,
+.nsos-cream .sales-quote-includes svg {
+  color: #b8893a;
+}
+.nsos-cream .sales-benefit-grid h3,
+.nsos-cream .sales-proof-grid h3 { color: #1c1814; }
+.nsos-cream .sales-benefit-grid p,
+.nsos-cream .sales-proof-grid p { color: #6f675e; }
+.nsos-cream .sales-proof-grid article > span { color: #dccfb8; }
+
+.nsos-cream .sales-hero-pills span {
+  border-color: rgba(184, 137, 58, .35);
+  background: #fff8ea;
+  color: #3a3228;
+}
+.nsos-cream .sales-hero-mark {
+  border-color: rgba(184, 137, 58, .4);
+  background: linear-gradient(145deg, #fff8ea, #fff);
+}
+.nsos-cream .sales-monogram { color: #b8893a; }
+.nsos-cream .sales-hero-mark strong { color: #1c1814; }
+.nsos-cream .sales-hero-mark span { color: #6f675e; }
+
+.nsos-cream .sales-compare-col.featured {
+  border-color: rgba(184, 137, 58, .55);
+  background: linear-gradient(145deg, #fff8ea, #fff);
+}
+.nsos-cream .sales-compare-col p {
+  color: #6f675e;
+  border-top-color: #efe8dc;
+}
+.nsos-cream .sales-compare-col.featured p { color: #3a3228; }
+.nsos-cream .sales-compare-col.featured p svg,
+.nsos-cream .sales-compare-col.featured > span { color: #b8893a; }
+.nsos-cream .sales-compare-vs { background: #1c1814; color: #fffdf8; }
+
+.nsos-cream .sales-product-grid article.featured {
+  border-color: #b8893a;
+  background: linear-gradient(150deg, #fff8ea, #fff 48%);
+}
+.nsos-cream .sales-product-grid article > span { color: #b8893a; }
+.nsos-cream .sales-product-grid article > p,
+.nsos-cream .sales-product-grid article > strong small { color: #6f675e; }
+.nsos-cream .sales-product-grid ul { border-top-color: #efe8dc; }
+.nsos-cream .sales-product-grid li { color: #3a3228; }
+.nsos-cream .sales-product-grid article > button {
+  border-color: #e4d9cc;
+  background: #fff;
+  color: #1c1814;
+}
+.nsos-cream .sales-product-grid article.featured > button {
+  background: #1c1814;
+  color: #fffdf8;
+  border-color: #1c1814;
+}
+
+.nsos-cream .sales-membership-flow article > span {
+  background: #b8893a;
+  color: #fffdf8;
+}
+.nsos-cream .sales-membership-flow p { color: #6f675e; }
+.nsos-cream .sales-membership-flow > i { background: #e4d9cc; }
+.nsos-cream .sales-membership-flow > i:after { color: #b8893a; }
+.nsos-cream .sales-membership-banner {
+  border-color: rgba(184, 137, 58, .4);
+  background: #fff8ea;
+}
+.nsos-cream .sales-membership-banner > svg { color: #b8893a; }
+.nsos-cream .sales-membership-banner strong { color: #1c1814; }
+.nsos-cream .sales-membership-banner span { color: #6f675e; }
+.nsos-cream .sales-membership-banner button {
+  background: #1c1814;
+  color: #fffdf8;
+}
+
+.nsos-cream .sales-close-options button.primary {
+  background: #1c1814;
+  color: #fffdf8;
+  border-color: #1c1814;
+}
+.nsos-cream .sales-close-card {
+  border-color: rgba(184, 137, 58, .45);
+  background: linear-gradient(145deg, #fff8ea, #fff);
+  color: #1c1814;
+}
+.nsos-cream .sales-close-card:before { color: rgba(184, 137, 58, .18); }
+.nsos-cream .sales-close-card > span { color: #b8893a; }
+.nsos-cream .sales-close-card > p { color: #6f675e; }
+
+.nsos-cream .sales-presentation-footer {
+  background: #fffdf8;
+  border-top: 1px solid #e4d9cc;
+}
+.nsos-cream .sales-presentation-footer > button {
+  background: #fff;
+  border-color: #e4d9cc;
+  color: #3a3228;
+}
+.nsos-cream .sales-presentation-footer > button.next {
+  background: #1c1814;
+  color: #fffdf8;
+  border-color: #1c1814;
+}
+.nsos-cream .sales-slide-dots button { color: #8a8176; }
+.nsos-cream .sales-slide-dots button span {
+  border-color: #e4d9cc;
+  color: #6f675e;
+}
+.nsos-cream .sales-slide-dots button.active {
+  color: #1c1814;
+  background: #f7f1ea;
+}
+.nsos-cream .sales-slide-dots button.active span {
+  border-color: #b8893a;
+  background: #b8893a;
+  color: #fffdf8;
+}
+
+.nsos-cream .sales-quote-toggle button.active {
+  border-color: #b8893a;
+  background: #fff8ea;
+  color: #1c1814;
+}
+.nsos-cream .sales-quote-options select,
+.nsos-cream .sales-household-grid input,
+.nsos-cream .sales-household-inline input,
+.nsos-cream .sales-addr-row input,
+.nsos-cream .sales-household-form input,
+.nsos-cream .sales-household-form select,
+.nsos-cream .sales-household-form textarea {
+  background: #fff;
+  color: #1c1814;
+  border: 1px solid #e4d9cc;
+}
+.nsos-cream .sales-quote-plan-picker button.active {
+  border-color: #b8893a;
+  background: linear-gradient(145deg, #fff8ea, #fff);
+}
+.nsos-cream .sales-quote-plan-picker em,
+.nsos-cream .sales-quote-plan-picker strong small { color: #6f675e; }
+.nsos-cream .sales-quote-summary {
+  border: 1px solid rgba(184, 137, 58, .4);
+  background: linear-gradient(145deg, #fff8ea, #fff);
+}
+.nsos-cream .sales-quote-summary > p,
+.nsos-cream .sales-quote-summary > small { color: #6f675e; }
+.nsos-cream .sales-quote-includes { border-top-color: #efe8dc; }
+.nsos-cream .sales-quote-includes span { color: #3a3228; }
+.nsos-cream .sales-use-offer,
+.nsos-cream .sales-self-quote button {
+  background: #1c1814;
+  color: #fffdf8;
+}
+.nsos-cream .sales-save-offer,
+.nsos-cream .sales-back-presentation {
+  background: #fff;
+  color: #1c1814;
+  border: 1px solid #e4d9cc;
+}
+.nsos-cream .sales-account-error {
+  color: #7a2e24;
+  background: #f8e8e4;
+  border-color: #efc8c0;
+}
+.nsos-cream .sales-account-success { color: #1c1814; }
+.nsos-cream .sales-account-success dd button {
+  border-color: #e4d9cc;
+  color: #1c1814;
+}
+.nsos-cream .sales-slot-board button {
+  border: 1px solid #e4d9cc;
+  background: #fff;
+  color: #1c1814;
+}
+.nsos-cream .sales-slot-board button.active {
+  border-color: #b8893a;
+  background: #fff8ea;
+}
+.nsos-cream .sales-slot-board small,
+.nsos-cream .sales-empty-slots { color: #6f675e; }
+.nsos-cream .sales-empty-slots { border-color: #e4d9cc; }
+.nsos-cream .sales-check { color: #3a3228; }
+.nsos-cream .sales-check input { accent-color: #b8893a; }
+.nsos-cream .sales-household-grid span,
+.nsos-cream .sales-household-inline span,
+.nsos-cream .sales-password-field > span {
+  color: #6f675e;
+}
+.nsos-cream .sales-password-row input,
+.nsos-cream .sales-icon-btn {
+  background: #fff;
+  color: #1c1814;
+  border: 1px solid #e4d9cc;
+}
+.nsos-cream .sales-hero-rep-tools button {
+  background: #1c1814;
+  color: #fffdf8;
+  border-color: #1c1814;
+}
+.nsos-cream .sales-hero-rep-tools button.ghost {
+  background: transparent;
+  color: #1c1814;
+  border-color: #e4d9cc;
+}
+
+@media (min-width: 721px) and (max-width: 1280px) {
+  .nsos-cream .sales-presentation-overlay {
+    display: flex;
+  }
+  .nsos-cream .sales-presentation-shell {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+  }
+  .nsos-cream .sales-presentation-body {
+    flex: 1;
+    min-height: 0;
+    align-items: stretch;
+  }
+  .nsos-cream .sales-slide {
+    margin: 0 auto;
+    min-height: 0;
+    height: 100%;
+    justify-content: center;
+  }
+  .nsos-cream .sales-benefit-grid,
+  .nsos-cream .sales-proof-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    flex: 1;
+  }
+  .nsos-cream .sales-benefit-grid article,
+  .nsos-cream .sales-proof-grid article {
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+}

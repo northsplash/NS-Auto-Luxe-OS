@@ -4,7 +4,7 @@ import {
   Award, BarChart3, CalendarDays, ChevronDown, ClipboardCheck, Clock3, Crosshair, DollarSign, Gauge,
   History, ListChecks, LogOut, MapPin, Menu, Navigation, Pause, Phone,
   Play, Plus, RefreshCw, Route, Search, Sparkles, Target, TrendingUp, UserRound,
-  WifiOff, X, Eye, MessageCircle, Presentation,
+  WifiOff, X, Eye, MessageCircle, MoreHorizontal, Presentation,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { signOut } from '@/lib/auth';
@@ -641,7 +641,8 @@ export default function D2DPortal(){
       </div>
     </main>
     <nav className="os-mobile-bottom-nav mobile-app-nav-v25" aria-label="D2D mobile navigation">
-      {[['territory','Map',MapPin],['leads','Leads',Target],['presentation','Pitch',Presentation],['calendar','Calendar',CalendarDays],['messages','More',MessageCircle]].map(([id,label,Icon]:any)=><button key={id} className={tab===id?'active':''} onClick={()=>setTab(id as Tab)}><Icon size={20}/><span>{label}</span>{id==='leads'&&dueFollowups.length>0&&<b>{dueFollowups.length}</b>}</button>)}
+      {([['territory','Map',MapPin],['leads','Leads',Target],['presentation','Pitch',Presentation],['calendar','Calendar',CalendarDays]] as const).map(([id,label,Icon])=><button key={id} type="button" className={tab===id?'active':''} onClick={()=>setTab(id)}><Icon size={20}/><span>{label}</span>{id==='leads'&&dueFollowups.length>0&&<b>{dueFollowups.length}</b>}</button>)}
+      <button type="button" className={sidebar?'active':''} onClick={()=>setSidebar(true)}><MoreHorizontal size={20}/><span>More</span></button>
     </nav>
     {!selectedDoor&&!manual&&tab==='leads'&&<button type="button" className="d2d-add-lead-fab" onClick={manualLead}><Plus size={20}/><span>Add lead</span></button>}
 
