@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { createPortal as mountPortal } from 'react-dom';
 import {
   ArrowLeft, BadgeCheck, Car, Check, ChevronLeft, ChevronRight,
   Clock3, Copy, Crown, Eye, EyeOff, Gauge, Home, KeyRound, Maximize2, ShieldCheck,
@@ -329,5 +329,5 @@ export default function SalesPresentation({
     </div>
   </div>;
   if (embedded || typeof document === 'undefined') return tree;
-  return createPortal(tree, document.body);
+  return mountPortal(tree, document.body);
 }
