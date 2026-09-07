@@ -481,9 +481,28 @@
 .academy-result { margin: 12px 16px; padding: 10px 12px; border-radius: 10px; font-weight: 650; }
 .academy-result.pass { background: #e8f0e6; color: #2f5d32; }
 .academy-result.retry { background: #f8e6e2; color: #8a3b32; }
-.academy-course-v30 { display: grid; gap: 0; padding-bottom: 16px; }
-.academy-course-v30 > .btn-outline { margin: 0 0 12px; width: fit-content; }
-.academy-course-v30 > .btn-primary { margin: 8px 16px 16px; }
+.academy-phase-bar {
+  list-style: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+  padding: 12px 16px 0; margin: 0;
+}
+.academy-phase-bar button {
+  width: 100%; min-height: 40px; border-radius: 10px; border: 1px solid #e4d0a8;
+  background: #fffdf8; color: #6f675e; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+}
+.academy-phase-bar .active button { background: #1c1814; color: #f6f1e8; border-color: #1c1814; }
+.academy-phase-bar .done button { border-color: #1c1814; color: #1c1814; }
+.academy-lesson-stage, .academy-drill { padding: 12px 16px 8px; display: grid; gap: 12px; }
+.academy-lesson-count { margin: 0; font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: #8a7d6e; }
+.academy-takeaways { margin: 12px 0 0; padding: 12px 12px 12px 28px; background: #f6ead4; border-radius: 12px; display: grid; gap: 6px; }
+.academy-takeaways li { font-size: 13px; line-height: 1.45; }
+.academy-lesson-nav { display: flex; gap: 10px; justify-content: space-between; flex-wrap: wrap; }
+.academy-lesson-nav .btn-primary, .academy-lesson-nav .btn-outline { min-height: 44px; }
+.academy-owner-lessons { margin: 0; padding-left: 18px; color: #5c5349; font-size: 13px; line-height: 1.55; }
+.academy-drill h3 { margin: 0; }
+@media (max-width: 760px) {
+  .academy-lesson-nav { flex-direction: column-reverse; }
+  .academy-lesson-nav button { width: 100%; }
+}
 .training-admin-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .nsos-cream .training-card { text-align: left; display: grid; grid-template-columns: 44px 1fr 20px; gap: 10px; align-items: start; cursor: pointer; }
 .nsos-cream .training-card h3 { margin: 4px 0; font-size: 16px; }

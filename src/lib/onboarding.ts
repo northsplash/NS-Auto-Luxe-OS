@@ -369,8 +369,8 @@ export async function seedHireOnboarding(employee: Employee, role?: string) {
   await supabase.from('employees').update({ onboarding_status: 'in_progress' }).eq('id', employee.id);
   const academyIds = courseIdsForEmployee(hire);
   const extra = [
-    ...(academyIds.includes(D2D_ACADEMY_ID) ? [{ title: 'Complete door-to-door academy', description: 'Map, knock colors, door script, and next house. Pass the quiz before you canvass live.', category: 'd2d' }] : []),
-    ...(academyIds.includes(DETAIL_ACADEMY_ID) ? [{ title: 'Complete detailing academy', description: 'Job packet, live status, photos, checklist, and QC. Pass the quiz before you run jobs solo.', category: 'detailer' }] : []),
+    ...(academyIds.includes(D2D_ACADEMY_ID) ? [{ title: 'Complete door-to-door academy', description: 'Eight lessons, three field drills, then the quiz. Pass before you canvass live. A manager still walks one street with you.', category: 'd2d' }] : []),
+    ...(academyIds.includes(DETAIL_ACADEMY_ID) ? [{ title: 'Complete detailing academy', description: 'Eight lessons, three field drills, then the quiz. Pass before you run jobs solo. A manager still watches one live job.', category: 'detailer' }] : []),
   ];
   for (const task of [...DEFAULT_HIRE_TASKS, ...extra]) {
     const existing = await supabase.from('onboarding_tasks').select('id').eq('employee_id', employee.id).eq('title', task.title).maybeSingle();

@@ -72,7 +72,7 @@ The two cores: **SalesRabbit** for territory maps, pins, knocks, and canvassing;
 - Square payments, Gusto hiring pipeline, Stripe settings
 - Teams-style messaging (Chat / Teams filters, composer, company channel). Send shows an error instead of failing silently.
 - Gusto hiring: Convert / Hire seeds the onboarding packet and opens the hire’s profile.
-- New-hire academy: Door-to-door (SalesRabbit playbook) and Detailing (Housecall Pro + Uber live status) with quizzes. Opening **People → Training** applies the modules and assigns them by role. New hires also get the academy when they are hired.
+- New-hire academy: Door-to-door (8 lessons, 3 field drills, 8-question quiz) and Detailing (8 lessons, 3 field drills, 8-question quiz). Opening **People → Training** applies the modules and assigns them by role. New hires also get the academy when they are hired. Preview both courses from demo OS **People → Training**.
 
 ## Apply the hire packet in Supabase
 

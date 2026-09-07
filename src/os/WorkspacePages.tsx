@@ -1,5 +1,6 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { ACADEMY_COURSES } from '@/lib/trainingAcademy';
+import { AcademyPreview } from '@/components/TrainingPortal';
 import { firstWord, money, prettyLabel } from '@/lib/data';
 import { srStatus } from '@/lib/salesRabbitLeads';
 import { liveOpenSlots } from './appointmentSlots';
@@ -597,8 +598,17 @@ function TimesheetPage() {
 
 function TrainingPage() {
   const os = useOs();
+  const [preview, setPreview] = useState<'d2d' | 'detail' | null>(null);
   const d2d = os.employees.filter((e) => e.role === 'd2d_agent' && e.status === 'active');
   const detail = os.employees.filter((e) => e.role === 'detailer' && e.status === 'active');
+  if (preview) {
+    return (
+      <div>
+        <button type="button" className="nsos-btn" style={{ marginBottom: 14 }} onClick={() => setPreview(null)}>← Academy roster</button>
+        <AcademyPreview track={preview} />
+      </div>
+    );
+  }
   return (
     <div>
       <Kpis items={[
@@ -613,7 +623,11 @@ function TrainingPage() {
             <span className="nsos-eyebrow">{c.track === 'd2d' ? 'Door-to-door' : 'Detailing'}</span>
             <h3>{c.title}</h3>
             <p className="os-page-lead">{c.description}</p>
-            <p style={{ margin: '10px 0 8px', fontSize: 13 }}>{c.lessons.length} lessons · {c.duration_minutes} min · pass {c.passing_score}%</p>
+            <p style={{ margin: '10px 0 8px', fontSize: 13 }}>{c.lessons.length} lessons · {c.drills.length} drills · {c.questions.length} quiz · {c.duration_minutes} min · pass {c.passing_score}%</p>
+            <ol className="academy-owner-lessons">
+              {c.lessons.map((l) => <li key={l.id}>{l.title}</li>)}
+            </ol>
+            <button type="button" className="nsos-btn" style={{ marginTop: 12 }} onClick={() => setPreview(c.track)}>Open {c.track === 'd2d' ? 'D2D' : 'detailer'} academy</button>
             {(c.track === 'd2d' ? d2d : detail).map((e) => (
               <div className="nsos-job" key={e.id}>
                 <span>{e.name}</span>
