@@ -145,7 +145,26 @@ export default function EnterpriseSuite({ section, employees, setEmployees, appo
   const [payments, setPayments] = useState<any[]>([]);
   const [expenses, setExpenses] = useState<any[]>([]);
 
-  const [leadForm, setLeadForm] = useState({ assigned_employee_id: '', territory_id: '', customer_name: '', address: '', city: MARKET.city, state: MARKET.state, postal_code: MARKET.zip, phone: '', email: '', latitude: '', longitude: '', status: 'new', service_interest: '', vehicle_info: '', estimated_value: '', follow_up_at: '', notes: '' });
+  const emptyLeadForm = {
+    assigned_employee_id: '',
+    territory_id: '',
+    customer_name: '',
+    address: '',
+    city: String(MARKET.city),
+    state: String(MARKET.state),
+    postal_code: String(MARKET.zip),
+    phone: '',
+    email: '',
+    latitude: '',
+    longitude: '',
+    status: 'new',
+    service_interest: '',
+    vehicle_info: '',
+    estimated_value: '',
+    follow_up_at: '',
+    notes: '',
+  };
+  const [leadForm, setLeadForm] = useState(emptyLeadForm);
   const [territoryForm, setTerritoryForm] = useState({ name: '', assigned_employee_id: '', center_lat: '', center_lng: '', radius_meters: 1200, notes: '', polygon_points: [] as [number,number][] });
   const [taskForm, setTaskForm] = useState({ title: '', description: '', assigned_employee_id: '', priority: 'normal', due_at: '' });
   const [equipmentForm, setEquipmentForm] = useState({ name: '', category: 'Equipment', serial_number: '', purchase_date: '', purchase_cost: '', assigned_employee_id: '', condition: 'good', status: 'available', next_maintenance_at: '', notes: '' });
@@ -198,7 +217,7 @@ export default function EnterpriseSuite({ section, employees, setEmployees, appo
     const { data, error } = await supabase.from('leads').insert(payload).select().single();
     if (error) return alert(error.message);
     setLeads(p => [data, ...p]); await audit('lead.created', 'lead', data.id, { status: data.status });
-    setLeadForm(p => ({ ...p, customer_name: '', address: '', postal_code: '', phone: '', email: '', service_interest: '', vehicle_info: '', estimated_value: '', follow_up_at: '', notes: '' }));
+    setLeadForm({ ...emptyLeadForm, assigned_employee_id: leadForm.assigned_employee_id, territory_id: leadForm.territory_id });
   };
 
   const updateLeadStatus = async (lead: Lead, status: string) => {

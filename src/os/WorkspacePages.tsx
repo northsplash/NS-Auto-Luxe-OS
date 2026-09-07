@@ -76,7 +76,7 @@ const BUYS = [
 
 const ISSUES = [
   { id: 'i1', title: 'Water spot on Macan hood', type: 'Quality', who: 'Marcus Hale', job: 'Priya Shah', status: 'open' },
-  { id: 'i2', title: 'Late arrival · Oakwood', type: 'Late', who: 'Marcus Hale', job: 'Matthew Renner', status: 'reviewed' },
+  { id: 'i2', title: 'Late arrival · Forest Pines', type: 'Late', who: 'Marcus Hale', job: 'Matthew Renner', status: 'reviewed' },
 ];
 
 const SHOPS = [

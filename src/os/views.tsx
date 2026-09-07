@@ -814,7 +814,8 @@ export function CalendarView({ onOpen }: { onOpen: (id: string) => void }) {
         <form className="nsos-card" style={{ marginBottom: 14 }} onSubmit={(e) => {
           e.preventDefault();
           if (!draft.customer.trim()) return;
-          const id = os.createJob({ ...draft, time: `${label} · ${String(draft.time || '').includes('·') ? draft.time.split('·')[1].trim() : '10:00 AM'}` });
+          const slot = String(draft.time || '').includes('·') ? draft.time.split('·')[1].trim() : (draft.time || '10:00 AM');
+          const id = os.createJob({ ...draft, time: `${label} · ${slot}` });
           setOpen(false);
           setDraft({ ...draft, customer: '', vehicle: '', address: '' });
           onOpen(id);
@@ -840,7 +841,7 @@ export function CalendarView({ onOpen }: { onOpen: (id: string) => void }) {
               </select>
             </label>
           </div>
-          <label className="nsos-field">Address<input value={draft.address} onChange={(e) => setDraft({ ...draft, address: e.target.value })} /></label>
+          <label className="nsos-field">Address<input value={draft.address} onChange={(e) => setDraft({ ...draft, address: e.target.value })} placeholder="Street, Raleigh NC 27616" /></label>
           <button className="nsos-btn" type="submit">Book and confirm</button>
         </form>
       )}

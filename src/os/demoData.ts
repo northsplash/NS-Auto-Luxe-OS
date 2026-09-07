@@ -205,7 +205,7 @@ export const seedEmployees: OsEmployee[] = [
 
 export const seedJobs: OsJob[] = [
   {
-    id: 'j1', customer: 'Matthew Renner', email: 'matthew@renner.co', phone: '919-555-2210', service: 'Luxe Signature', vehicle: '2022 BMW 330i', address: '412 Oakwood Ave, Raleigh NC 27601', time: 'Today · 10:30 AM', status: 'en_route', detailer: 'Marcus Hale', price: 275, payment: 'due', eta: '10:42 AM',
+    id: 'j1', customer: 'Matthew Renner', email: 'matthew@renner.co', phone: '919-555-2210', service: 'Luxe Signature', vehicle: '2022 BMW 330i', address: '412 Forest Pines Dr, Raleigh NC 27616', time: 'Today · 10:30 AM', status: 'en_route', detailer: 'Marcus Hale', price: 275, payment: 'due', eta: '10:42 AM',
     internal_notes: 'Gate code 4412. Customer asked for extra interior vacuum on the rear seats.',
     notes: [{ id: uid(), at: 'Yesterday', author: 'Avery Chen', body: 'Confirmed window 10:30–12:00. BMW is in the driveway.' }],
     photos: [
@@ -214,14 +214,14 @@ export const seedJobs: OsJob[] = [
     comms: [{ id: uid(), channel: 'sms', name: 'Detailer en route', preview: 'Marcus is on the way. ETA 10:42 AM.', at: '10:18 AM' }],
   },
   {
-    id: 'j2', customer: 'Priya Shah', email: 'priya.shah@email.com', phone: '919-555-8831', service: 'Luxe Ceramic Coating', vehicle: '2024 Porsche Macan', address: '88 Fayetteville St, Raleigh NC 27601', time: 'Today · 1:00 PM', status: 'confirmed', detailer: 'Marcus Hale', price: 650, payment: 'paid',
+    id: 'j2', customer: 'Priya Shah', email: 'priya.shah@email.com', phone: '919-555-8831', service: 'Luxe Ceramic Coating', vehicle: '2024 Porsche Macan', address: '88 Sumner Blvd, Raleigh NC 27616', time: 'Today · 1:00 PM', status: 'confirmed', detailer: 'Marcus Hale', price: 650, payment: 'paid',
     internal_notes: 'Ceramic kit staged at Raleigh locker. Keep the Macan in shade.',
     notes: [{ id: uid(), at: 'Mon', author: 'Noah Patel', body: 'Deposit collected. Full day slot.' }],
     photos: [],
     comms: [{ id: uid(), channel: 'email', name: 'Booking confirmation', preview: 'Your North Splash detail is confirmed', at: 'Mon · 4:02 PM' }],
   },
   {
-    id: 'j3', customer: 'James Cole', email: 'james.cole@email.com', phone: '919-555-0199', service: 'Exterior Signature', vehicle: '2021 Tesla Model Y', address: '19 Cameron Village', time: 'Tomorrow · 9:00 AM', status: 'scheduled', detailer: 'Noah Patel', price: 175, payment: 'due',
+    id: 'j3', customer: 'James Cole', email: 'james.cole@email.com', phone: '919-555-0199', service: 'Exterior Signature', vehicle: '2021 Tesla Model Y', address: '19 Spring Forest Rd, Raleigh NC 27616', time: 'Tomorrow · 9:00 AM', status: 'scheduled', detailer: 'Noah Patel', price: 175, payment: 'due',
     internal_notes: '',
     notes: [],
     photos: [],
@@ -303,7 +303,7 @@ export const seedChats: OsChat[] = [
   {
     id: 'c1', name: 'Marcus Hale', kind: 'dm', channel_type: 'dm', preview: 'On the way to the BMW. ETA 10:42.', at: '10:18 AM', unread: 2, initials: 'MH', hue: '#3d5a4c',
     messages: [
-      { id: uid(), from: 'Marcus Hale', body: 'Clocked in. First job is the 330i on Oakwood.', at: '9:02 AM' },
+      { id: uid(), from: 'Marcus Hale', body: 'Clocked in. First job is the 330i on Forest Pines.', at: '9:02 AM' },
       { id: uid(), from: 'You', mine: true, body: 'Copy. Customer was told 10:30. Text when you tap En Route.', at: '9:04 AM' },
       { id: uid(), from: 'Marcus Hale', body: 'On the way to the BMW. ETA 10:42.', at: '10:18 AM' },
     ],
@@ -373,9 +373,9 @@ export const seedActivity: OsActivity[] = [
 ];
 
 export const seedCustomers: OsCustomer[] = [
-  { id: 'cu1', name: 'Matthew Renner', email: 'matthew@renner.co', phone: '919-555-2210', vehicle: '2022 BMW 330i', address: '412 Oakwood Ave, Raleigh NC 27601', member: false, photo: P('220453'), notes: [{ id: uid(), at: 'Yesterday', author: 'Avery Chen', body: 'Prefers morning windows. Gate code 4412.' }] },
-  { id: 'cu2', name: 'Priya Shah', email: 'priya.shah@email.com', phone: '919-555-8831', vehicle: '2024 Porsche Macan', address: '88 Fayetteville St, Raleigh NC 27601', member: true, photo: P('1239291'), notes: [] },
-  { id: 'cu3', name: 'James Cole', email: 'james.cole@email.com', phone: '919-555-0199', vehicle: '2021 Tesla Model Y', address: '19 Cameron Village', member: false, photo: P('614810'), notes: [] },
+  { id: 'cu1', name: 'Matthew Renner', email: 'matthew@renner.co', phone: '919-555-2210', vehicle: '2022 BMW 330i', address: '412 Forest Pines Dr, Raleigh NC 27616', member: false, photo: P('220453'), notes: [{ id: uid(), at: 'Yesterday', author: 'Avery Chen', body: 'Prefers morning windows. Gate code 4412.' }] },
+  { id: 'cu2', name: 'Priya Shah', email: 'priya.shah@email.com', phone: '919-555-8831', vehicle: '2024 Porsche Macan', address: '88 Sumner Blvd, Raleigh NC 27616', member: true, photo: P('1239291'), notes: [] },
+  { id: 'cu3', name: 'James Cole', email: 'james.cole@email.com', phone: '919-555-0199', vehicle: '2021 Tesla Model Y', address: '19 Spring Forest Rd, Raleigh NC 27616', member: false, photo: P('614810'), notes: [] },
   { id: 'cu4', name: 'Hannah Brooks', email: 'hannah@brooks.family', phone: '919-555-4402', vehicle: '2019 Mercedes C300', address: 'Cary · Preston Village', member: false, photo: P('733872'), notes: [] },
   { id: 'cu5', name: 'Luis Ortega', email: 'luis.ortega@email.com', phone: '919-555-7720', vehicle: '2023 Audi Q5', address: 'Durham · Trinity Park', member: true, photo: P('91227'), notes: [{ id: uid(), at: 'Yesterday', author: 'Marcus Hale', body: 'Rebook in 30 days. Loved interior.' }] },
 ];
