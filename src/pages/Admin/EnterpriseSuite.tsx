@@ -19,6 +19,7 @@ import EmployeeAvatar from '@/components/EmployeeAvatar';
 import WorkspaceHero from '@/components/WorkspaceHero';
 import { employeeCanD2D, employeeCanDetail, leadRepLabel, selfEmployeeForUser } from '@/lib/workCapabilities';
 import { useAuth } from '@/hooks/useAuth';
+import { SR_STATUSES } from '@/lib/salesRabbitLeads';
 
 export type EnterpriseSection =
   | 'job_assignments'
@@ -43,11 +44,9 @@ type Props = {
 };
 
 const LEAD_STATUSES = [
-  ['new', 'New'], ['not_home', 'Not Home'], ['no_answer', 'No Answer'],
-  ['interested', 'Interested'], ['follow_up', 'Follow Up'], ['appointment_set', 'Appointment Set'],
-  ['estimate_sent', 'Estimate Sent'], ['sold', 'Sold'], ['not_interested', 'Not Interested'],
-  ['do_not_knock', 'Do Not Knock'], ['existing_customer', 'Existing Customer'],
-  ['bad_address', 'Bad Address'], ['lost', 'Lost'],
+  ...SR_STATUSES.map((s) => [s.key, `${s.name} (${s.abbr})`] as const),
+  ['new', 'New Lead (NL)'], ['not_home', 'Not Home (NH)'], ['estimate_sent', 'Estimate (EST)'],
+  ['existing_customer', 'Customer (CST)'], ['bad_address', 'Lost (LST)'],
 ] as const;
 
 const roleLabel = (r?: string | null) => ({ owner: 'Owner / Admin', manager: 'Manager', employee: 'Employee', d2d: 'D2D Sales', recruiter: 'Recruiter', finance: 'Finance', customer: 'Customer' }[r || 'customer'] || r || 'Customer');

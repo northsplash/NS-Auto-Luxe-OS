@@ -315,6 +315,24 @@ input,select,textarea{border-radius:9px!important;border:1px solid #d9cec3!impor
 
 /* SalesRabbit / TeleMapper inspired residential marker language */
 .ns-door-marker-wrap{background:transparent!important;border:0!important;overflow:visible!important}
+.ns-sr-pin-wrap{background:transparent!important;border:0!important}
+.ns-sr-pin{
+  display:flex;align-items:center;justify-content:center;
+  width:28px;height:36px;background:var(--pin,#3498db);
+  border-radius:50% 50% 50% 0;transform:rotate(-45deg);
+  border:2px solid #fff;box-shadow:0 4px 10px rgba(28,20,14,.28);
+}
+.ns-sr-pin b{transform:rotate(45deg);color:#fff;font-size:8px;font-weight:800;letter-spacing:.03em;line-height:1}
+.ns-sr-pin.selected{transform:rotate(-45deg) scale(1.16);box-shadow:0 0 0 3px #fff,0 6px 14px rgba(28,20,14,.32)}
+.ns-door-marker .ns-sr-pin{position:absolute;left:50%;bottom:2px;margin-left:-14px}
+.field-contact-strip.sr-lead-sheet{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.field-contact-strip.sr-lead-sheet .wide{grid-column:1/-1}
+.sr-knock-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+.sr-knock-grid button{flex-direction:column!important;gap:2px!important;min-height:58px!important}
+.sr-knock-grid button strong{font-size:12px!important;letter-spacing:.04em}
+.sr-knock-grid button small{font-size:9px;font-weight:700;opacity:.86}
+.sr-custom-fields{margin-top:12px}
+.sr-custom-fields .wide{grid-column:1/-1}
 .ns-door-marker{position:relative;display:block;width:34px;height:40px;transform-origin:50% 100%;transition:transform .14s ease,filter .14s ease;overflow:visible}
 .ns-door-house-icon{position:absolute;left:50%;bottom:2px;transform:translateX(-50%);width:25px;height:27px;filter:drop-shadow(0 4px 5px rgba(39,27,19,.18));transition:.15s ease}
 .ns-door-roof{position:absolute;left:4px;top:0;width:18px;height:18px;background:var(--door-color);transform:rotate(45deg);border-radius:4px 3px 3px 3px;border:2px solid #fff}

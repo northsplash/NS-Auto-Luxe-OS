@@ -7,6 +7,7 @@ import { money, prettyLabel } from '@/lib/data';
 import { notifyCustomer } from '@/lib/communications';
 import { ServiceMenuSelect } from '@/components/DetailSelfPicker';
 import { DOOR_STATUSES, doorStatus } from '@/lib/fieldOps';
+import { SR_PIPELINE_KEYS, srStatus } from '@/lib/salesRabbitLeads';
 import { leadAssignableEmployees, leadRepLabel, selfEmployeeForUser } from '@/lib/workCapabilities';
 import { ensureOwnerFieldEmployee } from '@/lib/ownerFieldMode';
 import { useAuth } from '@/hooks/useAuth';
@@ -22,15 +23,11 @@ type Props = {
   onNavigate?: (view: string) => void;
 };
 
-const STAGES = [
-  { key: 'unworked', label: 'New', statuses: ['new', 'unworked'] },
-  { key: 'contacted', label: 'Contacted', statuses: ['contacted', 'no_answer', 'revisit'] },
-  { key: 'interested', label: 'Interested', statuses: ['interested'] },
-  { key: 'follow_up', label: 'Follow-up', statuses: ['follow_up'] },
-  { key: 'estimate', label: 'Estimate', statuses: ['estimate', 'estimate_sent'] },
-  { key: 'appointment_set', label: 'Appointment', statuses: ['appointment_set'] },
-  { key: 'sold', label: 'Sold', statuses: ['sold', 'existing_customer'] },
-] as const;
+const STAGES = SR_PIPELINE_KEYS.map((key) => ({
+  key,
+  label: srStatus(key).name,
+  statuses: key === 'unworked' ? ['new', 'unworked'] : [key],
+})) as Array<{ key: string; label: string; statuses: readonly string[] }>;
 
 const CLOSED = new Set(['sold', 'lost', 'not_interested', 'do_not_knock', 'existing_customer']);
 const COMPOSE_KEY = 'ns-compose-lead';

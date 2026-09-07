@@ -1,35 +1,14 @@
-export type DoorStatus =
-  | 'unworked'
-  | 'no_answer'
-  | 'revisit'
-  | 'contacted'
-  | 'interested'
-  | 'follow_up'
-  | 'estimate'
-  | 'appointment_set'
-  | 'sold'
-  | 'customer'
-  | 'not_interested'
-  | 'do_not_knock'
-  | 'cancelled'
-  | 'lost';
+import { SR_STATUSES, type DoorStatus } from './salesRabbitLeads';
 
-export const DOOR_STATUSES: Array<{key: DoorStatus; label: string; short: string; color: string; priority: number}> = [
-  { key: 'unworked', label: 'Unworked', short: 'Unworked', color: '#c8c0b8', priority: 30 },
-  { key: 'no_answer', label: 'No Answer', short: 'No Answer', color: '#d39a45', priority: 90 },
-  { key: 'revisit', label: 'Revisit', short: 'Revisit', color: '#c68b54', priority: 100 },
-  { key: 'contacted', label: 'Contacted', short: 'Contacted', color: '#8b735d', priority: 60 },
-  { key: 'interested', label: 'Interested', short: 'Interested', color: '#78935d', priority: 120 },
-  { key: 'follow_up', label: 'Follow Up', short: 'Follow Up', color: '#6f8f8a', priority: 140 },
-  { key: 'estimate', label: 'Estimate', short: 'Estimate', color: '#a27c47', priority: 150 },
-  { key: 'appointment_set', label: 'Appointment Set', short: 'Appointment', color: '#9d7651', priority: 160 },
-  { key: 'sold', label: 'Sold', short: 'Sold', color: '#5f7f61', priority: 170 },
-  { key: 'customer', label: 'Customer', short: 'Customer', color: '#426c4b', priority: 175 },
-  { key: 'not_interested', label: 'Not Interested', short: 'Not Interested', color: '#995f55', priority: 10 },
-  { key: 'do_not_knock', label: 'Do Not Knock', short: 'DNK', color: '#241d18', priority: 0 },
-  { key: 'cancelled', label: 'Cancelled', short: 'Cancelled', color: '#8d5e58', priority: 20 },
-  { key: 'lost', label: 'Lost', short: 'Lost', color: '#725d55', priority: 15 },
-];
+export type { DoorStatus };
+
+export const DOOR_STATUSES: Array<{key: DoorStatus; label: string; short: string; color: string; priority: number}> = SR_STATUSES.map((s) => ({
+  key: s.key,
+  label: s.name,
+  short: s.abbr,
+  color: s.color,
+  priority: s.priority,
+}));
 
 export const doorStatus = (value?: string | null) =>
   DOOR_STATUSES.find(item => item.key === value) ?? DOOR_STATUSES[0];

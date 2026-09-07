@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { doorStatus } from '@/lib/fieldOps';
+import { srPinHtml, srStatus } from '@/lib/salesRabbitLeads';
 import { MARKET } from '@/lib/market';
 import { searchOsmPlace } from '@/lib/osmGeocode';
 import type { FieldTerritoryMapProps } from './FieldTerritoryMap.types';
@@ -246,14 +247,13 @@ export default function FieldTerritoryMapLegacy({
         riseOnHover: true,
         zIndexOffset: selected ? 1000 : 0,
         icon: L.divIcon({
-          className: `ns-door-marker-wrap ${fieldMode ? 'field-mode' : ''}`,
+          className: `ns-door-marker-wrap ns-sr-pin-wrap ${fieldMode ? 'field-mode' : ''}`,
           html: `<span class="ns-door-marker ${selected ? 'selected' : ''}" style="--door-color:${status.color}">
-            <span class="ns-door-pin-halo"></span>
-            <span class="ns-door-house-icon"><span class="ns-door-roof"></span><span class="ns-door-body">${routeIndex ? `<b>${routeIndex}</b>` : '<i></i>'}</span></span>
-            <span class="ns-door-hover-card"><strong>${escapeText(address)}</strong><small>${escapeText(status.label)}</small><em>Click house to mark</em></span>
+            ${srPinHtml(door.do_not_knock ? 'do_not_knock' : door.status, { selected, route: routeIndex })}
+            <span class="ns-door-hover-card"><strong>${escapeText(address)}</strong><small>${escapeText(status.short)} · ${escapeText(status.label)}</small><em>Click pin to mark</em></span>
           </span>`,
-          iconSize: fieldMode ? [34, 40] : [30, 36],
-          iconAnchor: fieldMode ? [17, 36] : [15, 32],
+          iconSize: fieldMode ? [34, 42] : [30, 38],
+          iconAnchor: fieldMode ? [17, 40] : [15, 36],
           popupAnchor: [0, -31],
         }),
       });
@@ -269,13 +269,14 @@ export default function FieldTerritoryMapLegacy({
       if (lead.latitude == null || lead.longitude == null) return;
       if (lead.territory_door_id && visibleDoors.some(d => d.id === lead.territory_door_id)) return;
       const status = doorStatus(lead.status);
+      const pin = srStatus(lead.status);
       const marker = L.marker([Number(lead.latitude), Number(lead.longitude)], {
         keyboard:false,
         riseOnHover:true,
         icon:L.divIcon({
-          className:'ns-door-marker-wrap lead-only',
-          html:`<span class="ns-door-marker lead-ring" style="--door-color:${status.color}"><span class="ns-door-house-icon"><span class="ns-door-roof"></span><span class="ns-door-body"><i></i></span></span><span class="ns-door-hover-card"><strong>${escapeText(lead.address || lead.customer_name || 'Lead')}</strong><small>${escapeText(status.label)}</small><em>Click to open lead</em></span></span>`,
-          iconSize:[34,40],iconAnchor:[17,36],
+          className:'ns-door-marker-wrap ns-sr-pin-wrap lead-only',
+          html:`<span class="ns-door-marker lead-ring" style="--door-color:${status.color}">${srPinHtml(lead.status)}<span class="ns-door-hover-card"><strong>${escapeText(lead.address || lead.customer_name || 'Lead')}</strong><small>${escapeText(pin.abbr)} · ${escapeText(pin.name)}</small><em>Click to open lead</em></span></span>`,
+          iconSize:[34,42],iconAnchor:[17,40],
         }),
       });
       marker.on('click', (e: any) => {

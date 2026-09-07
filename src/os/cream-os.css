@@ -1636,6 +1636,9 @@ html.nsos-active #root {
   border-color: var(--ns-line) !important;
   color: var(--ns-ink) !important;
 }
+.nsos-cream .nsos-sr-pin-legend button.active { background: #efe6dc !important; }
+.nsos-cream .nsos-sr-knock { background: #fffdf8; border-color: #e4d9cc; color: #1c1814; }
+.nsos-cream .nsos-sr-knock small { color: #6f675e; }
 .nsos-cream .nsos-sr-zones b { color: rgba(28,24,20,.22) !important; border-color: rgba(28,24,20,.08) !important; }
 .nsos-cream .nsos-street-row.active-row,
 .nsos-cream .nsos-territory-card-main:hover { background: #f6f1e8 !important; }

@@ -35,6 +35,9 @@ import { BackToOwnerBanner, PortalSwitchGrid, PortalSwitchRail, TopbarOwnerLink,
 import { BRAND_LOGO } from '@/lib/brand';
 import { ServiceMenuSelect } from '@/components/DetailSelfPicker';
 import { isOnboardingOpen } from '@/lib/onboarding';
+import {
+  composedLeadIdentity, emptySrLeadFields, fieldsFromLead, SR_KNOCK_KEYS,
+} from '@/lib/salesRabbitLeads';
 
 type Tab='territory'|'route'|'leads'|'calendar'|'followups'|'presentation'|'messages'|'performance'|'timeclock'|'training'|'onboarding';
 type LiveLocation={latitude:number;longitude:number;accuracy?:number|null};
@@ -42,11 +45,12 @@ type OfflineAction={id:string;type:'save_lead'|'door_status'|'create_appointment
 const OFFLINE_KEY='ns_d2d_offline_queue_v2';
 const DOOR_CACHE_KEY='ns_d2d_territory_doors_v3';
 const JOBS_CACHE_KEY='ns_d2d_jobs_cache_v1';
-const STATUS_QUICK=['no_answer','revisit','interested','follow_up','estimate','appointment_set','sold','do_not_knock'] as const;
+const STATUS_QUICK = SR_KNOCK_KEYS;
 
 const emptyForm=()=>({
-  customer_name:'',address:'',phone:'',email:'',status:'unworked',service_interest:'',vehicle_info:'',
-  estimated_value:'',follow_up_at:'',notes:'',appointment_at:'',
+  ...emptySrLeadFields(),
+  customer_name:'',address:'',status:'unworked',service_interest:'',vehicle_info:'',
+  estimated_value:'',
 });
 
 export default function D2DPortal(){
@@ -260,17 +264,28 @@ export default function D2DPortal(){
     if((lead as any)?.archived_at&&cooldown&&cooldown>new Date()){alert(`Lead is archived until ${cooldown.toLocaleDateString()}. It cannot be reused yet.`);return;}
     setSelectedDoor(door);setManual(false);setHistory([]);
     let address=lead?.address||doorStreetLabel(door,'');
-    setForm({customer_name:lead?.customer_name||'',address,phone:lead?.phone||'',email:lead?.email||'',status:lead?.status||door.status||'unworked',service_interest:lead?.service_interest||'',vehicle_info:lead?.vehicle_info||'',estimated_value:String(lead?.estimated_value||''),follow_up_at:lead?.follow_up_at?.slice(0,16)||'',notes:lead?.notes||door.notes||'',appointment_at:''});
+    const fields=fieldsFromLead(lead||{address,city:door.city,state:door.state,postal_code:door.postal_code,notes:door.notes});
+    const identity=composedLeadIdentity(fields, lead?.customer_name||'', address);
+    setForm({
+      ...emptyForm(),
+      ...fields,
+      customer_name:identity.name,
+      address:identity.address||address,
+      status:lead?.status||door.status||'unworked',
+      service_interest:fields.service,
+      vehicle_info:fields.vehicle,
+      estimated_value:fields.value,
+    });
     if(door.id){const h=await supabase.from('territory_door_history').select('*').eq('door_id',door.id).order('created_at',{ascending:false}).limit(20);setHistory(h.data??[])}
     if(!address&&Number.isFinite(Number(door.latitude))&&Number.isFinite(Number(door.longitude))){
       const geo=await lookupAddress(Number(door.latitude),Number(door.longitude));address=geo?.address||'';
-      if(address){setForm(p=>({...p,address}));if(door.id){const patch={address,street_name:geo?.street||null,house_number:geo?.house_number||null,city:geo?.city||null,state:geo?.state||null,postal_code:geo?.postal_code||null};await supabase.from('territory_doors').update(patch).eq('id',door.id);setDoors(p=>{const next=p.map(x=>x.id===door.id?{...x,...patch}:x);cacheTerritoryDoors(next);return next;});}}
+      if(address){setForm(p=>({...p,address,street1:geo?.street||p.street1,city:geo?.city||p.city,state:geo?.state||p.state,postal_code:geo?.postal_code||p.postal_code}));if(door.id){const patch={address,street_name:geo?.street||null,house_number:geo?.house_number||null,city:geo?.city||null,state:geo?.state||null,postal_code:geo?.postal_code||null};await supabase.from('territory_doors').update(patch).eq('id',door.id);setDoors(p=>{const next=p.map(x=>x.id===door.id?{...x,...patch}:x);cacheTerritoryDoors(next);return next;});}}
     }
   };
 
   const pickMapPoint=async(lat:number,lng:number)=>{
     setManual(true);setSelectedDoor({latitude:lat,longitude:lng,territory_id:undefined});setHistory([]);setForm({...emptyForm(),address:'Locating address…'});
-    const geo=await lookupAddress(lat,lng);setForm(p=>({...p,address:geo?.address||''}));
+    const geo=await lookupAddress(lat,lng);setForm(p=>({...p,address:geo?.address||'',street1:geo?.street||p.street1,city:geo?.city||'',state:geo?.state||'',postal_code:geo?.postal_code||''}));
   };
 
   const checkDuplicate=async(phoneRaw?:string,addressRaw?:string)=>{
@@ -319,20 +334,28 @@ export default function D2DPortal(){
     const door=doorOverride||selectedDoor;
     if(!door)return false;setSaving(true);
     const data={...form,...override};
+    const identity=composedLeadIdentity({
+      first_name:data.first_name, last_name:data.last_name, phone:data.phone, alt_phone:data.alt_phone, email:data.email,
+      street1:data.street1, street2:data.street2, city:data.city, state:data.state, postal_code:data.postal_code,
+      notes:data.notes, vehicle:data.vehicle_info||data.vehicle, service:data.service_interest||data.service,
+      value:data.estimated_value||data.value, follow_up_at:data.follow_up_at, appointment_at:data.appointment_at,
+    }, data.customer_name, data.address);
     const nextStatus=forcedStatus||data.status||'unworked';
     const isManual=!door.id;
     if(nextStatus==='appointment_set'&&!data.appointment_at){setSaving(false);alert('Set the appointment time before saving. Dispatch needs a window.');return false;}
-    if(isManual&&!String(data.customer_name||data.phone||data.address||'').trim()){setSaving(false);alert('Add a name, phone, or street before saving this lead.');return false;}
-    const duplicates=await checkDuplicate(data.phone,data.address);
+    if(isManual&&!String(identity.name||data.phone||identity.address||'').trim()){setSaving(false);alert('Add a name, phone, or street before saving this lead.');return false;}
+    const duplicates=await checkDuplicate(data.phone,identity.address||data.address);
     const protectedDuplicate=duplicates?.find((x:any)=>x.status==='do_not_knock'||(x.cooldown_until&&new Date(x.cooldown_until)>new Date()));
     if(protectedDuplicate){setSaving(false);alert(protectedDuplicate.status==='do_not_knock'?'This address/contact is permanently Do Not Knock.':'This lead is in the 6-month archive cooldown and cannot be reused yet.');return false;}
     if(duplicates?.length&&!window.confirm(`Possible duplicate lead found: ${duplicates[0].customer_name||duplicates[0].address||duplicates[0].phone}. Save anyway?`)){setSaving(false);return false;}
     const territory_id=door.territory_id||(!isManual?selectedTerritory:null)||null;
     const payload:any={
       ...(door.lead_id?{id:door.lead_id}:{}),assigned_employee_id:employee.id,territory_id,territory_door_id:door.id||null,
-      customer_name:data.customer_name||null,address:data.address||null,phone:data.phone||null,email:data.email||null,status:nextStatus,
-      service_interest:data.service_interest||null,vehicle_info:data.vehicle_info||null,estimated_value:Number(data.estimated_value||0),
-      follow_up_at:data.follow_up_at?new Date(data.follow_up_at).toISOString():null,notes:data.notes||null,
+      customer_name:identity.name||null,address:identity.address||null,city:data.city||null,state:data.state||null,postal_code:data.postal_code||null,
+      phone:data.phone||null,email:data.email||null,status:nextStatus,
+      service_interest:data.service_interest||data.service||null,vehicle_info:data.vehicle_info||data.vehicle||null,estimated_value:Number(data.estimated_value||data.value||0),
+      follow_up_at:data.follow_up_at?new Date(data.follow_up_at).toISOString():null,
+      notes:[data.alt_phone?`Alt phone: ${data.alt_phone}`:'',data.notes].filter(Boolean).join('\n')||null,
       latitude:door.latitude??null,longitude:door.longitude??null,last_contacted_at:new Date().toISOString(),
       next_action:nextStatus==='follow_up'?'follow_up':nextStatus==='estimate'?'send_estimate':nextStatus==='appointment_set'?'appointment':null,
       next_action_at:data.follow_up_at?new Date(data.follow_up_at).toISOString():null,
@@ -422,10 +445,16 @@ export default function D2DPortal(){
     const note=offer.name?(offer.type==='membership'?`Membership interest: ${offer.name} at ${money(offer.amount)}/mo`:`Presented ${offer.name} estimate at ${money(offer.amount)}`):'Household captured from presentation';
     const nextStatus=['unworked','no_answer','revisit','contacted'].includes(form.status)?(offer.name?(offer.type==='membership'?'interested':'estimate'):'interested'):form.status;
     return {
-      customer_name:hh.name?.trim()||form.customer_name,
+      customer_name:hh.name?.trim()||form.customer_name||composedLeadIdentity(form, form.customer_name).name,
+      first_name:hh.name?fieldsFromLead({customer_name:hh.name}).first_name:form.first_name,
+      last_name:hh.name?fieldsFromLead({customer_name:hh.name}).last_name:form.last_name,
       phone:hh.phone?.trim()||form.phone,
       email:hh.email?.trim()||form.email,
       address:hh.address?.trim()||form.address,
+      street1:hh.address?fieldsFromLead({address:hh.address}).street1:form.street1,
+      city:hh.address?fieldsFromLead({address:hh.address}).city||form.city:form.city,
+      state:hh.address?fieldsFromLead({address:hh.address}).state||form.state:form.state,
+      postal_code:hh.address?fieldsFromLead({address:hh.address}).postal_code||form.postal_code:form.postal_code,
       service_interest:offer.name||form.service_interest,
       estimated_value:offer.amount?String(offer.amount):form.estimated_value,
       notes:[form.notes,note].filter(Boolean).join('\n'),
@@ -447,7 +476,7 @@ export default function D2DPortal(){
     const ok=await saveLead(undefined,patch.status,patch,door);
     if(ok)setTab('leads');
   };
-  const useCurrentLocation=()=>navigator.geolocation?.getCurrentPosition(async p=>{const lat=p.coords.latitude,lng=p.coords.longitude;setSelectedDoor(d=>({...d,latitude:lat,longitude:lng}));window.dispatchEvent(new CustomEvent('northsplash:center-map',{detail:{latitude:lat,longitude:lng,zoom:19}}));const geo=await lookupAddress(lat,lng);if(geo?.address)setForm(f=>({...f,address:geo.address}))},()=>alert('Allow location access to pin this lead.'),{enableHighAccuracy:true,timeout:15000,maximumAge:5000});
+  const useCurrentLocation=()=>navigator.geolocation?.getCurrentPosition(async p=>{const lat=p.coords.latitude,lng=p.coords.longitude;setSelectedDoor(d=>({...d,latitude:lat,longitude:lng}));window.dispatchEvent(new CustomEvent('northsplash:center-map',{detail:{latitude:lat,longitude:lng,zoom:19}}));const geo=await lookupAddress(lat,lng);if(geo?.address)setForm(f=>({...f,address:geo.address,street1:geo.street||f.street1,city:geo.city||f.city,state:geo.state||f.state,postal_code:geo.postal_code||f.postal_code}))},()=>alert('Allow location access to pin this lead.'),{enableHighAccuracy:true,timeout:15000,maximumAge:5000});
   const logPresentationEvent=(event:string,detail:Record<string,unknown>={})=>{
     if(!employee)return;
     void supabase.from('d2d_presentation_events').insert({employee_id:employee.id,lead_id:selectedDoor?.lead_id||null,territory_id:selectedTerritory||null,event_type:event,event_data:detail}).then(()=>{},()=>{});
@@ -485,9 +514,6 @@ export default function D2DPortal(){
     if(['interested','estimate','appointment_set'].includes(l.status))score+=25;if(l.follow_up_at&&new Date(l.follow_up_at)<=new Date())score+=10;
     return Math.min(100,score);
   };
-  const pipelineStages=[
-    ['unworked','New'],['contacted','Contacted'],['interested','Interested'],['follow_up','Follow-Up'],['estimate','Estimate'],['appointment_set','Appointment'],['sold','Sold']
-  ] as const;
   const dueFollowups=leads.filter(l=>l.status==='follow_up'||(l.follow_up_at&&new Date(l.follow_up_at)<=new Date()));
   // Keep this as a plain calculation instead of a hook. The D2D page has early
   // loading returns above, so adding a hook here changes the hook count between
@@ -525,7 +551,7 @@ export default function D2DPortal(){
           <div className="d2d-kpi-strip v2-kpis"><Kpi label="Territory" value={`${territoryProgress}%`} detail={`${territoryDoors.filter(d=>d.status!=='unworked').length}/${territoryDoors.length} worked`}/><Kpi label="Doors Today" value={String(workedToday.length)} detail={`Goal ${goals?.door_goal??50}`}/><Kpi label="Contact Rate" value={`${percent(contactsToday,workedToday.length)}%`} detail={`${contactsToday} contacts`}/><Kpi label="Appointments" value={String(appointmentsToday)} detail={`${percent(appointmentsToday,Math.max(contactsToday,1))}% of contacts`}/><Kpi label="Revenue" value={money(revenueToday)} detail={`Goal ${money(Number(goals?.revenue_goal??1500))}`}/></div>
           <div className="d2d-map-shell">
             <div className="d2d-map-topline"><div className="d2d-territory-select"><label>Assigned Territory</label><select value={selectedTerritory} onChange={e=>{setSelectedTerritory(e.target.value);setSelectedDoor(null);setHouseDiscoveryError('')}}>{territories.map(t=><option value={t.id} key={t.id}>{t.name}</option>)}</select></div><div className="d2d-field-actions"><button className="btn-outline" onClick={()=>discoverTerritoryHouses(selectedTerritory,true)} disabled={!selectedTerritory||discoveringHouses}><RefreshCw size={15}/>{discoveringHouses?'Finding Houses…':'Refresh Houses'}</button><button className="btn-outline" onClick={()=>setShowLabels(v=>!v)}>{showLabels?'Hide Labels':'Show Addresses'}</button><button className="btn-outline" onClick={startRoute}><Route size={15}/> Build Route</button></div></div>
-            <div className="d2d-filter-row v2-status-scroller">{DOOR_STATUSES.filter(x=>['unworked','no_answer','revisit','interested','follow_up','estimate','appointment_set','sold','do_not_knock'].includes(x.key)).map(s=><button key={s.key} className={filters.includes(s.key)?'status-filter active':'status-filter'} onClick={()=>setFilters(p=>p.includes(s.key)?p.filter(x=>x!==s.key):[...p,s.key])}><i style={{background:s.color}}/>{s.short}</button>)}</div>
+            <div className="d2d-filter-row v2-status-scroller">{DOOR_STATUSES.filter(x=>['unworked','no_answer','revisit','interested','not_interested','follow_up','estimate','appointment_set','sold','do_not_knock'].includes(x.key)).map(s=><button key={s.key} className={filters.includes(s.key)?'status-filter active':'status-filter'} onClick={()=>setFilters(p=>p.includes(s.key)?p.filter(x=>x!==s.key):[...p,s.key])}><i style={{background:s.color}}/>{s.short}</button>)}</div>
             {discoveringHouses&&<div className="d2d-house-discovery"><span className="live-dot"/> Mapping residential doors inside this territory…</div>}
             {houseDiscoveryError&&<div className="d2d-house-discovery error">{houseDiscoveryError}<button type="button" onClick={()=>discoverTerritoryHouses(selectedTerritory,true)}>Try again</button></div>}
             {!territories.length?<div className="ns-empty"><strong>No territory assigned</strong><p>Ask an owner to pin a neighborhood to this D2D login. Once it lands, houses, knock colors, and Next Best House appear here.</p></div>:!territoryDoors.length?<div className="ns-empty"><strong>No houses mapped yet</strong><p>Refresh houses for this territory, or ask an owner to redraw the neighborhood.</p><button type="button" className="btn-primary" onClick={()=>discoverTerritoryHouses(selectedTerritory,true)} disabled={!selectedTerritory||discoveringHouses}>{discoveringHouses?'Finding Houses…':'Refresh Houses'}</button></div>:<FieldTerritoryMap fieldMode className="d2d-primary-map" territories={territories.filter(t=>!selectedTerritory||t.id===selectedTerritory)} doors={territoryDoors} leads={leads.filter(l=>!selectedTerritory||l.territory_id===selectedTerritory)} liveLocation={live} routeDoorIds={routeDoorIds} activeDoorId={selectedDoor?.id||null} statusFilter={filters} showDoorLabels={showLabels} onDoorClick={pickDoor} onMapClick={pickMapPoint}/>}
@@ -583,17 +609,19 @@ export default function D2DPortal(){
 }
 
 function HouseDrawer({door,form,setForm,history,manual,saving,onClose,onSave,onSaveNext,onEstimate,onLocation,onPitch,onQuote}:{door:any;form:any;setForm:any;history:TerritoryDoorHistory[];manual:boolean;saving:boolean;onClose:()=>void;onSave:(e?:React.FormEvent,status?:string)=>Promise<boolean>|void;onSaveNext:()=>Promise<void>|void;onEstimate:()=>void;onLocation:()=>void;onPitch:()=>void;onQuote:()=>void}){
-  const [panel,setPanel]=useState<'quick'|'details'|'history'>('quick');
+  const [panel,setPanel]=useState<'sheet'|'history'>('sheet');
   const protectedDNK=door?.do_not_knock||door?.status==='do_not_knock';
   const statusMeta=doorStatus(form.status);
   const hasOffer=Boolean(form.service_interest||form.estimated_value);
+  const setField=(patch:Record<string,string>)=>setForm((p:any)=>({...p,...patch}));
+  const title=composedLeadIdentity(form, form.customer_name, form.address).name || form.address || (manual?'Add this household':'Mapped house');
   return <div className="house-drawer-backdrop" onClick={onClose}><form className="house-drawer field-house-sheet" onSubmit={e=>onSave(e)} onClick={e=>e.stopPropagation()}>
     <div className="house-drawer-handle"/>
     <div className="house-drawer-head field-house-head">
       <div className="field-house-address">
         <span className="eyebrow">{manual?'NEW LEAD':'CANVASS HOUSE'}</span>
-        <h2>{form.customer_name||form.address||(manual?'Add this household':'Mapped house')}</h2>
-        <div className="house-title-meta"><div className="house-status-pill" style={{background:statusMeta.color}}>{statusMeta.label}</div>{history.length>0&&<span className="house-visit-pill">{history.length} previous visit{history.length===1?'':'s'}</span>}</div>
+        <h2>{title}</h2>
+        <div className="house-title-meta"><div className="house-status-pill" style={{background:statusMeta.color}}>{statusMeta.short} · {statusMeta.label}</div>{history.length>0&&<span className="house-visit-pill">{history.length} previous visit{history.length===1?'':'s'}</span>}</div>
       </div>
       <button type="button" className="icon-btn light" onClick={onClose}><X/></button>
     </div>
@@ -607,10 +635,17 @@ function HouseDrawer({door,form,setForm,history,manual,saving,onClose,onSave,onS
       <button type="button" className="house-quote-btn" onClick={onQuote}><Target size={15}/> Quote</button>
     </div>
 
-    <div className="field-contact-strip">
-      <label><span>Name</span><input autoComplete="name" placeholder="Who you met" value={form.customer_name} onChange={e=>setForm((p:any)=>({...p,customer_name:e.target.value}))}/></label>
-      <label><span>Phone</span><input autoComplete="tel" type="tel" inputMode="tel" placeholder="919-555-0100" value={form.phone} onChange={e=>setForm((p:any)=>({...p,phone:e.target.value}))}/></label>
-      <label className="wide"><span>Address</span><input required={manual} autoComplete="street-address" placeholder={manual?'Street, Raleigh NC 27616':'Street if missing'} value={form.address} onChange={e=>setForm((p:any)=>({...p,address:e.target.value}))}/></label>
+    <div className="field-contact-strip sr-lead-sheet">
+      <label><span>First name</span><input autoComplete="given-name" placeholder="First" value={form.first_name} onChange={e=>setField({first_name:e.target.value,customer_name:composedLeadIdentity({...form,first_name:e.target.value}, form.customer_name).name})}/></label>
+      <label><span>Last name</span><input autoComplete="family-name" placeholder="Last" value={form.last_name} onChange={e=>setField({last_name:e.target.value,customer_name:composedLeadIdentity({...form,last_name:e.target.value}, form.customer_name).name})}/></label>
+      <label><span>Phone</span><input autoComplete="tel" type="tel" inputMode="tel" placeholder="919-555-0100" value={form.phone} onChange={e=>setField({phone:e.target.value})}/></label>
+      <label><span>Alt phone</span><input type="tel" inputMode="tel" placeholder="Optional" value={form.alt_phone} onChange={e=>setField({alt_phone:e.target.value})}/></label>
+      <label className="wide"><span>Email</span><input type="email" autoComplete="email" value={form.email} onChange={e=>setField({email:e.target.value})}/></label>
+      <label className="wide"><span>Street 1</span><input autoComplete="address-line1" placeholder="210 Forest Pines Dr" value={form.street1} onChange={e=>setField({street1:e.target.value,address:composedLeadIdentity({...form,street1:e.target.value}, '', form.address).address})}/></label>
+      <label><span>Street 2</span><input autoComplete="address-line2" placeholder="Apt / unit" value={form.street2} onChange={e=>setField({street2:e.target.value})}/></label>
+      <label><span>City</span><input autoComplete="address-level2" value={form.city} onChange={e=>setField({city:e.target.value})}/></label>
+      <label><span>State</span><input autoComplete="address-level1" value={form.state} onChange={e=>setField({state:e.target.value})}/></label>
+      <label><span>ZIP</span><input autoComplete="postal-code" value={form.postal_code} onChange={e=>setField({postal_code:e.target.value})}/></label>
     </div>
 
     {hasOffer&&<div className="d2d-applied-offer"><Sparkles size={16}/><div><strong>{form.service_interest||'Offer applied'}</strong><span>{form.estimated_value?money(Number(form.estimated_value)): 'Quote on this household'}</span></div><button type="button" onClick={onQuote}>Change</button></div>}
@@ -618,15 +653,24 @@ function HouseDrawer({door,form,setForm,history,manual,saving,onClose,onSave,onS
     {protectedDNK&&<div className="dnk-warning">Permanent Do Not Knock. Only a manager/admin should clear this property.</div>}
 
     {panel==='history'?<div className="house-history-panel">
-      <div className="house-panel-title"><div><span className="eyebrow">PROPERTY HISTORY</span><h3>Previous activity</h3></div><button type="button" className="btn-outline" onClick={()=>setPanel('quick')}>Back to marking</button></div>
+      <div className="house-panel-title"><div><span className="eyebrow">PROPERTY HISTORY</span><h3>Previous activity</h3></div><button type="button" className="btn-outline" onClick={()=>setPanel('sheet')}>Back to lead</button></div>
       <div className="house-history-list">{history.map(h=><div key={h.id}><i style={{background:doorStatus(h.new_status).color}}/><div><strong>{doorStatus(h.new_status).label}</strong><span>{localDateTime(h.created_at)}</span><p>{h.notes||'Status updated'}</p></div></div>)}{!history.length&&<div className="ns-empty">No previous activity at this house.</div>}</div>
     </div>:<>
-      <div className="field-quick-label"><span>{manual?'Stage this lead':'Mark this house'}</span><small>{manual?'Interested is the default. Change it if this was a knock outcome.':'One tap sets the outcome. Save keeps you moving.'}</small></div>
-      <div className="house-quick-grid field-quick-grid">{STATUS_QUICK.map(status=>{
+      <div className="field-quick-label"><span>{manual?'Stage this lead':'Mark this house'}</span><small>Pin abbreviation and color match the map marker.</small></div>
+      <div className="house-quick-grid field-quick-grid sr-knock-grid">{STATUS_QUICK.map(status=>{
         const meta=doorStatus(status);
-        return <button type="button" disabled={protectedDNK&&status!=='do_not_knock'} key={status} className={form.status===status?'active':''} style={{'--status-color':meta.color} as any} onClick={()=>setForm((p:any)=>({...p,status}))}><i style={{background:meta.color}}/><strong>{meta.short}</strong></button>
+        return <button type="button" disabled={protectedDNK&&status!=='do_not_knock'} key={status} className={form.status===status?'active':''} style={{'--status-color':meta.color} as any} onClick={()=>setForm((p:any)=>({...p,status}))}><strong>{meta.short}</strong><small>{meta.label}</small></button>
       })}</div>
       {form.status==='appointment_set'&&<div className="field-book-now"><label><span>Appointment time</span><input type="datetime-local" value={form.appointment_at} onChange={e=>setForm((p:any)=>({...p,appointment_at:e.target.value}))}/></label><p>Set the window, then Save. Dispatch gets this stop unassigned.</p></div>}
+      {(form.status==='follow_up'||form.status==='revisit')&&<div className="field-book-now"><label><span>Callback</span><input type="datetime-local" value={form.follow_up_at} onChange={e=>setForm((p:any)=>({...p,follow_up_at:e.target.value}))}/></label></div>}
+
+      <div className="house-form-grid sr-custom-fields">
+        <label><span>Vehicle</span><input value={form.vehicle_info} onChange={e=>setField({vehicle_info:e.target.value,vehicle:e.target.value})}/></label>
+        <label><span>Service interest</span><ServiceMenuSelect allowEmpty value={form.service_interest} onChange={(name,pkg)=>setForm((p:any)=>({...p,service_interest:name,service:name,...(pkg?{estimated_value:String(pkg.price),value:String(pkg.price)}:{})}))}/></label>
+        <label><span>Estimated value</span><input type="number" min="0" value={form.estimated_value} onChange={e=>setField({estimated_value:e.target.value,value:e.target.value})}/></label>
+        <label><span>Callback</span><input type="datetime-local" value={form.follow_up_at} onChange={e=>setField({follow_up_at:e.target.value})}/></label>
+        <label className="wide"><span>Notes</span><textarea value={form.notes} onChange={e=>setField({notes:e.target.value})}/></label>
+      </div>
 
       <div className="field-save-bar">
         {manual
@@ -634,14 +678,7 @@ function HouseDrawer({door,form,setForm,history,manual,saving,onClose,onSave,onS
           : <><button type="button" className="btn-primary field-save-next" disabled={saving||protectedDNK} onClick={onSaveNext}>{saving?'Saving…':'Save & Next House'}</button><button type="submit" className="btn-outline" disabled={saving||protectedDNK}>Save</button></>}
       </div>
       {manual&&<button type="button" className="btn-outline field-save-stay" disabled={saving||protectedDNK} onClick={()=>onSave()}>Save and stay</button>}
-
-      <button type="button" className="field-expand-details" onClick={()=>setPanel(panel==='details'?'quick':'details')}><Plus size={15}/>{panel==='details'?'Hide extra details':'Email, vehicle, notes'}</button>
-
-      {panel==='details'&&<div className="field-lead-details">
-        <div className="house-form-grid"><label><span>Email</span><input type="email" value={form.email} onChange={e=>setForm((p:any)=>({...p,email:e.target.value}))}/></label><label><span>Vehicle</span><input value={form.vehicle_info} onChange={e=>setForm((p:any)=>({...p,vehicle_info:e.target.value}))}/></label><label><span>Service Interest</span><ServiceMenuSelect allowEmpty value={form.service_interest} onChange={(name,pkg)=>setForm((p:any)=>({...p,service_interest:name,...(pkg?{estimated_value:String(pkg.price)}:{})}))}/></label><label><span>Estimated Value</span><input type="number" min="0" value={form.estimated_value} onChange={e=>setForm((p:any)=>({...p,estimated_value:e.target.value}))}/></label><label><span>Follow-Up</span><input type="datetime-local" value={form.follow_up_at} onChange={e=>setForm((p:any)=>({...p,follow_up_at:e.target.value}))}/></label><label><span>Appointment Time</span><input type="datetime-local" value={form.appointment_at} onChange={e=>setForm((p:any)=>({...p,appointment_at:e.target.value}))}/></label></div>
-        <label className="house-notes"><span>Notes</span><textarea value={form.notes} onChange={e=>setForm((p:any)=>({...p,notes:e.target.value}))}/></label>
-        <div className="house-drawer-actions"><button type="button" className="btn-outline" onClick={onEstimate}>Create Estimate</button>{form.status==='appointment_set'&&form.appointment_at&&<span className="field-inline-note">Saving will create the appointment.</span>}</div>
-      </div>}
+      <div className="house-drawer-actions"><button type="button" className="btn-outline" onClick={onEstimate}>Create Estimate</button>{form.status==='appointment_set'&&form.appointment_at&&<span className="field-inline-note">Saving will create the appointment.</span>}</div>
     </>}
   </form></div>;
 }

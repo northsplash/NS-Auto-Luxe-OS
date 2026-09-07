@@ -5,16 +5,15 @@ import {
   Target, TrendingUp, RefreshCw
 } from 'lucide-react';
 import { supabase, type Lead } from '@/lib/supabase';
-import { money, prettyLabel } from '@/lib/data';
-import { localDateTime, DOOR_STATUSES, doorStatus } from '@/lib/fieldOps';
+import { money } from '@/lib/data';
+import { localDateTime, doorStatus } from '@/lib/fieldOps';
+import { SR_PIPELINE_KEYS, SR_STATUSES, srStatus } from '@/lib/salesRabbitLeads';
 import { googleMapsErrorMessage, loadGoogleMaps, shouldUseGoogleMaps } from '@/lib/googleMaps';
 import { geocodeOsmAddress } from '@/lib/osmGeocode';
 import FieldTerritoryMap from '@/components/FieldTerritoryMap';
 
 type Props={leads:Lead[];onOpen:(lead:Lead)=>void;onSchedule?:(lead:Lead)=>void;repName?:string};
-const statusNames:Record<string,string>={unworked:'New',contacted:'Contacted',interested:'Interested',follow_up:'Follow Up',estimate:'Estimate',appointment_set:'Appointment',sold:'Sold',no_answer:'No Answer',revisit:'Revisit',do_not_knock:'DNK'};
-const stageColors:Record<string,string>=Object.fromEntries(DOOR_STATUSES.map(s=>[s.key,s.color]));
-const pipelineStages=['unworked','interested','follow_up','estimate','appointment_set'] as const;
+const pipelineStages=SR_PIPELINE_KEYS;
 const score=(l:Lead)=>{if(Number(l.lead_score||0)>0)return Number(l.lead_score);let n=20;if(l.phone)n+=15;if(l.email)n+=10;if(l.service_interest)n+=10;if(Number(l.estimated_value||0)>=300)n+=15;if(['interested','estimate','appointment_set'].includes(l.status))n+=25;if(l.follow_up_at&&new Date(l.follow_up_at)<=new Date())n+=10;return Math.min(100,n)};
 const temp=(l:Lead)=>l.lead_temperature&&l.lead_temperature!=='cold'?l.lead_temperature:(score(l)>=75?'hot':score(l)>=45?'warm':'cold');
 
@@ -30,7 +29,7 @@ function LeadMap({leads,onOpen}:{leads:Lead[];onOpen:(lead:Lead)=>void}){
         if(lead) onOpen(lead);
       }}
     />
-    <div className="lead-map-legend salesrabbit-legend-v29">{DOOR_STATUSES.slice(0,10).map(s=><span key={s.key}><i style={{background:s.color}}/>{s.short}</span>)}</div>
+    <div className="lead-map-legend salesrabbit-legend-v29">{SR_STATUSES.filter(s=>s.knock||s.key==='unworked').map(s=><span key={s.key}><i style={{background:s.color}}/>{s.abbr}</span>)}</div>
   </div>;
 }
 
@@ -94,19 +93,19 @@ export default function LeadCommandCenter({leads,onOpen,onSchedule,repName}:Prop
     </div>
     <div className="lead-command-toolbar lead-toolbar-v26">
       <div className="lead-search"><Search size={17}/><input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search name, address, phone or service"/></div>
-      <select value={stage} onChange={e=>setStage(e.target.value)}><option value="all">All active leads</option><option value="due">Follow-ups due</option>{Object.entries(statusNames).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select>
+      <select value={stage} onChange={e=>setStage(e.target.value)}><option value="all">All active leads</option><option value="due">Follow-ups due</option>{SR_STATUSES.map(s=><option key={s.key} value={s.key}>{s.name}</option>)}</select>
       <select value={sort} onChange={e=>setSort(e.target.value)}><option value="priority">Priority first</option><option value="followup">Next action</option><option value="value">Highest value</option><option value="nearest" disabled={!userPos}>Nearest to me</option></select><button type="button" className="btn-outline lead-near-me-v27" onClick={useMyLocation}><Navigation size={15}/>{userPos?'Refresh location':'Near me'}</button>{unmapped>0&&<button type="button" className="btn-outline lead-map-missing-v27" onClick={geocodeMissing} disabled={geocoding} title="Map up to 20 leads with addresses"><RefreshCw size={15} className={geocoding?'spin':''}/>{geocoding?'Mapping…':`Map ${Math.min(20,unmapped)} missing`}</button>}
     </div>{geocodeNote&&<div className="lead-geocode-note-v27">{geocodeNote}<button type="button" onClick={()=>setGeocodeNote('')}>×</button></div>}
 
     {view==='map'&&<div className="lead-map-layout-v26"><LeadMap leads={rows} onOpen={onOpen}/><aside className="lead-map-sidebar-v26 salesrabbit-door-list-v29"><header><div><span className="eyebrow">KNOCK QUEUE</span><h4>Next doors</h4></div><span>{rows.length}</span></header>{rows.slice(0,18).map(l=>{const knock=doorStatus(l.status);return <button key={l.id} onClick={()=>onOpen(l)}><i className="door-knock-dot-v29" style={{background:knock.color}} title={knock.label}/><span><strong>{l.customer_name||l.address||'Prospect'}</strong><small>{knock.short} · {l.address||'Address pending'}{userPos&&l.latitude&&l.longitude?` · ${formatDistance(leadDistance(l,userPos))}`:''}</small></span><em>{money(Number(l.estimated_value||0))}</em></button>})}</aside></div>}
 
-    {view==='pipeline'&&<div className="lead-pipeline-v26">{pipelineStages.map(s=>{const items=rows.filter(l=>l.status===s||(s==='unworked'&&['contacted','no_answer','revisit'].includes(l.status)));const total=items.reduce((n,l)=>n+Number(l.estimated_value||0),0);return <section key={s}><header><div><i style={{background:stageColors[s]}}/><strong>{statusNames[s]}</strong><span>{items.length}</span></div><em>{money(total)}</em></header><div className="lead-pipeline-cards-v26">{items.map(l=><article key={l.id} onClick={()=>onOpen(l)}><div className="lead-pipeline-card-head"><span className={`lead-temp ${temp(l)}`}/><strong>{l.customer_name||'Unnamed prospect'}</strong><em>{score(l)}</em></div><p>{l.address||'Address pending'}</p><small>{l.service_interest||'Service not selected'}{l.vehicle_info?` · ${l.vehicle_info}`:''}</small><div className="lead-pipeline-meta"><span>{money(Number(l.estimated_value||0))}</span><span>{l.follow_up_at?new Date(l.follow_up_at).toLocaleDateString():'No follow-up'}</span></div><div className="lead-pipeline-actions-v26">{l.phone&&<a href={`tel:${l.phone}`} onClick={e=>e.stopPropagation()}><Phone size={15}/></a>}{l.latitude&&l.longitude&&<button onClick={e=>{e.stopPropagation();openMaps(l)}}><Navigation size={15}/></button>}{onSchedule&&<button onClick={e=>{e.stopPropagation();onSchedule(l)}}><CalendarPlus size={15}/></button>}<button onClick={e=>{e.stopPropagation();onOpen(l)}}><ChevronRight size={16}/></button></div></article>)}{!items.length&&<div className="lead-column-empty">No leads</div>}</div></section>})}</div>}
+    {view==='pipeline'&&<div className="lead-pipeline-v26">{pipelineStages.map(s=>{const items=rows.filter(l=>l.status===s||(s==='unworked'&&['contacted'].includes(l.status)));const total=items.reduce((n,l)=>n+Number(l.estimated_value||0),0);const meta=srStatus(s);return <section key={s}><header><div><i style={{background:meta.color}}/><strong>{meta.name}</strong><span>{items.length}</span></div><em>{money(total)}</em></header><div className="lead-pipeline-cards-v26">{items.map(l=><article key={l.id} onClick={()=>onOpen(l)}><div className="lead-pipeline-card-head"><span className={`lead-temp ${temp(l)}`}/><strong>{l.customer_name||'Unnamed prospect'}</strong><em>{score(l)}</em></div><p>{l.address||'Address pending'}</p><small>{l.service_interest||'Service not selected'}{l.vehicle_info?` · ${l.vehicle_info}`:''}</small><div className="lead-pipeline-meta"><span>{money(Number(l.estimated_value||0))}</span><span>{l.follow_up_at?new Date(l.follow_up_at).toLocaleDateString():'No follow-up'}</span></div><div className="lead-pipeline-actions-v26">{l.phone&&<a href={`tel:${l.phone}`} onClick={e=>e.stopPropagation()}><Phone size={15}/></a>}{l.latitude&&l.longitude&&<button onClick={e=>{e.stopPropagation();openMaps(l)}}><Navigation size={15}/></button>}{onSchedule&&<button onClick={e=>{e.stopPropagation();onSchedule(l)}}><CalendarPlus size={15}/></button>}<button onClick={e=>{e.stopPropagation();onOpen(l)}}><ChevronRight size={16}/></button></div></article>)}{!items.length&&<div className="lead-column-empty">No leads</div>}</div></section>})}</div>}
 
     {view==='list'&&<div className="lead-command-table lead-list-v26">
       <div className="lead-command-head"><span>Customer</span><span>Stage</span><span>Next action</span><span>Value</span><span>Actions</span></div>
       {rows.map(l=><div className="lead-command-row" key={l.id}>
         <button className="lead-customer-cell" onClick={()=>onOpen(l)}><i className="door-knock-dot-v29" style={{background:doorStatus(l.status).color}}/><div><strong>{l.customer_name||'Unnamed prospect'}</strong><span>{l.address||'Address not added'}</span><small>{doorStatus(l.status).label} · {l.service_interest||'Service not selected'}{l.vehicle_info?` · ${l.vehicle_info}`:''}</small></div></button>
-        <span><b className={`lead-stage stage-${l.status}`}>{statusNames[l.status||'']||prettyLabel(l.status)}</b><small className="lead-score-line">Score {score(l)} · {temp(l)}</small></span>
+        <span><b className={`lead-stage stage-${l.status}`}>{srStatus(l.status).name}</b><small className="lead-score-line">Score {score(l)} · {temp(l)}</small></span>
         <span>{l.follow_up_at?<><strong className={new Date(l.follow_up_at).getTime()<=now?'overdue-text':''}>{new Date(l.follow_up_at).getTime()<=now?'Due ':'Next '}{localDateTime(l.follow_up_at)}</strong><small>{l.last_contacted_at?`Last contact ${new Date(l.last_contacted_at).toLocaleDateString()}`:'No contact logged'}</small></>:<><strong>No next action</strong><small>Set a follow-up to keep it moving</small></>}</span>
         <span><strong>{money(Number(l.estimated_value||0))}</strong><small>{l.contact_attempt_count||0} attempts</small></span>
         <span className="lead-row-actions">{l.phone&&<a href={`tel:${l.phone}`} title="Call"><Phone size={16}/></a>}{l.latitude&&l.longitude&&<button onClick={()=>openMaps(l)} title="Navigate"><Navigation size={16}/></button>}{onSchedule&&<button onClick={()=>onSchedule(l)} title="Schedule"><CalendarPlus size={16}/></button>}<button onClick={()=>onOpen(l)} title="Open"><ChevronRight size={17}/></button></span>

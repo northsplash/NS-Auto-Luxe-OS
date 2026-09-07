@@ -9,6 +9,7 @@ import {
 import type { EmployeeDraft } from '@/lib/rolePresets';
 import { BRAND_LOGO } from '@/lib/brand';
 import { money } from '@/lib/data';
+import { srStatus } from '@/lib/salesRabbitLeads';
 import { OsProvider, useOs } from './osStore';
 import {
   CalendarView, CommsView, CustomersView, D2DView, DispatchView, HireModal, HireView, JobDetail,
@@ -619,7 +620,7 @@ function OsShell() {
                 ))}
                 {commandLeads.map((l) => (
                   <button key={l.id} onClick={() => { go('sales'); setCommandOpen(false); }}>
-                    <Target size={16} /><span>{l.name}</span><small>{l.address} · {l.status}</small>
+                    <Target size={16} /><span>{l.name}</span><small>{l.address} · {srStatus(l.status).abbr}</small>
                   </button>
                 ))}
                 {q && !commandPages.length && !commandPeople.length && !commandJobs.length && !commandCustomers.length && !commandLeads.length && <p className="empty-text">Nothing matches.</p>}

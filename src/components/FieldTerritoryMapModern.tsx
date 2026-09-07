@@ -23,14 +23,12 @@ function clearMarkers(items: MarkerLike[]) {
   items.splice(0).forEach(item => { try { item.setMap?.(null); } catch {} });
 }
 
-function markerSvg(color: string, selected = false, routeIndex?: number, leadOnly = false) {
-  const safe = /^#[0-9a-f]{6}$/i.test(color) ? color : '#9d7651';
+function markerSvg(color: string, selected = false, label = '') {
+  const safe = /^#[0-9a-f]{6}$/i.test(color) ? color : '#3498db';
   const stroke = selected ? '#111111' : '#ffffff';
-  const number = routeIndex ? `<text x="28" y="35" text-anchor="middle" font-family="Arial" font-size="17" font-weight="700" fill="#fff">${routeIndex}</text>` : '';
-  const inner = leadOnly
-    ? `<circle cx="28" cy="28" r="11" fill="#fff" opacity=".96"/><circle cx="28" cy="28" r="5" fill="${safe}"/>`
-    : `<path d="M17 30V20l11-9 11 9v10h-7v-7h-8v7z" fill="#fff"/>`;
-  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="56" height="66" viewBox="0 0 56 66"><path d="M28 2C14.7 2 4 12.5 4 25.5 4 43 28 64 28 64s24-21 24-38.5C52 12.5 41.3 2 28 2z" fill="${safe}" stroke="${stroke}" stroke-width="${selected ? 4 : 2}"/>${inner}${number}</svg>`)}`;
+  const text = String(label || '').slice(0, 4);
+  const size = text.length > 2 ? 12 : 15;
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="56" height="66" viewBox="0 0 56 66"><path d="M28 2C14.7 2 4 12.5 4 25.5 4 43 28 64 28 64s24-21 24-38.5C52 12.5 41.3 2 28 2z" fill="${safe}" stroke="${stroke}" stroke-width="${selected ? 4 : 2}"/><text x="28" y="32" text-anchor="middle" font-family="Arial" font-size="${size}" font-weight="800" fill="#fff">${text}</text></svg>`)}`;
 }
 
 export default function FieldTerritoryMapModern({
@@ -183,8 +181,8 @@ export default function FieldTerritoryMapModern({
       const lat=Number(door.latitude),lng=Number(door.longitude); if(!Number.isFinite(lat)||!Number.isFinite(lng)) return;
       const status=doorStatus(door.status); const selected=door.id===activeDoorId; const routeIndex=door.id?routeMap.get(door.id):undefined;
       const marker = new google.maps.Marker({
-        map:instance, position:{lat,lng}, title:`${door.address||'Mapped house'} · ${status.label}`,
-        icon:{url:markerSvg(status.color,selected,routeIndex,false),scaledSize:new google.maps.Size(selected?46:38,selected?54:45),anchor:new google.maps.Point(selected?23:19,selected?54:45)},
+        map:instance, position:{lat,lng}, title:`${door.address||'Mapped house'} · ${status.short} · ${status.label}`,
+        icon:{url:markerSvg(status.color,selected,routeIndex?String(routeIndex):status.short),scaledSize:new google.maps.Size(selected?46:38,selected?54:45),anchor:new google.maps.Point(selected?23:19,selected?54:45)},
         label: showDoorLabels && door.address ? {text:String(door.address),color:'#17120d',fontSize:'10px',fontWeight:'700',className:'ns-google-address-label'} : undefined,
         zIndex:selected?120:routeIndex?100:40,
       });
@@ -196,7 +194,7 @@ export default function FieldTerritoryMapModern({
       if(lead.territory_door_id&&visibleDoors.some(d=>d.id===lead.territory_door_id))return;
       const lat=Number(lead.latitude),lng=Number(lead.longitude);if(!Number.isFinite(lat)||!Number.isFinite(lng))return;
       const status=doorStatus(lead.status); const door:FieldDoor={latitude:lat,longitude:lng,address:lead.address,status:lead.status,territory_id:lead.territory_id,lead_id:lead.id};
-      const marker=new google.maps.Marker({map:instance,position:{lat,lng},title:`${lead.customer_name||lead.address||'Lead'} · ${status.label}`,icon:{url:markerSvg(status.color,false,undefined,true),scaledSize:new google.maps.Size(34,40),anchor:new google.maps.Point(17,40)},zIndex:55});
+      const marker=new google.maps.Marker({map:instance,position:{lat,lng},title:`${lead.customer_name||lead.address||'Lead'} · ${status.short} · ${status.label}`,icon:{url:markerSvg(status.color,false,status.short),scaledSize:new google.maps.Size(34,40),anchor:new google.maps.Point(17,40)},zIndex:55});
       marker.addListener('click',()=>onDoorClick?.(door));dataMarkers.current.push(marker);bounds.extend({lat,lng});hasBounds=true;
     });
 

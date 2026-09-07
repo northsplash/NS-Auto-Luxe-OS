@@ -13,6 +13,7 @@ import {
   type OsShift, type OsTimeOff, type Weekday,
 } from './demoData';
 import { liveOpenSlots, localYmd } from './appointmentSlots';
+import { srStatus, srTemp } from '@/lib/salesRabbitLeads';
 
 function list<T>(value: T[] | undefined | null): T[] {
   return Array.isArray(value) ? value : [];
@@ -41,7 +42,7 @@ function seed(): OsSnapshot {
   return {
     employees: seedEmployees,
     jobs: seedJobs.map((j) => normalizeJob(j)),
-    leads: seedLeads,
+    leads: seedLeads.map((l) => normalizeLead(l)),
     chats: seedChats,
     payments: seedPayments,
     candidates: seedCandidates,
@@ -190,7 +191,7 @@ type OsApi = OsSnapshot & {
   renameChat: (id: string, name: string) => void;
   shareToChat: (chatId: string, body: string) => void;
   createJob: (draft: JobDraft) => string;
-  addLead: (name: string, address: string, extra?: { phone?: string; value?: number; rep?: string; status?: LeadStatus }) => string;
+  addLead: (name: string, address: string, extra?: Partial<OsLead>) => string;
   toggleMember: (customerId: string) => void;
   rescheduleJob: (id: string, time: string) => void;
 };
@@ -479,10 +480,10 @@ export function OsProvider({ children }: { children: ReactNode }) {
     setLeadStatus: (id, status) => setState((s) => ({
       ...s,
       leads: s.leads.map((l) => l.id !== id ? l : {
-        ...l, status, temp: status === 'sold' || status === 'appointment' ? 'hot' : status === 'dnk' ? 'cold' : l.temp,
-        activity: [{ id: uid(), at: clockNow(), author: l.rep, body: `Moved to ${status}.` }, ...list(l.activity)],
+        ...l, status, temp: srTemp(status),
+        activity: [{ id: uid(), at: clockNow(), author: l.rep, body: `Moved to ${srStatus(status).name}.` }, ...list(l.activity)],
       }),
-      activity: [{ id: uid(), at: clockNow(), kind: 'sales', text: `Lead ${s.leads.find((l) => l.id === id)?.name} → ${status}.` }, ...s.activity],
+      activity: [{ id: uid(), at: clockNow(), kind: 'sales', text: `Lead ${s.leads.find((l) => l.id === id)?.name} → ${srStatus(status).name}.` }, ...s.activity],
     })),
     assignLead: (id, rep) => setState((s) => ({
       ...s,
@@ -528,10 +529,10 @@ export function OsProvider({ children }: { children: ReactNode }) {
         const job: OsJob = normalizeJob({
           id: jobId,
           customer: lead.name,
-          email: '',
+          email: lead.email || '',
           phone: lead.phone,
-          service: opts?.service || (lead.value >= 500 ? 'Luxe Ceramic Coating' : 'Luxe Signature'),
-          vehicle: 'Vehicle TBD',
+          service: opts?.service || lead.service || (lead.value >= 500 ? 'Luxe Ceramic Coating' : 'Luxe Signature'),
+          vehicle: lead.vehicle || 'Vehicle TBD',
           address: lead.address,
           time: opts?.time || liveOpenSlots(s.jobs, s.employees, 1)[0]?.window || `${localYmd(new Date(Date.now() + 86400000))} · 10:00 AM`,
           status: 'scheduled',
@@ -542,12 +543,12 @@ export function OsProvider({ children }: { children: ReactNode }) {
         });
         const extra = fireComms(job, 'scheduled', s.templates);
         const customer: OsCustomer = {
-          id: `cu_${id}`, name: lead.name, email: '', phone: lead.phone, vehicle: 'Vehicle TBD', address: lead.address, member: false, notes: [],
+          id: `cu_${id}`, name: lead.name, email: lead.email || '', phone: lead.phone, vehicle: lead.vehicle || 'Vehicle TBD', address: lead.address, member: false, notes: [],
         };
         return {
           ...s,
           jobs: [{ ...job, comms: extra }, ...s.jobs],
-          leads: s.leads.map((l) => l.id === id ? { ...l, status: 'sold' as const, temp: 'hot' as const } : l),
+          leads: s.leads.map((l) => l.id === id ? { ...l, status: 'sold', temp: 'hot' } : l),
           customers: s.customers.some((c) => c.name === lead.name) ? s.customers : [customer, ...s.customers],
           activity: [{ id: `act_book_${id}`, at: clockNow(), kind: 'sales', text: `Booked ${lead.name} from D2D · ${money(job.price)}.` }, ...s.activity],
         };
@@ -678,12 +679,13 @@ export function OsProvider({ children }: { children: ReactNode }) {
     },
     addLead: (name, address, extra) => {
       const id = `l_${Date.now()}`;
+      const lead = normalizeLead({ id, name, address, ...extra, status: extra?.status || 'unworked', rep: extra?.rep || 'Unassigned', value: extra?.value ?? 275, phone: extra?.phone || '' });
       setState((s) => ({
         ...s,
-        leads: [normalizeLead({ id, name, address, status: extra?.status || 'new', temp: extra?.status === 'interested' || extra?.status === 'appointment' ? 'hot' : 'warm', rep: extra?.rep || 'Unassigned', value: extra?.value ?? 275, phone: extra?.phone || '' }), ...s.leads],
-        activity: [{ id: uid(), at: clockNow(), kind: 'sales', text: `New door logged: ${name} · ${address}.` }, ...s.activity],
+        leads: [lead, ...s.leads],
+        activity: [{ id: uid(), at: clockNow(), kind: 'sales', text: `New door logged: ${lead.name} · ${lead.address}.` }, ...s.activity],
       }));
-      flash('Door added', `${name} is on the pipeline`);
+      flash('Door added', `${lead.name} is on the pipeline`);
       return id;
     },
     toggleMember: (customerId) => setState((s) => ({

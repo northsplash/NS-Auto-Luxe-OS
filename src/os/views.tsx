@@ -12,9 +12,10 @@ import { firstWord, isSettledPayment, money, prettyLabel, trendLabel } from '@/l
 import { DETAIL_FAMILY_COPY, packagesForFamily } from '@/lib/detailCatalog';
 import { ServiceMenuSelect } from '@/components/DetailSelfPicker';
 import { remainingStepLabels } from '@/lib/onboarding';
+import { SR_STATUSES, composedLeadIdentity, fieldsFromLead, srStatus } from '@/lib/salesRabbitLeads';
 import {
   JOB_STEP_LABELS, JOB_STEPS, LEAD_STAGES, SHIFT_DAYS, WEEKDAYS, initialsOf, payLine, revenueDays,
-  type JobStatus, type LeadStatus, type OsChat, type OsEmployee, type OsJob,
+  type JobStatus, type OsChat, type OsEmployee, type OsJob, type OsLead,
 } from './demoData';
 import { useOs } from './osStore';
 
@@ -35,6 +36,51 @@ function statusClass(status: JobStatus) {
 function jobClock(time?: string | null) {
   const value = String(time || '');
   return value.includes('·') ? value.split('·')[1].trim() : value;
+}
+
+function SrMapPin({
+  lead, selected, className = '', style, onClick,
+}: {
+  lead: OsLead;
+  selected?: boolean;
+  className?: string;
+  style?: React.CSSProperties;
+  onClick?: () => void;
+}) {
+  const pin = srStatus(lead.status);
+  return (
+    <button
+      type="button"
+      className={`ns-sr-pin nsos-map-pin ${selected ? 'selected' : ''} ${className}`}
+      style={{ ...style, ['--pin' as string]: pin.color }}
+      title={`${lead.name} · ${pin.name} · ${lead.address}`}
+      onClick={onClick}
+    >
+      <b>{pin.abbr}</b>
+    </button>
+  );
+}
+
+function SrStatusDot({ status }: { status: string }) {
+  const pin = srStatus(status);
+  return <i className="nsos-sr-dot" style={{ background: pin.color }} title={`${pin.abbr} · ${pin.name}`} />;
+}
+
+function srPillTone(status: string) {
+  const key = srStatus(status).key;
+  if (key === 'do_not_knock' || key === 'not_interested' || key === 'cancelled' || key === 'lost') return 'red';
+  if (key === 'sold' || key === 'customer' || key === 'appointment_set' || key === 'interested') return 'green';
+  if (key === 'estimate' || key === 'follow_up' || key === 'revisit' || key === 'no_answer') return 'gold';
+  return 'blue';
+}
+
+function isWorkedLead(status: string) {
+  return srStatus(status).key !== 'unworked';
+}
+
+function isClosedLead(status: string) {
+  const key = srStatus(status).key;
+  return key === 'do_not_knock' || key === 'sold' || key === 'customer' || key === 'not_interested' || key === 'cancelled' || key === 'lost';
 }
 
 function StripeKpi({ label, value, delta }: { label: string; value: string; delta?: string }) {
@@ -107,17 +153,17 @@ export function OwnerDashboard({
   const completed = jobs.filter((j) => j.status === 'completed');
   const completedRev = completed.reduce((s, j) => s + Number(j.price || 0), 0);
   const avgTicket = completed.length ? Math.round(completedRev / completed.length) : 0;
-  const newLeads = leads.filter((l) => l.status === 'new').length;
+  const newLeads = leads.filter((l) => srStatus(l.status).key === 'unworked').length;
   const earlierCollected = payments.filter((p) => isSettledPayment(p.status) && String(p.at || '').includes('Yesterday')).reduce((s, p) => s + Number(p.amount || 0), 0);
   const todayCollected = payments.filter((p) => isSettledPayment(p.status) && String(p.at || '').includes('Today')).reduce((s, p) => s + Number(p.amount || 0), 0);
   const activeTeam = employees.filter((e) => e.status === 'active');
   const activeDetailers = employees.filter((e) => e.status === 'active' && e.role === 'detailer').length;
   const unassigned = jobs.filter((j) => jobOpen(j) && jobUnassigned(j));
   const unpaid = jobs.filter((j) => j.payment === 'due' && j.status !== 'scheduled');
-  const hotLeads = leads.filter((l) => l.temp === 'hot' && l.status !== 'sold' && l.status !== 'dnk');
+  const hotLeads = leads.filter((l) => l.temp === 'hot' && !isClosedLead(l.status));
   const pending = jobs.filter((j) => j.status === 'scheduled').length;
   const next = today[0] || jobs.find(jobOpen);
-  const d2d = leads.filter((l) => l.status !== 'dnk' && l.status !== 'sold').length;
+  const d2d = leads.filter((l) => !isClosedLead(l.status)).length;
   const assigned = jobs.filter((j) => jobOpen(j) && !jobUnassigned(j)).length;
   const exceptions = [
     unassigned.length ? { n: unassigned.length, title: 'Unassigned jobs', sub: 'Need a technician', go: onOpenDispatch, hot: true } : null,
@@ -779,7 +825,7 @@ export function CalendarView({ onOpen }: { onOpen: (id: string) => void }) {
     const hit = `${j.customer} ${j.service} ${j.vehicle} ${j.address}`.toLowerCase().includes(query);
     return hit && jobMatchesDay(j, pickedDate);
   });
-  const leadsToday = os.leads.filter((l) => `${l.name} ${l.address}`.toLowerCase().includes(query) && (l.status === 'appointment' || l.status === 'interested' || l.status === 'sold'));
+  const leadsToday = os.leads.filter((l) => `${l.name} ${l.address}`.toLowerCase().includes(query) && ['appointment_set', 'interested', 'sold', 'estimate'].includes(srStatus(l.status).key));
   const shiftsToday = os.shifts.filter((s) => s.day === weekday);
   const showJobs = filter === 'all' || filter === 'jobs';
   const showLeads = filter === 'all' || filter === 'leads';
@@ -1011,19 +1057,13 @@ export function TerritoriesView({ onMap, onPipeline }: { onMap?: () => void; onP
   const lead = os.leads.find((l) => l.id === active) || os.leads[0];
   const me = os.employees.find((e) => e.role === 'owner');
   const d2dReps = ['Unassigned', ...os.employees.filter((e) => e.role === 'd2d_agent' || e.role === 'owner').map((e) => e.name)];
-  const pinClass = (status: LeadStatus) => {
-    if (status === 'sold' || status === 'appointment') return 'hot';
-    if (status === 'interested') return 'warm';
-    if (status === 'dnk') return 'dnk';
-    return 'cold';
-  };
   const inZone = (x: number) => zone === 'all' || zoneOf(x) === zone;
   const pins = os.leads.filter((l) => inZone(l.x) && (!street || streetOf(l.address) === street));
   const boards = TERRITORY_ZONES.map((z) => {
     const doors = os.leads.filter((l) => zoneOf(l.x) === z.id);
     const streets = [...new Set(doors.map((l) => streetOf(l.address)))];
-    const worked = doors.filter((l) => l.status !== 'new').length;
-    const sold = doors.filter((l) => l.status === 'sold').length;
+    const worked = doors.filter((l) => isWorkedLead(l.status)).length;
+    const sold = doors.filter((l) => srStatus(l.status).key === 'sold').length;
     const assigned = reps[z.id] || (doors.find((l) => l.rep && l.rep !== 'Unassigned')?.rep) || 'Unassigned';
     return { ...z, doors, streets, worked, sold, assigned };
   });
@@ -1097,11 +1137,12 @@ export function TerritoriesView({ onMap, onPipeline }: { onMap?: () => void; onP
               <b>West Shore</b><b>Central Corridor</b><b>East Ridge</b>
             </div>
             {pins.map((l) => (
-              <button
+              <SrMapPin
                 key={l.id}
-                className={`nsos-pin ${pinClass(l.status)} zone-${zoneOf(l.x)} ${l.id === lead?.id ? 'selected' : ''} ${street && streetOf(l.address) === street ? 'street-hit' : ''}`}
+                lead={l}
+                className={`zone-${zoneOf(l.x)} ${street && streetOf(l.address) === street ? 'street-hit' : ''}`}
+                selected={l.id === lead?.id}
                 style={{ left: `${l.x}%`, top: `${l.y}%` }}
-                title={`${l.name} · ${l.address} · ${TERRITORY_ZONES.find((z) => z.id === zoneOf(l.x))?.name}`}
                 onClick={() => { setActive(l.id); setZone(zoneOf(l.x)); }}
               />
             ))}
@@ -1114,7 +1155,7 @@ export function TerritoriesView({ onMap, onPipeline }: { onMap?: () => void; onP
               <span className="nsos-eyebrow">{selectedZone?.name || 'Territory'} · {streetOf(lead.address)}</span>
               <h3>{lead.name}</h3>
               <p style={{ color: 'var(--os-muted)' }}>{lead.address} · {lead.phone || 'No phone'} · {money(lead.value)}</p>
-              <p style={{ color: 'var(--os-muted)', fontSize: 13 }}>{lead.rep} · {lead.status === 'knocked' ? 'not home' : lead.status}</p>
+              <p style={{ color: 'var(--os-muted)', fontSize: 13 }}>{lead.rep} · {srStatus(lead.status).name}</p>
               <button type="button" className="nsos-btn" style={{ width: '100%', justifyContent: 'center' }} onClick={() => onMap?.()}>Open on knock map</button>
             </div>
           )}
@@ -1122,7 +1163,7 @@ export function TerritoriesView({ onMap, onPipeline }: { onMap?: () => void; onP
             <span className="nsos-eyebrow">Streets</span>
             {streetRows.length ? streetRows.map((row) => {
               const meta = TERRITORY_ZONES.find((z) => z.id === row.zone);
-              const worked = row.doors.filter((l) => l.status !== 'new').length;
+              const worked = row.doors.filter((l) => isWorkedLead(l.status)).length;
               return (
                 <button
                   key={row.name}
@@ -1146,12 +1187,18 @@ export function TerritoriesView({ onMap, onPipeline }: { onMap?: () => void; onP
   );
 }
 
+const emptyDoorDraft = () => ({
+  first_name: '', last_name: '', phone: '', alt_phone: '', email: '',
+  street1: '', street2: '', city: 'Raleigh', state: 'NC', postal_code: '27616',
+});
+
 export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => void; onPipeline?: () => void }) {
   const os = useOs();
   const [active, setActive] = useState<string | null>(os.leads[0]?.id || null);
   const [note, setNote] = useState('');
-  const [door, setDoor] = useState({ name: '', address: '', phone: '' });
+  const [door, setDoor] = useState(emptyDoorDraft);
   const [zone, setZone] = useState<'all' | 'west' | 'central' | 'east'>('all');
+  const [pinFilter, setPinFilter] = useState<string | 'all'>('all');
   const [pane, setPane] = useState<'map' | 'pitch' | 'list'>(() => {
     const next = new URLSearchParams(window.location.search).get('pane');
     return next === 'pitch' || next === 'list' ? next : 'map';
@@ -1160,21 +1207,10 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
   const me = os.employees.find((e) => e.role === 'owner');
   const d2dReps = ['Unassigned', ...os.employees.filter((e) => e.role === 'd2d_agent' || e.role === 'owner').map((e) => e.name)];
   const territory = (x: number) => (x < 33 ? 'west' : x < 66 ? 'central' : 'east');
-  const pins = os.leads.filter((l) => zone === 'all' || territory(l.x) === zone);
+  const pins = os.leads.filter((l) => (zone === 'all' || territory(l.x) === zone) && (pinFilter === 'all' || srStatus(l.status).key === pinFilter));
   const slots = liveOpenSlots(os.jobs, os.employees, 10);
-  const knocks: { id: LeadStatus; label: string }[] = [
-    { id: 'knocked', label: 'Not home' },
-    { id: 'interested', label: 'Interested' },
-    { id: 'appointment', label: 'Appointment' },
-    { id: 'sold', label: 'Sold' },
-    { id: 'dnk', label: 'DNK' },
-  ];
-  const pinClass = (status: LeadStatus) => {
-    if (status === 'sold' || status === 'appointment') return 'hot';
-    if (status === 'interested') return 'warm';
-    if (status === 'dnk') return 'dnk';
-    return 'cold';
-  };
+  const knocks = SR_STATUSES.filter((s) => s.knock);
+  const leadPin = lead ? srStatus(lead.status) : null;
   const bookLead = (time?: string, service?: string, price?: number, detailer?: string) => {
     if (!lead) return;
     const id = os.convertLead(lead.id, { time, service, price, detailer });
@@ -1188,6 +1224,7 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
         phone: hh.phone?.trim() || '',
         value: offer.amount,
         status: 'interested',
+        service: offer.name,
       });
       setActive(id);
       return;
@@ -1199,8 +1236,30 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
       value: offer.amount,
       status: 'interested',
       temp: 'hot',
+      service: offer.name,
       notes: `${offer.name} · ${money(offer.amount)}`,
     });
+  };
+  const saveLeadFields = (patch: Partial<OsLead>) => {
+    if (!lead) return;
+    const next = { ...lead, ...patch };
+    const fields = fieldsFromLead(next);
+    const identity = composedLeadIdentity(fields, next.name, next.address);
+    os.patchLead(lead.id, { ...patch, ...fields, ...identity, value: Number(fields.value || next.value || 0) });
+  };
+  const doorRow = (l: OsLead) => {
+    const pin = srStatus(l.status);
+    return (
+      <button className={`nsos-sr-door ${l.id === lead?.id ? 'active-row' : ''}`} key={l.id} onClick={() => { setActive(l.id); setPane('map'); }}>
+        <SrStatusDot status={l.status} />
+        <div>
+          <strong>{l.name}</strong>
+          <small>{l.address} · {territory(l.x)} · {l.rep}</small>
+          <small>{l.activity[0] ? `${l.activity[0].at} · ${l.activity[0].body}` : 'Not knocked yet'}</small>
+        </div>
+        <span className={`nsos-pill ${srPillTone(l.status)}`}>{pin.abbr}</span>
+      </button>
+    );
   };
   return (
     <div className="nsos-sr" data-pane={pane}>
@@ -1212,14 +1271,14 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
       </div>
       <div className="nsos-sr-kpis">
         <div className="nsos-kpi"><span>Doors</span><strong>{os.leads.length}</strong></div>
-        <div className="nsos-kpi"><span>Touched</span><strong>{os.leads.filter((l) => l.status !== 'new').length}</strong></div>
+        <div className="nsos-kpi"><span>Touched</span><strong>{os.leads.filter((l) => isWorkedLead(l.status)).length}</strong></div>
         <div className="nsos-kpi"><span>Open windows</span><strong>{slots.length}</strong></div>
-        <div className="nsos-kpi"><span>Sold</span><strong>{os.leads.filter((l) => l.status === 'sold').length}</strong></div>
+        <div className="nsos-kpi"><span>Sold</span><strong>{os.leads.filter((l) => srStatus(l.status).key === 'sold').length}</strong></div>
       </div>
       {pane === 'pitch' ? (
         <div className="nsos-pitch">
           <div className="nsos-pitch-lead">
-            <span className="nsos-eyebrow">{lead ? `${territory(lead.x)} door` : 'No door selected'}</span>
+            <span className="nsos-eyebrow">{lead ? `${territory(lead.x)} door · ${leadPin?.abbr}` : 'No door selected'}</span>
             <h3>{lead?.name || 'Pick a household on the map'}</h3>
             <p>{lead ? `${lead.address} · Next open window ${slots[0]?.window || 'TBD'}` : 'Add a lead on Map, or tap Account in the pitch to capture the household here.'}</p>
             {lead && (
@@ -1258,38 +1317,30 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
               ))}
             </div>
           </div>
-          {pins.map((l) => (
-            <button className={`nsos-sr-door ${l.id === lead?.id ? 'active-row' : ''}`} key={l.id} onClick={() => { setActive(l.id); setPane('map'); }}>
-              <i className={`nsos-pin-dot ${pinClass(l.status)}`} />
-              <div>
-                <strong>{l.name}</strong>
-                <small>{l.address} · {territory(l.x)} · {l.rep}</small>
-                <small>{l.activity[0] ? `${l.activity[0].at} · ${l.activity[0].body}` : 'Not knocked yet'}</small>
-              </div>
-              <span className={`nsos-pill ${l.status === 'sold' || l.status === 'appointment' ? 'green' : l.status === 'dnk' ? 'red' : l.status === 'interested' ? 'gold' : 'blue'}`}>{l.status === 'knocked' ? 'not home' : l.status}</span>
-            </button>
-          ))}
+          {pins.map(doorRow)}
           {!pins.length && <div className="nsos-empty">No doors in this area. Log one from the map.</div>}
         </div>
       ) : (
       <div className="nsos-sr-layout">
         <div className="nsos-sr-map-wrap">
-          <div className="nsos-sr-legend">
-            <span><i className="cold" /> New</span>
-            <span><i className="warm" /> Interested</span>
-            <span><i className="hot" /> Appt / Sold</span>
-            <span><i className="dnk" /> DNK</span>
+          <div className="nsos-sr-legend nsos-sr-pin-legend">
+            <button type="button" className={pinFilter === 'all' ? 'active' : ''} onClick={() => setPinFilter('all')}>All</button>
+            {SR_STATUSES.filter((s) => s.knock || s.key === 'unworked').map((s) => (
+              <button type="button" key={s.key} className={pinFilter === s.key ? 'active' : ''} onClick={() => setPinFilter(pinFilter === s.key ? 'all' : s.key)}>
+                <i style={{ background: s.color }} />{s.abbr}
+              </button>
+            ))}
           </div>
           <div className="nsos-map nsos-sr-map">
             <div className="nsos-sr-zones" aria-hidden>
               <b>West</b><b>Central</b><b>East</b>
             </div>
             {pins.map((l) => (
-              <button
+              <SrMapPin
                 key={l.id}
-                className={`nsos-pin ${pinClass(l.status)} ${l.id === lead?.id ? 'selected' : ''}`}
+                lead={l}
+                selected={l.id === lead?.id}
                 style={{ left: `${l.x}%`, top: `${l.y}%` }}
-                title={`${l.name} · ${l.address}`}
                 onClick={() => setActive(l.id)}
               />
             ))}
@@ -1303,29 +1354,57 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
           </div>
           <form className="nsos-card nsos-add-door" onSubmit={(e) => {
             e.preventDefault();
-            if (!door.name.trim() && !door.phone.trim() && !door.address.trim()) return;
-            const id = os.addLead(door.name.trim() || 'New household', door.address.trim() || 'Address pending', {
+            const identity = composedLeadIdentity(door, 'New household', 'Address pending');
+            if (!identity.name && !door.phone.trim() && !identity.address) return;
+            const id = os.addLead(identity.name || 'New household', identity.address || 'Address pending', {
+              ...door,
               phone: door.phone.trim(),
-              status: 'interested',
+              email: door.email.trim(),
+              alt_phone: door.alt_phone.trim(),
+              status: 'unworked',
             });
-            setDoor({ name: '', address: '', phone: '' });
+            setDoor(emptyDoorDraft());
             setActive(id);
           }}>
             <span className="nsos-eyebrow">Add a lead</span>
-            <h3>Name, phone, street</h3>
-            <div className="nsos-add-door-grid">
-              <label className="nsos-field">Name<input value={door.name} onChange={(e) => setDoor({ ...door, name: e.target.value })} placeholder="Resident" /></label>
+            <h3>Household record</h3>
+            <div className="nsos-add-door-grid nsos-sr-lead-grid">
+              <label className="nsos-field">First name<input value={door.first_name} onChange={(e) => setDoor({ ...door, first_name: e.target.value })} placeholder="First" /></label>
+              <label className="nsos-field">Last name<input value={door.last_name} onChange={(e) => setDoor({ ...door, last_name: e.target.value })} placeholder="Last" /></label>
               <label className="nsos-field">Phone<input value={door.phone} onChange={(e) => setDoor({ ...door, phone: e.target.value })} placeholder="919-555-0100" inputMode="tel" /></label>
-              <label className="nsos-field wide">Address<input value={door.address} onChange={(e) => setDoor({ ...door, address: e.target.value })} placeholder="Street, Raleigh NC 27616" /></label>
+              <label className="nsos-field">Alt phone<input value={door.alt_phone} onChange={(e) => setDoor({ ...door, alt_phone: e.target.value })} placeholder="Optional" inputMode="tel" /></label>
+              <label className="nsos-field wide">Email<input value={door.email} onChange={(e) => setDoor({ ...door, email: e.target.value })} placeholder="name@email.com" /></label>
+              <label className="nsos-field wide">Street 1<input value={door.street1} onChange={(e) => setDoor({ ...door, street1: e.target.value })} placeholder="210 Forest Pines Dr" /></label>
+              <label className="nsos-field">Street 2<input value={door.street2} onChange={(e) => setDoor({ ...door, street2: e.target.value })} placeholder="Apt / unit" /></label>
+              <label className="nsos-field">City<input value={door.city} onChange={(e) => setDoor({ ...door, city: e.target.value })} /></label>
+              <label className="nsos-field">State<input value={door.state} onChange={(e) => setDoor({ ...door, state: e.target.value })} /></label>
+              <label className="nsos-field">ZIP<input value={door.postal_code} onChange={(e) => setDoor({ ...door, postal_code: e.target.value })} /></label>
             </div>
             <button className="nsos-btn" type="submit"><Plus size={15} />Save lead</button>
           </form>
           {lead && (
             <div className="nsos-card nsos-sr-card">
-              <span className="nsos-eyebrow">{territory(lead.x)} territory</span>
+              <span className="nsos-eyebrow">{territory(lead.x)} territory · {leadPin?.abbr} {leadPin?.name}</span>
               <h3>{lead.name}</h3>
-              <p style={{ color: 'var(--os-muted)' }}>{lead.address} · {lead.phone || 'No phone'} · {money(lead.value)}</p>
-              <label className="nsos-field">Rep
+              <p style={{ color: 'var(--os-muted)' }}>{lead.address}</p>
+              <div className="nsos-sr-lead-grid">
+                <label className="nsos-field">First name<input value={lead.first_name} onChange={(e) => saveLeadFields({ first_name: e.target.value })} /></label>
+                <label className="nsos-field">Last name<input value={lead.last_name} onChange={(e) => saveLeadFields({ last_name: e.target.value })} /></label>
+                <label className="nsos-field">Phone<input value={lead.phone} onChange={(e) => saveLeadFields({ phone: e.target.value })} inputMode="tel" /></label>
+                <label className="nsos-field">Alt phone<input value={lead.alt_phone} onChange={(e) => saveLeadFields({ alt_phone: e.target.value })} inputMode="tel" /></label>
+                <label className="nsos-field wide">Email<input value={lead.email} onChange={(e) => saveLeadFields({ email: e.target.value })} /></label>
+                <label className="nsos-field wide">Street 1<input value={lead.street1} onChange={(e) => saveLeadFields({ street1: e.target.value })} /></label>
+                <label className="nsos-field">Street 2<input value={lead.street2} onChange={(e) => saveLeadFields({ street2: e.target.value })} /></label>
+                <label className="nsos-field">City<input value={lead.city} onChange={(e) => saveLeadFields({ city: e.target.value })} /></label>
+                <label className="nsos-field">State<input value={lead.state} onChange={(e) => saveLeadFields({ state: e.target.value })} /></label>
+                <label className="nsos-field">ZIP<input value={lead.postal_code} onChange={(e) => saveLeadFields({ postal_code: e.target.value })} /></label>
+                <label className="nsos-field wide">Vehicle<input value={lead.vehicle} onChange={(e) => saveLeadFields({ vehicle: e.target.value })} placeholder="Year / make / model" /></label>
+                <label className="nsos-field">Service<input value={lead.service} onChange={(e) => saveLeadFields({ service: e.target.value })} /></label>
+                <label className="nsos-field">Value<input type="number" min="0" value={lead.value || ''} onChange={(e) => saveLeadFields({ value: Number(e.target.value || 0) })} /></label>
+                <label className="nsos-field">Callback<input value={lead.follow_up_at} onChange={(e) => saveLeadFields({ follow_up_at: e.target.value })} placeholder="Tonight after 6" /></label>
+                <label className="nsos-field">Appointment<input value={lead.appointment_at} onChange={(e) => saveLeadFields({ appointment_at: e.target.value })} placeholder="Fri · 10:00 AM" /></label>
+              </div>
+              <label className="nsos-field">Assignee
                 <div className="owner-lead-assign">
                   <select value={lead.rep} onChange={(e) => os.assignLead(lead.id, e.target.value)}>
                     {d2dReps.map((n) => <option key={n}>{n}</option>)}
@@ -1342,31 +1421,34 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
               </label>
               <div className="nsos-sr-knocks">
                 {knocks.map((s) => (
-                  <button key={s.id} className={`nsos-btn ${lead.status === s.id ? '' : 'ghost'}`} onClick={() => os.setLeadStatus(lead.id, s.id)}>{s.label}</button>
+                  <button
+                    key={s.key}
+                    type="button"
+                    className={`nsos-sr-knock ${lead.status === s.key ? 'active' : ''}`}
+                    style={{ ['--pin' as string]: s.color }}
+                    onClick={() => os.setLeadStatus(lead.id, s.key)}
+                  >
+                    <b>{s.abbr}</b>
+                    <small>{s.name}</small>
+                  </button>
                 ))}
               </div>
               <form onSubmit={(e) => { e.preventDefault(); if (!note.trim()) return; os.addLeadNote(lead.id, note.trim()); setNote(''); }}>
-                <label className="nsos-field">Knock note
+                <label className="nsos-field">Activity note
                   <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="What happened at the door?" />
                 </label>
               </form>
               {(lead.activity || []).slice(0, 4).map((a) => (
                 <div key={a.id} style={{ fontSize: 12, color: 'var(--os-muted)', padding: '6px 0', borderTop: '1px solid var(--os-line)' }}>{a.at} · {a.author} · {a.body}</div>
               ))}
-              <button className="nsos-btn" style={{ marginTop: 10, width: '100%', justifyContent: 'center' }} onClick={() => setPane('pitch')}>Pitch & book a window</button>
+              <div className="nsos-sr-card-actions">
+                {lead.phone && <a className="nsos-btn ghost" href={`tel:${lead.phone}`}>Call</a>}
+                <button className="nsos-btn" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setPane('pitch')}>Pitch & book a window</button>
+              </div>
             </div>
           )}
           <div className="nsos-sr-doors">
-            {pins.map((l) => (
-              <button className={`nsos-sr-door ${l.id === lead?.id ? 'active-row' : ''}`} key={l.id} onClick={() => setActive(l.id)}>
-                <i className={`nsos-pin-dot ${pinClass(l.status)}`} />
-                <div>
-                  <strong>{l.name}</strong>
-                  <small>{l.address}</small>
-                </div>
-                <span className={`nsos-pill ${l.status === 'sold' || l.status === 'appointment' ? 'green' : l.status === 'dnk' ? 'red' : l.status === 'interested' ? 'gold' : 'blue'}`}>{l.status === 'knocked' ? 'not home' : l.status}</span>
-              </button>
-            ))}
+            {pins.map(doorRow)}
           </div>
         </aside>
       </div>
@@ -1380,20 +1462,20 @@ export function PipelineView({ onBook }: { onBook?: (jobId: string) => void }) {
   const [q, setQ] = useState('');
   const [focus, setFocus] = useState<'all' | 'hot' | 'unassigned'>('all');
   const [compose, setCompose] = useState(false);
-  const [draft, setDraft] = useState({ name: '', address: '', phone: '', value: '275' });
+  const [draft, setDraft] = useState({ first_name: '', last_name: '', phone: '', email: '', street1: '', city: 'Raleigh', state: 'NC', postal_code: '27616', value: '275' });
   const [dropStage, setDropStage] = useState('');
   const needle = q.trim().toLowerCase();
   const match = (l: { name?: string; address?: string; rep?: string; phone?: string }) =>
     `${l.name || ''} ${l.address || ''} ${l.rep || ''} ${l.phone || ''}`.toLowerCase().includes(needle);
-  const live = os.leads.filter((l) => l.status !== 'dnk');
+  const live = os.leads.filter((l) => !isClosedLead(l.status) || srStatus(l.status).key === 'sold');
   const rows = live.filter((l) => {
     if (!match(l)) return false;
     if (focus === 'hot' && l.temp !== 'hot') return false;
     if (focus === 'unassigned' && l.rep && l.rep !== 'Unassigned') return false;
     return true;
   });
-  const total = rows.reduce((s, l) => s + Number(l.value || 0), 0);
-  const hot = live.filter((l) => l.temp === 'hot' && l.status !== 'sold');
+  const total = rows.filter((l) => srStatus(l.status).key !== 'sold').reduce((s, l) => s + Number(l.value || 0), 0);
+  const hot = live.filter((l) => l.temp === 'hot' && srStatus(l.status).key !== 'sold');
   const unassigned = live.filter((l) => !l.rep || l.rep === 'Unassigned');
   const sold = os.leads.filter((l) => l.status === 'sold').length;
   const reps = os.employees.filter((e) => e.role === 'd2d_agent' || e.role === 'owner');
@@ -1410,21 +1492,34 @@ export function PipelineView({ onBook }: { onBook?: (jobId: string) => void }) {
         className="nsos-card owner-lead-compose"
         onSubmit={(e) => {
           e.preventDefault();
-          if (!draft.name.trim() && !draft.address.trim()) return;
-          os.addLead(draft.name.trim() || 'New household', draft.address.trim() || 'Address pending', {
+          if (!draft.first_name.trim() && !draft.last_name.trim() && !draft.street1.trim()) return;
+          const identity = composedLeadIdentity({
+            first_name: draft.first_name, last_name: draft.last_name, phone: draft.phone, alt_phone: '', email: draft.email,
+            street1: draft.street1, street2: '', city: draft.city, state: draft.state, postal_code: draft.postal_code,
+            notes: '', vehicle: '', service: '', value: draft.value, follow_up_at: '', appointment_at: '',
+          }, 'New household', 'Address pending');
+          os.addLead(identity.name, identity.address, {
+            ...draft,
             phone: draft.phone.trim(),
+            email: draft.email.trim(),
             value: Number(draft.value || 0),
+            status: 'unworked',
           });
-          setDraft({ name: '', address: '', phone: '', value: '275' });
+          setDraft({ first_name: '', last_name: '', phone: '', email: '', street1: '', city: 'Raleigh', state: 'NC', postal_code: '27616', value: '275' });
           setCompose(false);
         }}
       >
         <span className="nsos-eyebrow">NEW LEAD</span>
         <h3>Log a household</h3>
-        <div className="owner-lead-compose-grid">
-          <label className="nsos-field">Name<input value={draft.name} onChange={(e) => setDraft((p) => ({ ...p, name: e.target.value }))} placeholder="Resident" /></label>
+        <div className="owner-lead-compose-grid nsos-sr-lead-grid">
+          <label className="nsos-field">First name<input value={draft.first_name} onChange={(e) => setDraft((p) => ({ ...p, first_name: e.target.value }))} placeholder="First" /></label>
+          <label className="nsos-field">Last name<input value={draft.last_name} onChange={(e) => setDraft((p) => ({ ...p, last_name: e.target.value }))} placeholder="Last" /></label>
           <label className="nsos-field">Phone<input value={draft.phone} onChange={(e) => setDraft((p) => ({ ...p, phone: e.target.value }))} placeholder="919-555-0100" /></label>
-          <label className="nsos-field wide">Address<input value={draft.address} onChange={(e) => setDraft((p) => ({ ...p, address: e.target.value }))} placeholder="Street" /></label>
+          <label className="nsos-field">Email<input value={draft.email} onChange={(e) => setDraft((p) => ({ ...p, email: e.target.value }))} /></label>
+          <label className="nsos-field wide">Street<input value={draft.street1} onChange={(e) => setDraft((p) => ({ ...p, street1: e.target.value }))} placeholder="Street" /></label>
+          <label className="nsos-field">City<input value={draft.city} onChange={(e) => setDraft((p) => ({ ...p, city: e.target.value }))} /></label>
+          <label className="nsos-field">State<input value={draft.state} onChange={(e) => setDraft((p) => ({ ...p, state: e.target.value }))} /></label>
+          <label className="nsos-field">ZIP<input value={draft.postal_code} onChange={(e) => setDraft((p) => ({ ...p, postal_code: e.target.value }))} /></label>
           <label className="nsos-field">Value<input type="number" min="0" value={draft.value} onChange={(e) => setDraft((p) => ({ ...p, value: e.target.value }))} /></label>
         </div>
         <button className="nsos-btn" type="submit"><Plus size={15} />Add to pipeline</button>
@@ -1467,7 +1562,7 @@ export function PipelineView({ onBook }: { onBook?: (jobId: string) => void }) {
                 if (id) os.setLeadStatus(id, s);
               }}
             >
-              <h3>{s}<span>{col.length}</span></h3>
+              <h3>{srStatus(s).name}<span>{col.length}</span></h3>
               {col.map((l) => (
                 <div className="nsos-lead" key={l.id} draggable onDragStart={(e) => e.dataTransfer.setData('lead', l.id)}>
                   <strong className="nsos-lead-name">{l.name || 'Untitled lead'}</strong>
@@ -1487,7 +1582,7 @@ export function PipelineView({ onBook }: { onBook?: (jobId: string) => void }) {
                     )}
                     <b>{money(l.value)}</b>
                   </div>
-                  {(s === 'appointment' || s === 'sold' || s === 'interested') && (
+                  {(s === 'appointment_set' || s === 'sold' || s === 'interested' || s === 'estimate') && (
                     <button className="nsos-btn ghost" style={{ marginTop: 8, width: '100%', justifyContent: 'center' }} onClick={() => { const id = os.convertLead(l.id); if (id) onBook?.(id); }}>Book job</button>
                   )}
                 </div>

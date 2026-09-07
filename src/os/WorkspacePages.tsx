@@ -1,6 +1,7 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { ACADEMY_COURSES } from '@/lib/trainingAcademy';
 import { firstWord, money, prettyLabel } from '@/lib/data';
+import { srStatus } from '@/lib/salesRabbitLeads';
 import { liveOpenSlots } from './appointmentSlots';
 import { payLine } from './demoData';
 import { useOs } from './osStore';
@@ -430,14 +431,14 @@ function PermissionsPage() {
 
 function MarketingPage() {
   const os = useOs();
-  const booked = os.leads.filter((l) => l.status === 'appointment' || l.status === 'sold').length;
+  const booked = os.leads.filter((l) => ['appointment_set', 'sold', 'customer'].includes(srStatus(l.status).key)).length;
   return (
     <div>
       <Kpis items={[
         { label: 'Campaigns', value: String(CAMPAIGNS.length) },
         { label: 'Booked from them', value: String(booked) },
         { label: 'Spend', value: money(CAMPAIGNS.reduce((s, c) => s + c.budget, 0)) },
-        { label: 'Open doors', value: String(os.leads.filter((l) => l.status !== 'dnk' && l.status !== 'sold').length) },
+        { label: 'Open doors', value: String(os.leads.filter((l) => !['do_not_knock', 'sold', 'customer', 'not_interested'].includes(srStatus(l.status).key)).length) },
       ]} />
       <div className="nsos-card">
         {CAMPAIGNS.map((c) => <Row key={c.id} title={c.name} sub={c.channel} meta={`${money(c.budget)} · ${c.booked} booked`} />)}
@@ -456,7 +457,7 @@ function RetentionPage() {
         { label: 'Due in 30 days', value: String(done.length) },
         { label: 'Members', value: String(members.length) },
         { label: 'Households', value: String(os.customers.length) },
-        { label: 'Hot leads', value: String(os.leads.filter((l) => l.temp === 'hot' && l.status !== 'sold').length) },
+        { label: 'Hot leads', value: String(os.leads.filter((l) => l.temp === 'hot' && srStatus(l.status).key !== 'sold').length) },
       ]} />
       <div className="nsos-card">
         {done.length ? done.map((j) => (

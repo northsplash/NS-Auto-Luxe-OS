@@ -2,6 +2,10 @@ import { DEFAULT_COMM_TEMPLATES, type CommunicationTemplate } from '@/lib/commun
 import { compensationSummary } from '@/lib/compensation';
 import { BOOKABLE_SERVICES, checklistForService, findDetailPackage } from '@/lib/detailCatalog';
 import { emptyOnboarding as emptyHirePacket, type OnboardingPacket as HirePacket } from '@/lib/onboarding';
+import {
+  SR_PIPELINE_KEYS, composedLeadIdentity, doorStatusKey, fieldsFromLead, srTemp,
+  type SrStatusKey,
+} from '@/lib/salesRabbitLeads';
 
 export type OnboardingPacket = HirePacket;
 export const emptyOnboarding = emptyHirePacket;
@@ -91,8 +95,8 @@ export type OsJob = {
   checklist?: OsJobStep[];
 };
 
-export type LeadStatus = 'new' | 'knocked' | 'interested' | 'appointment' | 'sold' | 'dnk';
-export const LEAD_STAGES: LeadStatus[] = ['new', 'knocked', 'interested', 'appointment', 'sold'];
+export type LeadStatus = SrStatusKey;
+export const LEAD_STAGES: LeadStatus[] = [...SR_PIPELINE_KEYS];
 
 export type OsLead = {
   id: string;
@@ -107,6 +111,19 @@ export type OsLead = {
   y: number;
   notes: string;
   activity: OsNote[];
+  first_name: string;
+  last_name: string;
+  alt_phone: string;
+  email: string;
+  street1: string;
+  street2: string;
+  city: string;
+  state: string;
+  postal_code: string;
+  vehicle: string;
+  service: string;
+  follow_up_at: string;
+  appointment_at: string;
 };
 
 export type OsMessage = { id: string; from: string; mine?: boolean; body: string; at: string };
@@ -266,16 +283,17 @@ export const seedJobs: OsJob[] = [
   },
 ];
 
-export const seedLeads: OsLead[] = [
-  { id: 'l1', name: 'Kim Alvarez', address: '210 Forest Pines Dr, Raleigh NC 27616', status: 'interested', rep: 'Sofia Reyes', value: 275, temp: 'hot', phone: '919-555-1001', x: 22, y: 28, notes: 'Asked about Signature + membership.', activity: [{ id: uid(), at: '9:04 AM', author: 'Sofia Reyes', body: 'Warm knock. Wants a quote tonight.' }] },
-  { id: 'l2', name: 'Derek Holt', address: '4412 Buffaloe Rd, Raleigh NC 27616', status: 'appointment', rep: 'Sofia Reyes', value: 450, temp: 'hot', phone: '919-555-1002', x: 48, y: 36, notes: 'Friday ceramic quote.', activity: [{ id: uid(), at: '9:41 AM', author: 'Sofia Reyes', body: 'Set Friday appointment.' }] },
-  { id: 'l3', name: 'Unknown door', address: '18 Sumner Blvd, Raleigh NC 27616', status: 'knocked', rep: 'Sofia Reyes', value: 175, temp: 'warm', phone: '', x: 64, y: 52, notes: 'No answer. Door hanger left.', activity: [{ id: uid(), at: '8:20 AM', author: 'Sofia Reyes', body: 'Knocked. No answer.' }] },
-  { id: 'l4', name: 'The Carters', address: '901 New Hope Church Rd, Raleigh NC 27616', status: 'new', rep: 'Unassigned', value: 275, temp: 'cold', phone: '919-555-1004', x: 34, y: 64, notes: '', activity: [] },
-  { id: 'l5', name: 'Mina Park', address: '3 Triangle Town Blvd, Raleigh NC 27616', status: 'sold', rep: 'Sofia Reyes', value: 650, temp: 'hot', phone: '919-555-1005', x: 72, y: 24, notes: 'Ceramic close. Booked next week.', activity: [{ id: uid(), at: 'Yesterday', author: 'Sofia Reyes', body: 'Closed ceramic. Sent to dispatch.' }] },
-  { id: 'l6', name: 'Do not knock', address: '77 Forest Pines Dr, Raleigh NC 27616', status: 'dnk', rep: 'Sofia Reyes', value: 0, temp: 'cold', phone: '', x: 18, y: 72, notes: 'Homeowner requested DNK.', activity: [{ id: uid(), at: 'Mon', author: 'Sofia Reyes', body: 'Marked do-not-knock.' }] },
-  { id: 'l7', name: 'The Nguyens', address: '12 Spring Forest Rd, Raleigh NC 27616', status: 'knocked', rep: 'Unassigned', value: 275, temp: 'warm', phone: '919-555-1007', x: 80, y: 42, notes: '', activity: [] },
-  { id: 'l8', name: 'Willow house', address: '8 Willow Cove Ln, Raleigh NC 27616', status: 'new', rep: 'Unassigned', value: 175, temp: 'cold', phone: '', x: 88, y: 58, notes: '', activity: [] },
-  { id: 'l9', name: 'Unknown door', address: '102 Falls River Ave, Raleigh NC 27616', status: 'new', rep: 'Unassigned', value: 275, temp: 'cold', phone: '', x: 28, y: 46, notes: '', activity: [] },
+export const seedLeads: Array<Partial<OsLead> & { id: string; name: string; address: string }> = [
+  { id: 'l1', name: 'Kim Alvarez', address: '210 Forest Pines Dr, Raleigh NC 27616', status: 'interested', rep: 'Sofia Reyes', value: 275, temp: 'hot', phone: '919-555-1001', email: 'kim.alvarez@email.com', vehicle: '2019 Honda Pilot', service: 'Luxe Signature', x: 22, y: 28, notes: 'Asked about Signature + membership.', activity: [{ id: uid(), at: '9:04 AM', author: 'Sofia Reyes', body: 'Warm knock. Wants a quote tonight.' }] },
+  { id: 'l2', name: 'Derek Holt', address: '4412 Buffaloe Rd, Raleigh NC 27616', status: 'appointment_set', rep: 'Sofia Reyes', value: 450, temp: 'hot', phone: '919-555-1002', appointment_at: windowOn(4, '10:00 AM'), service: 'Luxe Ceramic Coating', x: 48, y: 36, notes: 'Friday ceramic quote.', activity: [{ id: uid(), at: '9:41 AM', author: 'Sofia Reyes', body: 'Set Friday appointment.' }] },
+  { id: 'l3', name: 'Unknown door', address: '18 Sumner Blvd, Raleigh NC 27616', status: 'no_answer', rep: 'Sofia Reyes', value: 175, temp: 'warm', phone: '', x: 64, y: 52, notes: 'No answer. Door hanger left.', activity: [{ id: uid(), at: '8:20 AM', author: 'Sofia Reyes', body: 'Knocked. No answer.' }] },
+  { id: 'l4', name: 'The Carters', address: '901 New Hope Church Rd, Raleigh NC 27616', status: 'unworked', rep: 'Unassigned', value: 275, temp: 'cold', phone: '919-555-1004', x: 34, y: 64, notes: '', activity: [] },
+  { id: 'l5', name: 'Mina Park', address: '3 Triangle Town Blvd, Raleigh NC 27616', status: 'sold', rep: 'Sofia Reyes', value: 650, temp: 'hot', phone: '919-555-1005', email: 'mina.park@email.com', vehicle: '2023 Tesla Model Y', service: 'Luxe Ceramic Coating', x: 72, y: 24, notes: 'Ceramic close. Booked next week.', activity: [{ id: uid(), at: 'Yesterday', author: 'Sofia Reyes', body: 'Closed ceramic. Sent to dispatch.' }] },
+  { id: 'l6', name: 'Do not knock', address: '77 Forest Pines Dr, Raleigh NC 27616', status: 'do_not_knock', rep: 'Sofia Reyes', value: 0, temp: 'cold', phone: '', x: 18, y: 72, notes: 'Homeowner requested DNK.', activity: [{ id: uid(), at: 'Mon', author: 'Sofia Reyes', body: 'Marked do-not-knock.' }] },
+  { id: 'l7', name: 'The Nguyens', address: '12 Spring Forest Rd, Raleigh NC 27616', status: 'revisit', rep: 'Unassigned', value: 275, temp: 'warm', phone: '919-555-1007', follow_up_at: windowOn(1, '5:30 PM'), x: 80, y: 42, notes: 'Husband was leaving. Come back after 5.', activity: [] },
+  { id: 'l8', name: 'Willow house', address: '8 Willow Cove Ln, Raleigh NC 27616', status: 'estimate', rep: 'Sofia Reyes', value: 375, temp: 'hot', phone: '919-555-1008', email: 'willow@email.com', service: 'Interior Signature', x: 88, y: 58, notes: 'Estimate sent for Interior Signature.', activity: [] },
+  { id: 'l9', name: 'Unknown door', address: '102 Falls River Ave, Raleigh NC 27616', status: 'follow_up', rep: 'Sofia Reyes', value: 275, temp: 'warm', phone: '919-555-1009', follow_up_at: windowOn(0, '6:00 PM'), x: 28, y: 46, notes: 'Callback tonight after dinner.', activity: [] },
+  { id: 'l10', name: 'Pat Rivera', address: '44 Birchwood Ct, Raleigh NC 27616', status: 'not_interested', rep: 'Sofia Reyes', value: 0, temp: 'cold', phone: '', x: 56, y: 70, notes: 'Already has a detailer.', activity: [{ id: uid(), at: 'Tue', author: 'Sofia Reyes', body: 'Not interested this season.' }] },
 ];
 
 export const seedChats: OsChat[] = [
@@ -587,23 +605,55 @@ export function normalizeActivity(a: Partial<OsActivity> & { id?: string }): OsA
 }
 
 export function normalizeLead(l: Partial<OsLead> & { id?: string; name?: string }): OsLead {
+  const fields = fieldsFromLead(l);
+  const identity = composedLeadIdentity(fields, l.name || 'Lead', l.address || '');
+  const status = doorStatusKey(l.status);
   const merged = {
     id: l.id || uid(),
-    address: '',
-    status: 'new' as LeadStatus,
-    rep: 'Unassigned',
-    value: 275,
-    temp: 'warm' as const,
-    phone: '',
-    x: 40 + Math.random() * 30,
-    y: 30 + Math.random() * 30,
-    notes: '',
+    address: identity.address,
+    rep: l.rep || 'Unassigned',
+    value: Number(l.value ?? fields.value ?? 275) || 0,
+    temp: l.temp || srTemp(status),
+    phone: l.phone || fields.phone,
+    x: l.x ?? 40 + Math.random() * 30,
+    y: l.y ?? 30 + Math.random() * 30,
+    notes: l.notes || fields.notes,
+    first_name: fields.first_name,
+    last_name: fields.last_name,
+    alt_phone: fields.alt_phone,
+    email: l.email || fields.email,
+    street1: fields.street1,
+    street2: fields.street2,
+    city: fields.city || 'Raleigh',
+    state: fields.state || 'NC',
+    postal_code: fields.postal_code || '27616',
+    vehicle: fields.vehicle,
+    service: fields.service,
+    follow_up_at: fields.follow_up_at,
+    appointment_at: fields.appointment_at || String(l.appointment_at || ''),
     ...l,
-    name: l.name || 'Lead',
+    name: identity.name || l.name || 'Lead',
+    status,
   };
   return {
     ...merged,
-    status: merged.status || 'new',
+    name: merged.name || 'Lead',
+    address: identity.address || merged.address || '',
+    first_name: merged.first_name || fields.first_name,
+    last_name: merged.last_name || fields.last_name,
+    street1: merged.street1 || fields.street1,
+    street2: merged.street2 || fields.street2,
+    city: merged.city || fields.city,
+    state: merged.state || fields.state,
+    postal_code: merged.postal_code || fields.postal_code,
+    phone: merged.phone || '',
+    alt_phone: merged.alt_phone || '',
+    email: merged.email || '',
+    vehicle: merged.vehicle || '',
+    service: merged.service || '',
+    follow_up_at: merged.follow_up_at || '',
+    appointment_at: merged.appointment_at || '',
+    temp: merged.temp || srTemp(status),
     activity: Array.isArray(l.activity) ? l.activity : [],
   };
 }
