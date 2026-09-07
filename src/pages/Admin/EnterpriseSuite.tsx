@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Bell, Briefcase, CheckCircle2, ClipboardCheck, FileText, Gauge, MapPin,
+  Bell, Briefcase, CalendarDays, CheckCircle2, ClipboardCheck, FileText, Gauge, MapPin,
   PackageCheck, Plus, Save, ShieldCheck, Target, Trash2, UserCog, Users,
   Wrench, XCircle
 } from 'lucide-react';
@@ -52,8 +52,7 @@ const LEAD_STATUSES = [
 const roleLabel = (r?: string | null) => ({ owner: 'Owner / Admin', manager: 'Manager', employee: 'Employee', d2d: 'D2D Sales', recruiter: 'Recruiter', finance: 'Finance', customer: 'Customer' }[r || 'customer'] || r || 'Customer');
 const dt = (v?: string | null) => v ? new Date(v).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '—';
 const day = (v?: string | null) => v ? new Date(`${v}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
-const card: React.CSSProperties = { background: '#fffdf8', color: '#1c1814', border: '1px solid #e4d9cc', borderRadius: 14, padding: 18, boxShadow: '0 10px 28px rgba(48,38,28,.06)' };
-const grid: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 14 };
+const paper = 'phase-panel caramel enterprise-paper';
 const reverseAddress=async(lat:number,lng:number)=>{try{const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,{headers:{'Accept-Language':'en-US,en'}});if(!r.ok)return'';const d=await r.json();const a=d.address||{};const street=[a.house_number,a.road||a.residential||a.pedestrian].filter(Boolean).join(' ');const city=a.city||a.town||a.village||a.municipality;const region=[city,a.state,a.postcode].filter(Boolean).join(', ').replace(/, ([0-9]{5})$/, ' $1');return [street,region].filter(Boolean).join(', ')||d.display_name||''}catch{return''}};
 
 async function audit(action: string, entityType: string, entityId?: string, details: Record<string, unknown> = {}) {
@@ -320,39 +319,172 @@ export default function EnterpriseSuite({ section, employees, setEmployees, appo
 
 
   if (section === 'leads') return <div className="tab-content"><Header tab="leads" />
-    <div style={{ ...grid, marginBottom: 16 }}><Metric label="Doors / Leads" value={String(leadMetrics.total)} /><Metric label="Sold" value={String(leadMetrics.sold)} /><Metric label="Revenue Won" value={money(leadMetrics.value)} /><Metric label="Conversion" value={`${leadMetrics.conversion.toFixed(1)}%`} /><Metric label="Follow-ups Due" value={String(leadMetrics.followups)} /></div>
+    <div className="enterprise-form-grid"><Metric label="Doors / Leads" value={String(leadMetrics.total)} /><Metric label="Sold" value={String(leadMetrics.sold)} /><Metric label="Revenue Won" value={money(leadMetrics.value)} /><Metric label="Conversion" value={`${leadMetrics.conversion.toFixed(1)}%`} /><Metric label="Follow-ups Due" value={String(leadMetrics.followups)} /></div>
     <div className="admin-leads-layout">
       <div><LeadMap leads={leads} territories={territories} onMapPoint={async(lat,lng) => { setLeadForm(p => ({ ...p, latitude: lat.toFixed(6), longitude: lng.toFixed(6), address: p.address || 'Locating address…' })); const address=await reverseAddress(lat,lng); setLeadForm(p=>({...p,address:address||''})); }} /><p style={{color:'#888',fontSize:12}}>Click the map to set coordinates for a new lead. Reps can also use current GPS from their D2D portal.</p></div>
       <form className="enterprise-brown-card admin-lead-form" onSubmit={addLead}><h3><Target size={18}/> Add Lead / Door</h3><div className="form-group"><label>Rep</label><div className="owner-lead-assign"><select value={leadForm.assigned_employee_id} onChange={e=>setLeadForm(p=>({...p,assigned_employee_id:e.target.value}))}><option value="">Unassigned</option>{d2dReps.map(e=><option key={e.id} value={e.id}>{leadRepLabel(e)}</option>)}</select><button type="button" className="btn-outline" disabled={!self||leadForm.assigned_employee_id===self?.id} onClick={()=>self&&setLeadForm(p=>({...p,assigned_employee_id:self.id}))}>{leadForm.assigned_employee_id===self?.id?'Assigned to you':'Assign to me'}</button></div></div><div className="form-group"><label>Territory</label><select value={leadForm.territory_id} onChange={e=>setLeadForm(p=>({...p,territory_id:e.target.value}))}><option value="">None</option>{territories.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}</select></div><input placeholder="Name / homeowner" value={leadForm.customer_name} onChange={e=>setLeadForm(p=>({...p,customer_name:e.target.value}))}/><input placeholder="Street address" value={leadForm.address} onChange={e=>setLeadForm(p=>({...p,address:e.target.value}))}/><div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}><input placeholder="Latitude" value={leadForm.latitude} onChange={e=>setLeadForm(p=>({...p,latitude:e.target.value}))}/><input placeholder="Longitude" value={leadForm.longitude} onChange={e=>setLeadForm(p=>({...p,longitude:e.target.value}))}/></div><input placeholder="Phone" value={leadForm.phone} onChange={e=>setLeadForm(p=>({...p,phone:e.target.value}))}/><input placeholder="Service interest" value={leadForm.service_interest} onChange={e=>setLeadForm(p=>({...p,service_interest:e.target.value}))}/><input type="number" placeholder="Estimated value" value={leadForm.estimated_value} onChange={e=>setLeadForm(p=>({...p,estimated_value:e.target.value}))}/><select value={leadForm.status} onChange={e=>setLeadForm(p=>({...p,status:e.target.value}))}>{LEAD_STATUSES.map(([v,l])=><option value={v} key={v}>{l}</option>)}</select><textarea placeholder="Notes" value={leadForm.notes} onChange={e=>setLeadForm(p=>({...p,notes:e.target.value}))}/><button className="btn-primary btn-full"><Plus size={15}/> Save Lead</button></form>
     </div>
-    <div style={{...card,marginTop:18,overflowX:'auto'}}><div className="data-table"><div className="data-table-head"><span>Lead</span><span>Rep</span><span>Status</span><span>Value</span><span>Follow-up</span></div>{leads.map(l=><div className="data-table-row" key={l.id}><div className="dt-cell"><strong>{l.customer_name||l.address||'Unnamed lead'}</strong><span>{l.address||'No address'} · {l.service_interest||'No service selected'}</span></div><span>{empName(l.assigned_employee_id)}</span><select value={l.status} onChange={e=>updateLeadStatus(l,e.target.value)}>{LEAD_STATUSES.map(([v,n])=><option key={v} value={v}>{n}</option>)}</select><strong>{money(Number(l.actual_sale_amount||l.estimated_value||0))}</strong><span>{dt(l.follow_up_at)}</span></div>)}</div></div>
+    <div className={paper}><div className="data-table"><div className="data-table-head"><span>Lead</span><span>Rep</span><span>Status</span><span>Value</span><span>Follow-up</span></div>{leads.map(l=><div className="data-table-row" key={l.id}><div className="dt-cell"><strong>{l.customer_name||l.address||'Unnamed lead'}</strong><span>{l.address||'No address'} · {l.service_interest||'No service selected'}</span></div><span>{empName(l.assigned_employee_id)}</span><select value={l.status} onChange={e=>updateLeadStatus(l,e.target.value)}>{LEAD_STATUSES.map(([v,n])=><option key={v} value={v}>{n}</option>)}</select><strong>{money(Number(l.actual_sale_amount||l.estimated_value||0))}</strong><span>{dt(l.follow_up_at)}</span></div>)}</div></div>
   </div>;
 
   if (section === 'territories') return <div className="tab-content"><Header tab="territories" />
-    <div className="territory-builder-grid"><form style={card} onSubmit={addTerritory}><h3><MapPin size={18}/> New Territory</h3><input required placeholder="Territory name" value={territoryForm.name} onChange={e=>setTerritoryForm(p=>({...p,name:e.target.value}))}/><div className="owner-lead-assign"><select value={territoryForm.assigned_employee_id} onChange={e=>setTerritoryForm(p=>({...p,assigned_employee_id:e.target.value}))}><option value="">Unassigned</option>{d2dReps.map(e=><option value={e.id} key={e.id}>{leadRepLabel(e)}</option>)}</select><button type="button" className="btn-outline" disabled={!self||territoryForm.assigned_employee_id===self?.id} onClick={()=>self&&setTerritoryForm(p=>({...p,assigned_employee_id:self.id}))}>{territoryForm.assigned_employee_id===self?.id?'Assigned to you':'Assign to me'}</button></div><textarea placeholder="Notes" value={territoryForm.notes} onChange={e=>setTerritoryForm(p=>({...p,notes:e.target.value}))}/><div className="territory-draw-count">{territoryForm.polygon_points.length} boundary points selected</div><button className="btn-primary btn-full" disabled={territoryForm.polygon_points.length<3}>Save Drawn Territory</button><p className="helper-text">Click at least 3 points around the neighborhood. The final edge closes automatically.</p></form><FieldTerritoryMap editable territories={territories} leads={leads} onPolygonChange={polygon_points=>setTerritoryForm(p=>({...p,polygon_points}))}/></div>
-    <div className="territory-list-grid">{territories.map(t=><div style={card} key={t.id}><strong>{t.name}</strong><p>{empName(t.assigned_employee_id)} · {t.status}</p><small>{(t.polygon_geojson as any)?.coordinates?.[0]?.length?`${(t.polygon_geojson as any).coordinates[0].length-1} boundary points`:'Legacy radius territory'}</small><div style={{marginTop:12}}><button className="btn-sm btn-outline" onClick={()=>importTerritoryHouses(t)}>Load Houses from Map</button></div></div>)}</div>
+    <div className="territory-builder-grid"><form className={paper} onSubmit={addTerritory}><h3><MapPin size={18}/> New Territory</h3><input required placeholder="Territory name" value={territoryForm.name} onChange={e=>setTerritoryForm(p=>({...p,name:e.target.value}))}/><div className="owner-lead-assign"><select value={territoryForm.assigned_employee_id} onChange={e=>setTerritoryForm(p=>({...p,assigned_employee_id:e.target.value}))}><option value="">Unassigned</option>{d2dReps.map(e=><option value={e.id} key={e.id}>{leadRepLabel(e)}</option>)}</select><button type="button" className="btn-outline" disabled={!self||territoryForm.assigned_employee_id===self?.id} onClick={()=>self&&setTerritoryForm(p=>({...p,assigned_employee_id:self.id}))}>{territoryForm.assigned_employee_id===self?.id?'Assigned to you':'Assign to me'}</button></div><textarea placeholder="Notes" value={territoryForm.notes} onChange={e=>setTerritoryForm(p=>({...p,notes:e.target.value}))}/><div className="territory-draw-count">{territoryForm.polygon_points.length} boundary points selected</div><button className="btn-primary btn-full" disabled={territoryForm.polygon_points.length<3}>Save Drawn Territory</button><p className="helper-text">Click at least 3 points around the neighborhood. The final edge closes automatically.</p></form><FieldTerritoryMap editable territories={territories} leads={leads} onPolygonChange={polygon_points=>setTerritoryForm(p=>({...p,polygon_points}))}/></div>
+    <div className="territory-list-grid">{territories.map(t=><div className={paper} key={t.id}><strong>{t.name}</strong><p>{empName(t.assigned_employee_id)} · {t.status}</p><small>{(t.polygon_geojson as any)?.coordinates?.[0]?.length?`${(t.polygon_geojson as any).coordinates[0].length-1} boundary points`:'Legacy radius territory'}</small><div style={{marginTop:12}}><button className="btn-sm btn-outline" onClick={()=>importTerritoryHouses(t)}>Load Houses from Map</button></div></div>)}</div>
   </div>;
 
-  if (section === 'tasks') return <div className="tab-content"><Header tab="tasks" /><form style={{...card,marginBottom:18}} onSubmit={addTask}><div style={grid}><input required placeholder="Task title" value={taskForm.title} onChange={e=>setTaskForm(p=>({...p,title:e.target.value}))}/><select value={taskForm.assigned_employee_id} onChange={e=>setTaskForm(p=>({...p,assigned_employee_id:e.target.value}))}><option value="">Unassigned</option>{employees.map(e=><option key={e.id} value={e.id}>{e.name}</option>)}</select><select value={taskForm.priority} onChange={e=>setTaskForm(p=>({...p,priority:e.target.value}))}><option>low</option><option>normal</option><option>high</option><option>urgent</option></select><input type="datetime-local" value={taskForm.due_at} onChange={e=>setTaskForm(p=>({...p,due_at:e.target.value}))}/></div><textarea placeholder="Description" value={taskForm.description} onChange={e=>setTaskForm(p=>({...p,description:e.target.value}))}/><button className="btn-primary"><Plus size={15}/> Add Task</button></form><div style={grid}>{tasks.map(t=><div style={card} key={t.id}><div style={{display:'flex',justifyContent:'space-between'}}><strong>{t.title}</strong><span className="status-badge badge-gray">{t.priority}</span></div><p>{t.description}</p><small>{empName(t.assigned_employee_id)} · Due {dt(t.due_at)}</small><div style={{marginTop:12}}><select value={t.status} onChange={async e=>{const status=e.target.value;await supabase.from('business_tasks').update({status,completed_at:status==='completed'?new Date().toISOString():null}).eq('id',t.id);setTasks(p=>p.map(x=>x.id===t.id?{...x,status}:x));}}><option>open</option><option>in_progress</option><option>blocked</option><option>completed</option></select></div></div>)}</div></div>;
+  if (section === 'tasks') return <div className="tab-content enterprise-stack"><Header tab="tasks" /><form className={paper} onSubmit={addTask}><div className="enterprise-form-grid"><input required placeholder="Task title" value={taskForm.title} onChange={e=>setTaskForm(p=>({...p,title:e.target.value}))}/><select value={taskForm.assigned_employee_id} onChange={e=>setTaskForm(p=>({...p,assigned_employee_id:e.target.value}))}><option value="">Unassigned</option>{employees.map(e=><option key={e.id} value={e.id}>{e.name}</option>)}</select><select value={taskForm.priority} onChange={e=>setTaskForm(p=>({...p,priority:e.target.value}))}><option>low</option><option>normal</option><option>high</option><option>urgent</option></select><input type="datetime-local" value={taskForm.due_at} onChange={e=>setTaskForm(p=>({...p,due_at:e.target.value}))}/></div><textarea placeholder="Description" value={taskForm.description} onChange={e=>setTaskForm(p=>({...p,description:e.target.value}))}/><button className="btn-primary"><Plus size={15}/> Add Task</button></form><div className="enterprise-form-grid">{tasks.map(t=><div className={paper} key={t.id}><div style={{display:'flex',justifyContent:'space-between'}}><strong>{t.title}</strong><span className="status-badge badge-gray">{t.priority}</span></div><p>{t.description}</p><small>{empName(t.assigned_employee_id)} · Due {dt(t.due_at)}</small><div style={{marginTop:12}}><select value={t.status} onChange={async e=>{const status=e.target.value;await supabase.from('business_tasks').update({status,completed_at:status==='completed'?new Date().toISOString():null}).eq('id',t.id);setTasks(p=>p.map(x=>x.id===t.id?{...x,status}:x));}}><option>open</option><option>in_progress</option><option>blocked</option><option>completed</option></select></div></div>)}</div></div>;
 
-  if (section === 'equipment') return <div className="tab-content"><Header tab="equipment" /><form style={{...card,marginBottom:18}} onSubmit={addEquipment}><div style={grid}><input required placeholder="Asset name" value={equipmentForm.name} onChange={e=>setEquipmentForm(p=>({...p,name:e.target.value}))}/><input placeholder="Category" value={equipmentForm.category} onChange={e=>setEquipmentForm(p=>({...p,category:e.target.value}))}/><input placeholder="Serial number" value={equipmentForm.serial_number} onChange={e=>setEquipmentForm(p=>({...p,serial_number:e.target.value}))}/><input type="number" placeholder="Purchase cost" value={equipmentForm.purchase_cost} onChange={e=>setEquipmentForm(p=>({...p,purchase_cost:e.target.value}))}/><select value={equipmentForm.assigned_employee_id} onChange={e=>setEquipmentForm(p=>({...p,assigned_employee_id:e.target.value}))}><option value="">Not assigned</option>{employees.map(e=><option key={e.id} value={e.id}>{e.name}</option>)}</select><select value={equipmentForm.status} onChange={e=>setEquipmentForm(p=>({...p,status:e.target.value}))}><option>available</option><option>assigned</option><option>repair</option><option>retired</option></select></div><button className="btn-primary">Add Asset</button></form><div style={grid}>{equipment.map(a=><div style={card} key={a.id}><Wrench size={18}/><h3>{a.name}</h3><p>{a.category} · {a.status}</p><small>Assigned: {empName(a.assigned_employee_id)} · Value {money(Number(a.purchase_cost||0))}</small></div>)}</div></div>;
+  if (section === 'equipment') return <div className="tab-content enterprise-stack"><Header tab="equipment" /><form className={paper} onSubmit={addEquipment}><div className="enterprise-form-grid"><input required placeholder="Asset name" value={equipmentForm.name} onChange={e=>setEquipmentForm(p=>({...p,name:e.target.value}))}/><input placeholder="Category" value={equipmentForm.category} onChange={e=>setEquipmentForm(p=>({...p,category:e.target.value}))}/><input placeholder="Serial number" value={equipmentForm.serial_number} onChange={e=>setEquipmentForm(p=>({...p,serial_number:e.target.value}))}/><input type="number" placeholder="Purchase cost" value={equipmentForm.purchase_cost} onChange={e=>setEquipmentForm(p=>({...p,purchase_cost:e.target.value}))}/><select value={equipmentForm.assigned_employee_id} onChange={e=>setEquipmentForm(p=>({...p,assigned_employee_id:e.target.value}))}><option value="">Not assigned</option>{employees.map(e=><option key={e.id} value={e.id}>{e.name}</option>)}</select><select value={equipmentForm.status} onChange={e=>setEquipmentForm(p=>({...p,status:e.target.value}))}><option>available</option><option>assigned</option><option>repair</option><option>retired</option></select></div><button className="btn-primary">Add Asset</button></form><div className="enterprise-form-grid">{equipment.map(a=><div className={paper} key={a.id}><Wrench size={18}/><h3>{a.name}</h3><p>{a.category} · {a.status}</p><small>Assigned: {empName(a.assigned_employee_id)} · Value {money(Number(a.purchase_cost||0))}</small></div>)}</div></div>;
 
-  if (section === 'documents') return <div className="tab-content"><Header tab="documents" /><form style={{...card,marginBottom:18}} onSubmit={addDocument}><div style={grid}><select value={docForm.employee_id} onChange={e=>setDocForm(p=>({...p,employee_id:e.target.value}))}><option value="">No employee</option>{employees.map(e=><option value={e.id} key={e.id}>{e.name}</option>)}</select><select value={docForm.document_type} onChange={e=>setDocForm(p=>({...p,document_type:e.target.value}))}><option>training</option><option>resume</option><option>background_check</option><option>write_up</option><option>certification</option><option>policy</option><option>other</option></select><input required placeholder="Document title" value={docForm.title} onChange={e=>setDocForm(p=>({...p,title:e.target.value}))}/><input placeholder="Secure file URL" value={docForm.file_url} onChange={e=>setDocForm(p=>({...p,file_url:e.target.value}))}/><input type="date" value={docForm.expires_at} onChange={e=>setDocForm(p=>({...p,expires_at:e.target.value}))}/></div><textarea placeholder="Notes" value={docForm.notes} onChange={e=>setDocForm(p=>({...p,notes:e.target.value}))}/><button className="btn-primary"><FileText size={15}/> Save Record</button></form><div style={grid}>{documents.map(d=><div style={card} key={d.id}><strong>{d.title}</strong><p>{prettyLabel(d.document_type)} · {empName(d.employee_id)}</p>{d.file_url&&<a href={d.file_url} target="_blank" rel="noreferrer">Open document</a>}<small style={{display:'block',marginTop:8}}>Expires: {day(d.expires_at)}</small></div>)}</div></div>;
+  if (section === 'documents') return <div className="tab-content enterprise-stack"><Header tab="documents" /><form className={paper} onSubmit={addDocument}><div className="enterprise-form-grid"><select value={docForm.employee_id} onChange={e=>setDocForm(p=>({...p,employee_id:e.target.value}))}><option value="">No employee</option>{employees.map(e=><option value={e.id} key={e.id}>{e.name}</option>)}</select><select value={docForm.document_type} onChange={e=>setDocForm(p=>({...p,document_type:e.target.value}))}><option>training</option><option>resume</option><option>background_check</option><option>write_up</option><option>certification</option><option>policy</option><option>other</option></select><input required placeholder="Document title" value={docForm.title} onChange={e=>setDocForm(p=>({...p,title:e.target.value}))}/><input placeholder="Secure file URL" value={docForm.file_url} onChange={e=>setDocForm(p=>({...p,file_url:e.target.value}))}/><input type="date" value={docForm.expires_at} onChange={e=>setDocForm(p=>({...p,expires_at:e.target.value}))}/></div><textarea placeholder="Notes" value={docForm.notes} onChange={e=>setDocForm(p=>({...p,notes:e.target.value}))}/><button className="btn-primary"><FileText size={15}/> Save Record</button></form><div className="enterprise-form-grid">{documents.map(d=><div className={paper} key={d.id}><strong>{d.title}</strong><p>{prettyLabel(d.document_type)} · {empName(d.employee_id)}</p>{d.file_url&&<a href={d.file_url} target="_blank" rel="noreferrer">Open document</a>}<small style={{display:'block',marginTop:8}}>Expires: {day(d.expires_at)}</small></div>)}</div></div>;
 
   if (section === 'permissions') return <Permissions profiles={profiles} employees={employees} setEmployees={setEmployees} onSave={saveProfileAccess} />;
 
-  if (section === 'notifications') return <div className="tab-content"><Header tab="notifications" /><form style={{...card,marginBottom:18}} onSubmit={addNotification}><div style={grid}><input required placeholder="Title" value={notificationForm.title} onChange={e=>setNotificationForm(p=>({...p,title:e.target.value}))}/><select value={notificationForm.target_employee_id} onChange={e=>setNotificationForm(p=>({...p,target_employee_id:e.target.value,target_portal_role:''}))}><option value="">No specific employee</option>{employees.map(e=><option value={e.id} key={e.id}>{e.name}</option>)}</select><select value={notificationForm.target_portal_role} onChange={e=>setNotificationForm(p=>({...p,target_portal_role:e.target.value,target_employee_id:''}))}><option value="">No portal group</option><option value="manager">Managers</option><option value="employee">Employees</option><option value="d2d">D2D</option><option value="recruiter">Recruiters</option><option value="finance">Finance</option></select><select value={notificationForm.notification_type} onChange={e=>setNotificationForm(p=>({...p,notification_type:e.target.value}))}><option>info</option><option>warning</option><option>success</option><option>urgent</option></select></div><textarea required placeholder="Message" value={notificationForm.message} onChange={e=>setNotificationForm(p=>({...p,message:e.target.value}))}/><button className="btn-primary"><Bell size={15}/> Send</button></form><div style={grid}>{notifications.map(n=><div style={card} key={n.id}><strong>{n.title}</strong><p>{n.message}</p><small>{n.target_portal_role||empName(n.target_employee_id)} · {dt(n.created_at)}</small></div>)}</div></div>;
+  if (section === 'notifications') return <div className="tab-content enterprise-stack"><Header tab="notifications" /><form className={paper} onSubmit={addNotification}><div className="enterprise-form-grid"><input required placeholder="Title" value={notificationForm.title} onChange={e=>setNotificationForm(p=>({...p,title:e.target.value}))}/><select value={notificationForm.target_employee_id} onChange={e=>setNotificationForm(p=>({...p,target_employee_id:e.target.value,target_portal_role:''}))}><option value="">No specific employee</option>{employees.map(e=><option value={e.id} key={e.id}>{e.name}</option>)}</select><select value={notificationForm.target_portal_role} onChange={e=>setNotificationForm(p=>({...p,target_portal_role:e.target.value,target_employee_id:''}))}><option value="">No portal group</option><option value="manager">Managers</option><option value="employee">Employees</option><option value="d2d">D2D</option><option value="recruiter">Recruiters</option><option value="finance">Finance</option></select><select value={notificationForm.notification_type} onChange={e=>setNotificationForm(p=>({...p,notification_type:e.target.value}))}><option>info</option><option>warning</option><option>success</option><option>urgent</option></select></div><textarea required placeholder="Message" value={notificationForm.message} onChange={e=>setNotificationForm(p=>({...p,message:e.target.value}))}/><button className="btn-primary"><Bell size={15}/> Send</button></form><div className="enterprise-form-grid">{notifications.map(n=><div className={paper} key={n.id}><strong>{n.title}</strong><p>{n.message}</p><small>{n.target_portal_role||empName(n.target_employee_id)} · {dt(n.created_at)}</small></div>)}</div></div>;
 
-  if (section === 'time_off') return <div className="tab-content"><Header tab="time_off" /><div style={grid}>{timeOff.map(r=><div style={card} key={r.id}><strong>{empName(r.employee_id)}</strong><p>{day(r.start_date)} → {day(r.end_date)} · {r.request_type}</p><p>{r.reason}</p><div style={{display:'flex',gap:8}}><button className="btn-sm btn-primary" onClick={async()=>{await supabase.from('time_off_requests').update({status:'approved'}).eq('id',r.id);setTimeOff(p=>p.map(x=>x.id===r.id?{...x,status:'approved'}:x));}}>Approve</button><button className="btn-sm btn-outline" onClick={async()=>{await supabase.from('time_off_requests').update({status:'declined'}).eq('id',r.id);setTimeOff(p=>p.map(x=>x.id===r.id?{...x,status:'declined'}:x));}}>Decline</button><span className="status-badge badge-gray">{r.status}</span></div></div>)}</div></div>;
+  if (section === 'time_off') return (
+    <div className="tab-content enterprise-stack">
+      <Header tab="time_off" />
+      {timeOff.length ? (
+        <div className="enterprise-form-grid">
+          {timeOff.map(r => (
+            <div className={paper} key={r.id}>
+              <strong>{empName(r.employee_id)}</strong>
+              <p>{day(r.start_date)} → {day(r.end_date)} · {r.request_type}</p>
+              <p>{r.reason}</p>
+              <div className="enterprise-row-actions">
+                <button className="btn-sm btn-primary" onClick={async () => { await supabase.from('time_off_requests').update({ status: 'approved' }).eq('id', r.id); setTimeOff(p => p.map(x => x.id === r.id ? { ...x, status: 'approved' } : x)); }}>Approve</button>
+                <button className="btn-sm btn-outline" onClick={async () => { await supabase.from('time_off_requests').update({ status: 'declined' }).eq('id', r.id); setTimeOff(p => p.map(x => x.id === r.id ? { ...x, status: 'declined' } : x)); }}>Decline</button>
+                <span className="status-badge badge-gray">{r.status}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <section className={paper}>
+          <div className="ns-empty">
+            <CalendarDays size={28} />
+            <h3>No time-off requests</h3>
+            <p>When someone submits a request, approve or decline it here before the week is locked.</p>
+          </div>
+        </section>
+      )}
+    </div>
+  );
 
-  if (section === 'payroll_approval') return <div className="tab-content"><Header tab="payroll_approval" /><div style={{...card,marginBottom:18,overflowX:'auto'}}><h3><ClipboardCheck size={18}/> Timecards</h3><div className="data-table"><div className="data-table-head"><span>Employee</span><span>Clock In</span><span>Clock Out</span><span>Status</span><span>Action</span></div>{timeEntries.slice(0,150).map(t=><div className="data-table-row" key={t.id}><span>{empName(t.employee_id)}</span><span>{dt(t.clock_in)}</span><span>{dt(t.clock_out)}</span><span>{t.status}</span><div><button className="btn-sm btn-primary" onClick={()=>approveTime(t,'approved')}>Approve</button> <button className="btn-sm btn-outline" onClick={()=>approveTime(t,'needs_review')}>Review</button></div></div>)}</div></div><form style={{...card,marginBottom:18}} onSubmit={addPayrollRun}><h3>Close a Pay Period</h3><div style={grid}><input required type="date" value={payrollForm.period_start} onChange={e=>setPayrollForm(p=>({...p,period_start:e.target.value}))}/><input required type="date" value={payrollForm.period_end} onChange={e=>setPayrollForm(p=>({...p,period_end:e.target.value}))}/><input placeholder="Notes" value={payrollForm.notes} onChange={e=>setPayrollForm(p=>({...p,notes:e.target.value}))}/></div><button className="btn-primary">Create Payroll Run</button></form><div style={grid}>{payrollRuns.map(r=><div style={card} key={r.id}><strong>{day(r.period_start)} – {day(r.period_end)}</strong><h3>{money(Number(r.gross_pay||0))}</h3><span>{r.status}</span>{r.status!=='approved'&&<button className="btn-sm btn-primary" style={{marginLeft:10}} onClick={async()=>{await supabase.from('payroll_runs').update({status:'approved',approved_at:new Date().toISOString()}).eq('id',r.id);setPayrollRuns(p=>p.map(x=>x.id===r.id?{...x,status:'approved'}:x));}}>Approve</button>}</div>)}</div></div>;
+  if (section === 'payroll_approval') return (
+    <div className="tab-content timesheet-workspace">
+      <Header tab="payroll_approval" />
+      <section className={paper}>
+        <div className="phase-panel-head">
+          <div>
+            <span className="eyebrow">TIMECARDS</span>
+            <h3>Review hours</h3>
+          </div>
+        </div>
+        {timeEntries.length ? (
+          <div className="timesheet-table">
+            <div className="data-table">
+              <div className="data-table-head">
+                <span>Employee</span>
+                <span>Clock In</span>
+                <span>Clock Out</span>
+                <span>Status</span>
+                <span>Action</span>
+              </div>
+              {timeEntries.slice(0, 150).map(t => (
+                <div className="data-table-row" key={t.id}>
+                  <span>{empName(t.employee_id)}</span>
+                  <span>{dt(t.clock_in)}</span>
+                  <span>{dt(t.clock_out)}</span>
+                  <span>{t.status}</span>
+                  <div className="enterprise-row-actions">
+                    <button className="btn-sm btn-primary" onClick={() => approveTime(t, 'approved')}>Approve</button>
+                    <button className="btn-sm btn-outline" onClick={() => approveTime(t, 'needs_review')}>Review</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="ns-empty">
+            <ClipboardCheck size={28} />
+            <h3>No timecards this period</h3>
+            <p>Hours land here after the team clocks in. Approve the card, then close the pay period below.</p>
+          </div>
+        )}
+      </section>
+      <form className={paper} onSubmit={addPayrollRun}>
+        <div className="phase-panel-head">
+          <div>
+            <span className="eyebrow">PAYROLL</span>
+            <h3>Close a Pay Period</h3>
+          </div>
+        </div>
+        <div className="timesheet-pay-grid">
+          <label className="form-group">Start date
+            <input required type="date" value={payrollForm.period_start} onChange={e => setPayrollForm(p => ({ ...p, period_start: e.target.value }))} />
+          </label>
+          <label className="form-group">End date
+            <input required type="date" value={payrollForm.period_end} onChange={e => setPayrollForm(p => ({ ...p, period_end: e.target.value }))} />
+          </label>
+          <label className="form-group">Notes
+            <input placeholder="Optional notes" value={payrollForm.notes} onChange={e => setPayrollForm(p => ({ ...p, notes: e.target.value }))} />
+          </label>
+        </div>
+        <button className="btn-primary" type="submit">Create Payroll Run</button>
+      </form>
+      {payrollRuns.length ? (
+        <div className="enterprise-form-grid">
+          {payrollRuns.map(r => (
+            <div className={paper} key={r.id}>
+              <strong>{day(r.period_start)} – {day(r.period_end)}</strong>
+              <h3>{money(Number(r.gross_pay || 0))}</h3>
+              <span>{r.status}</span>
+              {r.status !== 'approved' && (
+                <button className="btn-sm btn-primary" onClick={async () => {
+                  await supabase.from('payroll_runs').update({ status: 'approved', approved_at: new Date().toISOString() }).eq('id', r.id);
+                  setPayrollRuns(p => p.map(x => x.id === r.id ? { ...x, status: 'approved' } : x));
+                }}>Approve</button>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
 
   if (section === 'reports') {
     const completed = payments.filter(p=>p.status==='completed'); const revenue=completed.reduce((s,p)=>s+Number(p.amount),0); const expenseTotal=expenses.reduce((s,e)=>s+Number(e.amount),0); const avg=completed.length?revenue/completed.length:0; const completedJobs=appointments.filter(a=>a.status==='completed').length; const canceled=appointments.filter(a=>a.status==='cancelled').length;
-    return <div className="tab-content"><Header tab="reports" /><div className="report-metric-grid"><Metric label="Collected Revenue" value={money(revenue)}/><Metric label="Tracked Expenses" value={money(expenseTotal)}/><Metric label="Operating Margin (before tax)" value={money(revenue-expenseTotal)}/><Metric label="Average Ticket" value={money(avg)}/><Metric label="Completed Details" value={String(completedJobs)}/><Metric label="Cancellations" value={String(canceled)}/><Metric label="D2D Conversion" value={`${leadMetrics.conversion.toFixed(1)}%`}/><Metric label="Lead Revenue" value={money(leadMetrics.value)}/></div><div style={{...card,marginTop:18}}><h3><Gauge size={18}/> What to watch</h3><p>Use labor %, average ticket, repeat customer rate, cancellations, add-on attach rate and D2D conversion as your weekly owner scorecard. Finance figures here are operational estimates, not tax filings.</p></div></div>;
+    return <div className="tab-content enterprise-stack"><Header tab="reports" /><div className="report-metric-grid"><Metric label="Collected Revenue" value={money(revenue)}/><Metric label="Tracked Expenses" value={money(expenseTotal)}/><Metric label="Operating Margin (before tax)" value={money(revenue-expenseTotal)}/><Metric label="Average Ticket" value={money(avg)}/><Metric label="Completed Details" value={String(completedJobs)}/><Metric label="Cancellations" value={String(canceled)}/><Metric label="D2D Conversion" value={`${leadMetrics.conversion.toFixed(1)}%`}/><Metric label="Lead Revenue" value={money(leadMetrics.value)}/></div><div className={paper}><h3><Gauge size={18}/> What to watch</h3><p>Use labor %, average ticket, repeat customer rate, cancellations, add-on attach rate and D2D conversion as your weekly owner scorecard. Finance figures here are operational estimates, not tax filings.</p></div></div>;
   }
 
-  if (section === 'audit') return <div className="tab-content"><Header tab="audit" /><div style={{...card,overflowX:'auto'}}><div className="data-table"><div className="data-table-head"><span>Action</span><span>Entity</span><span>When</span><span>Details</span></div>{auditLogs.map(a=><div className="data-table-row" key={a.id}><strong>{a.action}</strong><span>{a.entity_type} {a.entity_id?.slice(0,8)}</span><span>{dt(a.created_at)}</span><span style={{fontSize:12,color:'#888'}}>{JSON.stringify(a.details).slice(0,100)}</span></div>)}</div></div></div>;
+  if (section === 'audit') return (
+    <div className="tab-content enterprise-stack">
+      <Header tab="audit" />
+      <section className={paper}>
+        {auditLogs.length ? (
+          <div className="data-table">
+            <div className="data-table-head"><span>Action</span><span>Entity</span><span>When</span><span>Details</span></div>
+            {auditLogs.map(a => (
+              <div className="data-table-row" key={a.id}>
+                <strong>{a.action}</strong>
+                <span>{a.entity_type} {a.entity_id?.slice(0, 8)}</span>
+                <span>{dt(a.created_at)}</span>
+                <span className="audit-detail">{JSON.stringify(a.details).slice(0, 100)}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="ns-empty">
+            <ShieldCheck size={28} />
+            <h3>No audit events yet</h3>
+            <p>Owner actions such as payroll, permissions, and assignments will list here.</p>
+          </div>
+        )}
+      </section>
+    </div>
+  );
 
   return null;
 }

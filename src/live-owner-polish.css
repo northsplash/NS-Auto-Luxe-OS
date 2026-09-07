@@ -7319,3 +7319,93 @@ html {
   .portal-layout.nsos-cream .os-secondary-nav { padding: 0 12px !important; }
   .portal-layout.nsos-cream .ws-hero-metrics { grid-template-columns: 1fr 1fr; }
 }
+
+/* Timesheets / enterprise paper — never inherit the leftover dark invert. */
+.portal-layout.nsos-cream .timesheet-workspace,
+.portal-layout.nsos-cream .enterprise-stack {
+  display: grid;
+  gap: 16px;
+}
+.portal-layout.nsos-cream .enterprise-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+.portal-layout.nsos-cream .enterprise-paper,
+.portal-layout.nsos-cream .phase-panel.enterprise-paper {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  border: 1px solid #e4d9cc !important;
+  box-shadow: 0 10px 28px rgba(48, 38, 28, .05) !important;
+}
+.portal-layout.nsos-cream .enterprise-paper h3,
+.portal-layout.nsos-cream .timesheet-workspace h3 {
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .timesheet-workspace .phase-panel-head {
+  margin-bottom: 14px;
+}
+.portal-layout.nsos-cream .timesheet-pay-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin: 4px 0 14px;
+}
+.portal-layout.nsos-cream .timesheet-pay-grid .form-group,
+.portal-layout.nsos-cream .timesheet-pay-grid label {
+  display: grid;
+  gap: 6px;
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+  font-size: 11px;
+  font-weight: 700;
+}
+.portal-layout.nsos-cream .timesheet-table {
+  overflow-x: auto;
+}
+.portal-layout.nsos-cream .timesheet-table .data-table {
+  background: #fff !important;
+  border: 1px solid #eadfd3 !important;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.portal-layout.nsos-cream .timesheet-table .data-table-head,
+.portal-layout.nsos-cream .timesheet-table .data-table-row {
+  grid-template-columns: 1.3fr 1.1fr 1.1fr .8fr 1.2fr;
+}
+.portal-layout.nsos-cream .enterprise-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.portal-layout.nsos-cream .audit-detail {
+  font-size: 12px;
+  color: #6f675e !important;
+}
+.portal-layout.nsos-cream .timesheet-workspace .ns-empty,
+.portal-layout.nsos-cream .enterprise-stack .ns-empty {
+  background: rgba(184, 137, 58, .04) !important;
+  border: 1px dashed #e0c48a !important;
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+  border-radius: 14px;
+  padding: 28px 20px;
+  text-align: center;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+}
+.portal-layout.nsos-cream .timesheet-workspace .ns-empty h3,
+.portal-layout.nsos-cream .enterprise-stack .ns-empty h3 {
+  margin: 4px 0 0;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .timesheet-workspace .ns-empty p,
+.portal-layout.nsos-cream .enterprise-stack .ns-empty p {
+  margin: 0;
+  max-width: 420px;
+}
