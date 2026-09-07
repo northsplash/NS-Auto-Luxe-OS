@@ -7409,3 +7409,65 @@ html {
   margin: 0;
   max-width: 420px;
 }
+
+/* Territories — cream map chrome (kills leftover v13 espresso shells). */
+.portal-layout.nsos-cream .territory-command-toolbar-v13,
+.portal-layout.nsos-cream .territory-command-map-v13,
+.portal-layout.nsos-cream .territory-map-stage-v13,
+.portal-layout.nsos-cream .territory-admin-map,
+.portal-layout.nsos-cream .territory-admin-map .field-map-toolbar,
+.portal-layout.nsos-cream .territory-admin-map .field-map-tools,
+.portal-layout.nsos-cream .territory-map-help-v13,
+.portal-layout.nsos-cream .territory-filter-v13 {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  border-color: #e4d9cc !important;
+  box-shadow: none !important;
+}
+.portal-layout.nsos-cream .territory-admin-map .field-map-toolbar {
+  border-bottom: 1px solid #eadfd3 !important;
+  background: #f7f1ea !important;
+}
+.portal-layout.nsos-cream .territory-admin-map .google-map-search,
+.portal-layout.nsos-cream .territory-admin-map .google-map-search input {
+  background: #fff !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  border-color: #e4d9cc !important;
+}
+.portal-layout.nsos-cream .territory-admin-map .field-map-canvas {
+  background: #efe8dc !important;
+}
+.portal-layout.nsos-cream .territory-admin-map .field-map-tools,
+.portal-layout.nsos-cream .territory-map-help-v13 {
+  background: #f7f1ea !important;
+  border-top: 1px solid #eadfd3 !important;
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+}
+.portal-layout.nsos-cream .territory-map-help-v13 span {
+  color: #6f675e !important;
+}
+.portal-layout.nsos-cream .territory-map-help-v13 b {
+  background: #efe4d0 !important;
+  color: #7a5a1e !important;
+}
+.portal-layout.nsos-cream .territory-toolbar-status-v13,
+.portal-layout.nsos-cream .territory-toolbar-status-v13 > span:last-child {
+  color: #6f675e !important;
+}
+.portal-layout.nsos-cream .territory-toolbar-status-v13 strong {
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .territory-command-page,
+.portal-layout.nsos-cream .territory-command-layout-v13 {
+  background-image: none !important;
+}
+.portal-layout.nsos-cream .ns-map-shell .ns-map-fallback {
+  margin: 0;
+  border-radius: 0;
+  border: 0;
+  border-bottom: 1px solid #eadfd3;
+}
