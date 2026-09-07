@@ -17,7 +17,7 @@ import { applyNewHireAcademy, ACADEMY_COURSES } from '@/lib/trainingAcademy';
 import { canCollectJob } from '@/lib/collectPayment';
 import { hiredCrew } from '@/lib/ownerFieldMode';
 import { setOwnerBoardFilter } from '@/lib/ownerJump';
-import { isOnboardingOpen } from '@/lib/onboarding';
+import { isHirePacketOpen } from '@/lib/onboarding';
 import { BRAND_LOCKUP } from '@/lib/brand';
 import FieldTerritoryMap from '@/components/FieldTerritoryMap';
 import TerritoryStreetView from '@/components/TerritoryStreetView';
@@ -358,7 +358,7 @@ function CommandCenter({employees,appointments,customers,payments,onNavigate,own
  const avgTicket=completed.length?completed.reduce((n,a)=>n+Number(a.price||0),0)/completed.length:0;
  const activeTeam=employees.filter(e=>e.status==='active');
  const crew=hiredCrew(employees);
- const packetOpen=(e:Employee)=>isOnboardingOpen(e.onboarding_status);
+ const packetOpen=(e:Employee)=>isHirePacketOpen(e);
  const unassigned=appointments.filter(a=>!a.assigned_employee_id&&!['completed','cancelled'].includes(a.status)).length;
  const pending=appointments.filter(a=>a.status==='pending'||a.status==='scheduled').length;
  const qc=appointments.filter(a=>a.qc_status==='pending'||a.qc_status==='qc').length;

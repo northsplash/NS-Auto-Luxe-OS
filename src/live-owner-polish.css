@@ -7124,3 +7124,37 @@ html {
     max-height: 78px;
   }
 }
+
+/* Team directory: keep hire queues readable over the watermark. */
+.portal-layout.nsos-cream .portal-main:has(.team-directory-v21)::after {
+  opacity: .08 !important;
+  background-position: center 6% !important;
+  background-size: min(52vw, 420px) auto !important;
+}
+.portal-layout.nsos-cream .owner-onboard-queue,
+.portal-layout.nsos-cream .waiting-access-strip,
+.portal-layout.nsos-cream .team-directory-section {
+  background: #fffdf8 !important;
+  position: relative;
+  z-index: 1;
+}
+.portal-layout.nsos-cream .waiting-access-list > div {
+  background: #fffdf8;
+  border: 1px solid #eadfd3;
+  border-radius: 12px;
+  padding: 8px 10px;
+  overflow: hidden;
+}
+.portal-layout.nsos-cream .employee-photo {
+  overflow: hidden !important;
+  background: #f4ead8 !important;
+  color: #7a5a28 !important;
+  border: 1px solid #e0c48a !important;
+}
+.portal-layout.nsos-cream .employee-photo img {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  background: #f4ead8 !important;
+  object-fit: cover !important;
+}

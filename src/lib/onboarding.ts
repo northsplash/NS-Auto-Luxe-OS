@@ -1,4 +1,5 @@
 import { supabase, type Employee } from '@/lib/supabase';
+import { isOwnerFieldEmployee } from '@/lib/ownerFieldMode';
 import { assignAcademyForEmployee, courseIdsForEmployee, D2D_ACADEMY_ID, DETAIL_ACADEMY_ID } from '@/lib/trainingAcademy';
 import { normalizeFilingStatus, normalizeI9Status } from '@/lib/gustoPayroll';
 
@@ -113,6 +114,27 @@ export function onboardingStatusLabel(percent: number) {
 export function isOnboardingOpen(status?: string | null) {
   const st = String(status || '').toLowerCase();
   return Boolean(st) && !['complete', 'completed', 'done'].includes(st);
+}
+
+export function isLeadershipSeat(employee?: Pick<Employee, 'role' | 'title' | 'department' | 'notes' | 'work_modes' | 'employment_level'> | null) {
+  if (!employee) return false;
+  const role = String(employee.role || '').toLowerCase();
+  if (role === 'owner' || role === 'admin') return true;
+  return isOwnerFieldEmployee(employee as Employee);
+}
+
+export function isHirePacketOpen(employee?: Employee | null) {
+  return Boolean(employee) && isOnboardingOpen(employee.onboarding_status) && !isLeadershipSeat(employee);
+}
+
+export function preferLinkedPeople<T extends { id: string; email?: string | null; user_id?: string | null }>(people: T[]): T[] {
+  const byKey = new Map<string, T>();
+  for (const person of people) {
+    const key = String(person.email || '').trim().toLowerCase() || `id:${person.id}`;
+    const prev = byKey.get(key);
+    if (!prev || (!prev.user_id && person.user_id)) byKey.set(key, person);
+  }
+  return [...byKey.values()];
 }
 
 function fromRow(row: Record<string, unknown>): OnboardingPacket {

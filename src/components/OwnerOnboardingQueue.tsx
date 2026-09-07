@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ClipboardCheck } from 'lucide-react';
 import EmployeeAvatar from '@/components/EmployeeAvatar';
-import { loadOnboardingSummaries, isOnboardingOpen, type OnboardingSummary } from '@/lib/onboarding';
+import { loadOnboardingSummaries, isHirePacketOpen, preferLinkedPeople, type OnboardingSummary } from '@/lib/onboarding';
 import { prettyLabel } from '@/lib/data';
 import type { Employee } from '@/lib/supabase';
 
@@ -11,7 +11,7 @@ type Props = {
 };
 
 export default function OwnerOnboardingQueue({ employees, onOpen }: Props) {
-  const open = employees.filter((e) => isOnboardingOpen(e.onboarding_status));
+  const open = preferLinkedPeople(employees.filter((e) => isHirePacketOpen(e)));
   const [summaries, setSummaries] = useState<OnboardingSummary[]>([]);
 
   useEffect(() => {
@@ -43,7 +43,7 @@ export default function OwnerOnboardingQueue({ employees, onOpen }: Props) {
               <EmployeeAvatar employee={e} size="md" />
               <div>
                 <strong>{e.name}</strong>
-                <small>{e.title || prettyLabel(e.role)} · next {summary?.nextLabel || 'Identity'}</small>
+                <small>{e.title || prettyLabel(e.role)} · next {summary?.nextLabel || 'Personal'}</small>
                 <i className="nsos-onboard"><b style={{ width: `${percent}%` }} /></i>
               </div>
               <em>{percent}%</em>
