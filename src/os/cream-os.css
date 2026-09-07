@@ -1100,11 +1100,22 @@ html.nsos-active #root {
     padding-bottom: 0 !important;
   }
   .nsos-cream .portal-content {
-    padding: 10px 12px calc(64px + env(safe-area-inset-bottom)) !important;
+    padding: 10px 12px calc(96px + env(safe-area-inset-bottom)) !important;
   }
-  .nsos-cream.os-tab-messages .portal-content,
+  .nsos-cream.os-tab-messages .portal-content {
+    padding: 8px 8px calc(96px + env(safe-area-inset-bottom)) !important;
+  }
   .nsos-cream.os-tab-sales .portal-content {
-    padding: 8px 8px calc(58px + env(safe-area-inset-bottom)) !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    display: block !important;
+    height: auto !important;
+    padding: 8px 8px calc(96px + env(safe-area-inset-bottom)) !important;
+  }
+  .nsos-cream.os-tab-sales .nsos-sr {
+    flex: none !important;
+    height: auto !important;
+    min-height: 0 !important;
   }
   .os-phone-subnav {
     display: flex !important;

@@ -220,12 +220,15 @@ html.nsos-active,
 /* Phone: let every workspace scroll. Maps, pitch, and add-lead were clipped
    because sales/messages locked overflow to the viewport height. */
 @media (max-width: 860px) {
+  .portal-layout.nsos-cream .portal-content,
   .portal-layout.nsos-cream.os-tab-sales .portal-content {
     overflow-x: hidden !important;
     overflow-y: auto !important;
     display: block !important;
     height: auto !important;
-    padding-bottom: calc(88px + env(safe-area-inset-bottom)) !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    padding-bottom: calc(108px + env(safe-area-inset-bottom)) !important;
   }
   .portal-layout.nsos-cream.os-tab-sales .nsos-sr {
     flex: none !important;
@@ -234,24 +237,44 @@ html.nsos-active,
     display: grid !important;
     gap: 8px !important;
   }
-  .nsos-sr-kpis {
-    grid-template-columns: 1fr 1fr !important;
+  .nsos-sr-kpis,
+  .nsos-cream .nsos-sr-kpis,
+  .owner-kpis-v17,
+  .portal-layout.nsos-cream .owner-kpis-v17 {
+    display: flex !important;
+    overflow-x: auto !important;
     gap: 6px !important;
+    padding-bottom: 2px;
+    scrollbar-width: none;
   }
+  .nsos-sr-kpis::-webkit-scrollbar,
+  .owner-kpis-v17::-webkit-scrollbar { display: none; }
   .nsos-sr-kpis .nsos-kpi,
-  .nsos-cream .nsos-sr-kpis .nsos-kpi {
+  .nsos-cream .nsos-sr-kpis .nsos-kpi,
+  .owner-kpis-v17 .phase-kpi {
+    min-width: 104px !important;
+    flex: 0 0 auto;
     padding: 8px 10px !important;
   }
-  .nsos-sr-kpis strong { font-size: 18px !important; }
+  .nsos-sr-kpis strong,
+  .owner-kpis-v17 .phase-kpi strong { font-size: 18px !important; }
   .nsos-sr-layout {
-    grid-template-columns: 1fr !important;
-    gap: 10px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
   }
+  .nsos-sr-side { display: contents !important; }
+  .nsos-add-door { order: 1; }
+  .nsos-sr-map-wrap { order: 2; }
+  .nsos-sr-layout > .nsos-tabs,
+  .nsos-sr-side > .nsos-tabs { order: 3; }
+  .nsos-sr-card { order: 4; }
+  .nsos-sr-layout .nsos-sr-doors { order: 5; }
   .nsos-sr-map,
   .nsos-cream .nsos-sr-map,
   .nsos-admin-preview .nsos-sr-map {
-    height: min(28dvh, 210px) !important;
-    min-height: 150px !important;
+    height: min(22dvh, 160px) !important;
+    min-height: 120px !important;
   }
   .nsos-sr-legend {
     max-width: calc(100% - 16px);
@@ -276,14 +299,56 @@ html.nsos-active,
   .nsos-pitch {
     height: auto !important;
     min-height: 0 !important;
+    gap: 8px !important;
+    padding-bottom: 8px;
+  }
+  .nsos-pitch-lead {
+    padding: 8px 10px !important;
+  }
+  .nsos-pitch-lead h3 { font-size: 16px !important; margin: 2px 0 0 !important; }
+  .nsos-pitch-lead p { display: none; }
+  .nsos-pitch-slots {
+    display: flex !important;
+    overflow-x: auto !important;
+    gap: 6px !important;
+    margin-top: 8px !important;
+  }
+  .nsos-pitch-slots button {
+    min-width: 112px;
+    padding: 8px !important;
+    flex: 0 0 auto;
   }
   .nsos-pitch .sales-presentation-embedded {
     min-height: 0 !important;
     height: auto !important;
+    overflow: visible !important;
+    margin-bottom: 12px;
   }
-  .nsos-pitch-slots { grid-template-columns: 1fr 1fr !important; }
-  .nsos-add-door-grid { grid-template-columns: 1fr 1fr !important; }
-  .nsos-add-door h3 { font-size: 15px; margin: 0 0 8px; }
+  .nsos-add-door {
+    padding: 10px 12px !important;
+    margin: 0;
+  }
+  .nsos-add-door h3 { display: none; }
+  .nsos-add-door .nsos-eyebrow { margin-bottom: 6px; }
+  .nsos-add-door-grid { grid-template-columns: 1fr 1fr !important; gap: 6px !important; }
+  .nsos-add-door .nsos-field { margin-bottom: 0 !important; gap: 4px !important; }
+  .nsos-add-door input { min-height: 40px !important; }
+  .nsos-add-door .nsos-btn { margin-top: 8px !important; min-height: 44px; }
+
+  .portal-layout.nsos-cream .owner-command-v17 { gap: 10px !important; }
+  .portal-layout.nsos-cream .owner-command-head h2 { font-size: 22px !important; }
+  .portal-layout.nsos-cream .owner-command-head p { display: none !important; }
+  .portal-layout.nsos-cream .portal-main .nsos-quick {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 6px !important;
+  }
+  .portal-layout.nsos-cream .portal-main .nsos-quick button {
+    min-height: 44px !important;
+    padding: 8px 10px !important;
+  }
+  .portal-layout.nsos-cream .nsos-alerts { gap: 6px !important; }
+  .portal-layout.nsos-cream .portal-main .nsos-alert { padding: 10px 12px !important; }
 
   .portal-layout.d2d-os .portal-content {
     padding: 8px 10px calc(108px + env(safe-area-inset-bottom)) !important;
@@ -319,8 +384,8 @@ html.nsos-active,
   .portal-layout.nsos-cream .d2d-primary-map .field-map-canvas,
   .portal-layout.nsos-cream .territory-command-map .field-map-canvas,
   .portal-layout.nsos-cream .lead-map-card .field-map-canvas {
-    height: min(42dvh, 300px) !important;
-    min-height: 200px !important;
+    height: min(34dvh, 240px) !important;
+    min-height: 168px !important;
   }
   .d2d-field-actions {
     display: grid !important;
@@ -339,9 +404,20 @@ html.nsos-active,
   .house-drawer.field-house-sheet {
     max-height: min(88dvh, 100%) !important;
     width: 100% !important;
+    overflow-y: auto !important;
     padding-bottom: max(14px, env(safe-area-inset-bottom)) !important;
   }
-  .field-contact-strip { grid-template-columns: 1fr !important; }
+  .field-save-bar {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    background: #fffdf8;
+    padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+    display: grid !important;
+    gap: 6px;
+  }
+  .field-contact-strip { grid-template-columns: 1fr 1fr !important; }
+  .field-contact-strip .wide { grid-column: 1 / -1; }
   .house-quick-grid.field-quick-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
   .lead-command-kpis { grid-template-columns: 1fr 1fr !important; }
   .nsos-kanban {
@@ -378,31 +454,58 @@ html.nsos-active,
   .sales-hero-copy h2 { font-size: 30px !important; line-height: 1.05 !important; }
   .sales-close-main h2 { font-size: 30px !important; }
   .sales-quote-mode {
-    padding: 14px 12px 24px !important;
-    gap: 12px !important;
+    padding: 12px 10px 28px !important;
+    gap: 10px !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  .sales-quote-summary {
+    order: -1;
+    position: sticky;
+    top: 0;
+    z-index: 6;
+    padding: 12px !important;
+  }
+  .sales-household-actions,
+  .sales-quote-summary .sales-use-offer,
+  .sales-quote-summary .sales-save-offer {
+    min-height: 46px;
+    width: 100%;
   }
   .sales-presentation-mode {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
-  .sales-household-grid,
-  .sales-household-inline { grid-template-columns: 1fr !important; }
+  .sales-household-grid { grid-template-columns: 1fr !important; }
+  .sales-household-inline { grid-template-columns: 1fr 1fr !important; }
+  .sales-household-form {
+    margin: 12px 0 24px !important;
+    padding: 0 4px 32px !important;
+  }
+  .sales-slide-heading h2 { font-size: 22px !important; }
 }
 
 @media (max-width: 430px) {
   .nsos-sr-map,
   .nsos-cream .nsos-sr-map,
   .nsos-admin-preview .nsos-sr-map {
-    height: min(24dvh, 170px) !important;
-    min-height: 140px !important;
+    height: min(18dvh, 128px) !important;
+    min-height: 108px !important;
   }
   .os-phone-subnav { padding: 6px 8px 8px !important; }
   .portal-layout.nsos-cream .portal-content {
     padding-left: 10px !important;
     padding-right: 10px !important;
   }
-  .sales-slide-heading h2 { font-size: 22px !important; }
-  .sales-hero-copy h2 { font-size: 26px !important; }
+  .d2d-os .d2d-primary-map .field-map-canvas,
+  .portal-layout.nsos-cream .d2d-primary-map .field-map-canvas,
+  .portal-layout.nsos-cream .territory-command-map .field-map-canvas,
+  .portal-layout.nsos-cream .lead-map-card .field-map-canvas {
+    height: min(32dvh, 220px) !important;
+    min-height: 160px !important;
+  }
+  .sales-slide-heading h2 { font-size: 20px !important; }
+  .sales-hero-copy h2 { font-size: 24px !important; }
 }
 
 @media (prefers-reduced-motion: reduce) {
