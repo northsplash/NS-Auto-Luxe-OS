@@ -773,7 +773,7 @@ const handleDeleteAvailability = async (id: string) => {
             'recruiting','staff_schedule','timeclock','finance','sales','inventory','pay_settings',
             'job_assignments','tasks','equipment','documents','reports','permissions','notifications','time_off','payroll_approval','audit',
             'fleet','locations','marketing','approvals','incidents','purchasing','retention','continuity',
-            'owner_growth','owner_profits','payment_test','schedule',
+            'owner_growth','owner_profits','payment_test','schedule','messages',
           ].includes(tab) && (
             <WorkspaceHero
               tab={tab === 'employees' ? 'team' : tab}

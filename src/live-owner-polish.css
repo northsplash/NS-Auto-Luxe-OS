@@ -6008,7 +6008,11 @@ html, body, #root {
   overflow: hidden !important;
 }
 .portal-layout.nsos-cream.os-tab-messages .v2-page-head,
-.nsos-cream.os-tab-messages .v2-page-head {
+.nsos-cream.os-tab-messages .v2-page-head,
+.portal-layout.nsos-cream.os-tab-messages .ws-hero,
+.nsos-cream.os-tab-messages .ws-hero,
+.portal-layout.nsos-cream.os-tab-messages .os-workspace-pulse,
+.nsos-cream.os-tab-messages .os-workspace-pulse {
   display: none !important;
 }
 .portal-layout.nsos-cream.os-tab-messages .portal-main,
@@ -6063,7 +6067,8 @@ html, body, #root {
   width: 100% !important;
   max-width: none !important;
   min-width: 0 !important;
-  height: 100% !important;
+  height: auto !important;
+  flex: 1 1 0 !important;
   min-height: 0 !important;
   max-height: none !important;
   border-radius: 0 !important;
@@ -6370,7 +6375,8 @@ html, body, #root {
   .portal-layout.nsos-cream.os-tab-messages .team-messaging.messaging-usable.with-info,
   .nsos-cream.os-tab-messages .team-messaging.messaging-usable {
     border-radius: 0 !important;
-    height: 100% !important;
+    height: auto !important;
+    flex: 1 1 0 !important;
     max-height: none !important;
     min-height: 0 !important;
   }
@@ -6380,9 +6386,13 @@ html, body, #root {
 }
 
 @media (max-width: 1180px), (pointer: coarse) and (max-width: 1366px) {
+  .portal-layout.nsos-cream.os-tab-messages .portal-main,
+  .nsos-cream.os-tab-messages .portal-main {
+    padding-bottom: calc(58px + env(safe-area-inset-bottom)) !important;
+  }
   .portal-layout.nsos-cream.os-tab-messages .portal-content,
   .nsos-cream.os-tab-messages .portal-content {
-    padding: 0 0 calc(56px + env(safe-area-inset-bottom)) !important;
+    padding: 0 !important;
     overflow: hidden !important;
   }
   .portal-layout.nsos-cream.os-tab-messages .team-messaging,
@@ -6398,7 +6408,8 @@ html, body, #root {
   .nsos-cream.os-tab-messages .team-messaging.messaging-usable.with-info {
     display: grid !important;
     grid-template-columns: minmax(240px, 300px) minmax(0, 1fr) !important;
-    height: 100% !important;
+    height: auto !important;
+    flex: 1 1 0 !important;
     min-height: 0 !important;
     max-height: none !important;
     border-radius: 0 !important;
@@ -6435,9 +6446,13 @@ html, body, #root {
 }
 
 @media (max-width: 760px) {
+  .portal-layout.nsos-cream.os-tab-messages .portal-main,
+  .nsos-cream.os-tab-messages .portal-main {
+    padding-bottom: calc(58px + env(safe-area-inset-bottom)) !important;
+  }
   .portal-layout.nsos-cream.os-tab-messages .portal-content,
   .nsos-cream.os-tab-messages .portal-content {
-    padding: 0 0 calc(56px + env(safe-area-inset-bottom)) !important;
+    padding: 0 !important;
   }
   .portal-layout.nsos-cream.os-tab-messages .team-messaging,
   .portal-layout.nsos-cream.os-tab-messages .team-messaging.messaging-v6,
@@ -6451,7 +6466,8 @@ html, body, #root {
     display: flex !important;
     flex-direction: column !important;
     grid-template-columns: minmax(0, 1fr) !important;
-    height: 100% !important;
+    height: auto !important;
+    flex: 1 1 0 !important;
     min-height: 0 !important;
     max-height: none !important;
   }
