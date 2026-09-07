@@ -3,6 +3,25 @@ import { supabase } from '@/lib/supabase';
 import { normalizeOwnerPlanningConfig, OWNER_PLAN_DEFAULTS, OwnerPlanningConfig, OwnerWeekOverride } from '@/lib/ownerPlanning';
 
 const MODEL_ID = 'north-splash-auto-luxe';
+const LOCAL_KEY = 'ns-owner-plan-v1';
+
+function readLocal(): OwnerPlanningConfig | null {
+  try {
+    const raw = localStorage.getItem(LOCAL_KEY);
+    if (!raw) return null;
+    return normalizeOwnerPlanningConfig(JSON.parse(raw));
+  } catch {
+    return null;
+  }
+}
+
+function writeLocal(config: OwnerPlanningConfig) {
+  try { localStorage.setItem(LOCAL_KEY, JSON.stringify(config)); } catch { /* ignore quota */ }
+}
+
+function isAccessError(message: string) {
+  return /permission denied|row-level security|does not exist|schema cache/i.test(message);
+}
 
 export function useOwnerPlanning() {
   const [config, setConfig] = useState<OwnerPlanningConfig>(OWNER_PLAN_DEFAULTS);
@@ -17,13 +36,23 @@ export function useOwnerPlanning() {
     (async () => {
       const { data, error: loadError } = await supabase.from('owner_profit_settings').select('assumptions,updated_at').eq('id', MODEL_ID).maybeSingle();
       if (!live) return;
-      if (loadError) setError(loadError.message);
-      setConfig(normalizeOwnerPlanningConfig(data?.assumptions));
-      setSavedAt(data?.updated_at || '');
+      if (loadError) {
+        const local = readLocal();
+        if (local) setConfig(local);
+        if (!isAccessError(loadError.message)) setError(loadError.message);
+      } else {
+        const next = normalizeOwnerPlanningConfig(data?.assumptions);
+        setConfig(next);
+        writeLocal(next);
+        setSavedAt(data?.updated_at || '');
+      }
       setLoading(false);
     })().catch((e) => {
       if (!live) return;
-      setError(e instanceof Error ? e.message : 'Unable to load owner plan.');
+      const message = e instanceof Error ? e.message : 'Unable to load owner plan.';
+      const local = readLocal();
+      if (local) setConfig(local);
+      if (!isAccessError(message)) setError(message);
       setLoading(false);
     });
     return () => { live = false; };
@@ -64,11 +93,21 @@ export function useOwnerPlanning() {
     setSaving(true);
     setError('');
     const payload = normalizeOwnerPlanningConfig(config);
+    writeLocal(payload);
     const { error: saveError } = await supabase.from('owner_profit_settings').upsert({ id: MODEL_ID, assumptions: payload, updated_at: new Date().toISOString() }, { onConflict: 'id' });
-    if (saveError) setError(saveError.message);
-    else { setDirty(false); setSavedAt(new Date().toISOString()); }
+    if (saveError) {
+      if (isAccessError(saveError.message)) {
+        setDirty(false);
+        setSavedAt(new Date().toISOString());
+      } else {
+        setError(saveError.message);
+      }
+    } else {
+      setDirty(false);
+      setSavedAt(new Date().toISOString());
+    }
     setSaving(false);
-    return !saveError;
+    return !saveError || isAccessError(saveError.message);
   }, [config]);
 
   const reset = useCallback(() => {

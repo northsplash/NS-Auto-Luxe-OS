@@ -1105,6 +1105,7 @@ const handleDeleteAvailability = async (id: string) => {
 {tab === 'availability' && (
   <div className="tab-content">
     <form
+      className="availability-card"
       onSubmit={handleSaveAvailability}
       style={{
         background: '#fffdf8',
@@ -1222,6 +1223,7 @@ const handleDeleteAvailability = async (id: string) => {
     </form>
 
     <div
+      className="availability-card"
       style={{
         background: '#fffdf8',
         color: '#1c1814',

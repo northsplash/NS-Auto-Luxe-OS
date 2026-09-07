@@ -6978,3 +6978,102 @@ html {
     font-size: 18px !important;
   }
 }
+
+/* v74 — cream leftover dark shells so the lockup and type stay readable. */
+.portal-layout.nsos-cream .portal-main::after {
+  background-position: center 14% !important;
+  background-size: min(84vw, 820px) auto !important;
+  opacity: .2 !important;
+}
+.portal-layout.nsos-cream .v20-stage-flow > div,
+.portal-layout.nsos-cream .v20-health-panel .owner-summary-cells > div,
+.portal-layout.nsos-cream .owner-summary-cells.nsos-health-cells > div {
+  background: #fffdf8 !important;
+  border: 1px solid #e4d9cc !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .v20-stage-flow span,
+.portal-layout.nsos-cream .v20-health-panel .owner-summary-cells small,
+.portal-layout.nsos-cream .owner-summary-cells.nsos-health-cells small {
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+}
+.portal-layout.nsos-cream .v20-stage-flow b,
+.portal-layout.nsos-cream .v20-health-panel .owner-summary-cells b,
+.portal-layout.nsos-cream .owner-summary-cells.nsos-health-cells b {
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+
+.portal-layout.nsos-cream .crm-command,
+.portal-layout.nsos-cream .crm-customer-list,
+.portal-layout.nsos-cream .crm-customer-detail,
+.portal-layout.nsos-cream .client-photo-list,
+.portal-layout.nsos-cream .client-photo-main,
+.portal-layout.nsos-cream .territory-setup-card-v13,
+.portal-layout.nsos-cream .territory-form-section-v13,
+.portal-layout.nsos-cream .availability-card {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  border-color: #e4d9cc !important;
+  box-shadow: 0 10px 28px rgba(48, 38, 28, .05) !important;
+}
+.portal-layout.nsos-cream .crm-customer-list button,
+.portal-layout.nsos-cream .crm-customer-list strong,
+.portal-layout.nsos-cream .crm-customer-detail,
+.portal-layout.nsos-cream .crm-customer-detail h2,
+.portal-layout.nsos-cream .crm-customer-detail h3,
+.portal-layout.nsos-cream .empty-inspector h3,
+.portal-layout.nsos-cream .territory-panel-head-v13 h3,
+.portal-layout.nsos-cream .availability-card h3 {
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .crm-customer-list small,
+.portal-layout.nsos-cream .empty-inspector p,
+.portal-layout.nsos-cream .territory-panel-head-v13 small {
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+}
+.portal-layout.nsos-cream .crm-customer-list button.selected {
+  background: #f6ead4 !important;
+  border-color: #e0c48a !important;
+}
+.portal-layout.nsos-cream .territory-selection-summary-v13 > div {
+  background: #f6f1e8 !important;
+  border: 1px solid #e4d9cc !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .territory-selection-summary-v13 strong {
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .territory-selection-summary-v13 span {
+  color: #6f675e !important;
+  -webkit-text-fill-color: #6f675e !important;
+}
+.portal-layout.nsos-cream .client-photo-kind-row button.active,
+.portal-layout.nsos-cream .client-photo-kind-row button.active strong,
+.portal-layout.nsos-cream .client-photo-kind-row button.active small {
+  background: #1c1814 !important;
+  color: #f6f1e8 !important;
+  -webkit-text-fill-color: #f6f1e8 !important;
+}
+.portal-layout.nsos-cream .empty-inspector {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  min-height: 360px;
+  text-align: center;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+.portal-layout.nsos-cream .empty-inspector .message-empty-lockup {
+  width: min(240px, 56vw);
+  max-height: 170px;
+}
