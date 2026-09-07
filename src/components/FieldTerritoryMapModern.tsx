@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { doorStatus } from '@/lib/fieldOps';
-import { GOOGLE_MAPS_MAP_ID, googleMapsErrorMessage, loadGoogleMaps, watchGoogleMapError } from '@/lib/googleMaps';
+import { GOOGLE_MAPS_MAP_ID, googleMapsErrorMessage, loadGoogleMaps, shouldUseGoogleMaps, watchGoogleMapError } from '@/lib/googleMaps';
 import type { FieldDoor, FieldTerritoryMapProps } from './FieldTerritoryMap.types';
 
 type MarkerLike = { setMap?: (map: any) => void };
@@ -67,6 +67,10 @@ export default function FieldTerritoryMapModern({
   }, [JSON.stringify(initialPolygon), ready]);
 
   useEffect(() => {
+    if (!shouldUseGoogleMaps()) {
+      onUnavailable?.();
+      return;
+    }
     let cancelled = false;
     let stopWatch: (() => void) | undefined;
     setReady(false); setEngineError('');

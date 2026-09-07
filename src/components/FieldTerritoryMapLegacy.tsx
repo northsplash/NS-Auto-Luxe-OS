@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { doorStatus } from '@/lib/fieldOps';
+import { searchOsmPlace } from '@/lib/osmGeocode';
 import type { FieldTerritoryMapProps } from './FieldTerritoryMap.types';
 
 type Props = FieldTerritoryMapProps;
@@ -44,6 +45,8 @@ export default function FieldTerritoryMapLegacy({
   const [fullscreen, setFullscreen] = useState(false);
   const [interactionEnabled, setInteractionEnabled] = useState(false);
   const [locating, setLocating] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searching, setSearching] = useState(false);
   const [localLocation, setLocalLocation] = useState<{ latitude:number; longitude:number; accuracy?:number|null } | null>(null);
   const lastFitKey = useRef('');
 
@@ -357,6 +360,29 @@ export default function FieldTerritoryMapLegacy({
     onPolygonChange?.([...points.current]);
     redrawDraft();
   };
+  const searchPlace = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!map.current || !searchQuery.trim()) return;
+    setSearching(true);
+    try {
+      const place = await searchOsmPlace(searchQuery);
+      if (!place) {
+        alert('No matching place was found. Try a street address or neighborhood name.');
+        return;
+      }
+      const L = (window as any).L;
+      if (place.south != null && place.north != null && place.west != null && place.east != null && L) {
+        map.current.fitBounds([[place.south, place.west], [place.north, place.east]], { maxZoom: 18, animate: true });
+      } else {
+        map.current.flyTo([place.lat, place.lng], 17, { animate: true, duration: .7 });
+      }
+      setInteractionEnabled(true);
+    } catch {
+      alert('The address search could not run. Try again in a moment.');
+    } finally {
+      setSearching(false);
+    }
+  };
   const centerOnMe = async () => {
     if (!map.current) return;
     const known = liveLocation || localLocation;
@@ -390,7 +416,18 @@ export default function FieldTerritoryMapLegacy({
 
   return (
     <div ref={wrap} className={`field-map-wrap ${fullscreen ? 'field-map-fullscreen' : ''} ${fieldMode ? 'field-map-field-mode' : ''} ${className}`}>
-      <div className="field-map-toolbar">
+      <div className="field-map-toolbar google-map-toolbar">
+        <form className="google-map-search" onSubmit={searchPlace}>
+          <span>⌕</span>
+          <input
+            type="search"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Search address, neighborhood or place"
+            aria-label="Search the street map"
+            disabled={searching}
+          />
+        </form>
         <button type="button" className="map-tool-btn" onClick={toggleFullscreen}>{fullscreen ? 'Exit Full Screen' : 'Full Screen'}</button>
         <button type="button" className="map-tool-btn map-location-btn" onClick={centerOnMe} disabled={locating}>{locating?'Locating…':'Use Current Location'}</button>
         {editable && <><button type="button" className="map-tool-btn" disabled={!points.current.length} onClick={undo}>Undo Point</button><button type="button" className="map-tool-btn" onClick={reset}>Clear</button></>}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { GOOGLE_MAPS_API_KEY, googleMapsErrorMessage, googleMapsUnavailable, onGoogleMapsAuthFailure } from '@/lib/googleMaps';
+import { googleMapsErrorMessage, onGoogleMapsAuthFailure, shouldUseGoogleMaps } from '@/lib/googleMaps';
 import FieldTerritoryMapLegacy from './FieldTerritoryMapLegacy';
 import FieldTerritoryMapModern from './FieldTerritoryMapModern';
 import type { FieldTerritoryMapProps } from './FieldTerritoryMap.types';
@@ -7,8 +7,8 @@ export type { FieldDoor, FieldTerritoryMapProps } from './FieldTerritoryMap.type
 
 export default function FieldTerritoryMap(props: FieldTerritoryMapProps) {
   const { className = '', ...rest } = props;
-  const [engine, setEngine] = useState<'google' | 'leaflet'>(GOOGLE_MAPS_API_KEY && !googleMapsUnavailable() ? 'google' : 'leaflet');
-  const [fallbackReason, setFallbackReason] = useState(GOOGLE_MAPS_API_KEY && !googleMapsUnavailable() ? '' : googleMapsErrorMessage(GOOGLE_MAPS_API_KEY ? 'GOOGLE_MAPS_AUTH_FAILURE' : 'GOOGLE_MAPS_API_KEY_MISSING'));
+  const [engine, setEngine] = useState<'google' | 'leaflet'>(shouldUseGoogleMaps() ? 'google' : 'leaflet');
+  const [fallbackReason, setFallbackReason] = useState(shouldUseGoogleMaps() ? '' : googleMapsErrorMessage('GOOGLE_MAPS_DISABLED'));
 
   useEffect(() => {
     return onGoogleMapsAuthFailure(() => {
@@ -18,7 +18,7 @@ export default function FieldTerritoryMap(props: FieldTerritoryMapProps) {
   }, []);
 
   const dropToLeaflet = () => {
-    setFallbackReason(googleMapsErrorMessage(googleMapsUnavailable() ? 'GOOGLE_MAPS_AUTH_FAILURE' : 'GOOGLE_MAPS_LOAD_FAILED'));
+    setFallbackReason(googleMapsErrorMessage('GOOGLE_MAPS_AUTH_FAILURE'));
     setEngine('leaflet');
   };
 
@@ -28,7 +28,7 @@ export default function FieldTerritoryMap(props: FieldTerritoryMapProps) {
   return (
     <div className={`ns-map-shell ${className}`}>
       {engine === 'leaflet' && fallbackReason && (
-        <div className="ns-map-fallback">Street map is on. Google Maps is watermarked or not billed for this site, so OpenStreetMap is used instead.</div>
+        <div className="ns-map-fallback">OpenStreetMap is on. Search an address, then click the map to draw the neighborhood.</div>
       )}
       {map}
     </div>

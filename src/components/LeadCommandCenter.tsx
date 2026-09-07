@@ -7,7 +7,8 @@ import {
 import { supabase, type Lead } from '@/lib/supabase';
 import { money, prettyLabel } from '@/lib/data';
 import { localDateTime, DOOR_STATUSES, doorStatus } from '@/lib/fieldOps';
-import { googleMapsErrorMessage, loadGoogleMaps } from '@/lib/googleMaps';
+import { googleMapsErrorMessage, loadGoogleMaps, shouldUseGoogleMaps } from '@/lib/googleMaps';
+import { geocodeOsmAddress } from '@/lib/osmGeocode';
 import FieldTerritoryMap from '@/components/FieldTerritoryMap';
 
 type Props={leads:Lead[];onOpen:(lead:Lead)=>void;onSchedule?:(lead:Lead)=>void;repName?:string};
@@ -48,8 +49,22 @@ export default function LeadCommandCenter({leads,onOpen,onSchedule,repName}:Prop
     const targets=active.filter(l=>l.address&&(!Number(l.latitude)||!Number(l.longitude))).slice(0,20);
     if(!targets.length){setGeocodeNote('All visible leads with addresses are mapped.');return}
     setGeocoding(true);setGeocodeNote(`Mapping ${targets.length} address${targets.length===1?'':'es'}…`);
-    try{const google=await loadGoogleMaps();const geocoder=new google.maps.Geocoder();let mappedCount=0;
-      for(const lead of targets){try{const result=await new Promise<any[]>((resolve,reject)=>geocoder.geocode({address:lead.address,componentRestrictions:{country:'US'}},(results:any[],status:string)=>status==='OK'&&results?.length?resolve(results):reject(new Error(status))));const loc=result[0].geometry.location;const latitude=loc.lat(),longitude=loc.lng();const {error}=await supabase.from('leads').update({latitude,longitude}).eq('id',lead.id);if(!error)mappedCount++;await new Promise(r=>setTimeout(r,90));}catch{}}
+    try{
+      let mappedCount=0;
+      if (shouldUseGoogleMaps()) {
+        const google=await loadGoogleMaps();const geocoder=new google.maps.Geocoder();
+        for(const lead of targets){try{const result=await new Promise<any[]>((resolve,reject)=>geocoder.geocode({address:lead.address,componentRestrictions:{country:'US'}},(results:any[],status:string)=>status==='OK'&&results?.length?resolve(results):reject(new Error(status))));const loc=result[0].geometry.location;const latitude=loc.lat(),longitude=loc.lng();const {error}=await supabase.from('leads').update({latitude,longitude}).eq('id',lead.id);if(!error)mappedCount++;await new Promise(r=>setTimeout(r,90));}catch{}}
+      } else {
+        for (const lead of targets) {
+          try {
+            const loc = await geocodeOsmAddress(lead.address || '');
+            if (!loc) continue;
+            const { error } = await supabase.from('leads').update({ latitude: loc.lat, longitude: loc.lng }).eq('id', lead.id);
+            if (!error) mappedCount++;
+            await new Promise(r => setTimeout(r, 1100));
+          } catch { /* keep mapping the rest */ }
+        }
+      }
       setGeocodeNote(`Mapped ${mappedCount} of ${targets.length}.`);
     }catch(error){setGeocodeNote(googleMapsErrorMessage(error))}finally{setGeocoding(false)}
   };

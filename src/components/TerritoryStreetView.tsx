@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, ExternalLink, Eye, House, MapPin, RefreshCw } from 'lucide-react';
-import { googleMapsErrorMessage, loadGoogleMaps } from '@/lib/googleMaps';
+import { googleMapsErrorMessage, loadGoogleMaps, shouldUseGoogleMaps } from '@/lib/googleMaps';
 
 type StreetViewHouse = {
   id?: string;
@@ -59,6 +59,7 @@ export default function TerritoryStreetView({ houses, activeHouse, onActiveHouse
     if (!viewerRef.current) return;
     setLoading(true); setError(''); setAvailable(null); setCaptureDistance(null);
     try {
+      if (!shouldUseGoogleMaps()) throw new Error('GOOGLE_MAPS_DISABLED');
       const google = await loadGoogleMaps();
       const service = new google.maps.StreetViewService();
       const request = { location: { lat: Number(house.latitude), lng: Number(house.longitude) }, radius: 180, source: google.maps.StreetViewSource.OUTDOOR };
@@ -94,7 +95,9 @@ export default function TerritoryStreetView({ houses, activeHouse, onActiveHouse
       setAvailable(false);
       setError(err?.message === 'NO_GOOGLE_STREET_VIEW'
         ? 'Google Street View did not find outdoor imagery close enough to this property.'
-        : googleMapsErrorMessage(err));
+        : err?.message === 'GOOGLE_MAPS_DISABLED'
+          ? 'In-app Street View stays off until Google Maps billing is enabled. Open the house in Google Maps instead.'
+          : googleMapsErrorMessage(err));
     } finally { setLoading(false); }
   };
 

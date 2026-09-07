@@ -10,6 +10,7 @@ declare global {
 
 export const GOOGLE_MAPS_API_KEY = String(import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '').trim();
 export const GOOGLE_MAPS_MAP_ID = String(import.meta.env.VITE_GOOGLE_MAPS_MAP_ID || '').trim();
+export const GOOGLE_MAPS_ENABLED = String(import.meta.env.VITE_GOOGLE_MAPS_ENABLED || '').trim().toLowerCase() === 'true';
 
 const BROKEN_KEY = 'ns-google-maps-auth-failed';
 const authListeners = new Set<() => void>();
@@ -22,6 +23,10 @@ export function googleMapsUnavailable() {
   } catch {
     return false;
   }
+}
+
+export function shouldUseGoogleMaps() {
+  return GOOGLE_MAPS_ENABLED && Boolean(GOOGLE_MAPS_API_KEY) && !googleMapsUnavailable();
 }
 
 export function markGoogleMapsUnavailable() {
@@ -102,6 +107,7 @@ export function watchGoogleMapError(root: HTMLElement | null, onFail: () => void
 
 export function loadGoogleMaps(): Promise<any> {
   installAuthFailureHook();
+  if (!GOOGLE_MAPS_ENABLED) return Promise.reject(new Error('GOOGLE_MAPS_DISABLED'));
   if (googleMapsUnavailable()) return Promise.reject(new Error('GOOGLE_MAPS_AUTH_FAILURE'));
   if (window.google?.maps && !googleMapsUnavailable()) return Promise.resolve(window.google);
   if (window.__northSplashGoogleMapsPromise) return window.__northSplashGoogleMapsPromise;
@@ -179,7 +185,7 @@ export function loadGoogleMaps(): Promise<any> {
 
 export function googleMapsErrorMessage(error: unknown) {
   const code = error instanceof Error ? error.message : String(error || '');
-  if (code === 'GOOGLE_MAPS_API_KEY_MISSING') return 'Google Maps is ready in the OS code, but VITE_GOOGLE_MAPS_API_KEY has not been added in Vercel yet.';
+  if (code === 'GOOGLE_MAPS_DISABLED' || code === 'GOOGLE_MAPS_API_KEY_MISSING') return 'The street map uses OpenStreetMap. Google Maps stays off until billing is enabled.';
   if (code === 'GOOGLE_MAPS_AUTH_FAILURE') return 'Google Maps is not billed or allowed for this site, so the street map is OpenStreetMap instead.';
   if (code === 'GOOGLE_MAPS_LOAD_TIMEOUT') return 'Google Maps timed out while loading. Check the API key restrictions and enabled APIs.';
   return 'Google Maps could not load. The street map stays on so canvassing can continue.';
