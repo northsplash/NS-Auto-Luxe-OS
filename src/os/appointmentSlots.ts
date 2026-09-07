@@ -36,6 +36,13 @@ export function dayPartFromStamp(stamp?: string | null) {
   return value.includes('·') ? value.split('·')[0].trim() : '';
 }
 
+export function isTodayStamp(stamp?: string | null) {
+  const value = String(stamp || '');
+  if (!value) return false;
+  if (/\btoday\b/i.test(value)) return true;
+  return value.includes(localYmd(new Date()));
+}
+
 export function jobMatchesDay(job: OsJob, date: Date) {
   const stamp = String(job.time || '');
   const iso = localYmd(date);

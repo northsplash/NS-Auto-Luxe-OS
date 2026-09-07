@@ -1379,7 +1379,68 @@ html.nsos-active #root {
   align-items: flex-end;
   margin-bottom: 16px;
 }
-.nsos-hire-head h3 { margin: 4px 0 6px; }
+.nsos-hire-head h2 { margin: 4px 0 6px; font-size: clamp(26px, 4vw, 36px); letter-spacing: -.03em; }
+.nsos-hire-web {
+  margin: 0 0 16px;
+  padding: 14px 16px;
+  border: 1px solid #e4d9cc;
+  background: #fff;
+  border-radius: 14px;
+}
+.nsos-hire-web strong { display: block; margin: 4px 0; }
+.nsos-hire-web p { margin: 0; font-size: 13px; color: #6f675e; }
+.nsos-hire-stages {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 0 12px;
+  margin-bottom: 4px;
+}
+.nsos-hire-stages button {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid #e4d9cc;
+  background: #fff;
+  color: #1c1814;
+  font-size: 13px;
+  font-weight: 650;
+}
+.nsos-hire-stages button em {
+  font-style: normal;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #efe8dc;
+  font-size: 11px;
+  display: grid;
+  place-items: center;
+}
+.nsos-hire-stages button.active {
+  background: #1c1814;
+  color: #f6f1e8;
+  border-color: #1c1814;
+}
+.nsos-hire-stages button.active em { background: #3a342c; color: #f6f1e8; }
+.nsos-hire-list { display: grid; gap: 10px; }
+.nsos-hire-card-hit {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  color: inherit;
+}
+.nsos-hire-card-hit h3 { margin: 4px 0 0; }
+.nsos-hire-card-hit p { margin: 2px 0 0; color: #6f675e; font-size: 13px; }
 .nsos-hire-head p { color: #6f675e; max-width: 52ch; font-size: 13px; }
 .nsos-hire-onboard {
   display: grid;

@@ -568,7 +568,7 @@ html.nsos-active,
     min-height: 0 !important;
     height: 0 !important;
     max-height: none !important;
-    padding-bottom: calc(108px + env(safe-area-inset-bottom)) !important;
+    padding-bottom: calc(128px + env(safe-area-inset-bottom)) !important;
   }
   .portal-layout.nsos-cream .os-mobile-bottom-nav,
   .portal-layout.nsos-cream .os-mobile-bottom-nav.mobile-app-nav-v25,

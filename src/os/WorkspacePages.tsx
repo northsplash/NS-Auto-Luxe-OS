@@ -3,7 +3,7 @@ import { ACADEMY_COURSES } from '@/lib/trainingAcademy';
 import { AcademyPreview } from '@/components/TrainingPortal';
 import { firstWord, money, prettyLabel } from '@/lib/data';
 import { srStatus } from '@/lib/salesRabbitLeads';
-import { liveOpenSlots } from './appointmentSlots';
+import { jobMatchesDay, liveOpenSlots } from './appointmentSlots';
 import { payLine } from './demoData';
 import { useOs } from './osStore';
 import { Avatar } from './views';
@@ -700,7 +700,7 @@ function AvailabilityPage() {
       <Kpis items={[
         { label: 'Open slots', value: String(slots.length) },
         { label: 'Techs available', value: String(os.employees.filter((e) => e.role === 'detailer' && e.status === 'active').length) },
-        { label: 'Booked today', value: String(os.jobs.filter((j) => String(j.time || '').includes('Today')).length) },
+        { label: 'Booked today', value: String(os.jobs.filter((j) => jobMatchesDay(j, new Date())).length) },
         { label: 'Unassigned', value: String(os.jobs.filter((j) => !j.detailer && j.status !== 'completed').length) },
       ]} />
       <div className="nsos-card">
@@ -744,7 +744,7 @@ function CrewsPage({ onOpenJob }: { onOpenJob?: (id: string) => void }) {
     });
     return [...map.entries()];
   }, [os.employees]);
-  const today = os.jobs.filter((j) => String(j.time || '').includes('Today') && j.status !== 'completed');
+  const today = os.jobs.filter((j) => jobMatchesDay(j, new Date()) && j.status !== 'completed');
   return (
     <div>
       <Kpis items={[

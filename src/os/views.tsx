@@ -5,7 +5,7 @@ import {
 import AddEmployeeForm from '@/components/AddEmployeeForm';
 import SalesPresentation from '@/components/SalesPresentation';
 import OnboardingTab from './OnboardingTab';
-import { APPT_SLOTS, formatJobWindow, jobMatchesDay, liveOpenSlots, slotConflict } from './appointmentSlots';
+import { APPT_SLOTS, formatJobWindow, isTodayStamp, jobMatchesDay, liveOpenSlots, slotConflict } from './appointmentSlots';
 import { channelLabel, COMM_GROUPS, COMM_VARIABLES, fillTemplate, SAMPLE_VARS } from '@/lib/communicationCatalog';
 import { emptyEmployeeDraft, SYSTEM_ROLES, type EmployeeDraft } from '@/lib/rolePresets';
 import { firstWord, isSettledPayment, money, prettyLabel, trendLabel } from '@/lib/data';
@@ -156,7 +156,7 @@ export function OwnerDashboard({
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
   const ownerName = firstWord(employees.find((e) => e.role === 'owner')?.name, 'Jordan');
-  const today = jobs.filter((j) => String(j.time || '').includes('Today') && jobOpen(j));
+  const today = jobs.filter((j) => jobMatchesDay(j, new Date()) && jobOpen(j));
   const scheduledRev = today.reduce((s, j) => s + Number(j.price || 0), 0);
   const collected = payments.filter((p) => isSettledPayment(p.status)).reduce((s, p) => s + Number(p.amount || 0), 0);
   const completed = jobs.filter((j) => j.status === 'completed');
@@ -164,7 +164,7 @@ export function OwnerDashboard({
   const avgTicket = completed.length ? Math.round(completedRev / completed.length) : 0;
   const newLeads = leads.filter((l) => srStatus(l.status).key === 'unworked').length;
   const earlierCollected = payments.filter((p) => isSettledPayment(p.status) && String(p.at || '').includes('Yesterday')).reduce((s, p) => s + Number(p.amount || 0), 0);
-  const todayCollected = payments.filter((p) => isSettledPayment(p.status) && String(p.at || '').includes('Today')).reduce((s, p) => s + Number(p.amount || 0), 0);
+  const todayCollected = payments.filter((p) => isSettledPayment(p.status) && isTodayStamp(p.at)).reduce((s, p) => s + Number(p.amount || 0), 0);
   const activeTeam = employees.filter((e) => e.status === 'active');
   const activeDetailers = employees.filter((e) => e.status === 'active' && e.role === 'detailer').length;
   const unassigned = jobs.filter((j) => jobOpen(j) && jobUnassigned(j));
@@ -338,7 +338,7 @@ export function OwnerStripeDashboard({
 }) {
   const { jobs, payments, employees, customers } = useOs();
   const collected = payments.filter((p) => p.status === 'succeeded').reduce((s, p) => s + p.amount, 0);
-  const monthRevenue = jobs.filter((j) => (j.time || '').includes('Today') || (j.time || '').includes('Tomorrow') || j.status === 'completed').reduce((s, j) => s + Number(j.price || 0), 0);
+  const monthRevenue = jobs.filter((j) => jobMatchesDay(j, new Date()) || (j.time || '').includes('Tomorrow') || j.status === 'completed').reduce((s, j) => s + Number(j.price || 0), 0);
   const detailers = employees.filter((e) => e.role === 'detailer');
   const d2dAgents = employees.filter((e) => e.role === 'd2d_agent');
   const managers = employees.filter((e) => e.role === 'manager');
@@ -1988,24 +1988,69 @@ export function ReportsView() {
 
 export function HireView({ onHire, onOpen }: { onHire: (name?: string, title?: string) => void; onOpen?: (id: string) => void }) {
   const os = useOs();
-  const stages = ['Applied', 'Screen', 'Interview', 'Offer', 'Onboarding'];
+  const stages = ['Applied', 'Screen', 'Interview', 'Offer', 'Onboarding'] as const;
+  const [focus, setFocus] = useState<(typeof stages)[number]>('Applied');
+  const [openId, setOpenId] = useState<string | null>(null);
   const stageOf = (c: { stage: string; progress: number }) => {
     if (c.progress >= 85 || /offer/i.test(c.stage)) return 'Offer';
     if (c.progress >= 70 || /background/i.test(c.stage)) return 'Interview';
     if (c.progress >= 40) return 'Screen';
     return 'Applied';
   };
+  useEffect(() => {
+    const first = os.candidates.find((c) => /website/i.test(c.source || '') && stageOf(c) === 'Applied');
+    if (first) setOpenId(first.id);
+  }, []);
   const onboard = os.employees.filter((e) => e.onboarding < 100);
+  const website = os.candidates.filter((c) => /website/i.test(c.source || ''));
+  const rowsFor = (stage: string) => os.candidates.filter((c) => stageOf(c) === stage);
+  const focusedRows = focus === 'Onboarding' ? [] : rowsFor(focus);
+  const count = (stage: string) => (stage === 'Onboarding' ? onboard.length : rowsFor(stage).length);
+
+  const renderCandidate = (c: (typeof os.candidates)[number], compact?: boolean) => {
+    const open = openId === c.id || !compact;
+    return (
+      <div className={`nsos-card nsos-hire-card${open ? ' open' : ''}`} key={c.id}>
+        <button type="button" className="nsos-hire-card-hit" onClick={() => setOpenId(open && compact ? null : c.id)}>
+          <span className="nsos-eyebrow">{c.role}{c.source ? ` · ${c.source}` : ''}</span>
+          <h3>{c.name}</h3>
+          <p>{[c.email, c.city, c.phone].filter(Boolean).join(' · ') || 'No contact yet'}</p>
+        </button>
+        {open && (
+          <>
+            {c.startDate ? <p className="nsos-hire-meta">Can start {c.startDate}</p> : null}
+            {c.notes ? <p className="nsos-hire-notes">{c.notes}</p> : <p className="nsos-hire-empty">No written answers on this card yet.</p>}
+            <div className="nsos-hire-bar"><i style={{ width: `${c.progress}%` }} /></div>
+            {c.checklist?.map((item) => (
+              <button key={item.id} className="nsos-check" onClick={() => os.toggleChecklist(c.id, item.id)}>
+                <span className={item.done ? 'on' : ''}><Check size={12} /></span>
+                {item.label}
+              </button>
+            ))}
+            <button className="nsos-btn" style={{ marginTop: 10, width: '100%', justifyContent: 'center' }} onClick={() => onHire(c.name, c.role)}>Convert to employee</button>
+          </>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="nsos-hire">
       <div className="nsos-hire-head">
         <div>
-          <span className="nsos-eyebrow">Hiring packet</span>
-          <h3>Hiring pipeline</h3>
-          <p>Website applications from northsplash.com/apply land here as Applied, source Website, with the notes they submitted. Convert when you are ready to onboard.</p>
+          <span className="nsos-eyebrow">People · Hiring</span>
+          <h2>Applications land here</h2>
+          <p>northsplash.com/apply writes a Website card with the answers they typed. Read that first, then convert when you are ready to onboard.</p>
         </div>
         <button className="nsos-btn" onClick={() => onHire()}>Add hire</button>
       </div>
+      {website.length > 0 && (
+        <div className="nsos-hire-web">
+          <span className="nsos-eyebrow">Website apply</span>
+          <strong>{website.length} open from the public apply page</strong>
+          <p>Open a Website card to read the answers they typed. Convert when you are ready to onboard.</p>
+        </div>
+      )}
       {onboard.length > 0 && (
         <div className="nsos-hire-onboard">
           {onboard.map((e) => (
@@ -2017,40 +2062,31 @@ export function HireView({ onHire, onOpen }: { onHire: (name?: string, title?: s
           ))}
         </div>
       )}
-      <div className="nsos-kanban nsos-hire-board">
-        {stages.map((stage) => {
-          const rows = os.candidates.filter((c) => (stage === 'Onboarding' ? false : stageOf(c) === stage));
-          return (
-            <div className="nsos-col" key={stage}>
-              <h3>{stage}<span>{stage === 'Onboarding' ? onboard.length : rows.length}</span></h3>
-              {stage === 'Onboarding' && onboard.map((e) => (
-                <button className="nsos-lead" type="button" key={e.id} onClick={() => onOpen?.(e.id)}>
-                  <strong className="nsos-lead-name">{e.name}</strong>
-                  <small className="nsos-lead-addr">{e.email}</small>
-                  <div style={{ marginTop: 8, fontSize: 12 }}>{e.onboarding}% · next {remainingStepLabels(e.onboarding_packet)[0] || 'done'}</div>
-                </button>
-              ))}
-              {rows.map((c) => (
-                <div className="nsos-card nsos-hire-card" key={c.id}>
-                  <span className="nsos-eyebrow">{c.role}{c.source ? ` · ${c.source}` : ''}</span>
-                  <h3>{c.name}</h3>
-                  <p>{[c.email, c.city, c.phone].filter(Boolean).join(' · ') || 'No contact yet'}</p>
-                  {c.startDate ? <p className="nsos-hire-meta">Can start {c.startDate}</p> : null}
-                  {c.notes ? <p className="nsos-hire-notes">{c.notes}</p> : null}
-                  <div className="nsos-hire-bar"><i style={{ width: `${c.progress}%` }} /></div>
-                  {c.checklist?.map((item) => (
-                    <button key={item.id} className="nsos-check" onClick={() => os.toggleChecklist(c.id, item.id)}>
-                      <span className={item.done ? 'on' : ''}><Check size={12} /></span>
-                      {item.label}
-                    </button>
-                  ))}
-                  <button className="nsos-btn" style={{ marginTop: 10, width: '100%', justifyContent: 'center' }} onClick={() => onHire(c.name, c.role)}>Convert to employee</button>
-                </div>
-              ))}
-              {!rows.length && stage !== 'Onboarding' && <p className="nsos-hire-empty">No candidates in this stage.</p>}
-            </div>
-          );
-        })}
+      <div className="nsos-hire-stages" role="tablist" aria-label="Hiring stages">
+        {stages.map((stage) => (
+          <button
+            key={stage}
+            type="button"
+            role="tab"
+            aria-selected={focus === stage}
+            className={focus === stage ? 'active' : ''}
+            onClick={() => { setFocus(stage); setOpenId(null); }}
+          >
+            {stage}<em>{count(stage)}</em>
+          </button>
+        ))}
+      </div>
+      <div className="nsos-hire-list">
+        {focus === 'Onboarding' && onboard.map((e) => (
+          <button className="nsos-lead" type="button" key={e.id} onClick={() => onOpen?.(e.id)}>
+            <strong className="nsos-lead-name">{e.name}</strong>
+            <small className="nsos-lead-addr">{e.email}</small>
+            <div style={{ marginTop: 8, fontSize: 12 }}>{e.onboarding}% · next {remainingStepLabels(e.onboarding_packet)[0] || 'done'}</div>
+          </button>
+        ))}
+        {focus === 'Onboarding' && !onboard.length && <p className="nsos-hire-empty">Nobody is in an onboarding packet.</p>}
+        {focusedRows.map((c) => renderCandidate(c, true))}
+        {focus !== 'Onboarding' && !focusedRows.length && <p className="nsos-hire-empty">No candidates in {focus}.</p>}
       </div>
     </div>
   );

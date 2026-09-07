@@ -380,6 +380,13 @@ export default function BusinessSuite({ section, employees, setEmployees, comple
     return (
       <div className="tab-content business-suite">
         <SectionHeader tab="recruiting" />
+        {candidates.filter(c=>c.source==='Website' && !['rejected','withdrawn','archived','employed'].includes(c.stage)).length>0 && (
+          <div className="nsos-hire-web" style={{marginBottom:16}}>
+            <span className="nsos-eyebrow">Website apply</span>
+            <strong>{candidates.filter(c=>c.source==='Website' && !['rejected','withdrawn','archived','employed'].includes(c.stage)).length} open from northsplash.com/apply</strong>
+            <p>Read the notes on the card. Those are the answers they typed on the public apply page.</p>
+          </div>
+        )}
         {hireNotice && <HireInviteCard result={hireNotice} onClose={() => setHireNotice(null)} />}
         <div className="ops-kpi-row">
           <div><strong>{candidates.filter(c => !['rejected','withdrawn','archived'].includes(c.stage)).length}</strong><span>Active Candidates</span></div>

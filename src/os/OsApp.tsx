@@ -18,6 +18,7 @@ import {
 } from './views';
 import TeamMessagesView from './TeamMessagesView';
 import { DEMO_BOARD_TABS, DemoWorkspacePage, type DemoBoardTab } from './WorkspacePages';
+import { jobMatchesDay } from './appointmentSlots';
 
 export type OsTab =
   | 'dashboard' | 'command_center' | 'owner_growth' | 'owner_profits' | 'payment_test'
@@ -212,7 +213,7 @@ class OsErrorBoundary extends Component<{ children: ReactNode; onReset?: () => v
 type WorkMode = 'owner' | 'd2d' | 'detailer' | 'admin';
 
 function WorkspacePage({ tab, children, action }: { tab: OsTab; children: ReactNode; action?: ReactNode }) {
-  if (tab === 'command_center' || tab === 'dashboard' || tab === 'messages' || tab === 'sales') return <>{children}</>;
+  if (tab === 'command_center' || tab === 'dashboard' || tab === 'messages' || tab === 'sales' || tab === 'recruiting') return <>{children}</>;
   const meta = PAGE[tab];
   if (!meta) return <>{children}</>;
   const [eyebrow, title, sub] = meta;
@@ -378,7 +379,7 @@ function OsShell() {
     { label: 'Open Jobs', value: String(upcoming), Icon: BriefcaseBusiness },
     { label: 'Team', value: String(activeEmployees.length), Icon: Users },
   ] : currentWorkspace.id === 'owner' ? [
-    { label: 'Jobs today', value: String(os.jobs.filter((j) => String(j.time || '').includes('Today')).length), Icon: CalendarClock },
+    { label: 'Jobs today', value: String(os.jobs.filter((j) => jobMatchesDay(j, new Date())).length), Icon: CalendarClock },
     { label: 'Unassigned', value: String(os.jobs.filter((j) => !j.detailer && j.status !== 'completed').length), Icon: ShieldCheck },
     { label: 'Open packets', value: String(os.employees.filter((e) => Number(e.onboarding || 0) < 100).length), Icon: UserCheck },
     { label: 'Collected', value: money(collected), Icon: DollarSign },
