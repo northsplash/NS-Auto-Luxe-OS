@@ -71,6 +71,13 @@ export default function TrainingPortal({ employee }: { employee: Employee }) {
 
   const load = async () => {
     setLoading(true);
+    if (employee.id.startsWith('preview-')) {
+      setCourses(ACADEMY_COURSES.map(asTrainingCourse));
+      const local = readLocalAcademyProgress(employee.id);
+      setAssignments(courseIdsForEmployee(employee).map((id) => localAssignment(employee, id, local[id])));
+      setLoading(false);
+      return;
+    }
     await assignAcademyForEmployee(employee);
     const [a, c] = await Promise.all([
       supabase.from('training_assignments').select('*').eq('employee_id', employee.id).order('assigned_at', { ascending: false }),
@@ -112,7 +119,7 @@ export default function TrainingPortal({ employee }: { employee: Employee }) {
       const pack = academyQuestions(assignment.course_id);
       setQuestions(pack.questions);
       setOptions(pack.options);
-    } else {
+    } else if (!employee.id.startsWith('preview-')) {
       const [l, q] = await Promise.all([
         supabase.from('training_lessons').select('*').eq('course_id', assignment.course_id).order('sort_order'),
         supabase.from('training_questions').select('*').eq('course_id', assignment.course_id).order('sort_order'),
