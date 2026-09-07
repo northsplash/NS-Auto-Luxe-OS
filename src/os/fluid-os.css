@@ -771,10 +771,22 @@ html.nsos-active .portal-layout.nsos-cream {
   .portal-layout.nsos-cream .owner-command-v17 .nsos-alert svg {
     display: none !important;
   }
-  .portal-layout.nsos-cream .owner-command-v17 .nsos-alert em {
-    font-size: 18px !important;
-    line-height: 1 !important;
-    font-family: Inter, system-ui, sans-serif !important;
+  .portal-layout.nsos-cream .owner-command-v17 .nsos-alert:not(.hot) em {
+    color: #1c1814 !important;
+  }
+  .portal-layout.nsos-cream .nsos-hire-stages {
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    overflow: visible !important;
+    gap: 4px !important;
+    padding-bottom: 8px !important;
+  }
+  .portal-layout.nsos-cream .nsos-hire-stages button {
+    min-height: 36px !important;
+    padding: 0 4px !important;
+    font-size: 10px !important;
+    justify-content: center !important;
+    width: 100%;
   }
   .portal-layout.nsos-cream .owner-command-v17 .nsos-alert b {
     font-size: 12px !important;

@@ -2039,7 +2039,7 @@ export function HireView({ onHire, onOpen }: { onHire: (name?: string, title?: s
             <p className="nsos-hire-meta">Next: {c.checklist?.find((item) => !item.done)?.label || 'Convert to teammate'}</p>
             <div className="nsos-hire-actions">
               {c.phone ? <a className="nsos-btn ghost" href={`tel:${c.phone.replace(/\D/g, '')}`}>Call</a> : null}
-              <button className="nsos-btn ghost" type="button" onClick={() => onHire(c.name, c.role)}>Convert</button>
+              <button className="nsos-btn ghost" type="button" onClick={() => onHire(c.name, c.role)}>Hire</button>
             </div>
           </>
         )}
@@ -2072,7 +2072,7 @@ export function HireView({ onHire, onOpen }: { onHire: (name?: string, title?: s
               setOpenId(stage === 'Onboarding' ? null : (rowsFor(stage)[0]?.id || null));
             }}
           >
-            {stage} {count(stage)}
+            {stage === 'Onboarding' ? 'Onboard' : stage} {count(stage)}
           </button>
         ))}
       </div>
