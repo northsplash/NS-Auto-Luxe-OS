@@ -6657,6 +6657,11 @@ html.ns-chat-kb .os-tab-messages .message-thread {
 }
 
 /* v73 — full NS Auto Luxe lockup on cream pages, readable dark cards, usable chat. */
+html {
+  --ns-brand-lockup: url("/ns-auto-luxe-full-logo.png");
+  --ns-brand-watermark: url("/ns-auto-luxe-full-logo.png");
+  --ns-brand-mark: url("/ns-auto-luxe-mark.png");
+}
 .portal-layout.nsos-cream .portal-main {
   background-color: #efe8dc !important;
   background-image:
@@ -6677,7 +6682,7 @@ html.ns-chat-kb .os-tab-messages .message-thread {
   background-repeat: no-repeat !important;
   background-position: center 28% !important;
   background-size: min(78vw, 760px) auto !important;
-  opacity: .16 !important;
+  opacity: .22 !important;
   filter: none !important;
   mask-image: none !important;
   -webkit-mask-image: none !important;
@@ -6691,12 +6696,20 @@ html.ns-chat-kb .os-tab-messages .message-thread {
   position: relative;
   z-index: 1;
 }
+.portal-layout.nsos-cream .portal-content,
+.portal-layout.nsos-cream .tab-content,
+.portal-layout.nsos-cream .v2-page,
+.portal-layout.nsos-cream .phase300,
+.portal-layout.nsos-cream .os-page {
+  background: transparent !important;
+  background-color: transparent !important;
+}
 
 .auth-page.nsos-cream .auth-card::before,
 .workspace-gate.nsos-cream::before {
   background-image: var(--ns-brand-watermark) !important;
   background-size: min(72%, 420px) auto !important;
-  opacity: .2 !important;
+  opacity: .24 !important;
 }
 
 .portal-layout.nsos-cream .sidebar-brand {
@@ -6908,7 +6921,10 @@ html.ns-chat-kb .os-tab-messages .message-thread {
   .portal-layout.nsos-cream .portal-main::after {
     background-size: min(92vw, 640px) auto !important;
     background-position: center 22% !important;
-    opacity: .18 !important;
+    opacity: .24 !important;
+  }
+  .auth-page .auth-hero-lockup {
+    width: min(240px, 62vw) !important;
   }
   .portal-layout.nsos-cream .os-mobile-bottom-nav button,
   .portal-layout.nsos-cream .mobile-app-nav-v25 button {
