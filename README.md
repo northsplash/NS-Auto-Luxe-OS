@@ -83,13 +83,4 @@ After pulling, run `supabase/migrations/20260906120000_v29_employee_onboarding_p
 
 SQL lives in `supabase/migrations`. Apply the latest migration for communication template seeds after pulling. Without keys, the OS still runs on demo data.
 
-Live D2D **Apply customer account** calls the `create-customer-account` Edge Function so the rep session is not replaced by the new customer login. Public-site job applications post to `/api/job-application` on Vercel, then fall back to `submit-job-application`, the `submit_website_job_application` RPC, and a guest insert (anon key, not a signed-in portal session). The live project blocked anon inserts (`permission denied for table recruiting_candidates`) and the submit function was not deployed, which is why `/apply` showed the phone fallback. Run `supabase/migrations/20260907180000_website_apply_rpc.sql` in the live SQL editor and deploy the function with `--no-verify-jwt`:
-
-```bash
-supabase functions deploy create-customer-account
-supabase functions deploy submit-job-application --no-verify-jwt
-```
-
-Set GitHub Actions secret `SUPABASE_ACCESS_TOKEN` so push can apply that SQL and deploy the function.
-
-D2D and Owner can create the login. The function refuses emails that already belong to team accounts. Demo OS (`/os`) creates an in-memory customer instead. Website applications from the public apply page appear on Owner **People → Hiring** and Manager **Hiring** as source Website.
+Live D2D **Apply customer account** calls the `create-customer-account` Edge Function so the rep session is not replaced by the new customer login. Website applications from northsplash.com/apply appear on Owner **People → Hiring** and Manager **Hiring** as source Website. If guest inserts into `recruiting_candidates` are blocked, apply still writes a marked hiring record; opening Owner or Admin imports those records onto the board. Demo OS (`/os`) uses sample hiring data, not live applicants.

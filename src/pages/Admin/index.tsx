@@ -46,6 +46,7 @@ import TeamMessaging from '@/components/TeamMessaging';
 import AdminDataManager from '@/components/AdminDataManager';
 import { PortalSwitchGrid, PortalSwitchRail } from '@/components/PortalSwitch';
 import { BRAND_LOCKUP } from '@/lib/brand';
+import { isWebsiteJobApplication, importWebsiteApplications } from '@/lib/websiteApply';
 
 type AdminTab =
   | 'dashboard'
@@ -246,7 +247,10 @@ const [availabilityForm, setAvailabilityForm] = useState({
 
       const mergedAppointments=[...(apts.data ?? []), ...(openApts.data ?? [])];
       const byId=new Map(mergedAppointments.map((a:any)=>[a.id,a]));
-      const safeAppointments=[...byId.values()].map((a:any)=>({...a,add_ons:Array.isArray(a.add_ons)?a.add_ons:[]}));
+      const safeAppointments=[...byId.values()]
+        .map((a:any)=>({...a,add_ons:Array.isArray(a.add_ons)?a.add_ons:[]}))
+        .filter((a:any)=>!isWebsiteJobApplication(a));
+      await importWebsiteApplications().catch((err)=>{console.warn('Website apply import skipped',err)});
       setCustomers(custs.data ?? []);
       setAppointments(safeAppointments);
       setPayments(pays.data ?? []);

@@ -17,6 +17,7 @@ import CompensationRuleBuilder from '@/components/CompensationRuleBuilder';
 import { compensationSummary, estimateCustomRulePay } from '@/lib/compensation';
 import { employeeCanD2D } from '@/lib/workCapabilities';
 import WorkspaceHero from '@/components/WorkspaceHero';
+import { importWebsiteApplications } from '@/lib/websiteApply';
 
 export type BusinessSection =
   | 'recruiting'
@@ -108,6 +109,7 @@ export default function BusinessSuite({ section, employees, setEmployees, comple
 
   const loadBusinessData = async () => {
     setLoading(true);
+    await importWebsiteApplications().catch(() => ({ imported: 0 }));
     const [cand, sh, times, sr, ex, inv, pay, co, leadRows] = await Promise.all([
       supabase.from('recruiting_candidates').select('*').order('created_at', { ascending: false }),
       supabase.from('employee_shifts').select('*').order('shift_date', { ascending: true }),
@@ -390,7 +392,7 @@ export default function BusinessSuite({ section, employees, setEmployees, comple
           <div className="nsos-hire-web" style={{marginBottom:16}}>
             <span className="nsos-eyebrow">Website apply</span>
             <strong>No website applications on this board yet</strong>
-            <p>northsplash.com/apply lands here as source Website. Until that GRANT is applied, live applies also email <strong>Admin@northsplash.com</strong> — check that inbox (and the FormSubmit activation mail) so nobody is lost.</p>
+            <p>northsplash.com/apply lands here as source Website, stage Applied. Open this Hiring board after someone applies — Owner and Admin both use this list.</p>
           </div>
         )}
         {hireNotice && <HireInviteCard result={hireNotice} onClose={() => setHireNotice(null)} />}
