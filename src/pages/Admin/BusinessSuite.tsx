@@ -390,7 +390,7 @@ export default function BusinessSuite({ section, employees, setEmployees, comple
           <div className="nsos-hire-web" style={{marginBottom:16}}>
             <span className="nsos-eyebrow">Website apply</span>
             <strong>No website applications on this board yet</strong>
-            <p>northsplash.com/apply lands here as source Website. If the public form cannot send, run <code>supabase/migrations/20260907180000_website_apply_rpc.sql</code> in the live Supabase SQL editor and deploy <code>submit-job-application</code> with <code>--no-verify-jwt</code>.</p>
+            <p>northsplash.com/apply lands here as source Website. Until that GRANT is applied, live applies also email <strong>Admin@northsplash.com</strong> — check that inbox (and the FormSubmit activation mail) so nobody is lost.</p>
           </div>
         )}
         {hireNotice && <HireInviteCard result={hireNotice} onClose={() => setHireNotice(null)} />}
