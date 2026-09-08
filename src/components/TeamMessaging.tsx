@@ -245,7 +245,7 @@ export default function TeamMessaging({employee,employees=[],portalKind='employe
     {Number(meta.unread||0)>0?<b className="message-unread-v27">{Number(meta.unread)>99?'99+':meta.unread}</b>:<span className="message-channel-dot"/>}
   </button>};
 
-  return <div className={`team-messaging messaging-v6 messaging-usable ${compact?'team-messaging-compact':''} ${showInfo?'with-info':''} ${mobileThreadOpen?'thread-open':''}`}>
+  return <div className={`team-messaging messaging-v6 messaging-os messaging-usable ${compact?'team-messaging-compact':''} ${showInfo?'with-info':''} ${mobileThreadOpen?'thread-open':''}`}>
     <aside className="message-channel-rail">
       <div className="message-workspace-brand"><img className="message-workspace-lockup" src={BRAND_LOCKUP} alt=""/><div><strong>North Splash</strong><small>Field Communications</small></div><ChevronDown size={15}/></div>
       <div className="message-search"><Search size={15}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Find a channel"/><kbd>⌘K</kbd></div>
@@ -259,7 +259,8 @@ export default function TeamMessaging({employee,employees=[],portalKind='employe
         {favoriteChannels.length>0&&<><div className="message-section-label"><span><Star size={12}/>Favorites</span></div>{favoriteChannels.map(channelButton)}</>}
         <div className="message-section-label"><span><Hash size={12}/>Channels</span>{elevated&&<button onClick={()=>setShowCreate(true)} title="Create group"><Plus size={14}/></button>}</div>
         {regularChannels.map(channelButton)}
-        {!loading&&!filteredChannels.length&&<div className="ns-empty compact">No message groups available.</div>}
+        {loading&&<div className="ns-empty compact">Loading channels…</div>}
+        {!loading&&!filteredChannels.length&&<div className="ns-empty compact">No message groups yet. Pull to refresh, or create a crew channel from More.</div>}
       </div>
       <div className="message-rail-footer"><span className="message-presence-dot"/><div><strong>{employee?.name||profile?.full_name||'North Splash Team'}</strong><small>Available · messages live</small></div></div>
     </aside>
