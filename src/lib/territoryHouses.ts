@@ -2,12 +2,6 @@ import { supabase } from '@/lib/supabase';
 
 export const TERRITORY_MAX_AREA = 0.15;
 
-const OVERPASS_ENDPOINTS = [
-  'https://overpass.private.coffee/api/interpreter',
-  'https://overpass-api.de/api/interpreter',
-  'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
-];
-
 const BLOCKED_BUILDINGS = new Set([
   'commercial', 'industrial', 'warehouse', 'retail', 'office', 'school',
   'hospital', 'church', 'civic', 'public', 'government', 'garage', 'garages', 'shed',
@@ -79,45 +73,8 @@ function assertBounds({ south, west, north, east }: TerritoryBounds) {
   if (area > TERRITORY_MAX_AREA) throw new Error('Territory is too large. Draw a smaller neighborhood area.');
 }
 
-function overpassQuery(b: TerritoryBounds) {
-  return `[out:json][timeout:18];(way["building"](${b.south},${b.west},${b.north},${b.east});node["addr:housenumber"](${b.south},${b.west},${b.north},${b.east}););out center tags;`;
-}
-
 function isTooLarge(message: string) {
   return /too large/i.test(message);
-}
-
-async function fetchOverpassDirect(bounds: TerritoryBounds): Promise<OsmHouseElement[]> {
-  const q = overpassQuery(bounds);
-  let last = 'House discovery providers are busy.';
-  for (const url of OVERPASS_ENDPOINTS) {
-    try {
-      const ctl = new AbortController();
-      const timer = window.setTimeout(() => ctl.abort(), 22000);
-      const r = await fetch(url, {
-        method: 'POST',
-        headers: { 'content-type': 'text/plain;charset=UTF-8' },
-        body: q,
-        signal: ctl.signal,
-      });
-      window.clearTimeout(timer);
-      if (!r.ok) {
-        last = `Provider returned ${r.status}`;
-        continue;
-      }
-      const json = await r.json();
-      const poly = (bounds.points || []).filter((p) => Array.isArray(p) && p.length === 2);
-      return (json.elements || []).filter((e: OsmHouseElement) => {
-        const lat = Number(e.lat ?? e.center?.lat);
-        const lon = Number(e.lon ?? e.center?.lon);
-        if (!Number.isFinite(lat) || !Number.isFinite(lon)) return false;
-        return poly.length < 3 || pointInPolygon(lat, lon, poly);
-      });
-    } catch (err) {
-      last = err instanceof Error ? err.message : String(err);
-    }
-  }
-  throw new Error(`House discovery is temporarily unavailable. ${last}`);
 }
 
 export async function fetchTerritoryHouses(bounds: TerritoryBounds): Promise<OsmHouseElement[]> {
@@ -129,16 +86,22 @@ export async function fetchTerritoryHouses(bounds: TerritoryBounds): Promise<Osm
     east: bounds.east,
     points: bounds.points || [],
   };
-  try {
-    const { data, error } = await supabase.functions.invoke('territory-house-search', { body });
-    const message = String(data?.error || error?.message || '');
-    if (isTooLarge(message)) throw new Error(message || 'Territory is too large. Draw a smaller neighborhood area.');
-    if (!error && data?.success && Array.isArray(data.elements)) return data.elements;
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err || '');
-    if (isTooLarge(message)) throw err;
+  let last = 'House discovery is temporarily unavailable.';
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const { data, error } = await supabase.functions.invoke('territory-house-search', { body });
+      const message = String(data?.error || error?.message || '');
+      if (isTooLarge(message)) throw new Error(message || 'Territory is too large. Draw a smaller neighborhood area.');
+      if (!error && data?.success && Array.isArray(data.elements)) return data.elements;
+      last = message || last;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err || '');
+      if (isTooLarge(message)) throw err;
+      last = message || last;
+    }
+    await new Promise((r) => setTimeout(r, 400 * (attempt + 1)));
   }
-  return fetchOverpassDirect(bounds);
+  throw new Error(`${last} Mapped houses already imported stay saved until an owner refreshes this territory.`);
 }
 
 export function mapOsmHouses(

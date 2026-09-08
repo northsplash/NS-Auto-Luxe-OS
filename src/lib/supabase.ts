@@ -249,7 +249,7 @@ export type CompanySetting = {
 
 
 export type LeadTerritory = {
-  id: string; name: string; assigned_employee_id: string | null; center_lat: number | null; center_lng: number | null; radius_meters: number; status: string; notes: string | null; color?: string | null; priority?: number; house_goal?: number; locked?: boolean; polygon_geojson?: any; start_date?: string|null; end_date?: string|null; team_name?: string|null; created_at: string; updated_at: string;
+  id: string; name: string; assigned_employee_id: string | null; center_lat: number | null; center_lng: number | null; radius_meters: number; status: string; notes: string | null; color?: string | null; priority?: number; house_goal?: number; locked?: boolean; polygon_geojson?: any; start_date?: string|null; end_date?: string|null; team_name?: string|null; houses_imported_at?: string | null; created_at: string; updated_at: string;
 };
 export type TerritoryDoor = { id:string; territory_id:string; lead_id:string|null; address:string|null; latitude:number; longitude:number; status:string; last_visited_at:string|null; last_employee_id:string|null; notes:string|null; source:string; created_at:string; updated_at:string; normalized_address?:string|null; street_name?:string|null; house_number?:string|null; city?:string|null; state?:string|null; postal_code?:string|null; do_not_knock?:boolean; first_visited_at?:string|null; visit_count?:number; next_follow_up_at?:string|null; customer_id?:string|null; last_route_id?:string|null; };
 

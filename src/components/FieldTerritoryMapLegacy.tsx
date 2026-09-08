@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
-import { doorStatus } from '@/lib/fieldOps';
-import { srPinHtml, srStatus } from '@/lib/salesRabbitLeads';
+import {
+  applyCanvasFullscreen, clusterCanvassDoors, doorIsDimmed, doorMatchesSearch, doorsInBounds,
+  formatRelativeActivity, houseMarkerHtml, clusterMarkerHtml, type MapBounds,
+} from '@/lib/canvass';
 import { MARKET } from '@/lib/market';
 import { searchOsmPlace } from '@/lib/osmGeocode';
 import type { FieldTerritoryMapProps } from './FieldTerritoryMap.types';
@@ -32,6 +34,9 @@ export default function FieldTerritoryMapLegacy({
   autoFit = true,
   mobileGestureLock = true,
   fieldMode = false,
+  filterMode = 'dim',
+  searchQuery = '',
+  onViewportChange,
 }: Props) {
   const wrap = useRef<HTMLDivElement | null>(null);
   const el = useRef<HTMLDivElement | null>(null);
@@ -45,20 +50,24 @@ export default function FieldTerritoryMapLegacy({
   const onDoorClickRef = useRef(onDoorClick);
   const onTerritoryClickRef = useRef(onTerritoryClick);
   const onPolygonChangeRef = useRef(onPolygonChange);
+  const onViewportChangeRef = useRef(onViewportChange);
   const [ready, setReady] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   const [interactionEnabled, setInteractionEnabled] = useState(false);
   const [locating, setLocating] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [placeQuery, setPlaceQuery] = useState('');
   const [searching, setSearching] = useState(false);
   const [localLocation, setLocalLocation] = useState<{ latitude:number; longitude:number; accuracy?:number|null } | null>(null);
+  const [viewBounds, setViewBounds] = useState<MapBounds | null>(null);
   const lastFitKey = useRef('');
+  const canvasFs = useRef(false);
 
   useEffect(() => { editableRef.current = editable; }, [editable]);
   useEffect(() => { onMapClickRef.current = onMapClick; }, [onMapClick]);
   useEffect(() => { onDoorClickRef.current = onDoorClick; }, [onDoorClick]);
   useEffect(() => { onTerritoryClickRef.current = onTerritoryClick; }, [onTerritoryClick]);
   useEffect(() => { onPolygonChangeRef.current = onPolygonChange; }, [onPolygonChange]);
+  useEffect(() => { onViewportChangeRef.current = onViewportChange; }, [onViewportChange]);
 
   useEffect(() => {
     points.current = initialPolygon.map(p => [Number(p[0]), Number(p[1])]);
@@ -131,10 +140,25 @@ export default function FieldTerritoryMapLegacy({
       ? new ResizeObserver(fit)
       : null;
     if (el.current && ro) ro.observe(el.current);
+    const onMove = () => {
+      const b = instance.getBounds?.();
+      if (!b) return;
+      const next = {
+        south: b.getSouth(), west: b.getWest(), north: b.getNorth(), east: b.getEast(),
+        zoom: instance.getZoom?.() || 16,
+      };
+      setViewBounds(next);
+      onViewportChangeRef.current?.(next);
+    };
+    instance.on('moveend', onMove);
+    instance.on('zoomend', onMove);
+    window.setTimeout(onMove, 120);
     window.addEventListener('orientationchange', fit);
     return () => {
       ro?.disconnect();
       window.removeEventListener('orientationchange', fit);
+      instance.off('moveend', onMove);
+      instance.off('zoomend', onMove);
       instance.remove();
       map.current = null;
     };
@@ -191,9 +215,14 @@ export default function FieldTerritoryMapLegacy({
   }
 
   const visibleDoors = useMemo(() => {
-    if (!statusFilter.length) return doors;
-    return doors.filter(d => statusFilter.includes(d.status || 'unworked'));
-  }, [doors, statusFilter]);
+    const matched = doors.filter((d) => doorMatchesSearch(d, searchQuery, d.customer_name));
+    if (filterMode === 'hide' && statusFilter.length) {
+      return matched.filter((d) => statusFilter.includes(d.do_not_knock ? 'do_not_knock' : (d.status || 'unworked')));
+    }
+    return matched;
+  }, [doors, statusFilter, filterMode, searchQuery]);
+
+  const renderItems = useMemo(() => clusterCanvassDoors(doorsInBounds(visibleDoors, viewBounds), viewBounds?.zoom ?? 16), [visibleDoors, viewBounds]);
 
   useEffect(() => {
     if (!map.current || !layers.current || !(window as any).L) return;
@@ -237,31 +266,55 @@ export default function FieldTerritoryMapLegacy({
       L.polyline(routePoints, { color:'#6e4d32', weight:4, opacity:.82, dashArray:'8 8' }).addTo(layers.current);
     }
 
-    visibleDoors.forEach(door => {
+    renderItems.forEach((item) => {
+      if (item.type === 'cluster') {
+        const marker = L.marker([item.lat, item.lng], {
+          keyboard: false,
+          zIndexOffset: 80,
+          icon: L.divIcon({
+            className: 'ns-house-cluster-wrap',
+            html: clusterMarkerHtml(item.count, item.color),
+            iconSize: [34, 34],
+            iconAnchor: [17, 17],
+          }),
+        });
+        marker.on('click', (e: any) => {
+          L.DomEvent.stopPropagation(e);
+          map.current?.setView([item.lat, item.lng], Math.min(19, (map.current.getZoom?.() || 14) + 2));
+        });
+        marker.addTo(layers.current);
+        bounds.push([item.lat, item.lng]);
+        return;
+      }
+      const door = item.door;
       if (!Number.isFinite(Number(door.latitude)) || !Number.isFinite(Number(door.longitude))) return;
-      const status = door.do_not_knock ? doorStatus('do_not_knock') : doorStatus(door.status || 'unworked');
       const selected = Boolean(activeDoorId && door.id === activeDoorId);
       const routeIndex = door.id ? routeMap.get(door.id) : undefined;
-      const address = door.address || 'Mapped house';
+      const dim = doorIsDimmed(door, statusFilter);
       const marker = L.marker([Number(door.latitude), Number(door.longitude)], {
         keyboard: false,
         riseOnHover: true,
-        zIndexOffset: selected ? 1000 : 0,
+        zIndexOffset: selected ? 1000 : dim ? -20 : 0,
         icon: L.divIcon({
-          className: `ns-door-marker-wrap ns-sr-pin-wrap ${fieldMode ? 'field-mode' : ''}`,
-          html: `<span class="ns-door-marker ${selected ? 'selected' : ''}" style="--door-color:${status.color}">
-            ${srPinHtml(door.do_not_knock ? 'do_not_knock' : door.status, { selected, route: routeIndex })}
-            <span class="ns-door-hover-card"><strong>${escapeText(address)}</strong><small>${escapeText(status.short)} · ${escapeText(status.label)}</small><em>Click pin to mark</em></span>
-          </span>`,
-          iconSize: fieldMode ? [34, 42] : [30, 38],
-          iconAnchor: fieldMode ? [17, 40] : [15, 36],
-          popupAnchor: [0, -31],
+          className: `ns-house-pin-wrap ${fieldMode ? 'field-mode' : ''} ${dim ? 'dim' : ''} ${selected ? 'selected' : ''}`,
+          html: houseMarkerHtml(door, {
+            selected,
+            dim,
+            route: routeIndex,
+            assignedName: door.assigned_name || undefined,
+            lastActivity: formatRelativeActivity(door.last_visited_at),
+          }),
+          iconSize: fieldMode ? [24, 28] : [22, 26],
+          iconAnchor: fieldMode ? [12, 27] : [11, 25],
+          popupAnchor: [0, -22],
         }),
       });
       marker.on('click', (e: any) => { L.DomEvent.stopPropagation(e); onDoorClickRef.current?.(door); });
-      marker.bindTooltip(`${routeIndex ? `<b>#${routeIndex}</b> · ` : ''}${escapeText(address)} · ${escapeText(status.label)}`, {
-        direction: 'top', sticky: true, permanent: showDoorLabels && Boolean(door.address), className: 'ns-house-tooltip', offset:[0,-24],
-      });
+      if (showDoorLabels && door.address) {
+        marker.bindTooltip(escapeText(String(door.address)), {
+          direction: 'top', permanent: true, className: 'ns-house-tooltip', offset:[0,-18],
+        });
+      }
       marker.addTo(layers.current);
       bounds.push([Number(door.latitude), Number(door.longitude)]);
     });
@@ -269,20 +322,28 @@ export default function FieldTerritoryMapLegacy({
     leads.forEach(lead => {
       if (lead.latitude == null || lead.longitude == null) return;
       if (lead.territory_door_id && visibleDoors.some(d => d.id === lead.territory_door_id)) return;
-      const status = doorStatus(lead.status);
-      const pin = srStatus(lead.status);
+      const door = {
+        latitude: Number(lead.latitude),
+        longitude: Number(lead.longitude),
+        address: lead.address,
+        status: lead.status,
+        territory_id: lead.territory_id,
+        lead_id: lead.id,
+        customer_name: lead.customer_name,
+        last_visited_at: lead.last_contacted_at,
+      };
       const marker = L.marker([Number(lead.latitude), Number(lead.longitude)], {
         keyboard:false,
         riseOnHover:true,
         icon:L.divIcon({
-          className:'ns-door-marker-wrap ns-sr-pin-wrap lead-only',
-          html:`<span class="ns-door-marker lead-ring" style="--door-color:${status.color}">${srPinHtml(lead.status)}<span class="ns-door-hover-card"><strong>${escapeText(lead.address || lead.customer_name || 'Lead')}</strong><small>${escapeText(pin.abbr)} · ${escapeText(pin.name)}</small><em>Click to open lead</em></span></span>`,
-          iconSize:[34,42],iconAnchor:[17,40],
+          className:'ns-house-pin-wrap lead-only',
+          html: houseMarkerHtml(door, { lastActivity: formatRelativeActivity(lead.last_contacted_at), assignedName: lead.customer_name || undefined }),
+          iconSize:[22,26],iconAnchor:[11,25],
         }),
       });
       marker.on('click', (e: any) => {
         L.DomEvent.stopPropagation(e);
-        onDoorClickRef.current?.({ latitude:Number(lead.latitude), longitude:Number(lead.longitude), address:lead.address, status:lead.status, territory_id:lead.territory_id, lead_id:lead.id });
+        onDoorClickRef.current?.(door);
       });
       marker.addTo(layers.current);
       bounds.push([Number(lead.latitude), Number(lead.longitude)]);
@@ -290,14 +351,15 @@ export default function FieldTerritoryMapLegacy({
 
     const fitKey = JSON.stringify({
       territories: territories.map(t => [t.id, t.updated_at]),
-      doors: visibleDoors.map(d => d.id),
+      count: visibleDoors.length,
       route: routeDoorIds,
+      selected: selectedTerritoryId,
     });
     if (autoFit && !editable && bounds.length && bounds.length < 1200 && lastFitKey.current !== fitKey) {
       lastFitKey.current = fitKey;
       try { map.current.fitBounds(bounds, { padding:[32,32], maxZoom:18, animate:false }); } catch { /* noop */ }
     }
-  }, [territories, leads, visibleDoors, selectedTerritoryId, routeDoorIds, activeDoorId, showDoorLabels, autoFit, editable, fieldMode]);
+  }, [territories, leads, renderItems, visibleDoors, selectedTerritoryId, routeDoorIds, activeDoorId, showDoorLabels, autoFit, editable, fieldMode, statusFilter]);
 
   useEffect(() => {
     if (!map.current || !locationLayer.current || !(window as any).L) return;
@@ -318,21 +380,23 @@ export default function FieldTerritoryMapLegacy({
 
   useEffect(() => {
     const onChange = () => {
-      const active = document.fullscreenElement === wrap.current;
-      setFullscreen(active);
-      setTimeout(() => map.current?.invalidateSize({ animate:false }), 80);
-      setTimeout(() => map.current?.invalidateSize({ animate:false }), 260);
+      if (document.fullscreenElement === wrap.current) setFullscreen(true);
+      invalidateMap();
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && (canvasFs.current || document.fullscreenElement === wrap.current)) {
+        e.preventDefault();
+        exitCanvasFs();
+      }
     };
     document.addEventListener('fullscreenchange', onChange);
-    return () => document.removeEventListener('fullscreenchange', onChange);
-  }, []);
-
-  useEffect(() => {
-    if (!fullscreen) return;
-    const onKey = (e:KeyboardEvent) => { if(e.key === 'Escape' && document.fullscreenElement) document.exitFullscreen().catch(()=>{}); };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [fullscreen]);
+    return () => {
+      document.removeEventListener('fullscreenchange', onChange);
+      window.removeEventListener('keydown', onKey);
+      applyCanvasFullscreen(false);
+    };
+  }, []);
 
   useEffect(() => {
     const resize = () => setTimeout(() => map.current?.invalidateSize({ animate:false }), 80);
@@ -375,10 +439,10 @@ export default function FieldTerritoryMapLegacy({
   };
   const searchPlace = async (event: FormEvent) => {
     event.preventDefault();
-    if (!map.current || !searchQuery.trim()) return;
+    if (!map.current || !placeQuery.trim()) return;
     setSearching(true);
     try {
-      const place = await searchOsmPlace(searchQuery);
+      const place = await searchOsmPlace(placeQuery);
       if (!place) {
         alert('No matching place was found. Try a street address or neighborhood name.');
         return;
@@ -416,26 +480,35 @@ export default function FieldTerritoryMapLegacy({
       alert(message);
     }, {enableHighAccuracy:true,timeout:15000,maximumAge:5000});
   };
+  const invalidateMap = () => {
+    setTimeout(() => map.current?.invalidateSize({ animate:false }), 80);
+    setTimeout(() => map.current?.invalidateSize({ animate:false }), 260);
+  };
+  const exitCanvasFs = () => {
+    canvasFs.current = false;
+    setFullscreen(false);
+    applyCanvasFullscreen(false);
+    if (document.fullscreenElement === wrap.current) document.exitFullscreen().catch(()=>{});
+    invalidateMap();
+  };
   const toggleFullscreen = async () => {
-    try {
-      if (document.fullscreenElement === wrap.current) await document.exitFullscreen();
-      else if (wrap.current?.requestFullscreen) await wrap.current.requestFullscreen();
-      else setFullscreen(v=>!v);
-    } catch {
-      setFullscreen(v=>!v);
-    }
-    setTimeout(() => map.current?.invalidateSize({animate:false}), 120);
+    const next = !fullscreen;
+    canvasFs.current = next;
+    setFullscreen(next);
+    applyCanvasFullscreen(next);
+    setInteractionEnabled(true);
+    invalidateMap();
   };
 
   return (
-    <div ref={wrap} className={`field-map-wrap ${fullscreen ? 'field-map-fullscreen' : ''} ${fieldMode ? 'field-map-field-mode' : ''} ${className}`}>
+    <div ref={wrap} className={`field-map-wrap ${fullscreen ? 'field-map-fullscreen field-map-canvas-fs' : ''} ${fieldMode ? 'field-map-field-mode' : ''} ${className}`}>
       <div className="field-map-toolbar google-map-toolbar">
         <form className="google-map-search" onSubmit={searchPlace}>
           <span>⌕</span>
           <input
             type="search"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
+            value={placeQuery}
+            onChange={e => setPlaceQuery(e.target.value)}
             placeholder="Search address, neighborhood or place"
             aria-label="Search the street map"
             disabled={searching}
@@ -446,6 +519,7 @@ export default function FieldTerritoryMapLegacy({
         {editable && <><button type="button" className="map-tool-btn" disabled={!points.current.length} onClick={undo}>Undo Point</button><button type="button" className="map-tool-btn" onClick={reset}>Clear</button></>}
       </div>
       <div ref={el} className="field-map-canvas" />
+      {fullscreen && <button type="button" className="ns-canvas-exit" onClick={exitCanvasFs}>Exit Full Screen</button>}
       {!ready && <div className="field-map-skeleton" aria-live="polite">Loading the street map…</div>}
       {mobileGestureLock && !editable && !fullscreen && <div className={`map-interaction-toggle ${interactionEnabled?'active':''}`}><button type="button" onClick={()=>setInteractionEnabled(v=>!v)}>{interactionEnabled?'Done · Scroll Page':'Tap to Use Map'}</button></div>}
       {editable && <div className="field-map-tools"><span>Click the map to add boundary points. Drag numbered points to resize. Right-click a point to remove it.</span><strong>{points.current.length} points</strong></div>}

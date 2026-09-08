@@ -8,6 +8,7 @@ const endpoints = [
   'https://overpass.private.coffee/api/interpreter',
   'https://overpass-api.de/api/interpreter',
   'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
 ];
 
 function inside(lat: number, lng: number, polygon: [number, number][]) {

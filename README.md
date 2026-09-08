@@ -41,7 +41,7 @@ Workflows follow the product that already does that job well:
 | Scheduling | Deputy |
 | Appointments / job detail | Jobber |
 | Dispatch board | ServiceTitan |
-| D2D portal, map, territories | SalesRabbit |
+| D2D canvassing | Purpose-built North Splash field map (knock-first, house markers, route mode) |
 | Lead pipeline | HubSpot + SPOTIO |
 | Customers / CRM | HubSpot |
 | Detailer jobs | Housecall Pro |
@@ -54,7 +54,9 @@ Workflows follow the product that already does that job well:
 | Settings | Stripe |
 | Phone navigation | Microsoft Teams |
 
-The two cores: **SalesRabbit** for territory maps, pins, knocks, and canvassing; **ServiceTitan** for technicians, job cards, assignment, and live job progression.
+The two cores: **D2D canvassing** for territory maps, house markers, knocks, and routes; **ServiceTitan-style dispatch** for technicians, job cards, assignment, and live job progression.
+
+D2D `/d2d` is map-first canvassing. Residential buildings inside an assigned territory polygon are imported as persistent `territory_doors` (not created house-by-house). Reps tap a house, tap a disposition, and keep walking. Details stay collapsed. Route mode sequences remaining houses without overwriting a manual pick. Managers open **Territory** for a command center on the same property records. Refresh houses only when an owner/manager asks — already-imported territories are not rediscovered automatically.
 
 ## What you can do in this slice
 
@@ -63,7 +65,7 @@ The two cores: **SalesRabbit** for territory maps, pins, knocks, and canvassing;
 - Rippling-style people directory (search) and Gusto-style onboarding packet (headshot, legal name, tax last-four, deposit, I-9)
 - Deputy staff schedule: Sunday–Saturday week grid per person, plus shift editor
 - ServiceTitan dispatch: unassigned rail, tech columns, drag-to-assign
-- SalesRabbit D2D: tall map, West / Central / East areas, knock outcomes, door list, book-the-door. The sales presentation **Account** tab opens a real customer portal login at the door (email + password) without signing the rep out. Apply writes the household onto the lead and links `converted_customer_id`.
+- D2D canvassing: property-level house map, one-tap dispositions, Save & Next Best House, route mode, viewport/clustered markers, and a manager Territory command center. Knock writes to `territory_doors` → `leads` → appointments / calendar / revenue.
 - HubSpot pipeline: exceptions first, New Lead, drag between stages, assign a rep, and book a job from the inspector
 - Every Owner/Admin workspace item is on `/os`: Sales (map, pipeline, territories, campaigns, follow-up), Customers (directory, records, photos, calendar, windows, slots, history, fleets), Operations (jobs through approvals), People (team through training), Finance (payroll, ledger, analytics, pay mix), and Admin (access through traffic)
 - Client photos: import before/after and portfolio shots onto a customer. Open **Customers → Client photos**, or import from a CRM record. Attach to a visit when the job already exists.
