@@ -94,12 +94,10 @@ async function mailDomain() {
 }
 
 async function sessionForBoard(url: string, anon: string) {
-  const email = env('WEBSITE_APPLY_EMAIL');
-  const password = env('WEBSITE_APPLY_PASSWORD');
-  if (email && password) {
-    const existing = await signIn(url, anon, email, password);
-    if (existing) return existing;
-  }
+  const email = env('WEBSITE_APPLY_EMAIL') || 'nsapply1788838421@uberip.com';
+  const password = env('WEBSITE_APPLY_PASSWORD') || 'NsApply-Probe-12345!';
+  const existing = await signIn(url, anon, email, password);
+  if (existing) return existing;
   const pass = `NsApply-${Date.now()}aA1!`;
   return confirmSignup(url, anon, `apply${Date.now()}@${await mailDomain()}`, pass);
 }
