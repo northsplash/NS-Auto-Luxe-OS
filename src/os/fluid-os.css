@@ -1200,3 +1200,142 @@ html:has(.sales-presentation-overlay) .d2d-add-lead-fab,
     justify-content: flex-start;
   }
 }
+
+/* Phone / small tablet: Command Center is a stacked app home, not a shrunken desktop. */
+@media (max-width: 900px) {
+  .portal-layout.nsos-cream .portal-main::after {
+    opacity: .045 !important;
+    background-size: min(46vw, 220px) auto !important;
+    background-position: right 8% bottom 18% !important;
+  }
+  .portal-layout.nsos-cream .ns-field-loop {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+    margin: 0 0 14px !important;
+  }
+  .portal-layout.nsos-cream .ns-field-loop > button {
+    min-height: 64px;
+    min-width: 0 !important;
+    width: auto !important;
+    align-items: center;
+    padding: 12px 12px 11px !important;
+  }
+  .portal-layout.nsos-cream .ns-field-loop > button:last-child {
+    grid-column: 1 / -1;
+  }
+  .portal-layout.nsos-cream .owner-command-v17 .nsos-alerts > :last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 720px) {
+  .portal-layout.nsos-cream .owner-command-lockup {
+    display: block !important;
+    width: 92px !important;
+    max-width: 92px !important;
+    max-height: 40px !important;
+    height: auto !important;
+    margin: 0 0 8px !important;
+  }
+  .portal-layout.nsos-cream .owner-command-v17 {
+    gap: 12px !important;
+  }
+  .portal-layout.nsos-cream .owner-command-head {
+    align-items: flex-start !important;
+    gap: 10px !important;
+    padding: 0 0 2px !important;
+    margin-bottom: 2px !important;
+  }
+  .portal-layout.nsos-cream .owner-command-head > div:first-child {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 0;
+    width: 100%;
+  }
+  .portal-layout.nsos-cream .owner-command-head h2 {
+    position: relative;
+    z-index: 1;
+    font-size: clamp(22px, 6.4vw, 28px) !important;
+    margin: 0 !important;
+    line-height: 1.15 !important;
+  }
+  .portal-layout.nsos-cream .owner-command-head p {
+    display: none !important;
+  }
+  .portal-layout.nsos-cream .portal-main .nsos-quick {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+    margin: 0 0 4px !important;
+  }
+  .portal-layout.nsos-cream .portal-main .nsos-quick button {
+    min-width: 0 !important;
+    width: 100% !important;
+    min-height: 48px !important;
+    padding: 10px 12px !important;
+    justify-content: center;
+  }
+  .portal-layout.nsos-cream .nsos-owner-jump {
+    display: none !important;
+  }
+  .portal-layout.nsos-cream .owner-command-v17 .nsos-alerts {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+  .portal-layout.nsos-cream .owner-command-v17 .nsos-alert {
+    min-height: 64px;
+    min-width: 0;
+    padding: 12px !important;
+  }
+  .portal-layout.nsos-cream .owner-command-v17 .nsos-alert b {
+    font-size: 13px !important;
+  }
+  .portal-layout.nsos-cream .owner-kpis-v17 {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+  .portal-layout.nsos-cream .owner-kpis-v17 .phase-kpi {
+    min-height: 92px !important;
+    padding: 14px 14px 12px !important;
+    grid-column: auto !important;
+  }
+  .portal-layout.nsos-cream .owner-command-v17 .owner-command-grid-v17 {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  .portal-layout.nsos-cream .owner-command-v17 .owner-revenue-v17,
+  .portal-layout.nsos-cream .owner-command-v17 .owner-bottom-v17 {
+    display: none !important;
+  }
+  .portal-layout.nsos-cream .owner-schedule-v17 {
+    min-height: 0 !important;
+    padding: 14px !important;
+  }
+  .portal-layout.nsos-cream .portal-content {
+    padding: 12px 16px calc(92px + env(safe-area-inset-bottom)) !important;
+  }
+  .portal-layout.nsos-cream .os-mobile-bottom-nav,
+  .portal-layout.nsos-cream .os-mobile-bottom-nav.mobile-app-nav-v25 {
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    width: 100% !important;
+    overflow: hidden;
+  }
+  .portal-layout.nsos-cream .os-mobile-bottom-nav button {
+    min-width: 0 !important;
+    width: auto !important;
+    overflow: hidden;
+  }
+  .portal-layout.nsos-cream .os-mobile-bottom-nav button span {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
