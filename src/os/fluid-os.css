@@ -2402,3 +2402,90 @@ html:has(.sales-presentation-overlay) .d2d-add-lead-fab,
   color: #6f655b !important;
   background: transparent !important;
 }
+
+/* Customer pitch overlay stays black with the NS logo — do not cream-wash it. */
+.sales-presentation-overlay {
+  z-index: 12000;
+  background: #060606 !important;
+  color: #f7f3eb !important;
+  align-items: stretch;
+  height: 100dvh;
+  overflow: hidden;
+}
+.sales-presentation-overlay .sales-presentation-shell {
+  background: #080808 !important;
+  color: #f7f3eb !important;
+  min-height: 100%;
+  height: 100%;
+}
+.sales-presentation-overlay .sales-presentation-shell:before {
+  background: radial-gradient(circle at 88% 12%, rgba(205, 163, 54, .14), transparent 28%),
+    radial-gradient(circle at 8% 88%, rgba(232, 217, 191, .05), transparent 24%) !important;
+}
+.sales-presentation-overlay .sales-presentation-header {
+  background: rgba(7, 7, 7, .94) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, .1) !important;
+}
+.sales-presentation-brand img {
+  height: 42px;
+  width: auto;
+  max-width: 148px;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 0 12px rgba(212, 173, 59, .18));
+}
+.sales-presentation-overlay .sales-presentation-brand strong {
+  color: #f7f3eb !important;
+}
+.sales-presentation-overlay .sales-presentation-brand small {
+  color: #8f877d !important;
+}
+.sales-presentation-overlay .sales-hero-mark {
+  aspect-ratio: 1;
+  border: 1px solid rgba(212, 173, 59, .34);
+  background: linear-gradient(145deg, rgba(212, 173, 59, .08), rgba(255, 255, 255, .02));
+  border-radius: 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 28px;
+}
+.sales-presentation-overlay .sales-hero-mark img {
+  width: min(78%, 240px);
+  height: auto;
+  object-fit: contain;
+}
+.sales-presentation-overlay .sales-hero-mark span {
+  color: #d4ad3b;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .18em;
+}
+.sales-presentation-overlay .sales-presentation-body,
+.sales-presentation-overlay .sales-quote-mode,
+.sales-presentation-overlay .sales-account-mode {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+@media (max-width: 1100px) {
+  .sales-presentation-overlay .sales-hero-mark {
+    display: flex !important;
+    aspect-ratio: auto;
+    width: min(220px, 52vw);
+    margin: 0 auto 16px;
+    padding: 16px;
+    border-radius: 22px;
+  }
+  .sales-presentation-overlay .sales-slide-hero {
+    display: flex;
+    flex-direction: column;
+  }
+}
+@media (max-width: 430px) {
+  .sales-presentation-brand img {
+    height: 34px;
+    max-width: 110px;
+  }
+}
