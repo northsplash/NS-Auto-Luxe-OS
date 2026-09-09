@@ -2532,3 +2532,54 @@ html:has(.sales-presentation-overlay) .d2d-add-lead-fab,
 .dispatch-v16-drawer {
   z-index: 12021;
 }
+
+.field-contact-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 12px;
+}
+.field-contact-bar .btn-outline,
+.ns-empty .field-contact-bar .btn-outline,
+.ns-empty .field-contact-bar .btn-primary {
+  min-height: 40px;
+}
+.ns-empty .field-contact-bar {
+  justify-content: center;
+  margin-top: 12px;
+}
+button.employee-home-card {
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+}
+.ns-app-toast {
+  position: fixed;
+  right: 16px;
+  bottom: 88px;
+  z-index: 14000;
+  display: grid;
+  gap: 2px;
+  min-width: min(280px, calc(100vw - 32px));
+  max-width: 360px;
+  padding: 12px 14px;
+  border: 1px solid #eadfd3;
+  border-radius: 14px;
+  background: #fffdf8;
+  color: #1c1814;
+  box-shadow: 0 16px 40px rgba(28, 24, 20, .18);
+  text-align: left;
+  cursor: pointer;
+}
+.ns-app-toast strong {
+  font-size: 13px;
+  font-weight: 800;
+}
+.ns-app-toast span {
+  font-size: 12px;
+  color: #6f655b;
+}
+.crm-detail-hero .field-contact-bar {
+  grid-column: 1 / -1;
+}

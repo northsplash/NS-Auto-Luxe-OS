@@ -2,6 +2,7 @@ import { Component, lazy, Suspense, useEffect, type ErrorInfo, type ReactNode } 
 import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
 import { BRAND_LOGO } from './lib/brand';
 import { isStaleChunkError, recoverStaleChunkOnce } from './lib/staleChunk';
+import AppToast from './components/AppToast';
 
 const OsApp = lazy(() => import('@/os/OsApp'));
 const Login = lazy(() => import('@/pages/Login'));
@@ -101,6 +102,7 @@ const routerBasename = import.meta.env.BASE_URL.replace(/\/$/, '') || undefined;
 export default function App() {
   return (
     <BrowserRouter basename={routerBasename}>
+      <AppToast />
       <RoutedErrorBoundary>
         <Suspense fallback={<Loader />}>
           <Routes>

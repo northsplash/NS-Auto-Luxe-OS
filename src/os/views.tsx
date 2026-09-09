@@ -1898,6 +1898,8 @@ export function JobDetail({ job }: { job: OsJob }) {
         </label>
         <div className="nsos-actions" style={{ marginTop: 14 }}>
           <a className="nsos-btn ghost" href={`https://maps.apple.com/?q=${encodeURIComponent(job.address)}`} target="_blank" rel="noreferrer"><Navigation size={14} />Directions</a>
+          {job.phone && <a className="nsos-btn ghost" href={`tel:${job.phone}`}><Smartphone size={14} />Call</a>}
+          {job.phone && <a className="nsos-btn ghost" href={`sms:${job.phone}`}><MessageCircle size={14} />Text</a>}
           {job.status !== 'completed' && job.status !== 'en_route' && job.status !== 'arrived' && job.status !== 'in_progress' && (
             <button className="nsos-btn" onClick={() => os.setJobStatus(job.id, 'en_route')}>En route</button>
           )}

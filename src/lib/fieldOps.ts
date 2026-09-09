@@ -145,6 +145,30 @@ export function buildGoogleMapsUrl(lat?: number | null, lng?: number | null, add
   return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(dest)}`;
 }
 
+export function telHref(phone?: string | null) {
+  const digits = String(phone || '').replace(/[^\d+]/g, '');
+  return digits.length >= 7 ? `tel:${digits}` : '';
+}
+
+export function smsHref(phone?: string | null, body?: string) {
+  const digits = String(phone || '').replace(/[^\d+]/g, '');
+  if (digits.length < 7) return '';
+  if (!body) return `sms:${digits}`;
+  const ios = typeof navigator !== 'undefined' && /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  return `sms:${digits}${ios ? '&' : '?'}body=${encodeURIComponent(body)}`;
+}
+
+export async function copyText(value: string) {
+  const text = String(value || '').trim();
+  if (!text) return false;
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function percent(value: number, total: number) {
   return total > 0 ? Math.min(100, Math.round(value / total * 100)) : 0;
 }
