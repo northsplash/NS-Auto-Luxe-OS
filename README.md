@@ -1,6 +1,6 @@
 # North Splash Auto Luxe OS
 
-Field-service operating system for North Splash Auto Luxe. Service area is all of North Carolina. One cream-luxury OS — Stripe hierarchy, SalesRabbit D2D, ServiceTitan dispatch — not 15 tools stitched together.
+Field-service operating system for North Splash Auto Luxe. Service area is all of North Carolina. One cream-luxury OS — Stripe hierarchy, knock-first field map, ServiceTitan dispatch — not 15 tools stitched together.
 
 `/` and `/owner` open the live Owner portal (Supabase team, jobs, and cash). `/os` is the demo cream OS with sample data. D2D canvassing is `/d2d`. The detailer portal is `/employee`. Manager dispatch is `/manager`. Sign-in stays at `/login`.
 

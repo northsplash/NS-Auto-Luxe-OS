@@ -60,7 +60,7 @@ export const D2D_ACADEMY: AcademyCourse = {
   duration_minutes: 75,
   manager_signoff_required: true,
   track: 'd2d',
-  modeled: 'SalesRabbit + live pitch + customer account',
+  modeled: 'North Splash field academy + live pitch + customer account',
   lessons: [
     lesson('11', 1, 'How a North Splash door day works', `You work one assigned territory. The map is the product — not a clipboard.
 

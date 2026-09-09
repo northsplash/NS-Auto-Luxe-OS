@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  ChevronDown, Crosshair, History, MapPin, MessageCircle, Navigation, Phone,
+  ChevronDown, ChevronLeft, ChevronRight, Crosshair, History, MapPin, MessageCircle, Navigation, Phone,
   Presentation, Target, UserRound, X,
 } from 'lucide-react';
 import { CANVASS_KNOCK_KEYS, NEEDS_TIME_KEYS } from '@/lib/canvass';
@@ -32,6 +32,9 @@ type Props = {
   onPitch: () => void;
   onQuote: () => void;
   onAccount: () => void;
+  onWalkPrev?: () => void;
+  onWalkNext?: () => void;
+  walkLabel?: string;
 };
 
 export default function CanvassInspector({
@@ -52,6 +55,9 @@ export default function CanvassInspector({
   onPitch,
   onQuote,
   onAccount,
+  onWalkPrev,
+  onWalkNext,
+  walkLabel,
 }: Props) {
   const [detailsOpen, setDetails] = useState(mode === 'manager' || manual);
   const [historyOpen, setHistoryOpen] = useState(mode === 'manager');
@@ -91,6 +97,17 @@ export default function CanvassInspector({
           <button type="button" className="house-quote-btn" onClick={onQuote}><Target size={15} />Quote</button>
           <button type="button" onClick={onAccount}><UserRound size={15} />Account</button>
         </div>
+        {(onWalkPrev || onWalkNext || walkLabel) && (
+          <div className="canvass-walk-bar">
+            {walkLabel && <span className="canvass-walk-street">{walkLabel}</span>}
+            {(onWalkPrev || onWalkNext) && (
+              <div className="canvass-walk-pair">
+                <button type="button" disabled={!onWalkPrev} onClick={onWalkPrev}><ChevronLeft size={15} />Prev on street</button>
+                <button type="button" disabled={!onWalkNext} onClick={onWalkNext}>Next on street<ChevronRight size={15} /></button>
+              </div>
+            )}
+          </div>
+        )}
 
         {!manual && (
           <>

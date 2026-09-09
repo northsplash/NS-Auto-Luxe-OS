@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
-  BarChart2, Bell, Calendar, CalendarClock, CalendarDays, Car, Check, ChevronRight, Clock3, CreditCard, DollarSign, GripVertical, MapPin, MessageCircle, Navigation, Plus, Search, Send, Smartphone, Target, Trash2, TrendingUp, UserCheck, Users,
+  BarChart2, Bell, Calendar, CalendarClock, CalendarDays, Car, Check, ChevronLeft, ChevronRight, Clock3, CreditCard, DollarSign, GripVertical, MapPin, MessageCircle, Navigation, Plus, Search, Send, Smartphone, Target, Trash2, TrendingUp, UserCheck, Users,
 } from 'lucide-react';
 import AddEmployeeForm from '@/components/AddEmployeeForm';
 import SalesPresentation from '@/components/SalesPresentation';
@@ -14,6 +14,11 @@ import { firstWord, isSettledPayment, money, prettyLabel, trendLabel } from '@/l
 import { DETAIL_FAMILY_COPY, minutesForService, packagesForFamily } from '@/lib/detailCatalog';
 import { DEFAULT_TRAVEL_BUFFER_MINUTES } from '@/lib/driveTime';
 import { smsHref, telHref } from '@/lib/fieldOps';
+import FieldContactBar from '@/components/FieldContactBar';
+import {
+  advancesAfterKnock, doorNextAction, groupByStreet, isFollowUpDue, nextBestDoor, nextOnStreet, prevOnStreet,
+  reviewQueues, streetName, streetProgress, type FieldDoor,
+} from '@/lib/fieldReview';
 import { showToast } from '@/components/AppToast';
 import { ServiceMenuSelect } from '@/components/DetailSelfPicker';
 import { remainingStepLabels } from '@/lib/onboarding';
@@ -88,6 +93,19 @@ function isWorkedLead(status: string) {
 function isClosedLead(status: string) {
   const key = srStatus(status).key;
   return key === 'do_not_knock' || key === 'sold' || key === 'customer' || key === 'not_interested' || key === 'cancelled' || key === 'lost';
+}
+
+function osAsDoor(l: OsLead): FieldDoor {
+  return {
+    id: l.id,
+    address: l.address,
+    status: l.status,
+    follow_up_at: l.follow_up_at,
+    hot: l.temp === 'hot',
+    owner: l.rep,
+    name: l.name,
+    phone: l.phone,
+  };
 }
 
 function StripeKpi({ label, value, delta, onOpen }: { label: string; value: string; delta?: string; onOpen?: () => void }) {
@@ -1272,9 +1290,9 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
   const [door, setDoor] = useState(emptyDoorDraft);
   const [zone, setZone] = useState<'all' | 'west' | 'central' | 'east'>('all');
   const [pinFilter, setPinFilter] = useState<string | 'all'>('all');
-  const [pane, setPane] = useState<'map' | 'pitch' | 'list'>(() => {
+  const [pane, setPane] = useState<'map' | 'pitch' | 'list' | 'review'>(() => {
     const next = new URLSearchParams(window.location.search).get('pane');
-    return next === 'pitch' || next === 'list' ? next : 'map';
+    return next === 'pitch' || next === 'list' || next === 'review' ? next : 'map';
   });
   const [presenting, setPresenting] = useState(() => new URLSearchParams(window.location.search).get('present') === '1');
   const lead = os.leads.find((l) => l.id === active) || os.leads[0];
@@ -1282,6 +1300,22 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
   const d2dReps = ['Unassigned', ...os.employees.filter((e) => e.role === 'd2d_agent' || e.role === 'owner').map((e) => e.name)];
   const territory = (x: number) => (x < 33 ? 'west' : x < 66 ? 'central' : 'east');
   const pins = os.leads.filter((l) => (zone === 'all' || territory(l.x) === zone) && (pinFilter === 'all' || srStatus(l.status).key === pinFilter));
+  const fieldDoors = pins.map(osAsDoor);
+  const queues = reviewQueues(os.leads.map(osAsDoor));
+  const leadStreet = lead ? streetName(lead.address) : '';
+  const progress = lead ? streetProgress(os.leads.map(osAsDoor), leadStreet) : null;
+  const streetNext = lead ? nextOnStreet(fieldDoors, lead.id) : null;
+  const streetPrev = lead ? prevOnStreet(fieldDoors, lead.id) : null;
+  const bestDoor = nextBestDoor(os.leads.map(osAsDoor), lead?.id);
+  const streetGroups = groupByStreet(fieldDoors);
+  const applyKnock = (status: string) => {
+    if (!lead) return;
+    os.setLeadStatus(lead.id, srStatus(status).key);
+    if (!advancesAfterKnock(status)) return;
+    const simulated = os.leads.map((l) => osAsDoor(l.id === lead.id ? { ...l, status: status as OsLead['status'] } : l));
+    const nxt = nextOnStreet(simulated, lead.id) || nextBestDoor(simulated, lead.id);
+    if (nxt) setActive(nxt.id);
+  };
   const slots = liveOpenSlots(os.jobs, os.employees, 10);
   const knocks = SR_STATUSES.filter((s) => s.knock);
   const leadPin = lead ? srStatus(lead.status) : null;
@@ -1374,7 +1408,7 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
   return (
     <div className="nsos-sr" data-pane={pane}>
       <div className="nsos-seg" role="tablist" aria-label="Leads view">
-        {([['map', 'Map'], ['pitch', 'Pitch'], ['list', 'Doors']] as const).map(([id, label]) => (
+        {([['map', 'Map'], ['review', 'Review'], ['pitch', 'Pitch'], ['list', 'Doors']] as const).map(([id, label]) => (
           <button key={id} type="button" role="tab" aria-selected={pane === id} className={pane === id ? 'active' : ''} onClick={() => setPane(id)}>{label}</button>
         ))}
         <button type="button" className="nsos-seg-link" onClick={() => onPipeline?.()}>Pipeline</button>
@@ -1382,7 +1416,9 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
       <div className="nsos-sr-kpis">
         <div className="nsos-kpi"><span>Doors</span><strong>{os.leads.length}</strong></div>
         <div className="nsos-kpi"><span>Touched</span><strong>{os.leads.filter((l) => isWorkedLead(l.status)).length}</strong></div>
-        <div className="nsos-kpi"><span>Open windows</span><strong>{slots.length}</strong></div>
+        <div className="nsos-kpi nsos-kpi-link" role="button" tabIndex={0} onClick={() => setPane('review')} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setPane('review'); } }}>
+          <span>Due now</span><strong>{queues.due.length}</strong>
+        </div>
         <div className="nsos-kpi"><span>Sold</span><strong>{os.leads.filter((l) => srStatus(l.status).key === 'sold').length}</strong></div>
       </div>
       {pane === 'pitch' ? (
@@ -1420,6 +1456,42 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
           />
           )}
         </div>
+      ) : pane === 'review' ? (
+        <div className="nsos-review">
+          {([
+            ['due', 'Callbacks due', queues.due],
+            ['hot', 'Hot households', queues.hot],
+            ['fresh', 'Unworked', queues.fresh],
+            ['callbacks', 'No answer · revisit · follow-up', queues.callbacks],
+          ] as const).map(([id, title, rows]) => (
+            <section key={id} className="nsos-review-lane">
+              <header>
+                <h3>{title}</h3>
+                <span>{rows.length}</span>
+              </header>
+              {rows.length ? rows.map((d) => {
+                const l = os.leads.find((x) => x.id === d.id);
+                if (!l) return null;
+                const next = doorNextAction(d);
+                return (
+                  <button
+                    className={`nsos-sr-door ${l.id === lead?.id ? 'active-row' : ''}`}
+                    key={l.id}
+                    onClick={() => { setActive(l.id); setPane('map'); }}
+                  >
+                    <SrStatusDot status={l.status} />
+                    <div>
+                      <strong>{l.name}</strong>
+                      <small>{l.address} · {territory(l.x)} · {l.rep}</small>
+                      <small className={next.overdue ? 'overdue-text' : ''}>{next.text}</small>
+                    </div>
+                    <span className={`nsos-pill ${srPillTone(l.status)}`}>{srStatus(l.status).abbr}</span>
+                  </button>
+                );
+              }) : <div className="nsos-empty">Nothing in this queue.</div>}
+            </section>
+          ))}
+        </div>
       ) : pane === 'list' ? (
         <div className="nsos-sr-doors nsos-sr-doors-board">
           <div className="nsos-sr-doors-head">
@@ -1433,7 +1505,18 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
               ))}
             </div>
           </div>
-          {pins.map(doorRow)}
+          {streetGroups.map((g) => (
+            <div className="nsos-street-group" key={g.street}>
+              <header>
+                <strong>{g.street}</strong>
+                <span>{g.worked}/{g.total} worked</span>
+              </header>
+              {g.items.map((d) => {
+                const l = pins.find((x) => x.id === d.id);
+                return l ? doorRow(l) : null;
+              })}
+            </div>
+          ))}
           {!pins.length && <div className="nsos-empty">No doors in this area. Log one from the map.</div>}
         </div>
       ) : (
@@ -1460,7 +1543,25 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
                 onClick={() => setActive(l.id)}
               />
             ))}
+            {progress && progress.total > 0 && (
+              <div className="nsos-street-progress">
+                <MapPin size={13} />
+                <strong>{progress.street}</strong>
+                <span>{progress.worked}/{progress.total} worked</span>
+              </div>
+            )}
           </div>
+        </div>
+        <div className="nsos-walk-bar">
+            <button type="button" className="nsos-btn ghost" disabled={!streetPrev} onClick={() => streetPrev && setActive(streetPrev.id)}>
+              <ChevronLeft size={16} /> Prev
+            </button>
+            <button type="button" className="nsos-btn" disabled={!bestDoor} onClick={() => bestDoor && setActive(bestDoor.id)}>
+              <Target size={15} /> Next best door
+            </button>
+            <button type="button" className="nsos-btn ghost" disabled={!streetNext} onClick={() => streetNext && setActive(streetNext.id)}>
+              Next <ChevronRight size={16} />
+            </button>
         </div>
         <aside className="nsos-sr-side">
           <div className="nsos-tabs">
@@ -1503,6 +1604,7 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
               <span className="nsos-eyebrow">{territory(lead.x)} territory · {leadPin?.abbr} {leadPin?.name}</span>
               <h3>{lead.name}</h3>
               <p style={{ color: 'var(--os-muted)' }}>{lead.address}</p>
+              <FieldContactBar phone={lead.phone || lead.alt_phone} address={lead.address} name={lead.name} />
               <div className="nsos-sr-lead-grid">
                 <label className="nsos-field">First name<input value={lead.first_name} onChange={(e) => saveLeadFields({ first_name: e.target.value })} /></label>
                 <label className="nsos-field">Last name<input value={lead.last_name} onChange={(e) => saveLeadFields({ last_name: e.target.value })} /></label>
@@ -1542,7 +1644,7 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
                     type="button"
                     className={`nsos-sr-knock ${lead.status === s.key ? 'active' : ''}`}
                     style={{ ['--pin' as string]: s.color }}
-                    onClick={() => os.setLeadStatus(lead.id, s.key)}
+                    onClick={() => applyKnock(s.key)}
                   >
                     <b>{s.abbr}</b>
                     <small>{s.name}</small>
@@ -1559,12 +1661,24 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
               ))}
               <div className="nsos-sr-card-actions">
                 {lead.phone && telHref(lead.phone) && <a className="nsos-btn ghost" href={telHref(lead.phone)}>Call</a>}
+                {lead.phone && smsHref(lead.phone) && <a className="nsos-btn ghost" href={smsHref(lead.phone, `Hi ${firstWord(lead.name, 'there')}, this is North Splash Auto Luxe.`)}>Text</a>}
                 <button className="nsos-btn" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setPane('pitch')}>Pitch & book a window</button>
               </div>
             </div>
           )}
           <div className="nsos-sr-doors">
-            {pins.map(doorRow)}
+            {streetGroups.map((g) => (
+              <div className="nsos-street-group" key={g.street}>
+                <header>
+                  <strong>{g.street}</strong>
+                  <span>{g.worked}/{g.total}</span>
+                </header>
+                {g.items.map((d) => {
+                  const l = pins.find((x) => x.id === d.id);
+                  return l ? doorRow(l) : null;
+                })}
+              </div>
+            ))}
           </div>
         </aside>
       </div>
@@ -1592,7 +1706,7 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
 export function PipelineView({ onBook }: { onBook?: (jobId: string) => void }) {
   const os = useOs();
   const [q, setQ] = useState('');
-  const [focus, setFocus] = useState<'all' | 'hot' | 'unassigned'>('all');
+  const [focus, setFocus] = useState<'all' | 'hot' | 'unassigned' | 'due'>('all');
   const [compose, setCompose] = useState(false);
   const [composeError, setComposeError] = useState('');
   const [pickedId, setPickedId] = useState('');
@@ -1606,11 +1720,13 @@ export function PipelineView({ onBook }: { onBook?: (jobId: string) => void }) {
     if (!match(l)) return false;
     if (focus === 'hot' && l.temp !== 'hot') return false;
     if (focus === 'unassigned' && l.rep && l.rep !== 'Unassigned') return false;
+    if (focus === 'due' && !isFollowUpDue(l.follow_up_at)) return false;
     return true;
   });
   const total = rows.filter((l) => srStatus(l.status).key !== 'sold').reduce((s, l) => s + Number(l.value || 0), 0);
   const hot = live.filter((l) => l.temp === 'hot' && srStatus(l.status).key !== 'sold');
   const unassigned = live.filter((l) => !l.rep || l.rep === 'Unassigned');
+  const due = live.filter((l) => isFollowUpDue(l.follow_up_at) && !isClosedLead(l.status));
   const sold = os.leads.filter((l) => l.status === 'sold').length;
   const reps = os.employees.filter((e) => e.role === 'd2d_agent' || e.role === 'owner');
   const me = os.employees.find((e) => e.role === 'owner');
@@ -1665,6 +1781,11 @@ export function PipelineView({ onBook }: { onBook?: (jobId: string) => void }) {
       </form>
       )}
       <div className="nsos-alerts owner-lead-exceptions">
+        {due.length > 0 && (
+          <button type="button" className={`nsos-alert hot ${focus === 'due' ? 'selected' : ''}`} onClick={() => setFocus((v) => v === 'due' ? 'all' : 'due')}>
+            <em>{due.length}</em><span><b>Callbacks due</b><small>Knock or call before they cool</small></span>
+          </button>
+        )}
         {hot.length > 0 && (
           <button type="button" className={`nsos-alert hot ${focus === 'hot' ? 'selected' : ''}`} onClick={() => setFocus((v) => v === 'hot' ? 'all' : 'hot')}>
             <em>{hot.length}</em><span><b>Hot leads</b><small>Ready to quote or book</small></span>
@@ -1675,7 +1796,7 @@ export function PipelineView({ onBook }: { onBook?: (jobId: string) => void }) {
             <em>{unassigned.length}</em><span><b>Unassigned</b><small>Need a rep on the door</small></span>
           </button>
         )}
-        {!hot.length && !unassigned.length && <div className="ns-empty">Nothing needs you. Drag a card or log a new door.</div>}
+        {!due.length && !hot.length && !unassigned.length && <div className="ns-empty">Nothing needs you. Drag a card or log a new door.</div>}
       </div>
       <div className="nsos-actions" style={{ marginBottom: 12 }}>
         <div className="nsos-search" style={{ flex: 1 }}><Search size={14} /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search deals, streets, or reps" /></div>
@@ -1715,6 +1836,7 @@ export function PipelineView({ onBook }: { onBook?: (jobId: string) => void }) {
                 >
                   <strong className="nsos-lead-name">{leadDisplayName(l)}</strong>
                   <small className="nsos-lead-addr">{l.address || 'No address'}</small>
+                  <small className={doorNextAction(osAsDoor(l)).overdue ? 'overdue-text nsos-lead-next' : 'nsos-lead-next'}>{doorNextAction(osAsDoor(l)).text}</small>
                   <div className="nsos-lead-meta">
                     <span className={`nsos-temp ${l.temp}`}>{l.temp}</span>
                     <select
@@ -1749,8 +1871,10 @@ export function PipelineView({ onBook }: { onBook?: (jobId: string) => void }) {
             <span className="nsos-eyebrow">{srStatus(picked.status).abbr} · {srStatus(picked.status).name}</span>
             <h3>{leadDisplayName(picked)}</h3>
             <p>{picked.address || 'Address pending'}{picked.phone ? ` · ${picked.phone}` : ''}</p>
+            <p className={doorNextAction(osAsDoor(picked)).overdue ? 'overdue-text' : ''} style={{ color: 'var(--os-muted)', fontSize: 13 }}>{doorNextAction(osAsDoor(picked)).text}</p>
             <div className="nsos-actions">
               {picked.phone && telHref(picked.phone) && <a className="nsos-btn ghost" href={telHref(picked.phone)}>Call</a>}
+              {picked.phone && smsHref(picked.phone) && <a className="nsos-btn ghost" href={smsHref(picked.phone, `Hi ${firstWord(picked.name, 'there')}, this is North Splash Auto Luxe.`)}>Text</a>}
               <button type="button" className="nsos-btn" onClick={() => { const id = os.convertLead(picked.id); if (id) onBook?.(id); }}>Book job</button>
             </div>
           </div>

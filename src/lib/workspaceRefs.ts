@@ -17,7 +17,7 @@ export const WORKSPACE_REFS: Record<
   leads: {
     kicker: 'Field sales',
     title: 'Leads',
-    modeled: 'SalesRabbit + HubSpot + SPOTIO',
+    modeled: 'North Splash field map + HubSpot pipeline',
     lead: 'Pins, knocks, pipeline, and the next door — without leaving the board.',
   },
   crm: {
@@ -107,19 +107,19 @@ export const WORKSPACE_REFS: Record<
   d2d: {
     kicker: 'Field',
     title: 'Door to door',
-    modeled: 'SalesRabbit',
+    modeled: 'North Splash field map',
     lead: 'Map, pins, knock colors, and the next door. This is the core field product.',
   },
   sales: {
     kicker: 'Field',
     title: 'Door to door',
-    modeled: 'SalesRabbit',
+    modeled: 'North Splash field map',
     lead: 'Doors, conversion, and revenue by rep.',
   },
   territories: {
     kicker: 'Field',
     title: 'Territories',
-    modeled: 'SalesRabbit',
+    modeled: 'North Splash field map',
     lead: 'Draw the neighborhood, assign a rep, then work every door inside the pin.',
   },
   messages: {
@@ -179,7 +179,7 @@ export const WORKSPACE_REFS: Record<
   training: {
     kicker: 'Academy',
     title: 'Training',
-    modeled: 'Gusto onboarding + SalesRabbit playbooks',
+    modeled: 'Gusto onboarding + North Splash door playbooks',
     lead: 'Door scripts and detailing standards new hires finish before they go live.',
   },
   timeclock: {

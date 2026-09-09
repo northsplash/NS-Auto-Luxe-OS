@@ -39,6 +39,7 @@ import {
   percent, sameLocalDay, smsHref, telHref, localDateKey,
 } from '@/lib/fieldOps';
 import { CANVASS_FILTER_KEYS, CLOSE_AFTER_KNOCK, NEEDS_TIME_KEYS, canvassTerritoryStats } from '@/lib/canvass';
+import { nextBestDoor, nextOnStreet, prevOnStreet, streetName, streetProgress as streetWalk, type FieldDoor } from '@/lib/fieldReview';
 import { sendCommunication, notifyCustomer } from '@/lib/communications';
 import EmployeeAvatar from '@/components/EmployeeAvatar';
 import WorkspaceGate from '@/components/WorkspaceGate';
@@ -411,6 +412,15 @@ export default function D2DPortal(){
         setForm((p:any)=>({...p,status:nextStatus}));
         if(door.id){const h=await supabase.from('territory_door_history').select('*').eq('door_id',door.id).order('created_at',{ascending:false}).limit(20);setHistory(h.data??[])}
       } else {
+        const simulated=territoryDoors.map(d=>d.id===door.id?{...d,status:nextStatus,lead_id:saved.id}:d);
+        const asField=(d:TerritoryDoor):FieldDoor=>({id:d.id,address:d.address||'',status:d.status||'unworked',follow_up_at:d.next_follow_up_at});
+        const nxt=door.id?(nextOnStreet(simulated.map(asField),door.id)||nextBestDoor(simulated.map(asField),door.id)):null;
+        const full=nxt?simulated.find(d=>d.id===nxt.id):null;
+        if(full){
+          setSaving(false);
+          void pickDoor(full);
+          return true;
+        }
         setSelectedDoor(null);setManual(false);setHistory([]);
       }
       setSaving(false);return true;
@@ -630,6 +640,10 @@ export default function D2DPortal(){
     return {...d,customer_name:lead?.customer_name||null,assigned_name:employee?.name||''};
   });
   const nextRouteDoor=routeDoorIds[0]?doors.find(d=>d.id===routeDoorIds[0]):null;
+  const walkDoors=territoryDoors.map((d):FieldDoor=>({id:d.id,address:d.address||'',status:d.status||'unworked',follow_up_at:d.next_follow_up_at}));
+  const walkNext=selectedDoor?.id?nextOnStreet(walkDoors,selectedDoor.id):null;
+  const walkPrev=selectedDoor?.id?prevOnStreet(walkDoors,selectedDoor.id):null;
+  const walkProgress=selectedDoor?streetWalk(walkDoors,streetName(selectedDoor.address||'')):null;
   const routeRemainingMeters=(()=>{
     if(!routeDoorIds.length)return 0;
     let cursor=live||nextRouteDoor||{latitude:MARKET.lat,longitude:MARKET.lng};
@@ -741,7 +755,7 @@ export default function D2DPortal(){
     </nav>
     {!selectedDoor&&!manual&&tab==='leads'&&<button type="button" className="d2d-add-lead-fab" onClick={manualLead}><Plus size={20}/><span>Add lead</span></button>}
 
-    {(selectedDoor||manual)&&<CanvassInspector door={selectedDoor} form={form} setForm={setForm} history={history} manual={manual} saving={saving} assignedName={employee.name} onClose={()=>{setSelectedDoor(null);setManual(false);setHistory([])}} onKnock={knockDoor} onSave={saveLead} onSaveNext={saveAndNext} onEstimate={createEstimate} onLocation={useCurrentLocation} onPitch={()=>openPitch('lead_drawer')} onQuote={()=>openPitch('lead_drawer_quote','quote')} onAccount={()=>openPitch('lead_drawer_account','account')}/>} 
+    {(selectedDoor||manual)&&<CanvassInspector door={selectedDoor} form={form} setForm={setForm} history={history} manual={manual} saving={saving} assignedName={employee.name} walkLabel={walkProgress&&walkProgress.total>1?`${walkProgress.street} · ${walkProgress.worked}/${walkProgress.total} worked`:''} onWalkPrev={walkPrev?()=>{const d=territoryDoors.find(x=>x.id===walkPrev.id);if(d)void pickDoor(d)}:undefined} onWalkNext={walkNext?()=>{const d=territoryDoors.find(x=>x.id===walkNext.id);if(d)void pickDoor(d)}:undefined} onClose={()=>{setSelectedDoor(null);setManual(false);setHistory([])}} onKnock={knockDoor} onSave={saveLead} onSaveNext={saveAndNext} onEstimate={createEstimate} onLocation={useCurrentLocation} onPitch={()=>openPitch('lead_drawer')} onQuote={()=>openPitch('lead_drawer_quote','quote')} onAccount={()=>openPitch('lead_drawer_account','account')}/>} 
     {pitchOpen&&<SalesPresentation key={pitchMode} householdSeed={form} leadId={selectedDoor?.lead_id||null} customerName={form.customer_name||undefined} customerPhone={form.phone||undefined} customerEmail={form.email||undefined} customerAddress={form.address||undefined} initialMode={pitchMode} onClose={()=>{setPitchOpen(false);if(form.converted_customer_id)setTab('leads');}} onSelectOffer={useSalesOffer} onApplyAndSave={applyAndSaveOffer} onEvent={logPresentationEvent}/>}
   </div>;
 }

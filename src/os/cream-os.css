@@ -1173,7 +1173,7 @@ html.nsos-active #root {
   .nsos-cream .team-messaging.thread-open .message-thread { display: flex !important; }
 }
 
-/* Skip, focus, onboarding, hiring, calendar, owner jump, SalesRabbit doors */
+/* Skip, focus, onboarding, hiring, calendar, owner jump, field doors */
 .nsos-skip {
   position: absolute;
   left: -999px;

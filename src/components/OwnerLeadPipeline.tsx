@@ -8,6 +8,7 @@ import { MARKET } from '@/lib/market';
 import { notifyCustomer } from '@/lib/communications';
 import { ServiceMenuSelect } from '@/components/DetailSelfPicker';
 import { DOOR_STATUSES, doorStatus, smsHref, telHref } from '@/lib/fieldOps';
+import { nextBestDoor } from '@/lib/fieldReview';
 import {
   composedLeadIdentity, emptySrLeadFields, fieldsFromLead, leadDisplayName, leadNextAction, notesWithAltPhone, SR_KNOCK_KEYS, SR_PIPELINE_KEYS, srStatus,
   type SrLeadFields, type SrStatusKey,
@@ -423,6 +424,20 @@ export default function OwnerLeadPipeline({ employees, setAppointments, onNaviga
       {view === 'map' && (
         <div className="lead-command-layout v2-lead-map-layout">
           <div className="lead-map-card">
+            {(() => {
+              const best = nextBestDoor(filtered.map((l) => ({
+                id: l.id, address: l.address || '', status: l.status, follow_up_at: l.follow_up_at, hot: isHot(l), name: leadDisplayName(l), phone: l.phone,
+              })), selected?.id);
+              return best ? (
+                <button type="button" className="lead-next-best owner-next-best" onClick={() => {
+                  const l = filtered.find((x) => x.id === best.id);
+                  if (l) setSelected(l);
+                }}>
+                  <Target size={15} />
+                  <span><small>Next best door</small><strong>{best.name || best.address}</strong></span>
+                </button>
+              ) : null;
+            })()}
             <FieldTerritoryMap
                 territories={[]}
                 leads={filtered}
