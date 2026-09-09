@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import {
   Archive, ArchiveRestore, CalendarPlus, ExternalLink, Eye, Plus, Search, Target, XCircle,
 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { supabase, type Appointment, type Employee, type Lead, type TerritoryDoor } from '@/lib/supabase';
 import { money } from '@/lib/data';
 import { notifyCustomer } from '@/lib/communications';
 import { ServiceMenuSelect } from '@/components/DetailSelfPicker';
@@ -15,7 +15,8 @@ import { osmDirectionsUrl, osmPropertyUrl } from '@/lib/osmGeocode';
 import { leadAssignableEmployees, leadRepLabel, selfEmployeeForUser } from '@/lib/workCapabilities';
 import { ensureOwnerFieldEmployee } from '@/lib/ownerFieldMode';
 import { useAuth } from '@/hooks/useAuth';
-import type { Appointment, Employee, Lead, TerritoryDoor } from '@/lib/supabase';
+import { minutesForService } from '@/lib/detailCatalog';
+import { planAppointmentTiming } from '@/lib/scheduling';
 import WorkspaceHero from '@/components/WorkspaceHero';
 import FieldTerritoryMap from '@/components/FieldTerritoryMap';
 
@@ -604,33 +605,58 @@ function LeadInspector({
     e.preventDefault();
     if (!bookAt) return alert('Pick a date and time.');
     setBooking(true);
-    const { data, error } = await supabase.from('appointments').insert({
-      customer_name: identity.name || selected.customer_name,
-      customer_email: fields.email || selected.email,
-      customer_phone: fields.phone || selected.phone,
-      service_name: fields.service || selected.service_interest || 'Detailing Service',
-      package_name: fields.service || selected.service_interest || null,
-      add_ons: [],
-      vehicle_info: fields.vehicle || selected.vehicle_info || '',
-      scheduled_at: new Date(bookAt).toISOString(),
-      status: 'scheduled',
-      price: Number(fields.value || selected.estimated_value || 0),
-      notes: notesWithAltPhone(fields.notes, fields.alt_phone) || selected.notes || '',
-      service_address: identity.address || selected.address,
-      latitude: selected.latitude,
-      longitude: selected.longitude,
-      sales_rep_employee_id: selected.assigned_employee_id,
-      lead_id: selected.id,
-      source_channel: 'owner',
-      dispatch_status: 'unassigned',
-      field_status: 'scheduled',
-    }).select().single();
-    setBooking(false);
-    if (error) return alert(error.message);
-    setAppointments?.((p) => [...p, data].sort((a, b) => new Date(a.scheduled_at || 0).getTime() - new Date(b.scheduled_at || 0).getTime()));
-    await patchLead(selected, { status: 'appointment_set', appointment_id: data.id }, { type: 'status_change', previous: selected.status, next: 'appointment_set', notes: 'Booked from owner pipeline' });
-    void notifyCustomer('booking_received', data);
-    onNavigate?.('appointments');
+    try {
+      const service = fields.service || selected.service_interest || 'Detailing Service';
+      const duration = minutesForService(service, 120);
+      const requested = new Date(bookAt);
+      const dayStart = new Date(requested); dayStart.setHours(0, 0, 0, 0);
+      const dayEnd = new Date(dayStart); dayEnd.setDate(dayEnd.getDate() + 1);
+      const { data: dayJobs } = await supabase.from('appointments').select('*').gte('scheduled_at', dayStart.toISOString()).lt('scheduled_at', dayEnd.toISOString());
+      const plan = await planAppointmentTiming({
+        appointments: (dayJobs || []) as Appointment[],
+        durationMinutes: duration,
+        destination: { lat: selected.latitude, lng: selected.longitude, address: identity.address || selected.address },
+        requestedStart: requested,
+        shopLane: true,
+      });
+      if (plan.previous) await supabase.from('appointments').update({ travel_buffer_minutes: plan.inboundMinutes }).eq('id', plan.previous.id);
+      const { data, error } = await supabase.from('appointments').insert({
+        customer_name: identity.name || selected.customer_name,
+        customer_email: fields.email || selected.email,
+        customer_phone: fields.phone || selected.phone,
+        service_name: service,
+        package_name: fields.service || selected.service_interest || null,
+        add_ons: [],
+        vehicle_info: fields.vehicle || selected.vehicle_info || '',
+        scheduled_at: plan.start.toISOString(),
+        estimated_duration_minutes: duration,
+        travel_buffer_minutes: plan.travelBufferMinutes,
+        status: 'scheduled',
+        price: Number(fields.value || selected.estimated_value || 0),
+        notes: notesWithAltPhone(fields.notes, fields.alt_phone) || selected.notes || '',
+        service_address: identity.address || selected.address,
+        latitude: selected.latitude,
+        longitude: selected.longitude,
+        sales_rep_employee_id: selected.assigned_employee_id,
+        lead_id: selected.id,
+        source_channel: 'owner',
+        dispatch_status: 'unassigned',
+        field_status: 'scheduled',
+      }).select().single();
+      if (error) {
+        alert(error.message);
+        return;
+      }
+      if (plan.snapped) setBookAt(toLocalInput(plan.start));
+      setAppointments?.((p) => [...p, data as Appointment].sort((a, b) => new Date(a.scheduled_at || 0).getTime() - new Date(b.scheduled_at || 0).getTime()));
+      await patchLead(selected, { status: 'appointment_set', appointment_id: data.id }, { type: 'status_change', previous: selected.status, next: 'appointment_set', notes: 'Booked from owner pipeline' });
+      void notifyCustomer('booking_received', data as Appointment);
+      onNavigate?.('appointments');
+    } catch {
+      alert('Unable to book this job. Try another window.');
+    } finally {
+      setBooking(false);
+    }
   };
 
   return (
@@ -706,6 +732,7 @@ function LeadInspector({
         <form className="owner-lead-book" onSubmit={bookJob}>
           <div className="phase-panel-head"><div><span className="eyebrow">BOOK</span><h3>Put it on the calendar</h3></div></div>
           <label>Window<input type="datetime-local" value={bookAt} onChange={(e) => setBookAt(e.target.value)} required /></label>
+          <p className="owner-book-travel">Drive time and traffic set a buffer after the last job, then this snaps to the next open 30-minute slot.</p>
           <button className="btn-primary" disabled={booking}><CalendarPlus size={15} />{booking ? 'Booking…' : 'Book job'}</button>
         </form>
       )}

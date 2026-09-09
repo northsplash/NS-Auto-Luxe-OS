@@ -26,7 +26,7 @@ The app serves at `http://127.0.0.1:43127`. Demo state lives in this browser (`l
 
 Open **Owner → Command Center**. Each push to `main` rebuilds Vercel and GitHub Pages. Hard-refresh once after a deploy so the service worker drops the previous shell. If a screen says a JavaScript chunk could not load, reload once — the OS now recovers from stale hashed files after a deploy.
 
-Lead, territory, and D2D maps use Google Maps when `VITE_GOOGLE_MAPS_API_KEY` is set on the Vercel project (Maps JavaScript API, Geocoding API, and Places API). OpenStreetMap is the fallback if the key is missing or Google rejects it. Do not paste a Maps key into chat.
+Lead, territory, and D2D maps use Google Maps when `VITE_GOOGLE_MAPS_API_KEY` is set on the Vercel project (Maps JavaScript API, Geocoding API, Places API, and Distance Matrix API with traffic). Scheduling uses that same key to estimate drive time between jobs, then snaps the next appointment to the first open 30-minute slot after the buffer. OpenStreetMap plus a road-speed estimate is the fallback if the key is missing or Google rejects it. Do not paste a Maps key into chat.
 
 ## How it is modeled
 

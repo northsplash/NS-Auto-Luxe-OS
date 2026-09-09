@@ -30,6 +30,9 @@ import {
 import LeadCommandCenter from '@/components/LeadCommandCenter';
 import CanvassInspector from '@/components/CanvassInspector';
 import SharedCalendar from '@/components/SharedCalendar';
+import { minutesForService } from '@/lib/detailCatalog';
+import { DEFAULT_TRAVEL_BUFFER_MINUTES } from '@/lib/driveTime';
+import { planAppointmentTiming, toLocalInput } from '@/lib/scheduling';
 import {
   APPOINTMENT_STATUSES, CONTACTED_STATUSES, DOOR_STATUSES,
   SOLD_STATUSES, doorStatus, doorStreetLabel, formatDistance, haversineMeters, localDateTime, optimizeWalkingRoute, rankNextBestHouse,
@@ -428,11 +431,18 @@ export default function D2DPortal(){
 
   const createAppointment=async(lead:Lead,source:ReturnType<typeof emptyForm>=form)=>{
     if(!employee||!source.appointment_at)return;
+    const service=source.service_interest||lead.service_interest||'Detailing Service';
+    const duration=minutesForService(service,120);
+    const dest={lat:selectedDoor?.latitude??lead.latitude,lng:selectedDoor?.longitude??lead.longitude,address:form.address||lead.address};
+    const plan=await planAppointmentTiming({appointments,durationMinutes:duration,destination:dest,requestedStart:new Date(source.appointment_at),shopLane:true});
+    if(plan.previous)await supabase.from('appointments').update({travel_buffer_minutes:plan.inboundMinutes}).eq('id',plan.previous.id);
+    if(plan.snapped)setForm((p:any)=>({...p,appointment_at:toLocalInput(plan.start)}));
     const {data,error}=await supabase.from('appointments').insert({
       user_id:lead.converted_customer_id||null,customer_name:source.customer_name||lead.customer_name,customer_email:source.email||lead.email,customer_phone:source.phone||lead.phone,
-      service_name:source.service_interest||lead.service_interest||'Detailing Service',package_name:source.service_interest||lead.service_interest||null,add_ons:[],vehicle_info:source.vehicle_info||lead.vehicle_info||'',
-      scheduled_at:new Date(source.appointment_at).toISOString(),status:'pending',price:Number(source.estimated_value||lead.estimated_value||0),notes:source.notes||lead.notes||'',
+      service_name:service,package_name:source.service_interest||lead.service_interest||null,add_ons:[],vehicle_info:source.vehicle_info||lead.vehicle_info||'',
+      scheduled_at:plan.start.toISOString(),status:'pending',price:Number(source.estimated_value||lead.estimated_value||0),notes:source.notes||lead.notes||'',
       service_address:form.address||lead.address,latitude:selectedDoor?.latitude??lead.latitude,longitude:selectedDoor?.longitude??lead.longitude,
+      estimated_duration_minutes:duration,travel_buffer_minutes:plan.travelBufferMinutes,
       sales_rep_employee_id:employee.id,lead_id:lead.id,source_channel:'d2d',dispatch_status:'unassigned',field_status:'scheduled',
     }).select().single();if(error)throw error;
     setAppointments(p=>[...p,data].sort((x,y)=>new Date(x.scheduled_at||0).getTime()-new Date(y.scheduled_at||0).getTime()));
@@ -738,6 +748,7 @@ function appointmentDraft(lead:any,employee:Employee,form:ReturnType<typeof empt
     user_id:lead.converted_customer_id||null,customer_name:form.customer_name||lead.customer_name,customer_email:form.email||lead.email,customer_phone:form.phone||lead.phone,
     service_name:form.service_interest||lead.service_interest||'Detailing Service',package_name:form.service_interest||lead.service_interest||null,add_ons:[],vehicle_info:form.vehicle_info||lead.vehicle_info||'',
     scheduled_at:new Date(form.appointment_at).toISOString(),status:'pending',price:Number(form.estimated_value||lead.estimated_value||0),notes:form.notes||lead.notes||'',
+    estimated_duration_minutes:minutesForService(form.service_interest||lead.service_interest,120),travel_buffer_minutes:DEFAULT_TRAVEL_BUFFER_MINUTES,
     service_address:form.address||lead.address,latitude:door?.latitude??lead.latitude,longitude:door?.longitude??lead.longitude,
     sales_rep_employee_id:employee.id,lead_id:lead.id||null,source_channel:'d2d',dispatch_status:'unassigned',field_status:'scheduled',
   };

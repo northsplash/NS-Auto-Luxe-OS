@@ -862,7 +862,7 @@ export function CalendarView({ onOpen }: { onOpen: (id: string) => void }) {
   const bookAppointment = (confirm: boolean) => {
     if (!draft.customer.trim()) return;
     if (slotConflict(os.jobs, draft.detailer, pickedDate, draft.time)) {
-      setBookError(`${draft.detailer} already has ${draft.time} on ${label}. Pick another window or tech.`);
+      setBookError(`${draft.detailer} needs job time plus a travel buffer through ${draft.time} on ${label}. Pick a later window or another tech.`);
       return;
     }
     setBookError('');

@@ -6,7 +6,7 @@ import {
 import { supabase } from '@/lib/supabase';
 import type { Appointment, Employee } from '@/lib/supabase';
 import { money, prettyLabel } from '@/lib/data';
-import { dayKey, timeLabel } from '@/lib/scheduling';
+import { dayKey, jobDurationMinutes as duration, timeLabel, travelBufferMinutes as buffer } from '@/lib/scheduling';
 import EmployeeAvatar from '@/components/EmployeeAvatar';
 import { employeeCanDetail } from '@/lib/workCapabilities';
 import { canCollectJob, isJobPaid, markJobCollected } from '@/lib/collectPayment';
@@ -20,8 +20,6 @@ const STATUS_COLUMNS=[
   ['unassigned','Unassigned'],['scheduled','Scheduled'],['en_route','En Route'],['arrived','Arrived'],['in_progress','In Progress'],['finished','Finished'],['completed','Completed']
 ] as const;
 const asDate=(v?:string|null)=>v?new Date(v):null;
-const duration=(a:Appointment)=>Number(a.estimated_duration_minutes||120);
-const buffer=(a:Appointment)=>Number(a.travel_buffer_minutes||30);
 const isLive=(a:Appointment)=>['en_route','arrived','in_progress','started'].includes(a.field_status||a.status);
 const jobStatus=(a:Appointment)=>a.status==='completed'?'completed':a.field_status==='finished'?'finished':a.field_status||a.dispatch_status||a.status||'scheduled';
 const statusLabel=(s?:string|null)=>prettyLabel(s).replace(/\b\w/g,c=>c.toUpperCase());

@@ -11,6 +11,8 @@ import { supabase } from '@/lib/supabase';
 import { Appointment, Payment, Subscription } from '@/lib/supabase';
 import { money, calcSavings, ADD_ONS, VEHICLE_SIZES, MEMBERSHIPS, prettyLabel, firstWord } from '@/lib/data';
 import { packageForSelf, type DetailFamily, type DetailSelf } from '@/lib/detailCatalog';
+import { DEFAULT_TRAVEL_BUFFER_MINUTES } from '@/lib/driveTime';
+import { clockMinutesInZone, minuteWindowsOverlap, occupyMinutes } from '@/lib/scheduling';
 import DetailSelfPicker from '@/components/DetailSelfPicker';
 import PortalPageHead from '@/components/PortalPageHead';
 import { sendCommunication } from '@/lib/communications';
@@ -174,7 +176,7 @@ const [timesLoading, setTimesLoading] = useState(false);
     navigate('/');
   };
 
-  const loadAvailableTimes = async (date: string) => {
+  const loadAvailableTimes = async (date: string, family = bookFamily, self = bookSelf) => {
   setBookDate(date);
   setBookTime('');
   setAvailableTimes([]);
@@ -198,50 +200,52 @@ const [timesLoading, setTimesLoading] = useState(false);
       return;
     }
 
-    const { data: booked, error: bookedError } = await supabase.rpc(
+    const { data: bookedRpc, error: bookedError } = await supabase.rpc(
       'get_booked_times',
       {
         for_date: date,
       }
     );
 
-    if (bookedError) throw bookedError;
+    let bookedRows: Array<Record<string, unknown>> = Array.isArray(bookedRpc) ? bookedRpc as Array<Record<string, unknown>> : [];
+    if (bookedError) {
+      const dayStart = new Date(`${date}T00:00:00`);
+      const dayEnd = new Date(dayStart);
+      dayEnd.setDate(dayEnd.getDate() + 1);
+      const { data: fallback } = await supabase
+        .from('appointments')
+        .select('scheduled_at, estimated_duration_minutes, travel_buffer_minutes, service_name, status')
+        .gte('scheduled_at', dayStart.toISOString())
+        .lt('scheduled_at', dayEnd.toISOString());
+      bookedRows = (fallback ?? []).filter((row) => !['cancelled', 'no_show'].includes(String(row.status || '')));
+    }
 
-    const bookedTimes = new Set(
-      (booked ?? []).map((item: any) =>
-        new Date(item.scheduled_at).toLocaleTimeString('en-US', {
-          timeZone: 'America/New_York',
-          hour12: false,
-          hour: '2-digit',
-          minute: '2-digit',
-        })
-      )
-    );
+    const occupied = bookedRows
+      .map((item) => {
+        const iso = String(item.scheduled_at || item.start || '');
+        if (!iso) return null;
+        return { start: clockMinutesInZone(iso), minutes: occupyMinutes(item) };
+      })
+      .filter((row): row is { start: number; minutes: number } => Boolean(row));
 
+    const needMinutes = (packageForSelf(family, self).minutes || 120) + DEFAULT_TRAVEL_BUFFER_MINUTES;
     const slots: string[] = [];
-
     const startValue=dayAvailability.start_time||'09:00';
     const endValue=dayAvailability.end_time||'17:00';
     const slotMinutes=Math.max(15,Number(dayAvailability.slot_minutes||60));
     const [startHour, startMinute] = startValue.split(':').map(Number);
-
     const [endHour, endMinute] = endValue.split(':').map(Number);
-
     let current = startHour * 60 + startMinute;
     const end = endHour * 60 + endMinute;
 
     while (current + slotMinutes <= end) {
       const hours = Math.floor(current / 60);
       const minutes = current % 60;
-
       const value =
         `${String(hours).padStart(2, '0')}:` +
         `${String(minutes).padStart(2, '0')}`;
-
-      if (!bookedTimes.has(value)) {
-        slots.push(value);
-      }
-
+      const blocked = occupied.some((job) => minuteWindowsOverlap(current, needMinutes, job.start, job.minutes));
+      if (!blocked) slots.push(value);
       current += slotMinutes;
     }
 
@@ -306,6 +310,8 @@ const [timesLoading, setTimesLoading] = useState(false);
           package_name: bookedPkg.name,
           add_ons: bookAddOns.map(i => ADD_ONS[i][0]),
           vehicle_info: profile?.vehicle_info ?? '',
+          estimated_duration_minutes: bookedPkg.minutes || 120,
+          travel_buffer_minutes: DEFAULT_TRAVEL_BUFFER_MINUTES,
           price: gross,
           notes: bookNotes,
           status: 'pending',
@@ -865,7 +871,11 @@ const [timesLoading, setTimesLoading] = useState(false);
                   <DetailSelfPicker
                     family={bookFamily}
                     self={bookSelf}
-                    onChange={(family, self) => { setBookFamily(family); setBookSelf(self); }}
+                    onChange={(family, self) => {
+                      setBookFamily(family);
+                      setBookSelf(self);
+                      if (bookDate) void loadAvailableTimes(bookDate, family, self);
+                    }}
                   />
                 </div>
                 <div className="form-group">
@@ -920,6 +930,7 @@ const [timesLoading, setTimesLoading] = useState(false);
         ))}
       </div>
     )}
+    <p className="portal-travel-note">Open times already include the last job’s length plus a travel buffer, so the next stop is not booked too close.</p>
   </div>
 )}
                 

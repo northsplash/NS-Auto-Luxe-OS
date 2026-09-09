@@ -198,8 +198,8 @@ export async function reverseGeocodeLatLng(lat: number, lng: number): Promise<st
 
 export function googleMapsErrorMessage(error: unknown) {
   const code = error instanceof Error ? error.message : String(error || '');
-  if (code === 'GOOGLE_MAPS_DISABLED' || code === 'GOOGLE_MAPS_API_KEY_MISSING') return 'Add VITE_GOOGLE_MAPS_API_KEY on Vercel (Maps JavaScript API, Geocoding, Places). The map stays on OpenStreetMap until that key is in the build.';
-  if (code === 'GOOGLE_MAPS_AUTH_FAILURE') return 'Google Maps rejected this key. Check billing, HTTP-referrer restrictions, and that Maps JavaScript API is enabled.';
+  if (code === 'GOOGLE_MAPS_DISABLED' || code === 'GOOGLE_MAPS_API_KEY_MISSING') return 'Add VITE_GOOGLE_MAPS_API_KEY on Vercel (Maps JavaScript API, Geocoding, Places, Distance Matrix). The map stays on OpenStreetMap until that key is in the build.';
+  if (code === 'GOOGLE_MAPS_AUTH_FAILURE') return 'Google Maps rejected this key. Check billing, HTTP-referrer restrictions, and that Maps JavaScript API and Distance Matrix API are enabled.';
   if (code === 'GOOGLE_MAPS_LOAD_TIMEOUT') return 'Google Maps timed out while loading. Check the API key restrictions and enabled APIs.';
   return 'Google Maps could not load. The street map stays on so canvassing can continue.';
 }
