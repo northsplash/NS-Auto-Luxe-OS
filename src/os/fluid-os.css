@@ -1935,7 +1935,8 @@ html:has(.sales-presentation-overlay) .d2d-add-lead-fab,
     width: 100%;
     min-height: 48px !important;
   }
-  .auth-portals-phone {
+  .auth-page .auth-portals-phone,
+  .auth-page.nsos-cream .auth-portals-phone {
     display: flex !important;
     flex-wrap: wrap;
     gap: 6px;
