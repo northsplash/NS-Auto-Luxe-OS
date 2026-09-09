@@ -1,17 +1,19 @@
-import { FormEvent, KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft, AtSign, BellRing, Check, ChevronDown, Hash, Megaphone, MessageCircle, MoreHorizontal,
-  Paperclip, Plus, Search, Send, Smile, Sparkles, Star, Users, X, Zap,
+  Plus, Search, Sparkles, Star, Users, X, Zap,
 } from 'lucide-react';
 import { prettyLabel } from '@/lib/data';
 import type { OsChat } from './demoData';
 import { useOs } from './osStore';
 import { bindChatViewport } from '@/lib/chatViewport';
 import { BRAND_LOCKUP } from '@/lib/brand';
+import { ChatComposer, ChatDayRule, ChatMessage, formatChatDay, sameChatDay, useMessageReactions, type ReplyTarget } from '@/components/MessageChrome';
 
-function Avatar({ initials, hue, size = 34, photo }: { initials: string; hue: string; size?: number; photo?: string }) {
-  if (photo) return <img className="nsos-avatar message-avatar employee-message-avatar" src={photo} alt="" style={{ width: size, height: size }} />;
-  return <span className="nsos-avatar message-avatar employee-message-avatar" style={{ width: size, height: size, background: hue, fontSize: size * 0.32 }}>{initials}</span>;
+function Avatar({ initials, hue, size = 34, photo, className }: { initials: string; hue: string; size?: number; photo?: string; className?: string }) {
+  const cls = className || 'nsos-avatar message-avatar employee-message-avatar';
+  if (photo) return <img className={cls} src={photo} alt="" style={{ width: size, height: size }} />;
+  return <span className={cls} style={{ width: size, height: size, background: hue, fontSize: size * 0.32 }}>{initials}</span>;
 }
 
 const QUICK = [
@@ -45,6 +47,8 @@ export default function TeamMessagesView() {
   const [newName, setNewName] = useState('');
   const [newMembers, setNewMembers] = useState<string[]>([]);
   const [favorites, setFavorites] = useState<string[]>(readFavorites);
+  const [reply, setReply] = useState<ReplyTarget | null>(null);
+  const { map: reactions, toggle: toggleReaction } = useMessageReactions();
   const composerRef = useRef<HTMLTextAreaElement | null>(null);
   const endRef = useRef<HTMLDivElement | null>(null);
 
@@ -89,9 +93,11 @@ export default function TeamMessagesView() {
     e?.preventDefault();
     if (!draft.trim() || !active) return;
     try {
-      os.sendChat(active.id, draft.trim());
+      const body = reply && reply.name !== 'You' && !draft.includes(`@${reply.name}`) ? `@${reply.name} ${draft.trim()}` : draft.trim();
+      os.sendChat(active.id, body);
       setDraft('');
       setKind('message');
+      setReply(null);
       setSendError('');
       composerRef.current?.focus();
       window.setTimeout(() => endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 40);
@@ -100,15 +106,14 @@ export default function TeamMessagesView() {
       setSendError('Message did not send. Reset demo data from Manage data if this workspace is full, then try again.');
     }
   };
-  const onComposerKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      void send();
-    }
-  };
   const quickSend = (q: { text: string; kind: string }) => {
     setDraft(q.text);
     setKind(q.kind);
+    window.setTimeout(() => composerRef.current?.focus(), 0);
+  };
+  const startReply = (id: string, name: string, body: string) => {
+    setReply({ id, name, body });
+    if (name !== 'You') setDraft((p) => (p.includes(`@${name}`) ? p : `@${name} ${p}`));
     window.setTimeout(() => composerRef.current?.focus(), 0);
   };
   const toggleFavorite = (id: string) => setFavorites((prev) => {
@@ -131,13 +136,17 @@ export default function TeamMessagesView() {
   const dms = regularChannels.filter((c) => c.kind === 'dm');
   const teams = regularChannels.filter((c) => c.kind !== 'dm');
 
-  const channelButton = (c: OsChat) => (
+  const channelButton = (c: OsChat) => {
+    const emp = os.employees.find((e) => e.name === c.name);
+    return (
     <button
       key={c.id}
-      className={active?.id === c.id ? 'message-channel active' : 'message-channel'}
+      className={`message-channel ${active?.id === c.id ? 'active' : ''} ${c.unread > 0 ? 'unread' : ''} ${c.kind === 'dm' ? 'is-dm' : ''}`}
       onClick={() => { setActiveId(c.id); setMobileThreadOpen(true); os.markChatRead(c.id); }}
     >
-      <span className="message-channel-icon">{channelIcon(c)}</span>
+      {c.kind === 'dm'
+        ? <Avatar className="nsos-avatar message-rail-avatar" initials={emp?.initials || c.initials} hue={emp?.hue || c.hue} photo={emp?.photo} size={36} />
+        : <span className="message-channel-icon">{channelIcon(c)}</span>}
       <span className="message-channel-copy">
         <span className="message-channel-title-v27">
           <strong>{c.name}</strong>
@@ -145,16 +154,17 @@ export default function TeamMessagesView() {
         </span>
         <small>{c.preview || c.description || channelLabel(c)}</small>
       </span>
-      {c.unread > 0 ? <b className="message-unread-v27">{c.unread > 99 ? '99+' : c.unread}</b> : <span className="message-channel-dot" />}
+      {c.unread > 0 ? <b className="message-unread-v27">{c.unread > 99 ? '99+' : c.unread}</b> : null}
     </button>
-  );
+    );
+  };
 
   return (
-    <div className={`team-messaging messaging-v6 messaging-os messaging-usable ${showInfo ? 'with-info' : ''} ${mobileThreadOpen ? 'thread-open' : ''}`}>
+    <div className={`team-messaging messaging-v6 messaging-os messaging-usable messaging-v7 ${showInfo ? 'with-info' : ''} ${mobileThreadOpen ? 'thread-open' : ''}`}>
       <aside className="message-channel-rail">
         <div className="message-workspace-brand">
           <img className="message-workspace-lockup" src={BRAND_LOCKUP} alt="" />
-          <div><strong>North Splash</strong><small>Teams · activity · chat</small></div>
+          <div><strong>North Splash</strong><small>Crew chat</small></div>
           <ChevronDown size={15} />
         </div>
         <div className="nsos-seg message-rail-seg" role="tablist" aria-label="Chat filters">
@@ -237,25 +247,24 @@ export default function TeamMessagesView() {
             <div className="message-scroll">
               {visibleMessages.map((m, index) => {
                 const previous = visibleMessages[index - 1];
-                const grouped = previous && previous.from === m.from;
+                const grouped = Boolean(previous && previous.from === m.from && sameChatDay(previous.at, m.at));
+                const dayChanged = !previous || !sameChatDay(previous.at, m.at);
                 const employee = os.employees.find((e) => e.name === m.from);
                 return (
                   <div key={m.id} className="message-entry-wrap">
-                    <article className={`${m.mine ? 'message-bubble mine' : 'message-bubble'} ${grouped ? 'grouped' : ''}`}>
-                      {!grouped ? (
-                        <Avatar initials={employee?.initials || initials(m.from)} hue={employee?.hue || '#c8a96a'} photo={employee?.photo} size={34} />
-                      ) : (
-                        <div className="message-avatar-spacer"><span>{m.at}</span></div>
-                      )}
-                      <div className="message-body">
-                        <header>{!grouped && <><strong>{m.from}</strong><span>{m.at}</span></>}</header>
-                        <p>{m.body}</p>
-                        <div className="message-hover-actions">
-                          <button type="button" title="React" onClick={() => { setDraft((p) => `${p}${p ? ' ' : ''}👍`); composerRef.current?.focus(); }}><Smile size={13} /></button>
-                          <button type="button" title="Reply" onClick={() => { setDraft(`@${m.from} `); composerRef.current?.focus(); }}><MessageCircle size={13} /></button>
-                        </div>
-                      </div>
-                    </article>
+                    {dayChanged && <ChatDayRule label={formatChatDay(m.at)} />}
+                    <ChatMessage
+                      messageId={m.id}
+                      mine={m.mine}
+                      grouped={grouped}
+                      name={m.from}
+                      at={m.at}
+                      body={m.body}
+                      avatar={<Avatar initials={employee?.initials || initials(m.from)} hue={employee?.hue || '#c8a96a'} photo={employee?.photo} size={36} />}
+                      reactions={reactions[m.id]}
+                      onToggleReaction={(emoji) => toggleReaction(m.id, emoji)}
+                      onReply={() => startReply(m.id, m.mine ? 'You' : m.from, m.body)}
+                    />
                   </div>
                 );
               })}
@@ -268,28 +277,17 @@ export default function TeamMessagesView() {
               )}
               <div ref={endRef} />
             </div>
-            <form className="message-composer" onSubmit={send}>
-              {sendError && <div className="nsos-onboard-error" role="alert">{sendError}</div>}
-              <div className="message-composer-box">
-                <div className="message-composer-toolbar">
-                  <button type="button" disabled title="File attachments are not available yet"><Plus size={16} /></button>
-                  <button type="button" disabled title="File attachments are not available yet"><Paperclip size={15} /></button>
-                  <span>{kind && kind !== 'message' ? prettyLabel(kind) : 'Message'}</span>
-                </div>
-                <div className="message-composer-row">
-                  <textarea
-                    ref={composerRef}
-                    value={draft}
-                    onChange={(e) => setDraft(e.target.value)}
-                    onKeyDown={onComposerKeyDown}
-                    placeholder={`Message #${String(active.name || '').toLowerCase().replaceAll(' ', '-')}`}
-                    rows={1}
-                  />
-                  <button className="message-send-btn" type="submit" disabled={!draft.trim()}><Send size={18} /><span>Send</span></button>
-                </div>
-                <p className="message-composer-hint">Enter to send · Shift+Enter for a new line</p>
-              </div>
-            </form>
+            <ChatComposer
+              value={draft}
+              onChange={setDraft}
+              onSend={() => send()}
+              placeholder={`Message ${active.kind === 'dm' ? active.name : `#${String(active.name || '').toLowerCase().replaceAll(' ', '-')}`}`}
+              kindLabel={kind && kind !== 'message' ? prettyLabel(kind) : undefined}
+              reply={reply}
+              onClearReply={() => setReply(null)}
+              sendError={sendError}
+              composerRef={composerRef}
+            />
           </>
         ) : (
           <div className="message-thread-empty">

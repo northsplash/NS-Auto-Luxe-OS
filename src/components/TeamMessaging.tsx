@@ -1,7 +1,7 @@
-import { FormEvent, KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ArrowLeft, AtSign, BellRing, Check, ChevronDown, Hash, Megaphone, MessageCircle, MoreHorizontal,
-  Paperclip, Plus, Search, Send, Smile, Sparkles, Star, Users, X, Zap,
+  ArrowLeft, AtSign, BellRing, Check, ChevronDown, Hash, Megaphone, MoreHorizontal,
+  Plus, Search, Sparkles, Star, Users, X, Zap,
 } from 'lucide-react';
 import { prettyLabel } from '@/lib/data';
 import { useAuth } from '@/hooks/useAuth';
@@ -10,6 +10,7 @@ import type { Employee } from '@/lib/supabase';
 import EmployeeAvatar from '@/components/EmployeeAvatar';
 import { bindChatViewport } from '@/lib/chatViewport';
 import { BRAND_LOCKUP } from '@/lib/brand';
+import { ChatComposer, ChatDayRule, ChatMessage, formatChatDay, sameChatDay, useMessageReactions, type ReplyTarget } from '@/components/MessageChrome';
 
 type Channel = {
   id:string; name:string; slug:string; channel_type:string; audience_role?:string|null; crew_id?:string|null;
@@ -79,6 +80,8 @@ export default function TeamMessaging({employee,employees=[],portalKind='employe
   const [mobileThreadOpen,setMobileThreadOpen]=useState(()=>typeof window!=='undefined' && window.innerWidth>760);
   const [favorites,setFavorites]=useState<string[]>(()=>readFavorites());
   const [channelMeta,setChannelMeta]=useState<Record<string,ChannelMeta>>({});
+  const [reply,setReply]=useState<ReplyTarget|null>(null);
+  const {map:reactions,toggle:toggleReaction}=useMessageReactions();
   const endRef=useRef<HTMLDivElement|null>(null);
   const composerRef=useRef<HTMLTextAreaElement|null>(null);
   const elevated=portalKind==='admin'||portalKind==='manager'||profile?.role==='admin'||profile?.portal_role==='owner';
@@ -221,7 +224,7 @@ export default function TeamMessaging({employee,employees=[],portalKind='employe
       }
       let senderAvatar=employee?.avatar_url||profile?.avatar_url||null;
       if(!employee?.avatar_url){const {data:latestProfile}=await supabase.from('profiles').select('avatar_url').eq('id',user.id).maybeSingle();senderAvatar=latestProfile?.avatar_url||senderAvatar;}
-      const body=draft.trim();
+      const body=reply&&reply.name!=='You'&&!draft.includes(`@${reply.name}`)?`@${reply.name} ${draft.trim()}`:draft.trim();
       const payload:Record<string,unknown>={channel_id:channelId,sender_user_id:user.id,sender_employee_id:employee?.id||null,sender_name:employee?.name||profile?.full_name||user.email?.split('@')[0]||'North Splash Team',sender_avatar_url:senderAvatar,body,message_kind:kind||'message'};
       const insertMessage=async(row:Record<string,unknown>)=>{
         const withRow=await supabase.from('employee_messages').insert(row).select().single();
@@ -249,13 +252,13 @@ export default function TeamMessaging({employee,employees=[],portalKind='employe
       };
       setMessages(p=>p.some(x=>x.id===local.id)?p:[...p,local]);
       setChannelMeta(prev=>({...prev,[channelId]:{lastBody:body,lastAt:local.created_at,unread:0}}));
-      setDraft('');setKind('message');composerRef.current?.focus();
+      setDraft('');setKind('message');setReply(null);composerRef.current?.focus();
     }catch(err:unknown){
       setSendError(err instanceof Error?err.message:'Message could not send. Check that you are signed in and try again.');
     }finally{setSending(false)}
   };
-  const onComposerKeyDown=(e:KeyboardEvent<HTMLTextAreaElement>)=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();void send();}};
   const quickSend=(q:{text:string;kind:string})=>{setDraft(q.text);setKind(q.kind);setTimeout(()=>composerRef.current?.focus(),0)};
+  const startReply=(id:string,name:string,body:string)=>{setReply({id,name,body});if(name!=='You')setDraft(p=>p.includes(`@${name}`)?p:`@${name} ${p}`);setTimeout(()=>composerRef.current?.focus(),0)};
   const toggleFavorite=(id:string)=>setFavorites(prev=>{const next=prev.includes(id)?prev.filter(x=>x!==id):[...prev,id];localStorage.setItem('ns_message_favorites',JSON.stringify(next));return next});
   const createGroup=async(e:FormEvent)=>{
     e.preventDefault();if(!user||!newName.trim())return;const slug=`custom-${Date.now().toString(36)}`;
@@ -268,16 +271,16 @@ export default function TeamMessaging({employee,employees=[],portalKind='employe
   const mine=(m:Message)=>m.sender_user_id===user?.id;
   const messageEmployee=(m:Message)=>directory.find(e=>e.id===m.sender_employee_id)||directory.find(e=>String(e.name||'').toLowerCase()===String(m.sender_name||'').toLowerCase());
 
-  const channelButton=(c:Channel)=>{const meta=channelMeta[c.id]||{};return <button key={c.id} className={activeId===c.id?'message-channel active':'message-channel'} onClick={()=>{setActiveId(c.id);setMobileThreadOpen(true)}}>
+  const channelButton=(c:Channel)=>{const meta=channelMeta[c.id]||{};return <button key={c.id} className={`message-channel ${activeId===c.id?'active':''} ${Number(meta.unread||0)>0?'unread':''}`} onClick={()=>{setActiveId(c.id);setMobileThreadOpen(true)}}>
     <span className="message-channel-icon">{channelIcon(c)}</span>
     <span className="message-channel-copy"><span className="message-channel-title-v27"><strong>{c.name}</strong>{meta.lastAt&&<time>{shortTime(meta.lastAt)}</time>}</span><small>{meta.lastBody||c.description||channelLabel(c)}</small></span>
-    {Number(meta.unread||0)>0?<b className="message-unread-v27">{Number(meta.unread)>99?'99+':meta.unread}</b>:<span className="message-channel-dot"/>}
+    {Number(meta.unread||0)>0?<b className="message-unread-v27">{Number(meta.unread)>99?'99+':meta.unread}</b>:null}
   </button>};
 
-  return <div className={`team-messaging messaging-v6 messaging-os messaging-usable ${compact?'team-messaging-compact':''} ${showInfo?'with-info':''} ${mobileThreadOpen?'thread-open':''}`}>
+  return <div className={`team-messaging messaging-v6 messaging-os messaging-usable messaging-v7 ${compact?'team-messaging-compact':''} ${showInfo?'with-info':''} ${mobileThreadOpen?'thread-open':''}`}>
     <aside className="message-channel-rail">
-      <div className="message-workspace-brand"><img className="message-workspace-lockup" src={BRAND_LOCKUP} alt=""/><div><strong>North Splash</strong><small>Field Communications</small></div><ChevronDown size={15}/></div>
-      <div className="message-search"><Search size={15}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Find a channel"/><kbd>⌘K</kbd></div>
+      <div className="message-workspace-brand"><img className="message-workspace-lockup" src={BRAND_LOCKUP} alt=""/><div><strong>North Splash</strong><small>Crew chat</small></div><ChevronDown size={15}/></div>
+      <div className="message-search"><Search size={15}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Find a channel"/></div>
       <div className="message-rail-filters" role="tablist" aria-label="Channel filter">
         {([['all','All'],['unread','Unread'],['chat','Chat'],['teams','Teams']] as const).map(([id,label])=>
           <button type="button" key={id} role="tab" aria-selected={railFilter===id} className={railFilter===id?'active':''} onClick={()=>setRailFilter(id)}>{label}</button>
@@ -309,22 +312,15 @@ export default function TeamMessaging({employee,employees=[],portalKind='employe
         <div className="message-scroll">
           {visibleMessages.map((m,index)=>{
             const previous=visibleMessages[index-1];
-            const grouped=previous&&previous.sender_name===m.sender_name&&(new Date(m.created_at).getTime()-new Date(previous.created_at).getTime())<8*60*1000;
-            const dayChanged=!previous||new Date(previous.created_at).toDateString()!==new Date(m.created_at).toDateString();
-            return <div key={m.id} className="message-entry-wrap">{dayChanged&&<div className="message-day-divider"><span>{formatDay(m.created_at)}</span></div>}<article className={`${mine(m)?'message-bubble mine':'message-bubble'} ${grouped?'grouped':''}`}>
-              {!grouped?<EmployeeAvatar employee={messageEmployee(m)} name={m.sender_name} avatarUrl={m.sender_avatar_url||(mine(m)?profile?.avatar_url:null)} size="sm" className="message-avatar employee-message-avatar"/>:<div className="message-avatar-spacer"><span>{new Date(m.created_at).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}</span></div>}
-              <div className="message-body"><header>{!grouped&&<><strong>{m.sender_name}</strong><span>{new Date(m.created_at).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}</span></>}</header><p>{m.body}</p>{m.message_kind && m.message_kind!=='message'&&<small className={`message-kind kind-${m.message_kind}`}>{prettyLabel(m.message_kind)}</small>}<div className="message-hover-actions"><button type="button" title="React" onClick={()=>{setDraft(p=>`${p}${p?' ':''}👍`);composerRef.current?.focus()}}><Smile size={13}/></button><button type="button" title="Reply" onClick={()=>{setDraft(`@${m.sender_name} `);composerRef.current?.focus()}}><MessageCircle size={13}/></button></div></div>
-            </article></div>;
+            const grouped=Boolean(previous&&previous.sender_name===m.sender_name&&sameChatDay(previous.created_at,m.created_at)&&(new Date(m.created_at).getTime()-new Date(previous.created_at).getTime())<8*60*1000);
+            const dayChanged=!previous||!sameChatDay(previous.created_at,m.created_at);
+            return <div key={m.id} className="message-entry-wrap">{dayChanged&&<ChatDayRule label={formatChatDay(m.created_at)}/>}<ChatMessage messageId={m.id} mine={mine(m)} grouped={grouped} name={m.sender_name} at={new Date(m.created_at).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})} body={m.body} kind={m.message_kind} avatar={<EmployeeAvatar employee={messageEmployee(m)} name={m.sender_name} avatarUrl={m.sender_avatar_url||(mine(m)?profile?.avatar_url:null)} size="sm" className="message-avatar employee-message-avatar"/>} reactions={reactions[m.id]} onToggleReaction={(emoji)=>toggleReaction(m.id,emoji)} onReply={()=>startReply(m.id,mine(m)?'You':m.sender_name,m.body)} /></div>;
           })}
           {threadError&&<div className="message-send-error" role="alert">{threadError}<button type="button" onClick={()=>void loadMessages(active.id)}>Retry</button></div>}
           {!visibleMessages.length&&!loading&&!threadError&&<div className="message-thread-empty"><img className="message-empty-lockup" src={BRAND_LOCKUP} alt=""/><strong>{messageSearch?'No matching messages':'Start the conversation'}</strong><span>{messageSearch?'Try a different search.':`Share the first update in ${active.name}.`}</span></div>}
           <div ref={endRef}/>
         </div>
-        <form className="message-composer" onSubmit={send}>
-          {sendError&&<div className="message-send-error" role="alert">{sendError}<button type="button" onClick={()=>void send()}>Retry</button></div>}
-          {!user&&<div className="message-send-error" role="alert">You are not signed in, so messages cannot send.</div>}
-          <div className="message-composer-box"><div className="message-composer-toolbar"><button type="button" disabled title="File attachments are not available yet"><Plus size={16}/></button><button type="button" disabled title="File attachments are not available yet"><Paperclip size={15}/></button><span>{kind && kind!=='message'?prettyLabel(kind):'Message'}</span></div><div className="message-composer-row"><textarea ref={composerRef} value={draft} onChange={e=>setDraft(e.target.value)} onKeyDown={onComposerKeyDown} placeholder={`Message #${String(active.name||'').toLowerCase().replaceAll(' ','-')}`} rows={1}/><button type="submit" className="message-send-btn" disabled={sending||!draft.trim()}><Send size={18}/><span>{sending?'Sending':'Send'}</span></button></div><p className="message-composer-hint">Enter to send · Shift+Enter for a new line</p></div>
-        </form>
+        <ChatComposer value={draft} onChange={setDraft} onSend={()=>{void send()}} placeholder={`Message ${String(active.name||'').startsWith('#')?active.name:`#${String(active.name||'').toLowerCase().replaceAll(' ','-')}`}`} kindLabel={kind&&kind!=='message'?prettyLabel(kind):undefined} reply={reply} onClearReply={()=>setReply(null)} sendError={!user?'You are not signed in, so messages cannot send.':sendError} onRetry={user?()=>void send():undefined} sending={sending} disabled={!user} composerRef={composerRef} />
       </>:<div className="message-thread-empty"><img className="message-empty-lockup" src={BRAND_LOCKUP} alt=""/><strong>Select a channel</strong><span>Choose a team channel to start messaging.</span></div>}
     </section>
 
@@ -342,7 +338,5 @@ export default function TeamMessaging({employee,employees=[],portalKind='employe
 
 function channelLabel(c:Channel){if(c.channel_type==='company')return'Company-wide';if(c.channel_type==='role')return`${(c.audience_role||'team').replaceAll('_',' ')} channel`;if(c.channel_type==='crew')return'Crew channel';return'Private group'}
 function channelIcon(c:Channel){if(c.channel_type==='company')return <Megaphone size={15}/>;if(c.channel_type==='custom')return <Users size={15}/>;return <Hash size={15}/>}
-function initials(name:string){return name.split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]?.toUpperCase()).join('')||'NS'}
-function formatDay(value:string){const d=new Date(value);const today=new Date();const yesterday=new Date();yesterday.setDate(today.getDate()-1);if(d.toDateString()===today.toDateString())return'Today';if(d.toDateString()===yesterday.toDateString())return'Yesterday';return d.toLocaleDateString([],{weekday:'short',month:'short',day:'numeric'})}
 function shortTime(value:string){const d=new Date(value),now=new Date();if(d.toDateString()===now.toDateString())return d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});return d.toLocaleDateString([],{month:'short',day:'numeric'})}
 function readFavorites(){try{const value=JSON.parse(localStorage.getItem('ns_message_favorites')||'[]');return Array.isArray(value)?value:[]}catch{return[]}}

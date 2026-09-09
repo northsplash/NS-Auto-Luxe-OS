@@ -308,10 +308,12 @@ export const seedChats: OsChat[] = [
   {
     id: 'c-company', name: 'Company Updates', kind: 'space', channel_type: 'company',
     description: 'Company-wide announcements and field updates.',
-    preview: 'Welcome to North Splash field comms.', at: '8:01 AM', unread: 0, initials: 'CU', hue: '#c8a96a', topic: 'Company',
+    preview: 'Marcus is covering Forest Pines.', at: '8:40 AM', unread: 0, initials: 'CU', hue: '#c8a96a', topic: 'Company',
     messages: [
       { id: 'm-welcome', from: 'Jordan Miles', body: 'Company channel is live. Wins, delays, and safety notes belong here — not in a group text.', at: '8:01 AM' },
       { id: 'm-welcome-2', from: 'Avery Chen', body: 'If you are new, finish your onboarding packet under People → your name → Onboarding.', at: '8:04 AM' },
+      { id: 'm-welcome-3', from: 'You', mine: true, body: '@Avery Chen copy. I’ll ping anyone still missing packets this afternoon.', at: '8:12 AM' },
+      { id: 'm-welcome-4', from: 'Noah Patel', body: 'Marcus is covering Forest Pines. Sofia is on Birch. Call if a window slips.', at: '8:40 AM' },
     ],
   },
   {
@@ -340,11 +342,12 @@ export const seedChats: OsChat[] = [
     ],
   },
   {
-    id: 'c1', name: 'Marcus Hale', kind: 'dm', channel_type: 'dm', preview: 'On the way to the BMW. ETA 10:42.', at: '10:18 AM', unread: 2, initials: 'MH', hue: '#3d5a4c',
+    id: 'c1', name: 'Marcus Hale', kind: 'dm', channel_type: 'dm', preview: 'Customer added a pet-hair interior. I’ll need an extra 20 minutes.', at: '10:21 AM', unread: 2, initials: 'MH', hue: '#3d5a4c',
     messages: [
       { id: uid(), from: 'Marcus Hale', body: 'Clocked in. First job is the 330i on Forest Pines.', at: '9:02 AM' },
       { id: uid(), from: 'You', mine: true, body: 'Copy. Customer was told 10:30. Text when you tap En Route.', at: '9:04 AM' },
       { id: uid(), from: 'Marcus Hale', body: 'On the way to the BMW. ETA 10:42.', at: '10:18 AM' },
+      { id: uid(), from: 'Marcus Hale', body: 'Customer added a pet-hair interior. I’ll need an extra 20 minutes.', at: '10:21 AM' },
     ],
   },
   {
