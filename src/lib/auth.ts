@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { isDemoMode, supabase } from './supabase';
 export type { Profile } from './supabase';
 
 export async function signUp(
@@ -70,6 +70,8 @@ function visitStore(key: string, value?: string) {
 
 export async function trackPageView(page: string) {
   if (typeof window === 'undefined') return;
+  const supabaseUrl = String(import.meta.env.VITE_SUPABASE_URL || '');
+  if (isDemoMode || !supabaseUrl || /placeholder\.supabase\.co/i.test(supabaseUrl)) return;
   if (visitStore(VISIT_BLOCK_KEY) === '1') return;
 
   const sessionId = visitStore('ns_session') || crypto.randomUUID();
