@@ -113,13 +113,30 @@ export function occupyMinutes(job: Pick<Appointment, 'estimated_duration_minutes
 
 export type AppointmentPlan = {
   start: Date;
+  /** Post-job padding stored on THIS appointment (drive to the following stop, or the default). */
   travelBufferMinutes: number;
+  /** Drive minutes from the previous stop — store this on the previous appointment. */
   inboundMinutes: number;
   drive: DriveEstimate;
   previous: Appointment | null;
   snapped: boolean;
   label: string;
 };
+
+export function appointmentPartyName(
+  a: Pick<Appointment, 'customer_name' | 'customer_phone' | 'customer_email' | 'service_address' | 'user_id'>,
+  customers: Array<{ id: string; full_name?: string | null }> = [],
+) {
+  const named = String(a.customer_name || '').trim();
+  if (named && !/^customer$/i.test(named)) return named;
+  const fromProfile = customers.find((c) => c.id === a.user_id)?.full_name?.trim();
+  if (fromProfile) return fromProfile;
+  const street = String(a.service_address || '').split(',')[0]?.trim();
+  if (street) return street;
+  if (a.customer_phone) return a.customer_phone;
+  if (a.customer_email) return a.customer_email;
+  return 'Guest booking';
+}
 
 export async function planAppointmentTiming(opts: {
   appointments: Appointment[];
@@ -186,6 +203,7 @@ export async function planAppointmentTiming(opts: {
       }
 
       const following = jobs.find((a) => a.scheduled_at && new Date(a.scheduled_at) >= cursor && a.id !== opts.ignoreId) || null;
+      let outboundMinutes = DEFAULT_TRAVEL_BUFFER_MINUTES;
       if (following?.scheduled_at) {
         const outbound = await estimateDriveBuffer({
           origin: dest,
@@ -197,14 +215,15 @@ export async function planAppointmentTiming(opts: {
           cursor = roundToSlot(new Date(Math.max(leaveBy.getTime(), appointmentBusyEnd(following)?.getTime() || 0)));
           continue;
         }
+        outboundMinutes = outbound.minutes;
       }
 
       const inbound = previous ? drive.minutes : DEFAULT_TRAVEL_BUFFER_MINUTES;
       const snapped = cursor.getTime() !== requested.getTime();
-      const fromLabel = previous ? `after ${previous.customer_name || previous.service_name} at ${timeLabel(previous.scheduled_at!)}` : 'first job of the day';
+      const fromLabel = previous ? `after ${appointmentPartyName(previous)} at ${timeLabel(previous.scheduled_at!)}` : 'first job of the day';
       return {
         start: cursor,
-        travelBufferMinutes: inbound,
+        travelBufferMinutes: outboundMinutes,
         inboundMinutes: inbound,
         drive: previous ? drive : { minutes: inbound, miles: 0, source: 'fallback', label: `${inbound} min first-job buffer` },
         previous,
@@ -235,19 +254,4 @@ export function isUpcomingJob(a: Pick<Appointment, 'status' | 'archived' | 'sche
   if (!isOpenJob(a)) return false;
   if (!a.scheduled_at) return true;
   return new Date(a.scheduled_at).getTime() >= Date.now() - 6 * 3600000;
-}
-
-export function appointmentPartyName(
-  a: Pick<Appointment, 'customer_name' | 'customer_phone' | 'customer_email' | 'service_address' | 'user_id'>,
-  customers: Array<{ id: string; full_name?: string | null }> = [],
-) {
-  const named = String(a.customer_name || '').trim();
-  if (named && !/^customer$/i.test(named)) return named;
-  const fromProfile = customers.find((c) => c.id === a.user_id)?.full_name?.trim();
-  if (fromProfile) return fromProfile;
-  const street = String(a.service_address || '').split(',')[0]?.trim();
-  if (street) return street;
-  if (a.customer_phone) return a.customer_phone;
-  if (a.customer_email) return a.customer_email;
-  return 'Guest booking';
 }

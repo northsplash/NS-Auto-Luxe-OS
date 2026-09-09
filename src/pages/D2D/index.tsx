@@ -98,6 +98,7 @@ export default function D2DPortal(){
   const [leadStage,setLeadStage]=useState('all');
   const [discoveringHouses,setDiscoveringHouses]=useState(false);
   const [houseDiscoveryError,setHouseDiscoveryError]=useState('');
+  const [loadError,setLoadError]=useState('');
   const attemptedDiscovery=useRef<Set<string>>(new Set());
   const lastLocationWrite=useRef(0);
 
@@ -110,6 +111,7 @@ export default function D2DPortal(){
   const load=async()=>{
     if(!user){setBusy(false);return;}
     setBusy(true);
+    setLoadError('');
     try{
     const {data:emp}=await supabase.from('employees').select('*').eq('user_id',user.id).maybeSingle();
     setEmployee(emp);
@@ -137,7 +139,7 @@ export default function D2DPortal(){
       else {const cached=loadTerritoryDoors(ids);setDoors(cached)}
     }else setDoors([]);
     if(r.data?.id){const rs=await supabase.from('territory_route_stops').select('*').eq('route_id',r.data.id).order('stop_order');setRouteDoorIds((rs.data??[]).filter(x=>x.status!=='completed').map(x=>x.door_id));}
-    }catch(err){console.warn('D2D workspace load failed',err)}finally{setBusy(false)}
+    }catch(err){setLoadError(err instanceof Error&&err.message?err.message:'Could not load the D2D workspace.')}finally{setBusy(false)}
   };
   useEffect(()=>{load()},[user]);
   const [packetOpened,setPacketOpened]=useState(false);
@@ -588,6 +590,7 @@ export default function D2DPortal(){
 
   const logout=async()=>{await signOut().catch(()=>{});navigate('/')};
   if(loading||busy)return <WorkspaceGate busy title="Opening D2D" body="Loading territories, doors, and today's knocks." />;
+  if(loadError&&!employee)return <WorkspaceGate title="Could not open D2D" body={loadError} onRetry={()=>{setBusy(true);void load()}} homeHref="/login" homeLabel="Back to sign in" />;
   if(!employee)return <WorkspaceGate title="D2D profile not linked" body="Ask an owner to link your login in People → Permissions." homeHref="/login" homeLabel="Back to sign in" />;
 
   const nav:[Tab,string,any,string][]=[
@@ -648,6 +651,7 @@ export default function D2DPortal(){
       <PortalSwitchRail allow={canSwitchLivePortals(profile?.portal_role)}/>
       <BackToOwnerBanner allow={canSwitchLivePortals(profile?.portal_role)}/>
       <div className="portal-content">
+        {loadError&&<div className="d2d-house-discovery error">{loadError}<button type="button" onClick={()=>void load()}>Retry</button></div>}
         {(!online||offlineCount>0)&&<div className={`d2d-offline-banner ${online?'queued':'down'}`}><WifiOff size={16}/><div><strong>{online?`${offlineCount} knock${offlineCount===1?'':'s'} queued`:'Working offline'}</strong><span>{online?'Sync when the connection is solid.':'Knocks save on this phone until you are back online.'}</span></div>{online&&offlineCount>0&&<button type="button" className="btn-primary" onClick={()=>void syncOffline()}>Sync now</button>}</div>}
         {isOnboardingOpen(employee.onboarding_status)&&tab!=='onboarding'&&<button type="button" className="portal-notice" onClick={()=>setTab('onboarding')}><ClipboardCheck size={17}/><div><strong>Finish your Gusto hire packet</strong><span>Personal details, W-4, payment method, I-9, and emergency contact.</span></div><small>Open</small></button>}
         {tab==='onboarding'&&<div className="tab-content v2-page"><EmployeeOnboardingTab employee={employee} audience="self" onUpdated={setEmployee} onOpenTraining={()=>setTab('training')}/></div>}

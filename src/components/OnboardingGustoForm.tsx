@@ -9,6 +9,7 @@ import {
   gustoExportRows,
   gustoStepCopy,
 } from '@/lib/gustoPayroll';
+import { MARKET } from '@/lib/market';
 
 function Field({
   label,
@@ -145,7 +146,7 @@ export default function OnboardingGustoForm({
           </div>
           <div className="form-row">
             <Field label="Personal phone" gusto="Phone number">
-              <input type="tel" value={packet.personal_phone} onChange={(e) => onPatch({ personal_phone: e.target.value })} placeholder="919-000-0000" required />
+              <input type="tel" value={packet.personal_phone} onChange={(e) => onPatch({ personal_phone: e.target.value })} placeholder={MARKET.phonePlaceholder} required />
             </Field>
             <Field label="Personal email" gusto="Personal email">
               <input type="email" value={packet.personal_email} onChange={(e) => onPatch({ personal_email: e.target.value })} placeholder="name@email.com" />

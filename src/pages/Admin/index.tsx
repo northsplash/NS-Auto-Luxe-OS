@@ -149,6 +149,8 @@ export default function Admin() {
   const [scheduleDraft,setScheduleDraft]=useState<Record<string,string>>({});
   const [teamQuery,setTeamQuery]=useState('');
   const [dataLoading, setDataLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [workspaceReload, setWorkspaceReload] = useState(0);
   const [teamCalendarEmployee,setTeamCalendarEmployee]=useState('');
   const [availability, setAvailability] = useState<any[]>([]);
 const [availabilityForm, setAvailabilityForm] = useState({
@@ -207,6 +209,7 @@ const [availabilityForm, setAvailabilityForm] = useState({
     }
     (async () => {
       try {
+      setLoadError('');
       const since = new Date(Date.now() - 45 * 86400000).toISOString();
       const [custs, apts, openApts, pays, emps, avail] = await Promise.all([
   supabase
@@ -270,12 +273,12 @@ const [availabilityForm, setAvailabilityForm] = useState({
         payments: (pays.data ?? []) as Payment[],
       });
       } catch (err) {
-        console.warn('Owner workspace load failed', err);
+        setLoadError(err instanceof Error && err.message ? err.message : 'Could not load the Owner workspace.');
       } finally {
         setDataLoading(false);
       }
     })();
-  }, [user, profile, hasWorkspaceAccess]);
+  }, [user, profile, hasWorkspaceAccess, workspaceReload]);
 
   useEffect(() => {
     if (!hasWorkspaceAccess) return;
@@ -807,6 +810,12 @@ const handleDeleteAvailability = async (id: string) => {
         {dataManagerOpen&&<AdminDataManager section={tab} label={navItems.find(n=>n.id===tab)?.label||'Workspace'} onClose={()=>setDataManagerOpen(false)}/>}
 
         <div className="portal-content" key={tab}>
+          {loadError && (
+            <div className="d2d-house-discovery error">
+              {loadError}
+              <button type="button" onClick={() => { setDataLoading(true); setWorkspaceReload((n) => n + 1); }}>Retry</button>
+            </div>
+          )}
           {![
             'command_center','crm','dispatch','crews','leads','territories','training','communications','automations','client_photos',
             'recruiting','staff_schedule','timeclock','finance','sales','inventory','pay_settings',

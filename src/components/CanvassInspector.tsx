@@ -4,6 +4,7 @@ import {
   Presentation, Target, UserRound, X,
 } from 'lucide-react';
 import { CANVASS_KNOCK_KEYS, NEEDS_TIME_KEYS } from '@/lib/canvass';
+import { MARKET } from '@/lib/market';
 import { composedLeadIdentity } from '@/lib/salesRabbitLeads';
 import { doorStatus, doorStreetLabel, localDateTime } from '@/lib/fieldOps';
 import { ServiceMenuSelect } from '@/components/DetailSelfPicker';
@@ -149,7 +150,7 @@ export default function CanvassInspector({
             <div className="field-contact-strip sr-lead-sheet">
               <label><span>First name</span><input autoComplete="given-name" placeholder="First" value={form.first_name} onChange={(e) => setField({ first_name: e.target.value, customer_name: composedLeadIdentity({ ...form, first_name: e.target.value }, form.customer_name).name })} /></label>
               <label><span>Last name</span><input autoComplete="family-name" placeholder="Last" value={form.last_name} onChange={(e) => setField({ last_name: e.target.value, customer_name: composedLeadIdentity({ ...form, last_name: e.target.value }, form.customer_name).name })} /></label>
-              <label><span>Phone</span><input autoComplete="tel" type="tel" inputMode="tel" placeholder="919-555-0100" value={form.phone} onChange={(e) => setField({ phone: e.target.value })} /></label>
+              <label><span>Phone</span><input autoComplete="tel" type="tel" inputMode="tel" placeholder={MARKET.phonePlaceholder} value={form.phone} onChange={(e) => setField({ phone: e.target.value })} /></label>
               <label><span>Alt phone</span><input type="tel" inputMode="tel" placeholder="Optional" value={form.alt_phone} onChange={(e) => setField({ alt_phone: e.target.value })} /></label>
               <label className="wide"><span>Email</span><input type="email" autoComplete="email" value={form.email} onChange={(e) => setField({ email: e.target.value })} /></label>
               <label className="wide"><span>Street 1</span><input autoComplete="address-line1" placeholder="210 Forest Pines Dr" value={form.street1} onChange={(e) => setField({ street1: e.target.value, address: composedLeadIdentity({ ...form, street1: e.target.value }, '', form.address).address })} /></label>

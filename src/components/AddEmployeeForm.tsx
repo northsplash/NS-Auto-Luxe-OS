@@ -10,6 +10,7 @@ import {
   type PayMix,
   type SystemRole,
 } from '@/lib/rolePresets';
+import { MARKET } from '@/lib/market';
 
 type Props = {
   value: EmployeeDraft;
@@ -107,7 +108,7 @@ export default function AddEmployeeForm({ value, onChange, onSubmit, submitting,
           </div>
           <div className="form-group">
             <label>Phone</label>
-            <input type="tel" value={value.phone} onChange={(e) => patch({ phone: e.target.value })} placeholder="919-000-0000" />
+            <input type="tel" value={value.phone} onChange={(e) => patch({ phone: e.target.value })} placeholder={MARKET.phonePlaceholder} />
           </div>
         </div>
         <div className="form-row">

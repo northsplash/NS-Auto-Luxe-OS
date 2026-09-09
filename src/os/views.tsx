@@ -12,10 +12,11 @@ import { firstWord, isSettledPayment, money, prettyLabel, trendLabel } from '@/l
 import { DETAIL_FAMILY_COPY, packagesForFamily } from '@/lib/detailCatalog';
 import { ServiceMenuSelect } from '@/components/DetailSelfPicker';
 import { remainingStepLabels } from '@/lib/onboarding';
+import { MARKET } from '@/lib/market';
 import { SR_STATUSES, composedLeadIdentity, fieldsFromLead, leadDisplayName, srStatus } from '@/lib/salesRabbitLeads';
 import { householdAsLeadFields, type ApplyOfferResult, type OfferSelection } from '@/lib/customerAccount';
 import {
-  JOB_STEP_LABELS, JOB_STEPS, LEAD_STAGES, SHIFT_DAYS, WEEKDAYS, initialsOf, payLine, revenueDays,
+  JOB_STEP_LABELS, JOB_STEPS, LEAD_STAGES, SHIFT_DAYS, WEEKDAYS, initialsOf, jobPartyName, payLine, revenueDays,
   type JobStatus, type OsChat, type OsEmployee, type OsJob, type OsLead,
 } from './demoData';
 import { useOs } from './osStore';
@@ -908,7 +909,7 @@ export function CalendarView({ onOpen }: { onOpen: (id: string) => void }) {
             <label className="nsos-field">Vehicle<input value={draft.vehicle} onChange={(e) => setDraft({ ...draft, vehicle: e.target.value })} placeholder="Year make model" /></label>
           </div>
           <div className="form-row">
-            <label className="nsos-field">Phone<input type="tel" autoComplete="tel" value={draft.phone} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} placeholder="919-000-0000" /></label>
+            <label className="nsos-field">Phone<input type="tel" autoComplete="tel" value={draft.phone} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} placeholder={MARKET.phonePlaceholder} /></label>
             <label className="nsos-field">Email<input type="email" autoComplete="email" value={draft.email} onChange={(e) => setDraft({ ...draft, email: e.target.value })} placeholder="name@email.com" /></label>
           </div>
           <label className="nsos-field">Service
@@ -1438,7 +1439,7 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
             <div className="nsos-add-door-grid nsos-sr-lead-grid">
               <label className="nsos-field">First name<input value={door.first_name} onChange={(e) => setDoor({ ...door, first_name: e.target.value })} placeholder="First" /></label>
               <label className="nsos-field">Last name<input value={door.last_name} onChange={(e) => setDoor({ ...door, last_name: e.target.value })} placeholder="Last" /></label>
-              <label className="nsos-field">Phone<input value={door.phone} onChange={(e) => setDoor({ ...door, phone: e.target.value })} placeholder="919-555-0100" inputMode="tel" /></label>
+              <label className="nsos-field">Phone<input value={door.phone} onChange={(e) => setDoor({ ...door, phone: e.target.value })} placeholder={MARKET.phonePlaceholder} inputMode="tel" /></label>
               <label className="nsos-field">Alt phone<input value={door.alt_phone} onChange={(e) => setDoor({ ...door, alt_phone: e.target.value })} placeholder="Optional" inputMode="tel" /></label>
               <label className="nsos-field wide">Email<input value={door.email} onChange={(e) => setDoor({ ...door, email: e.target.value })} placeholder="name@email.com" /></label>
               <label className="nsos-field wide">Street 1<input value={door.street1} onChange={(e) => setDoor({ ...door, street1: e.target.value })} placeholder="210 Forest Pines Dr" /></label>
@@ -1604,7 +1605,7 @@ export function PipelineView({ onBook }: { onBook?: (jobId: string) => void }) {
         <div className="owner-lead-compose-grid nsos-sr-lead-grid">
           <label className="nsos-field">First name<input value={draft.first_name} onChange={(e) => setDraft((p) => ({ ...p, first_name: e.target.value }))} placeholder="First" /></label>
           <label className="nsos-field">Last name<input value={draft.last_name} onChange={(e) => setDraft((p) => ({ ...p, last_name: e.target.value }))} placeholder="Last" /></label>
-          <label className="nsos-field">Phone<input value={draft.phone} onChange={(e) => setDraft((p) => ({ ...p, phone: e.target.value }))} placeholder="919-555-0100" /></label>
+          <label className="nsos-field">Phone<input value={draft.phone} onChange={(e) => setDraft((p) => ({ ...p, phone: e.target.value }))} placeholder={MARKET.phonePlaceholder} /></label>
           <label className="nsos-field">Email<input value={draft.email} onChange={(e) => setDraft((p) => ({ ...p, email: e.target.value }))} /></label>
           <label className="nsos-field wide">Street<input value={draft.street1} onChange={(e) => setDraft((p) => ({ ...p, street1: e.target.value }))} placeholder="Street" /></label>
           <label className="nsos-field">City<input value={draft.city} onChange={(e) => setDraft((p) => ({ ...p, city: e.target.value }))} /></label>
@@ -1780,7 +1781,7 @@ export function CustomerPortalCard({ job }: { job: OsJob }) {
     <div className="nsos-portal">
       <span className="nsos-eyebrow">Customer portal</span>
       <strong>Track your appointment</strong>
-      <p>{firstWord(job.customer, 'Customer')}, your {job.service} is {JOB_STEP_LABELS[idx]}.</p>
+      <p>{firstWord(jobPartyName(job), 'Guest')}, your {job.service} is {JOB_STEP_LABELS[idx]}.</p>
       <div className="nsos-status">
         {JOB_STEP_LABELS.map((label, i) => (
           <span key={label} className={i < idx ? 'done' : i === idx ? 'now' : ''}>{label}</span>
@@ -1826,7 +1827,7 @@ export function JobDetail({ job }: { job: OsJob }) {
   const [note, setNote] = useState('');
   const idx = stepIndex(job.status);
   const vars = {
-    customer_first_name: firstWord(job.customer, 'Customer'),
+    customer_first_name: firstWord(jobPartyName(job), 'Guest'),
     detailer_name: firstWord(job.detailer, 'Detailer'),
     vehicle: job.vehicle,
     service: job.service,
@@ -2200,7 +2201,7 @@ export function CommsView() {
   const selected = templates.find((t) => t.id === selectedId) || templates[0];
   const liveJob = os.jobs[0];
   const vars = liveJob ? {
-    customer_first_name: firstWord(liveJob.customer, 'Customer'),
+    customer_first_name: firstWord(jobPartyName(liveJob), 'Guest'),
     detailer_name: firstWord(liveJob.detailer, 'Detailer'),
     vehicle: liveJob.vehicle,
     service: liveJob.service,

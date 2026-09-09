@@ -9,6 +9,8 @@ export default function WorkspaceGate({
   homeLabel = 'Sign in',
   secondaryHref,
   secondaryLabel,
+  onRetry,
+  retryLabel = 'Retry',
 }: {
   title: string;
   body: string;
@@ -17,6 +19,8 @@ export default function WorkspaceGate({
   homeLabel?: string;
   secondaryHref?: string;
   secondaryLabel?: string;
+  onRetry?: () => void;
+  retryLabel?: string;
 }) {
   return (
     <div className="workspace-gate nsos-cream">
@@ -27,7 +31,8 @@ export default function WorkspaceGate({
       <p>{body}</p>
       {!busy && (
         <div className="workspace-gate-actions">
-          <Link className="btn-primary" to={homeHref}>{homeLabel}</Link>
+          {onRetry && <button type="button" className="btn-primary" onClick={onRetry}>{retryLabel}</button>}
+          <Link className={onRetry ? 'btn-outline' : 'btn-primary'} to={homeHref}>{homeLabel}</Link>
           {secondaryHref && secondaryLabel && (
             <Link className="btn-outline" to={secondaryHref}>{secondaryLabel}</Link>
           )}

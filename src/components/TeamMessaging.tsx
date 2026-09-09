@@ -122,14 +122,15 @@ export default function TeamMessaging({employee,employees=[],portalKind='employe
     return null;
   };
   const loadChannels=async()=>{
+    setSendError('');
     const {data,error}=await supabase.from('employee_message_channels').select('*').eq('is_active',true).order('channel_type').order('name');
-    if(error){console.warn('[messages] channel load',error);setSendError(error.message);setLoading(false);return}
+    if(error){setSendError(error.message||'Could not load channels.');setLoading(false);return}
     let list=(data??[]) as Channel[];
     if(!list.length){
       try{
         const company=await ensureCompanyChannel([]);
         if(company)list=[company];
-      }catch(err){console.warn('[messages] ensure company',err)}
+      }catch(err){setSendError(err instanceof Error&&err.message?err.message:'Could not open the Company channel.')}
     }
     setChannels(list);
     void loadChannelMeta(list);
@@ -288,7 +289,11 @@ export default function TeamMessaging({employee,employees=[],portalKind='employe
         <div className="message-section-label"><span><Hash size={12}/>Channels</span>{elevated&&<button onClick={()=>setShowCreate(true)} title="Create group"><Plus size={14}/></button>}</div>
         {regularChannels.map(channelButton)}
         {loading&&<div className="ns-empty compact">Loading channels…</div>}
-        {!loading&&!filteredChannels.length&&<div className="ns-empty compact">No message groups yet. Pull to refresh, or create a crew channel from More.</div>}
+        {!loading&&!filteredChannels.length&&<div className="ns-empty compact">
+          <strong>{sendError?'Could not load channels':'No crew channels yet'}</strong>
+          <p>{sendError||(elevated?'Create a crew channel with + above.':'Ask a manager to start a crew channel.')}</p>
+          <button type="button" className="btn-outline" onClick={()=>{setLoading(true);setSendError('');void loadChannels()}}>Retry</button>
+        </div>}
       </div>
       <div className="message-rail-footer"><span className="message-presence-dot"/><div><strong>{employee?.name||profile?.full_name||'North Splash Team'}</strong><small>Available · messages live</small></div></div>
     </aside>

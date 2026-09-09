@@ -4,6 +4,7 @@ import {
 } from 'lucide-react';
 import { supabase, type Appointment, type Employee, type Lead, type TerritoryDoor } from '@/lib/supabase';
 import { money } from '@/lib/data';
+import { MARKET } from '@/lib/market';
 import { notifyCustomer } from '@/lib/communications';
 import { ServiceMenuSelect } from '@/components/DetailSelfPicker';
 import { DOOR_STATUSES, doorStatus } from '@/lib/fieldOps';
@@ -324,7 +325,7 @@ export default function OwnerLeadPipeline({ employees, setAppointments, onNaviga
           <div className="owner-lead-compose-grid sr-lead-sheet">
             <label>First name<input value={draft.first_name} onChange={(e) => setDraft((p) => ({ ...p, first_name: e.target.value }))} placeholder="First" autoComplete="given-name" /></label>
             <label>Last name<input value={draft.last_name} onChange={(e) => setDraft((p) => ({ ...p, last_name: e.target.value }))} placeholder="Last" autoComplete="family-name" /></label>
-            <label>Phone<input value={draft.phone} onChange={(e) => setDraft((p) => ({ ...p, phone: e.target.value }))} placeholder="919-555-0100" inputMode="tel" autoComplete="tel" /></label>
+            <label>Phone<input value={draft.phone} onChange={(e) => setDraft((p) => ({ ...p, phone: e.target.value }))} placeholder={MARKET.phonePlaceholder} inputMode="tel" autoComplete="tel" /></label>
             <label>Alt phone<input value={draft.alt_phone} onChange={(e) => setDraft((p) => ({ ...p, alt_phone: e.target.value }))} placeholder="Optional" inputMode="tel" /></label>
             <label className="wide">Email<input value={draft.email} onChange={(e) => setDraft((p) => ({ ...p, email: e.target.value }))} placeholder="name@email.com" autoComplete="email" /></label>
             <label className="wide">Street 1<input value={draft.street1} onChange={(e) => setDraft((p) => ({ ...p, street1: e.target.value }))} placeholder="210 Forest Pines Dr" autoComplete="address-line1" /></label>

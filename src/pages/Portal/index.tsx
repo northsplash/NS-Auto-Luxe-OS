@@ -100,6 +100,7 @@ export default function Portal() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [dataLoading, setDataLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
   // Booking form state
   const [showBook, setShowBook] = useState(false);
@@ -113,6 +114,7 @@ export default function Portal() {
 const [bookTime, setBookTime] = useState('');
 const [availableTimes, setAvailableTimes] = useState<string[]>([]);
 const [timesLoading, setTimesLoading] = useState(false);
+const [availabilityError, setAvailabilityError] = useState('');
   const [bookDone, setBookDone] = useState(false);
   const [lastBook, setLastBook] = useState<{ name: string; when: string; price: number; addOns: string } | null>(null);
   const [subscribeBusy, setSubscribeBusy] = useState(false);
@@ -151,6 +153,7 @@ const [timesLoading, setTimesLoading] = useState(false);
     if (!user) return;
     (async () => {
       try {
+        setLoadError('');
         const [apts, pays, subs] = await Promise.all([
           supabase.from('appointments').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
           supabase.from('payments').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
@@ -160,7 +163,7 @@ const [timesLoading, setTimesLoading] = useState(false);
         setPayments(pays.data ?? []);
         setSubscription(subs.data ?? null);
       } catch (err) {
-        console.warn('Customer portal load failed', err);
+        setLoadError(err instanceof Error && err.message ? err.message : 'Could not load your appointments.');
       } finally {
         setDataLoading(false);
       }
@@ -180,20 +183,21 @@ const [timesLoading, setTimesLoading] = useState(false);
   setBookDate(date);
   setBookTime('');
   setAvailableTimes([]);
+  setAvailabilityError('');
 
   if (!date) return;
 
   setTimesLoading(true);
 
   try {
-    const { data: dayAvailability, error: availabilityError } =
+    const { data: dayAvailability, error: dayAvailErr } =
       await supabase
         .from('availability')
         .select('*')
         .eq('date', date)
         .maybeSingle();
 
-    if (availabilityError) throw availabilityError;
+    if (dayAvailErr) throw dayAvailErr;
 
     if (!dayAvailability || !dayAvailability.is_available) {
       setAvailableTimes([]);
@@ -251,7 +255,7 @@ const [timesLoading, setTimesLoading] = useState(false);
 
     setAvailableTimes(slots);
   } catch (error) {
-    console.error('Availability error:', error);
+    setAvailabilityError(error instanceof Error && error.message ? error.message : 'Could not load open times.');
     setAvailableTimes([]);
   } finally {
     setTimesLoading(false);
@@ -269,6 +273,7 @@ const [timesLoading, setTimesLoading] = useState(false);
   const refreshPortal = async () => {
     if (!user) return;
     try {
+      setLoadError('');
       const [apts, pays, subs] = await Promise.all([
         supabase.from('appointments').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
         supabase.from('payments').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
@@ -278,7 +283,7 @@ const [timesLoading, setTimesLoading] = useState(false);
       setPayments(pays.data ?? []);
       setSubscription(subs.data ?? null);
     } catch (err) {
-      console.warn('Customer portal load failed', err);
+      setLoadError(err instanceof Error && err.message ? err.message : 'Could not refresh your appointments.');
     }
   };
 
@@ -502,6 +507,12 @@ const [timesLoading, setTimesLoading] = useState(false);
         </div>
 
         <div className="portal-content">
+          {loadError && (
+            <div className="d2d-house-discovery error">
+              {loadError}
+              <button type="button" onClick={() => void refreshPortal()}>Retry</button>
+            </div>
+          )}
 
           {/* DASHBOARD */}
           {tab === 'dashboard' && (
@@ -904,6 +915,11 @@ const [timesLoading, setTimesLoading] = useState(false);
 
     {timesLoading ? (
       <p>Checking available times...</p>
+    ) : availabilityError ? (
+      <p className="d2d-house-discovery error">
+        Could not check this date.
+        <button type="button" onClick={() => void loadAvailableTimes(bookDate)}>Retry</button>
+      </p>
     ) : availableTimes.length === 0 ? (
       <p style={{ color: '#999' }}>
         No appointments available on this date.

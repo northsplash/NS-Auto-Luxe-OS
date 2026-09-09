@@ -6,6 +6,7 @@ import {
   Sparkles, Star, Target, UserRound, X,
 } from 'lucide-react';
 import { MEMBERSHIPS, VEHICLE_SIZES, money } from '@/lib/data';
+import { MARKET } from '@/lib/market';
 import { BRAND_LOGO, BRAND_MARK } from '@/lib/brand';
 import { packageForSelf, type DetailFamily, type DetailSelf } from '@/lib/detailCatalog';
 import DetailSelfPicker from '@/components/DetailSelfPicker';
@@ -257,7 +258,7 @@ export default function SalesPresentation({
             <div className="sales-household-grid">
               <label><span>First name</span><input autoComplete="given-name" placeholder="First" value={household.first_name} onChange={(e) => patchHousehold({ first_name: e.target.value })} /></label>
               <label><span>Last name</span><input autoComplete="family-name" placeholder="Last" value={household.last_name} onChange={(e) => patchHousehold({ last_name: e.target.value })} /></label>
-              <label><span>Phone</span><input autoComplete="tel" inputMode="tel" type="tel" placeholder="919-555-0100" value={household.phone} onChange={(e) => patchHousehold({ phone: e.target.value })} /></label>
+              <label><span>Phone</span><input autoComplete="tel" inputMode="tel" type="tel" placeholder={MARKET.phonePlaceholder} value={household.phone} onChange={(e) => patchHousehold({ phone: e.target.value })} /></label>
               <label><span>Alt phone</span><input type="tel" inputMode="tel" placeholder="Optional" value={household.alt_phone} onChange={(e) => patchHousehold({ alt_phone: e.target.value })} /></label>
               <label className="wide"><span>Email</span><input autoComplete="email" type="email" placeholder="Required for portal login" value={household.email} onChange={(e) => patchHousehold({ email: e.target.value })} /></label>
               <label className="wide"><span>Street 1</span><input autoComplete="address-line1" placeholder="Street address" value={household.street1} onChange={(e) => patchHousehold({ street1: e.target.value })} /></label>

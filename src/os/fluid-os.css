@@ -2157,8 +2157,8 @@ html:has(.sales-presentation-overlay) .d2d-add-lead-fab,
   }
 }
 
-/* Territory Google toolbar — keep labels. portal-v2 sets font-size:0 on phone. */
-@media (max-width: 720px) {
+/* Territory Google toolbar — keep labels. portal-v2 sets font-size:0 under 860px. */
+@media (max-width: 860px) {
   .portal-layout.nsos-cream .field-map-google .field-map-toolbar,
   .portal-layout.nsos-cream .google-map-toolbar,
   .portal-layout.nsos-cream .territory-admin-map .field-map-toolbar,
@@ -2519,4 +2519,16 @@ html:has(.sales-presentation-overlay) .d2d-add-lead-fab,
     height: 34px;
     max-width: 110px;
   }
+}
+
+/* Sheets above the 5-tab phone nav (z-index 9800). */
+.canvass-inspector-backdrop,
+.message-modal-backdrop,
+.dispatch-v16-drawer-backdrop {
+  z-index: 12020;
+}
+.canvass-inspector,
+.message-group-modal,
+.dispatch-v16-drawer {
+  z-index: 12021;
 }

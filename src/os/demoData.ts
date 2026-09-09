@@ -1,6 +1,7 @@
 import { DEFAULT_COMM_TEMPLATES, type CommunicationTemplate } from '@/lib/communicationCatalog';
 import { compensationSummary } from '@/lib/compensation';
 import { BOOKABLE_SERVICES, checklistForService, findDetailPackage } from '@/lib/detailCatalog';
+import { MARKET } from '@/lib/market';
 import { emptyOnboarding as emptyHirePacket, type OnboardingPacket as HirePacket } from '@/lib/onboarding';
 import {
   SR_PIPELINE_KEYS, composedLeadIdentity, doorStatusKey, fieldsFromLead, srTemp,
@@ -232,7 +233,7 @@ const docs = (done: number): OsDocument[] => {
 const P = (id: string) => `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&h=160&w=160`;
 
 export const seedEmployees: OsEmployee[] = [
-  { id: 'e1', name: 'Jordan Miles', title: 'Owner / Field Operator', role: 'owner', department: 'Ownership', status: 'active', email: 'jordan@northsplash.com', phone: '919-555-0100', initials: 'JM', hue: '#c8a96a', photo: P('2379005'), pay_type: 'custom', hourly_rate: 0, annual_salary: 0, weekly_base: 0, commission_rate: 0, per_job_rate: 0, pay_schedule: 'monthly', hours_week: 48, onboarding: 100, location: 'North Carolina', documents: docs(5), availability: fieldAvail() },
+  { id: 'e1', name: 'Jordan Miles', title: 'Owner / Field Operator', role: 'owner', department: 'Ownership', status: 'active', email: 'jordan@northsplash.com', phone: MARKET.phonePlaceholder, initials: 'JM', hue: '#c8a96a', photo: P('2379005'), pay_type: 'custom', hourly_rate: 0, annual_salary: 0, weekly_base: 0, commission_rate: 0, per_job_rate: 0, pay_schedule: 'monthly', hours_week: 48, onboarding: 100, location: 'North Carolina', documents: docs(5), availability: fieldAvail() },
   { id: 'e2', name: 'Avery Chen', title: 'Operations Administrator', role: 'admin', department: 'Operations', status: 'active', email: 'avery@northsplash.com', phone: '919-555-0101', initials: 'AC', hue: '#7c6a4a', photo: P('1181686'), pay_type: 'salary', hourly_rate: 0, annual_salary: 62000, weekly_base: 0, commission_rate: 0, per_job_rate: 0, pay_schedule: 'biweekly', hours_week: 40, onboarding: 100, location: 'Durham', documents: docs(5), availability: officeAvail() },
   { id: 'e3', name: 'Marcus Hale', title: 'Lead Mobile Detailer', role: 'detailer', department: 'Detailing', status: 'active', email: 'marcus@northsplash.com', phone: '919-555-0102', initials: 'MH', hue: '#3d5a4c', photo: P('1681010'), pay_type: 'hourly', hourly_rate: 22, annual_salary: 0, weekly_base: 0, commission_rate: 0, per_job_rate: 35, pay_schedule: 'weekly', hours_week: 38, onboarding: 100, location: 'Cary', documents: docs(5), availability: fieldAvail() },
   { id: 'e4', name: 'Sofia Reyes', title: 'D2D Closer', role: 'd2d_agent', department: 'Sales', status: 'active', email: 'sofia@northsplash.com', phone: '919-555-0103', initials: 'SR', hue: '#5c3d5a', photo: P('774909'), pay_type: 'base_commission', hourly_rate: 0, annual_salary: 0, weekly_base: 350, commission_rate: 12.5, per_job_rate: 0, pay_schedule: 'weekly', hours_week: 32, onboarding: 80, location: 'Charlotte', documents: docs(4), availability: fieldAvail(), onboarding_packet: { ...emptyOnboarding(), legal_first: 'Sofia', legal_last: 'Reyes', preferred: 'Sofia', dob: '1998-04-12', street: '210 Ninth St', city: 'Durham', state: 'NC', zip: '27705', personal_phone: '919-555-0103', personal_email: 'sofia@northsplash.com', ssn_last4: '4412', ssn_on_file: true, filing_status: 'Single or Married filing separately', ohio_filing_status: 'Single', ohio_school_district: 'Durham County', bank_name: 'Truist', routing_last4: '0410', account_last4: '8821', account_type: 'checking', payment_method: 'direct_deposit', work_auth: 'A citizen of the United States', i9_ack: true, handbook_ack: true, steps: { identity: true, tax: true, pay: true, work: true } } },
@@ -548,10 +549,24 @@ export function normalizeCandidate(c: Partial<OsCandidate> & { id?: string }): O
   };
 }
 
+/** Never title a household "Customer". Prefer a real name, then street, then phone. */
+export function jobPartyName(
+  job: { customer?: string | null; address?: string | null; phone?: string | null },
+  unnamed = 'Guest booking',
+) {
+  const named = String(job.customer || '').trim();
+  if (named && !/^customer$/i.test(named)) return named;
+  const street = String(job.address || '').split(',')[0]?.trim();
+  if (street) return street;
+  const phone = String(job.phone || '').trim();
+  if (phone) return phone;
+  return unnamed;
+}
+
 export function normalizeJob(j: Partial<OsJob> & { id?: string }): OsJob {
   const merged = {
     id: j.id || uid(),
-    customer: 'Customer',
+    customer: '',
     email: '',
     phone: '',
     service: 'Luxe Signature',
@@ -568,7 +583,7 @@ export function normalizeJob(j: Partial<OsJob> & { id?: string }): OsJob {
   const service = findDetailPackage(merged.service)?.name || merged.service || 'Luxe Signature';
   return {
     ...merged,
-    customer: merged.customer || 'Customer',
+    customer: jobPartyName(merged),
     service,
     time: merged.time || 'TBD',
     status: merged.status || 'scheduled',

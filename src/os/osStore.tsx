@@ -7,7 +7,7 @@ import {
   clockNow, defaultTemplates, initialsOf, normalizeActivity, normalizeChat, normalizeEmployee, normalizeJob, normalizeLead,
   seedActivity, seedCandidates, seedChats, seedCustomers, seedEmployees, seedJobs, seedLeads,
   seedPayments, seedSettings, seedShifts, seedTimeOff, uid, emptyOnboarding,
-  normalizeCandidate, normalizeCustomer,
+  normalizeCandidate, normalizeCustomer, jobPartyName,
   type JobDraft, type JobStatus, type LeadStatus, type OsActivity, type OsCandidate, type OsChat,
   type OsCustomer, type OsEmployee, type OsJob, type OsLead, type OsPayment, type OsSettings,
   type OsShift, type OsTimeOff, type Weekday,
@@ -128,7 +128,7 @@ function load(): OsSnapshot {
 
 function jobVars(job: OsJob) {
   return {
-    customer_first_name: firstWord(job.customer, 'Customer'),
+    customer_first_name: firstWord(jobPartyName(job), 'Guest'),
     detailer_name: firstWord(job.detailer, 'Detailer'),
     vehicle: job.vehicle || '',
     service: job.service || '',
@@ -388,7 +388,7 @@ export function OsProvider({ children }: { children: ReactNode }) {
           ? s.activity
           : [{
               id: actId, at: clockNow(), kind: 'comms' as const,
-              text: `${firstWord(job.detailer, 'Detailer')} moved ${firstWord(job.customer, 'Customer')}’s job to ${statusLabel}${fresh[0] ? ` · ${fresh[0].channel.toUpperCase()} sent` : ''}.`,
+              text: `${firstWord(job.detailer, 'Detailer')} moved ${firstWord(jobPartyName(job), 'Guest')}’s job to ${statusLabel}${fresh[0] ? ` · ${fresh[0].channel.toUpperCase()} sent` : ''}.`,
             }, ...s.activity];
         return {
           ...s,
