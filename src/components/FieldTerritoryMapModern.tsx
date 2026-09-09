@@ -4,7 +4,7 @@ import {
   applyCanvasFullscreen, clusterCanvassDoors, doorIsDimmed, doorMatchesSearch, doorsInBounds,
   formatRelativeActivity, houseMarkerDataUrl, type MapBounds,
 } from '@/lib/canvass';
-import { GOOGLE_MAPS_MAP_ID, googleMapsErrorMessage, loadGoogleMaps, shouldUseGoogleMaps, watchGoogleMapError } from '@/lib/googleMaps';
+import { GOOGLE_MAP_CHROME, GOOGLE_MAPS_MAP_ID, googleMapsErrorMessage, loadGoogleMaps, shouldUseGoogleMaps, watchGoogleMapError } from '@/lib/googleMaps';
 import { MARKET } from '@/lib/market';
 import type { FieldDoor, FieldTerritoryMapProps } from './FieldTerritoryMap.types';
 
@@ -107,10 +107,7 @@ export default function FieldTerritoryMapModern({
         maxZoom: 21,
         mapTypeId: 'roadmap',
         ...(GOOGLE_MAPS_MAP_ID ? { mapId: GOOGLE_MAPS_MAP_ID } : { styles: ROADMAP_STYLES }),
-        streetViewControl: true,
-        mapTypeControl: false,
-        fullscreenControl: false,
-        clickableIcons: true,
+        ...GOOGLE_MAP_CHROME,
         gestureHandling: mobileGestureLock && !editable ? 'cooperative' : 'greedy',
       });
       map.current = instance;

@@ -2156,3 +2156,121 @@ html:has(.sales-presentation-overlay) .d2d-add-lead-fab,
     padding-bottom: calc(12px + env(safe-area-inset-bottom)) !important;
   }
 }
+
+/* Territory Google toolbar — keep labels. portal-v2 sets font-size:0 on phone. */
+@media (max-width: 720px) {
+  .portal-layout.nsos-cream .field-map-google .field-map-toolbar,
+  .portal-layout.nsos-cream .google-map-toolbar,
+  .portal-layout.nsos-cream .territory-admin-map .field-map-toolbar,
+  .portal-layout.nsos-cream .d2d-primary-map .field-map-toolbar {
+    position: relative !important;
+    inset: auto !important;
+    top: auto !important;
+    right: auto !important;
+    left: auto !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    width: 100% !important;
+    max-width: none !important;
+    overflow: visible !important;
+    background: #fffdf8 !important;
+    border: 0 !important;
+    border-bottom: 1px solid #eadfd3 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 8px !important;
+    gap: 6px !important;
+    z-index: 4 !important;
+  }
+  .portal-layout.nsos-cream .google-map-search {
+    grid-column: 1 / -1 !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    background: #fff !important;
+    border: 1px solid #eadfd3 !important;
+    color: #1c1814 !important;
+  }
+  .portal-layout.nsos-cream .google-map-search input {
+    font-size: 14px !important;
+    color: #1c1814 !important;
+    -webkit-text-fill-color: #1c1814 !important;
+    background: transparent !important;
+    min-height: 40px !important;
+  }
+  .portal-layout.nsos-cream .field-map-google .map-tool-btn,
+  .portal-layout.nsos-cream .google-map-toolbar .map-tool-btn,
+  .portal-layout.nsos-cream .territory-admin-map .map-tool-btn,
+  .portal-layout.nsos-cream .d2d-primary-map .map-tool-btn {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    color: #1c1814 !important;
+    -webkit-text-fill-color: #1c1814 !important;
+    min-height: 40px !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    background: #fff !important;
+    border: 1px solid #eadfd3 !important;
+  }
+  .portal-layout.nsos-cream .map-style-switcher {
+    grid-column: 1 / -1 !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    width: 100% !important;
+    background: #fff !important;
+    border: 1px solid #eadfd3 !important;
+  }
+  .portal-layout.nsos-cream .map-style-switcher button {
+    font-size: 12px !important;
+    min-height: 36px !important;
+    color: #1c1814 !important;
+    -webkit-text-fill-color: #1c1814 !important;
+    background: transparent !important;
+  }
+  .portal-layout.nsos-cream .map-style-switcher button.active {
+    background: #1c1814 !important;
+    color: #fffdf8 !important;
+    -webkit-text-fill-color: #fffdf8 !important;
+  }
+  .portal-layout.nsos-cream .d2d-filter-row,
+  .portal-layout.nsos-cream .v2-status-scroller,
+  .portal-layout.nsos-cream .jobber-stage-bar {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    gap: 6px !important;
+    padding-bottom: 8px !important;
+  }
+  .portal-layout.nsos-cream .status-filter {
+    flex: 0 0 auto !important;
+    min-width: 52px;
+  }
+  .portal-layout.nsos-cream .jobber-stage-bar button {
+    flex: 0 0 auto !important;
+    white-space: nowrap;
+  }
+  .portal-layout.nsos-cream .os-mobile-bottom-nav,
+  .portal-layout.nsos-cream .os-mobile-bottom-nav.mobile-app-nav-v25 {
+    z-index: 9800 !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  }
+}
+
+/* Never let portal input/button chrome restyle Google's own widgets. */
+.portal-layout.nsos-cream .gm-style input,
+.portal-layout.nsos-cream .gm-style button,
+.portal-layout.nsos-cream .gm-style select,
+.portal-layout.nsos-cream .gm-style textarea,
+.portal-main .gm-style input,
+.portal-main .gm-style button {
+  background: revert !important;
+  color: revert !important;
+  -webkit-text-fill-color: revert !important;
+  border: revert !important;
+  border-radius: revert !important;
+  min-height: revert !important;
+  min-width: revert !important;
+  width: auto !important;
+  font-size: revert !important;
+  box-shadow: revert !important;
+}

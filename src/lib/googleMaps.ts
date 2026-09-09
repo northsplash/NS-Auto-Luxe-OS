@@ -13,6 +13,20 @@ export const GOOGLE_MAPS_MAP_ID = String(import.meta.env.VITE_GOOGLE_MAPS_MAP_ID
 /** Lead / territory maps use Google whenever a Maps JavaScript key is in the build. */
 export const GOOGLE_MAPS_ENABLED = Boolean(GOOGLE_MAPS_API_KEY);
 
+/** Hide Google's extra camera / street-view / type widgets. We draw our own search and Map / Satellite / Hybrid. */
+export const GOOGLE_MAP_CHROME = {
+  disableDefaultUI: true,
+  zoomControl: true,
+  streetViewControl: false,
+  mapTypeControl: false,
+  fullscreenControl: false,
+  rotateControl: false,
+  scaleControl: false,
+  cameraControl: false,
+  clickableIcons: true,
+  keyboardShortcuts: false,
+} as const;
+
 const BROKEN_KEY = 'ns-google-maps-auth-failed-v2';
 const authListeners = new Set<() => void>();
 

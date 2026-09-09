@@ -226,3 +226,28 @@ export async function planAppointmentTiming(opts: {
     label: `${DEFAULT_TRAVEL_BUFFER_MINUTES} min travel buffer. No open window in the next two weeks.`,
   };
 }
+
+export function isOpenJob(a: Pick<Appointment, 'status' | 'archived'>) {
+  return !a.archived && !['cancelled', 'completed'].includes(String(a.status || ''));
+}
+
+export function isUpcomingJob(a: Pick<Appointment, 'status' | 'archived' | 'scheduled_at'>) {
+  if (!isOpenJob(a)) return false;
+  if (!a.scheduled_at) return true;
+  return new Date(a.scheduled_at).getTime() >= Date.now() - 6 * 3600000;
+}
+
+export function appointmentPartyName(
+  a: Pick<Appointment, 'customer_name' | 'customer_phone' | 'customer_email' | 'service_address' | 'user_id'>,
+  customers: Array<{ id: string; full_name?: string | null }> = [],
+) {
+  const named = String(a.customer_name || '').trim();
+  if (named && !/^customer$/i.test(named)) return named;
+  const fromProfile = customers.find((c) => c.id === a.user_id)?.full_name?.trim();
+  if (fromProfile) return fromProfile;
+  const street = String(a.service_address || '').split(',')[0]?.trim();
+  if (street) return street;
+  if (a.customer_phone) return a.customer_phone;
+  if (a.customer_email) return a.customer_email;
+  return 'Guest booking';
+}

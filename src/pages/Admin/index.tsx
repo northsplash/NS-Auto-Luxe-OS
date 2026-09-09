@@ -16,7 +16,7 @@ import { isSettledPayment, money, prettyLabel } from '@/lib/data';
 import { sameLocalDay } from '@/lib/fieldOps';
 import { sendCommunication, notifyCustomer } from '@/lib/communications';
 import { canCollectJob, markJobCollected, type CollectMethod } from '@/lib/collectPayment';
-import { toLocalInput } from '@/lib/scheduling';
+import { appointmentPartyName, isUpcomingJob, toLocalInput } from '@/lib/scheduling';
 import type { BusinessSection } from './BusinessSuite';
 import type { EnterpriseSection } from './EnterpriseSuite';
 import type { ExpansionSection } from './OperationsExpansion';
@@ -654,7 +654,7 @@ const handleDeleteAvailability = async (id: string) => {
 
   const workspaceForTab=(id:AdminTab)=>workspaces.find(w=>w.items.includes(id))??workspaces[0];
   const currentWorkspace=workspaceForTab(tab);
-  const upcomingAppointments = appointments.filter(a=>a.scheduled_at && new Date(a.scheduled_at).getTime()>=Date.now() && !['cancelled','completed'].includes(a.status)).length;
+  const upcomingAppointments = appointments.filter((a) => isUpcomingJob(a)).length;
   const unassignedJobs = appointments.filter(a=>!a.assigned_employee_id && !['cancelled','completed'].includes(a.status)).length;
   const activeEmployees = employees.filter(e=>e.status==='active').length;
   const completedJobs = appointments.filter(a=>a.status==='completed').length;
@@ -1028,7 +1028,7 @@ const handleDeleteAvailability = async (id: string) => {
                     .map(a => (
                     <div key={a.id} className="data-table-row jobber-appt-row">
                       <div className="dt-cell dt-service">
-                        <strong>{a.customer_name || customers.find(c=>c.id===a.user_id)?.full_name || 'Customer'}</strong>
+                        <strong>{appointmentPartyName(a, customers)}</strong>
                         <span className="dt-sub">{a.service_address || a.customer_phone || a.customer_email || 'Address pending'}</span>
                       </div>
                       <div className="dt-cell">
@@ -1045,7 +1045,7 @@ const handleDeleteAvailability = async (id: string) => {
                               className="jobber-schedule-input"
                               value={scheduleDraft[a.id] || toLocalInput()}
                               onChange={(e) => setScheduleDraft((p) => ({ ...p, [a.id]: e.target.value }))}
-                              aria-label={`Preferred window for ${a.customer_name || 'customer'}`}
+                              aria-label={`Preferred window for ${appointmentPartyName(a, customers)}`}
                             />
                           )}
                       </span>
