@@ -12,7 +12,8 @@ import { Appointment, Payment, Subscription } from '@/lib/supabase';
 import { money, calcSavings, ADD_ONS, VEHICLE_SIZES, MEMBERSHIPS, prettyLabel, firstWord } from '@/lib/data';
 import { packageForSelf, type DetailFamily, type DetailSelf } from '@/lib/detailCatalog';
 import { DEFAULT_TRAVEL_BUFFER_MINUTES } from '@/lib/driveTime';
-import { clockMinutesInZone, minuteWindowsOverlap, occupyMinutes, SLOT_MINUTES, todayYmdInZone, zonedDateTimeIso } from '@/lib/scheduling';
+import { clockMinutesInZone, joinLocalInput, minuteWindowsOverlap, occupyMinutes, SLOT_MINUTES, splitLocalInput, todayYmdInZone, zonedDateTimeIso } from '@/lib/scheduling';
+import AppointmentWindowPicker from '@/components/AppointmentWindowPicker';
 import DetailSelfPicker from '@/components/DetailSelfPicker';
 import PortalPageHead from '@/components/PortalPageHead';
 import { sendCommunication } from '@/lib/communications';
@@ -117,6 +118,7 @@ const [timesLoading, setTimesLoading] = useState(false);
 const [availabilityError, setAvailabilityError] = useState('');
 const [dayClosed, setDayClosed] = useState(false);
   const [bookDone, setBookDone] = useState(false);
+  const [bookFormError, setBookFormError] = useState('');
   const [lastBook, setLastBook] = useState<{ name: string; when: string; price: number; addOns: string } | null>(null);
   const [subscribeBusy, setSubscribeBusy] = useState(false);
   const [subscribeNotice, setSubscribeNotice] = useState('');
@@ -185,7 +187,6 @@ const [dayClosed, setDayClosed] = useState(false);
 
   const loadAvailableTimes = async (date: string, family = bookFamily, self = bookSelf) => {
   setBookDate(date);
-  setBookTime('');
   setAvailableTimes([]);
   setAvailabilityError('');
   setDayClosed(false);
@@ -251,6 +252,7 @@ const [dayClosed, setDayClosed] = useState(false);
     }
 
     setAvailableTimes(slots);
+    setBookTime((prev) => (slots.includes(prev) ? prev : (slots[0] || '')));
   } catch (error) {
     setAvailabilityError(error instanceof Error && error.message ? error.message : 'Could not load open times.');
     setAvailableTimes([]);
@@ -264,7 +266,9 @@ const [dayClosed, setDayClosed] = useState(false);
   const openBook = () => {
     setBookDone(false);
     setBookSubmitting(false);
+    setBookFormError('');
     setShowBook(true);
+    void loadAvailableTimes(bookDate || todayYmdInZone());
   };
 
   const refreshPortal = async () => {
@@ -291,11 +295,12 @@ const [dayClosed, setDayClosed] = useState(false);
     e.preventDefault();
     if (!user) return;
     if (!bookDate || !bookTime) {
-      alert('Please choose an appointment date and time.');
+      setBookFormError('Pick a day and a time chip.');
       return;
     }
 
     setBookSubmitting(true);
+    setBookFormError('');
 
     try {
       const gross =
@@ -380,7 +385,7 @@ const [dayClosed, setDayClosed] = useState(false);
       setBookDone(true);
     } catch (error) {
       console.error('Booking error:', error);
-      alert(
+      setBookFormError(
         error instanceof Error
           ? error.message
           : 'Unable to request this appointment. Please try again.'
@@ -897,62 +902,37 @@ const [dayClosed, setDayClosed] = useState(false);
                     ))}
                   </select>
                 </div>
-<div className="form-group">
-  <label>Appointment Date</label>
-
-  <input
-    type="date"
-    required
-    min={todayYmdInZone()}
-    value={bookDate}
-    onChange={e => loadAvailableTimes(e.target.value)}
+<div className="form-group appt-window-field">
+  <AppointmentWindowPicker
+    value={bookDate && bookTime ? joinLocalInput(bookDate, bookTime) : joinLocalInput(todayYmdInZone(), '09:00')}
+    onChange={(next) => {
+      const { ymd, hm } = splitLocalInput(next);
+      setBookFormError('');
+      if (ymd !== bookDate) void loadAvailableTimes(ymd);
+      setBookTime(hm);
+    }}
+    durationMinutes={bookedPkg.minutes || 120}
+    timezoneLabel="ET"
+    busy={timesLoading}
+    occupyChecker={(ymd, hm) => {
+      if (ymd !== bookDate) return false;
+      if (timesLoading) return 'Checking this day…';
+      if (availabilityError) return 'Could not check this date.';
+      if (dayClosed) return 'This date is closed.';
+      if (!availableTimes.includes(hm)) return 'This window is already booked.';
+      return false;
+    }}
+    emptyText={dayClosed ? 'This date is closed. Pick another day.' : availabilityError ? 'Could not check this date.' : 'Every open window on this date is already booked.'}
   />
+  {availabilityError && (
+    <p className="d2d-house-discovery error">
+      Could not check this date.
+      <button type="button" onClick={() => void loadAvailableTimes(bookDate)}>Retry</button>
+    </p>
+  )}
+  {bookFormError && <p className="nsos-book-error" role="alert">{bookFormError}</p>}
+  <p className="portal-travel-note">Times are Eastern. Each chip already includes the last job’s length plus a travel buffer.</p>
 </div>
-
-{bookDate && (
-  <div className="form-group">
-    <label>Available Times</label>
-
-    {timesLoading ? (
-      <p>Checking available times...</p>
-    ) : availabilityError ? (
-      <p className="d2d-house-discovery error">
-        Could not check this date.
-        <button type="button" onClick={() => void loadAvailableTimes(bookDate)}>Retry</button>
-      </p>
-    ) : dayClosed ? (
-      <p style={{ color: '#6f655b' }}>
-        This date is closed. Pick another day.
-      </p>
-    ) : availableTimes.length === 0 ? (
-      <p style={{ color: '#6f655b' }}>
-        Every open window on this date is already booked.
-      </p>
-    ) : (
-      <div className="mini-addons">
-        {availableTimes.map(time => (
-          <button
-            key={time}
-            type="button"
-            className={`mini-addon ${
-              bookTime === time ? 'mini-active' : ''
-            }`}
-            onClick={() => setBookTime(time)}
-          >
-            {new Date(`2000-01-01T${time}:00`).toLocaleTimeString(
-              'en-US',
-              {
-                hour: 'numeric',
-                minute: '2-digit',
-              }
-            )}
-          </button>
-        ))}
-      </div>
-    )}
-    <p className="portal-travel-note">Open times already include the last job’s length plus a travel buffer, so the next stop is not booked too close.</p>
-  </div>
-)}
                 
                 <div className="form-group">
                   <label>Add-Ons</label>

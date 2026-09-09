@@ -291,3 +291,100 @@ export function isUpcomingJob(a: Pick<Appointment, 'status' | 'archived' | 'sche
   if (!a.scheduled_at) return true;
   return new Date(a.scheduled_at).getTime() >= Date.now() - 6 * 3600000;
 }
+
+export function pad2(n: number) {
+  return String(n).padStart(2, '0');
+}
+
+export function minutesToHm(total: number) {
+  const wrapped = ((total % (24 * 60)) + 24 * 60) % (24 * 60);
+  return `${pad2(Math.floor(wrapped / 60))}:${pad2(wrapped % 60)}`;
+}
+
+export function hmToMinutes(hm: string) {
+  const [hour, minute] = String(hm || '').split(':').map(Number);
+  return (Number.isFinite(hour) ? hour : 0) * 60 + (Number.isFinite(minute) ? minute : 0);
+}
+
+export function clockLabel(hmOrMinutes: string | number) {
+  const mins = typeof hmOrMinutes === 'number' ? hmOrMinutes : hmToMinutes(hmOrMinutes);
+  return new Date(2000, 0, 1, Math.floor(mins / 60), mins % 60).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
+
+export function durationLabel(minutes: number) {
+  const n = Math.max(0, Math.round(Number(minutes) || 0));
+  if (n < 60) return `${n} min`;
+  const hours = Math.floor(n / 60);
+  const rest = n % 60;
+  if (!rest) return `${hours} hr`;
+  return `${hours} hr ${rest} min`;
+}
+
+export function splitLocalInput(value?: string | null) {
+  const [ymd = '', time = ''] = String(value || '').split('T');
+  return { ymd, hm: (time || '09:00').slice(0, 5) };
+}
+
+export function joinLocalInput(ymd: string, hm: string) {
+  return `${ymd}T${hm}`;
+}
+
+export function isPastSlot(ymd: string, hm: string, now = new Date()) {
+  const stamp = new Date(`${ymd}T${hm}:00`);
+  if (Number.isNaN(stamp.getTime())) return false;
+  return stamp.getTime() < now.getTime() - 60 * 1000;
+}
+
+export function workDaySlotMinutes(step = SLOT_MINUTES) {
+  const out: number[] = [];
+  for (let m = WORK_DAY_START_MINUTES; m < WORK_DAY_END_MINUTES; m += step) out.push(m);
+  return out;
+}
+
+export type UpcomingDay = {
+  ymd: string;
+  weekday: string;
+  day: number;
+  month: string;
+  isToday: boolean;
+  weekdayIndex: number;
+};
+
+export function upcomingDays(count = 14, from = new Date(), skipWeekdays: number[] = []): UpcomingDay[] {
+  const start = new Date(from);
+  start.setHours(12, 0, 0, 0);
+  const today = dayKey(from);
+  const out: UpcomingDay[] = [];
+  for (let i = 0; i < 40 && out.length < count; i += 1) {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    if (skipWeekdays.includes(d.getDay())) continue;
+    out.push({
+      ymd: dayKey(d),
+      weekday: d.toLocaleDateString('en-US', { weekday: 'short' }),
+      day: d.getDate(),
+      month: d.toLocaleDateString('en-US', { month: 'short' }),
+      isToday: dayKey(d) === today,
+      weekdayIndex: d.getDay(),
+    });
+  }
+  return out;
+}
+
+export function windowSummary(ymd: string, hm: string, durationMinutes: number, bufferMinutes = 0, timeZoneLabel = 'ET') {
+  const start = hmToMinutes(hm);
+  const date = new Date(`${ymd}T12:00:00`);
+  const datePart = Number.isNaN(date.getTime())
+    ? ymd
+    : date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  const startText = clockLabel(start);
+  const endText = clockLabel(start + Math.max(SLOT_MINUTES, durationMinutes));
+  return {
+    datePart,
+    startLabel: startText,
+    endLabel: endText,
+    headline: `${datePart} · ${startText} – ${endText} ${timeZoneLabel}`,
+    durationText: durationLabel(durationMinutes),
+    bufferText: bufferMinutes ? `${bufferMinutes} min travel after` : '',
+  };
+}

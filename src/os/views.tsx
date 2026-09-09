@@ -5,7 +5,9 @@ import {
 import AddEmployeeForm from '@/components/AddEmployeeForm';
 import SalesPresentation from '@/components/SalesPresentation';
 import OnboardingTab from './OnboardingTab';
-import { APPT_SLOTS, formatJobWindow, isTodayStamp, jobMatchesDay, liveOpenSlots, slotConflict } from './appointmentSlots';
+import { formatJobWindow, isTodayStamp, jobMatchesDay, liveOpenSlots, localYmd, parseClockMinutes, slotConflict } from './appointmentSlots';
+import AppointmentWindowPicker from '@/components/AppointmentWindowPicker';
+import { clockLabel, joinLocalInput, minutesToHm, splitLocalInput } from '@/lib/scheduling';
 import { channelLabel, COMM_GROUPS, COMM_VARIABLES, fillTemplate, SAMPLE_VARS } from '@/lib/communicationCatalog';
 import { emptyEmployeeDraft, SYSTEM_ROLES, type EmployeeDraft } from '@/lib/rolePresets';
 import { firstWord, isSettledPayment, money, prettyLabel, trendLabel } from '@/lib/data';
@@ -846,6 +848,7 @@ export function CalendarView({ onOpen }: { onOpen: (id: string) => void }) {
     customer: '', email: '', phone: '', service: 'Luxe Signature', vehicle: '', address: '', time: '10:00 AM',
     price: 275, detailer: os.employees.find((e) => e.role === 'detailer')?.name || 'Marcus Hale',
   });
+  const [bookValue, setBookValue] = useState(() => joinLocalInput(localYmd(today), '10:00'));
   const query = q.toLowerCase();
   const label = dayLabel(picked);
   const weekday = calDays[picked] as typeof WEEKDAYS[number];
@@ -863,16 +866,38 @@ export function CalendarView({ onOpen }: { onOpen: (id: string) => void }) {
     m.set(clock, [...(m.get(clock) || []), j]);
     return m;
   }, new Map<string, OsJob[]>());
+  const occupyMinutes = minutesForService(draft.service, 120) + DEFAULT_TRAVEL_BUFFER_MINUTES;
+  const clockToHm = (time: string) => {
+    const mins = parseClockMinutes(time);
+    return mins == null ? '10:00' : minutesToHm(mins);
+  };
   const bookAppointment = (confirm: boolean) => {
     if (!draft.customer.trim()) return;
-    if (slotConflict(os.jobs, draft.detailer, pickedDate, draft.time, undefined, minutesForService(draft.service, 120) + DEFAULT_TRAVEL_BUFFER_MINUTES)) {
-      setBookError(`${draft.detailer} needs job time plus a travel buffer through ${draft.time} on ${label}. Pick a later window or another tech.`);
+    const { ymd, hm } = splitLocalInput(bookValue);
+    const date = new Date(`${ymd}T12:00:00`);
+    const time = clockLabel(hm);
+    if (Number.isNaN(date.getTime())) {
+      setBookError('Pick a day and a time chip.');
+      return;
+    }
+    const weekday = date.toLocaleDateString('en-US', { weekday: 'short' });
+    const tech = os.employees.find((e) => e.name === draft.detailer);
+    if (date.getDay() === 0) {
+      setBookError('The shop is closed Sundays. Pick another day.');
+      return;
+    }
+    if (tech?.availability && weekday in tech.availability && !tech.availability[weekday as typeof WEEKDAYS[number]]) {
+      setBookError(`${draft.detailer} is off ${weekday}. Pick another tech or day.`);
+      return;
+    }
+    if (slotConflict(os.jobs, draft.detailer, date, time, undefined, occupyMinutes)) {
+      setBookError(`${draft.detailer} needs job time plus a travel buffer through ${time} on ${date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}. Pick another chip.`);
       return;
     }
     setBookError('');
     const id = os.createJob({
       ...draft,
-      time: formatJobWindow(pickedDate, draft.time),
+      time: formatJobWindow(date, time),
       confirm,
     });
     setOpen(false);
@@ -887,7 +912,7 @@ export function CalendarView({ onOpen }: { onOpen: (id: string) => void }) {
           <h3>{label}</h3>
           <p className="nsos-cal-date">{pickedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
         </div>
-        <button className="nsos-btn" onClick={() => { setOpen((v) => !v); setBookError(''); }}><Plus size={14} />New appointment</button>
+        <button className="nsos-btn" onClick={() => { setOpen((v) => !v); setBookError(''); setBookValue(joinLocalInput(localYmd(pickedDate), clockToHm(draft.time))); }}><Plus size={14} />New appointment</button>
       </div>
       <div className="nsos-week" role="tablist" aria-label="This week">
         {week.map((d, i) => (
@@ -905,8 +930,8 @@ export function CalendarView({ onOpen }: { onOpen: (id: string) => void }) {
       <div className="nsos-search" style={{ marginBottom: 12 }}><Search size={14} /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search the day" /></div>
       {open && (
         <form className="nsos-card nsos-book-form" style={{ marginBottom: 14 }} onSubmit={(e) => { e.preventDefault(); bookAppointment(false); }}>
-          <span className="nsos-eyebrow">Book into {label}</span>
-          <p className="nsos-book-hint">Sends a confirmation request. Use Confirm now only after the customer agrees to the window.</p>
+          <span className="nsos-eyebrow">Set the window</span>
+          <p className="nsos-book-hint">Pick a day and a time chip. Taken windows stay visible so you can see why. Sends a confirmation request — use Confirm now only after the customer agrees.</p>
           <div className="form-row">
             <label className="nsos-field">Customer<input required autoComplete="name" value={draft.customer} onChange={(e) => setDraft({ ...draft, customer: e.target.value })} /></label>
             <label className="nsos-field">Vehicle<input value={draft.vehicle} onChange={(e) => setDraft({ ...draft, vehicle: e.target.value })} placeholder="Year make model" /></label>
@@ -918,19 +943,39 @@ export function CalendarView({ onOpen }: { onOpen: (id: string) => void }) {
           <label className="nsos-field">Service
             <ServiceMenuSelect value={draft.service} onChange={(name, pkg) => setDraft({ ...draft, service: name, price: pkg?.price ?? draft.price })} />
           </label>
-          <div className="form-row">
-            <label className="nsos-field">When
-              <select value={draft.time} onChange={(e) => setDraft({ ...draft, time: e.target.value })}>
-                {APPT_SLOTS.map((t) => <option key={t}>{t}</option>)}
-              </select>
-            </label>
-            <label className="nsos-field">Detailer
-              <select value={draft.detailer} onChange={(e) => setDraft({ ...draft, detailer: e.target.value })}>
-                <option value="">Unassigned</option>
-                {os.employees.filter((e) => e.role === 'detailer' || e.role === 'manager' || e.role === 'owner').map((e) => <option key={e.id}>{e.name}</option>)}
-              </select>
-            </label>
-          </div>
+          <label className="nsos-field">Detailer
+            <select value={draft.detailer} onChange={(e) => setDraft({ ...draft, detailer: e.target.value })}>
+              <option value="">Unassigned</option>
+              {os.employees.filter((e) => e.role === 'detailer' || e.role === 'manager' || e.role === 'owner').map((e) => <option key={e.id}>{e.name}</option>)}
+            </select>
+          </label>
+          <AppointmentWindowPicker
+            value={bookValue}
+            onChange={(next) => {
+              setBookValue(next);
+              const { ymd, hm } = splitLocalInput(next);
+              setDraft((p) => ({ ...p, time: clockLabel(hm) }));
+              const idx = week.findIndex((d) => localYmd(d) === ymd);
+              if (idx >= 0) setPicked(idx);
+              setBookError('');
+            }}
+            durationMinutes={minutesForService(draft.service, 120)}
+            bufferMinutes={DEFAULT_TRAVEL_BUFFER_MINUTES}
+            techLabel={draft.detailer || 'Unassigned'}
+            skipWeekdays={[0]}
+            occupyChecker={(ymd, hm) => {
+              const date = new Date(`${ymd}T12:00:00`);
+              const weekday = date.toLocaleDateString('en-US', { weekday: 'short' });
+              const tech = os.employees.find((e) => e.name === draft.detailer);
+              if (tech?.availability && weekday in tech.availability && !tech.availability[weekday as typeof WEEKDAYS[number]]) {
+                return `${draft.detailer} is off ${weekday}.`;
+              }
+              if (slotConflict(os.jobs, draft.detailer, date, clockLabel(hm), undefined, occupyMinutes)) {
+                return `${draft.detailer || 'This tech'} is already on a job through ${clockLabel(hm)}.`;
+              }
+              return false;
+            }}
+          />
           <label className="nsos-field">Address<input required value={draft.address} onChange={(e) => setDraft({ ...draft, address: e.target.value })} placeholder="Street, city, NC" /></label>
           {bookError && <div className="nsos-book-error" role="alert">{bookError}</div>}
           <div className="nsos-actions">

@@ -18,6 +18,7 @@ import { ensureOwnerFieldEmployee } from '@/lib/ownerFieldMode';
 import { useAuth } from '@/hooks/useAuth';
 import { minutesForService } from '@/lib/detailCatalog';
 import { planAppointmentTiming } from '@/lib/scheduling';
+import AppointmentWindowPicker from '@/components/AppointmentWindowPicker';
 import WorkspaceHero from '@/components/WorkspaceHero';
 import FieldTerritoryMap from '@/components/FieldTerritoryMap';
 
@@ -579,6 +580,8 @@ function LeadInspector({
   const [fields, setFields] = useState(emptySrLeadFields);
   const [bookAt, setBookAt] = useState('');
   const [booking, setBooking] = useState(false);
+  const [bookHint, setBookHint] = useState('');
+  const [suggestion, setSuggestion] = useState<{ value: string; label: string } | null>(null);
   const setField = (patch: Partial<SrLeadFields>) => setFields((p) => ({ ...p, ...patch }));
 
   useEffect(() => {
@@ -591,6 +594,8 @@ function LeadInspector({
     next.setDate(next.getDate() + 1);
     next.setHours(10, 0, 0, 0);
     setBookAt(toLocalInput(next));
+    setBookHint('');
+    setSuggestion(null);
   }, [selected?.id]);
 
   if (!selected) {
@@ -615,8 +620,12 @@ function LeadInspector({
 
   const bookJob = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!bookAt) return alert('Pick a date and time.');
+    if (!bookAt) {
+      setBookHint('Pick a day and a time chip.');
+      return;
+    }
     setBooking(true);
+    setBookHint('');
     try {
       const service = fields.service || selected.service_interest || 'Detailing Service';
       const duration = minutesForService(service, 120);
@@ -632,7 +641,12 @@ function LeadInspector({
         shopLane: true,
       });
       if (plan.noWindow) {
-        alert(plan.label);
+        setBookHint(plan.label);
+        return;
+      }
+      if (plan.snapped && Math.abs(plan.start.getTime() - requested.getTime()) > 60 * 1000) {
+        setSuggestion({ value: toLocalInput(plan.start), label: plan.label });
+        setBookHint('That window is not open. Use the next open time, or pick another chip.');
         return;
       }
       if (plan.previous) await supabase.from('appointments').update({ travel_buffer_minutes: plan.inboundMinutes }).eq('id', plan.previous.id);
@@ -644,7 +658,7 @@ function LeadInspector({
         package_name: fields.service || selected.service_interest || null,
         add_ons: [],
         vehicle_info: fields.vehicle || selected.vehicle_info || '',
-        scheduled_at: plan.start.toISOString(),
+        scheduled_at: requested.toISOString(),
         estimated_duration_minutes: duration,
         travel_buffer_minutes: plan.travelBufferMinutes,
         status: 'scheduled',
@@ -660,16 +674,18 @@ function LeadInspector({
         field_status: 'scheduled',
       }).select().single();
       if (error) {
-        alert(error.message);
+      setBookHint(error.message);
         return;
       }
       if (plan.snapped) setBookAt(toLocalInput(plan.start));
+      setSuggestion(null);
+      setBookHint('');
       setAppointments?.((p) => [...p, data as Appointment].sort((a, b) => new Date(a.scheduled_at || 0).getTime() - new Date(b.scheduled_at || 0).getTime()));
       await patchLead(selected, { status: 'appointment_set', appointment_id: data.id }, { type: 'status_change', previous: selected.status, next: 'appointment_set', notes: 'Booked from owner pipeline' });
       void notifyCustomer('booking_received', data as Appointment);
       onNavigate?.('appointments');
     } catch {
-      alert('Unable to book this job. Try another window.');
+      setBookHint('Unable to book this job. Try another window.');
     } finally {
       setBooking(false);
     }
@@ -747,8 +763,21 @@ function LeadInspector({
       {!archived && (
         <form className="owner-lead-book" onSubmit={bookJob}>
           <div className="phase-panel-head"><div><span className="eyebrow">BOOK</span><h3>Put it on the calendar</h3></div></div>
-          <label>Window<input type="datetime-local" value={bookAt} onChange={(e) => setBookAt(e.target.value)} required /></label>
-          <p className="owner-book-travel">Drive time and traffic set a buffer after the last job, then this snaps to the next open 30-minute slot.</p>
+          <AppointmentWindowPicker
+            value={bookAt}
+            onChange={(next) => { setBookAt(next); setBookHint(''); setSuggestion(null); }}
+            durationMinutes={minutesForService(fields.service || selected.service_interest || 'Luxe Signature', 120)}
+            suggestion={suggestion}
+            onAcceptSuggestion={() => {
+              if (!suggestion) return;
+              setBookAt(suggestion.value);
+              setSuggestion(null);
+              setBookHint('');
+            }}
+            onKeepRequested={() => setSuggestion(null)}
+            compact
+          />
+          {bookHint && <p className="owner-book-travel" role="alert">{bookHint}</p>}
           <button className="btn-primary" disabled={booking}><CalendarPlus size={15} />{booking ? 'Booking…' : 'Book job'}</button>
         </form>
       )}

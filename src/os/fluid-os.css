@@ -2959,3 +2959,186 @@ body {
 .portal-layout.nsos-cream .modal {
   z-index: 12031 !important;
 }
+
+/* Appointment window picker — day strip + time chips (last-wins). */
+.appt-window-picker,
+.portal-layout.nsos-cream .appt-window-picker {
+  display: grid;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+.appt-window-label,
+.portal-layout.nsos-cream .appt-window-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: #1c1814;
+}
+.appt-window-label span {
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.appt-window-label small {
+  color: #6f675e;
+  font-size: 12px;
+}
+.appt-day-strip,
+.portal-layout.nsos-cream .appt-day-strip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 2px 2px 8px;
+  scrollbar-width: thin;
+}
+.appt-day-strip button,
+.portal-layout.nsos-cream .appt-day-strip button {
+  flex: 0 0 auto;
+  width: 64px;
+  min-height: 72px;
+  border-radius: 16px;
+  border: 1px solid #eadfd3 !important;
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  display: grid;
+  place-items: center;
+  gap: 0;
+  padding: 8px 4px !important;
+}
+.appt-day-strip button small,
+.appt-day-strip button em {
+  font-size: 10px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: #6f675e;
+}
+.appt-day-strip button strong {
+  font-size: 20px;
+  line-height: 1.1;
+}
+.appt-day-strip button.is-today {
+  box-shadow: inset 0 0 0 1px #c8a96a;
+}
+.appt-day-strip button.active,
+.portal-layout.nsos-cream .appt-day-strip button.active {
+  background: #1c1814 !important;
+  color: #fffdf8 !important;
+  border-color: #1c1814 !important;
+}
+.appt-day-strip button.active small,
+.appt-day-strip button.active em,
+.portal-layout.nsos-cream .appt-day-strip button.active small,
+.portal-layout.nsos-cream .appt-day-strip button.active em {
+  color: #e8dcc8 !important;
+}
+.appt-slot-group {
+  display: grid;
+  gap: 8px;
+}
+.appt-slot-group > span {
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: #6f675e;
+}
+.appt-time-grid,
+.portal-layout.nsos-cream .appt-time-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.appt-time-chip,
+.portal-layout.nsos-cream .appt-time-chip {
+  min-height: 42px;
+  border-radius: 12px;
+  border: 1px solid #eadfd3 !important;
+  background: #fff !important;
+  color: #1c1814 !important;
+  font-weight: 700;
+  font-size: 13px;
+}
+.appt-time-chip.active,
+.portal-layout.nsos-cream .appt-time-chip.active {
+  background: #1c1814 !important;
+  color: #fffdf8 !important;
+  border-color: #1c1814 !important;
+}
+.appt-time-chip.taken,
+.portal-layout.nsos-cream .appt-time-chip.taken {
+  background: #f4eee6 !important;
+  color: #9a9086 !important;
+  text-decoration: line-through;
+  cursor: not-allowed;
+}
+.appt-window-summary,
+.portal-layout.nsos-cream .appt-window-summary {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #f7f1ea;
+  border: 1px solid #eadfd3;
+  color: #1c1814;
+}
+.appt-window-summary strong { font-size: 14px; }
+.appt-window-summary span { color: #6f675e; font-size: 12px; }
+.appt-find-open,
+.portal-layout.nsos-cream .appt-find-open {
+  justify-self: start;
+  margin-top: 6px;
+  background: transparent !important;
+  color: #1c1814 !important;
+  border: 0 !important;
+  padding: 0 !important;
+  min-height: 0 !important;
+  font-weight: 750;
+  text-decoration: underline;
+}
+.appt-suggest,
+.portal-layout.nsos-cream .appt-suggest {
+  display: grid;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #f4eadc;
+  border: 1px solid #e4d4c0;
+}
+.appt-suggest strong { display: block; color: #1c1814; }
+.appt-suggest span { color: #6f675e; font-size: 13px; }
+.appt-suggest-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.appt-window-busy,
+.appt-window-empty,
+.appt-window-conflict {
+  margin: 0;
+  font-size: 13px;
+  color: #6f675e;
+}
+.appt-window-conflict {
+  color: #7a3b32;
+}
+.calendar-form-grid .appt-window-field,
+.calendar-editor .appt-window-field,
+.form-group.appt-window-field {
+  grid-column: 1 / -1;
+}
+.field-book-now .appt-window-picker {
+  margin-bottom: 8px;
+}
+@media (max-width: 720px) {
+  .appt-time-grid,
+  .portal-layout.nsos-cream .appt-time-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .appt-window-picker.compact .appt-day-strip button {
+    width: 56px;
+    min-height: 64px;
+  }
+}

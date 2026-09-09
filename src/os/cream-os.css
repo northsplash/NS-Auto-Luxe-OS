@@ -1527,6 +1527,7 @@ html.nsos-active #root {
 }
 .nsos-cal-date { margin: 4px 0 0; color: #6f675e; font-size: 13px; }
 .nsos-book-hint { color: #6f675e; font-size: 13px; margin: 0 0 12px; }
+.nsos-book-form .appt-window-picker { margin: 4px 0 12px; }
 .nsos-book-error {
   background: #f6e8e4;
   color: #7a3b32;

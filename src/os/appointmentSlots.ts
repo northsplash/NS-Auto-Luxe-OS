@@ -12,6 +12,7 @@ export type OpenSlot = {
 };
 
 export const APPT_SLOTS = ['8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '1:00 PM', '2:30 PM', '4:00 PM'] as const;
+/** Featured pitch windows stay sparse. Booking uses the 30-minute field grid. */
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
 
 export function localYmd(d: Date) {

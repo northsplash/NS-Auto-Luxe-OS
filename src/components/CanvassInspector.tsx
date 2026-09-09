@@ -8,6 +8,8 @@ import { MARKET } from '@/lib/market';
 import { composedLeadIdentity } from '@/lib/salesRabbitLeads';
 import { doorStatus, doorStreetLabel, localDateTime, smsHref, telHref } from '@/lib/fieldOps';
 import { ServiceMenuSelect } from '@/components/DetailSelfPicker';
+import AppointmentWindowPicker from '@/components/AppointmentWindowPicker';
+import { toLocalInput } from '@/lib/scheduling';
 import type { TerritoryDoorHistory } from '@/lib/supabase';
 
 type FormShape = Record<string, any>;
@@ -118,7 +120,12 @@ export default function CanvassInspector({
 
         {form.status === 'appointment_set' && (
           <div className="field-book-now">
-            <label><span>Appointment time</span><input type="datetime-local" value={form.appointment_at} onChange={(e) => setForm((p: FormShape) => ({ ...p, appointment_at: e.target.value }))} /></label>
+            <AppointmentWindowPicker
+              value={form.appointment_at || toLocalInput()}
+              onChange={(next) => setForm((p: FormShape) => ({ ...p, appointment_at: next }))}
+              durationMinutes={120}
+              compact
+            />
             <p>Set the window, then Save. Dispatch receives this stop unassigned.</p>
           </div>
         )}
@@ -164,7 +171,14 @@ export default function CanvassInspector({
               <label><span>Service interest</span><ServiceMenuSelect allowEmpty value={form.service_interest} onChange={(name, pkg) => setForm((p: FormShape) => ({ ...p, service_interest: name, service: name, ...(pkg ? { estimated_value: String(pkg.price), value: String(pkg.price) } : {}) }))} /></label>
               <label><span>Estimated value</span><input type="number" min="0" value={form.estimated_value} onChange={(e) => setField({ estimated_value: e.target.value, value: e.target.value })} /></label>
               <label><span>Follow-up</span><input type="datetime-local" value={form.follow_up_at} onChange={(e) => setField({ follow_up_at: e.target.value })} /></label>
-              <label><span>Appointment</span><input type="datetime-local" value={form.appointment_at} onChange={(e) => setField({ appointment_at: e.target.value })} /></label>
+              <div className="wide">
+                <AppointmentWindowPicker
+                  value={form.appointment_at || toLocalInput()}
+                  onChange={(next) => setField({ appointment_at: next })}
+                  durationMinutes={120}
+                  compact
+                />
+              </div>
               <label><span>Lead source</span>
                 <select value={form.lead_source || 'd2d'} onChange={(e) => setField({ lead_source: e.target.value })}>
                   <option value="d2d">Door to door</option>
