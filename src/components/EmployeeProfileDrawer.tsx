@@ -10,6 +10,7 @@ import { money, prettyLabel } from '@/lib/data';
 import { MARKET } from '@/lib/market';
 import { appointmentPartyName } from '@/lib/scheduling';
 import { isOnboardingOpen } from '@/lib/onboarding';
+import { telHref } from '@/lib/fieldOps';
 import { inviteEmployeeLogin, portalRoleFromPosition } from '@/lib/inviteHire';
 
 type Tab='onboarding'|'overview'|'employment'|'pay'|'documents'|'schedule'|'activity';
@@ -53,7 +54,7 @@ export default function EmployeeProfileDrawer({employee:e,employees,appointments
    {tab==='activity'&&<section className="employee-activity-v25"><div className="profile-section-title-v25"><Activity/><div><strong>Recent Activity</strong><small>Operational activity currently available from appointments.</small></div></div>{assigned.slice(0,20).map(a=><div key={a.id}><Clock3 size={14}/><span><strong>{a.service_name}</strong><small>{appointmentPartyName(a)} · {new Date(a.scheduled_at||a.created_at).toLocaleString()}</small></span><em>{prettyLabel(a.status)}</em></div>)}{!assigned.length&&<div className="ns-empty compact">No activity recorded yet.</div>}</section>}
   </div>
   {['employment','pay'].includes(tab)&&<div className="employee-profile-save-v25"><button className="btn-primary" onClick={save} disabled={saving}><Save size={15}/>{saving?'Saving...':'Save Changes'}</button></div>}
-  <footer className="team-profile-actions">{e.email&&<a className="btn-outline" href={`mailto:${e.email}`}><Mail size={15}/>Email</a>}{e.phone&&<a className="btn-outline" href={`tel:${e.phone}`}><Phone size={15}/>Call</a>}<button className="btn-outline" onClick={()=>void resendInvite()} disabled={inviteBusy}><Send size={15}/>{inviteBusy?'Sending…':'Resend invite'}</button><button className="btn-outline" onClick={onOpenMessages}><MessageCircle size={15}/>Message</button><button className="btn-outline" onClick={()=>onOpenCalendar(e.id)}><Calendar size={15}/>Calendar</button><button className="danger-button" onClick={()=>onDelete(e.id)}><Trash2 size={15}/>Permanently Delete</button></footer>
+  <footer className="team-profile-actions">{e.email&&<a className="btn-outline" href={`mailto:${e.email}`}><Mail size={15}/>Email</a>}{telHref(e.phone)&&<a className="btn-outline" href={telHref(e.phone)}><Phone size={15}/>Call</a>}<button className="btn-outline" onClick={()=>void resendInvite()} disabled={inviteBusy}><Send size={15}/>{inviteBusy?'Sending…':'Resend invite'}</button><button className="btn-outline" onClick={onOpenMessages}><MessageCircle size={15}/>Message</button><button className="btn-outline" onClick={()=>onOpenCalendar(e.id)}><Calendar size={15}/>Calendar</button><button className="danger-button" onClick={()=>onDelete(e.id)}><Trash2 size={15}/>Permanently Delete</button></footer>
   {inviteNote&&<p className="profile-invite-note">{inviteNote}</p>}
  </section></div>
 }

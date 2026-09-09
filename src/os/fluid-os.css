@@ -2950,3 +2950,12 @@ body {
   -webkit-text-fill-color: #f7f3eb !important;
   border-color: rgba(255, 255, 255, .18) !important;
 }
+
+.modal-overlay,
+.portal-layout.nsos-cream .modal-overlay {
+  z-index: 12030 !important;
+}
+.modal,
+.portal-layout.nsos-cream .modal {
+  z-index: 12031 !important;
+}

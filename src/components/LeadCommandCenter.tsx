@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { supabase, type Lead } from '@/lib/supabase';
 import { money } from '@/lib/data';
-import { doorStatus } from '@/lib/fieldOps';
+import { doorStatus, telHref } from '@/lib/fieldOps';
 import { SR_PIPELINE_KEYS, SR_STATUSES, doorStatusKey, leadDisplayName, leadNextAction, srStatus } from '@/lib/salesRabbitLeads';
 import { googleMapsErrorMessage, loadGoogleMaps, shouldUseGoogleMaps } from '@/lib/googleMaps';
 import { geocodeOsmAddress, osmDirectionsUrl } from '@/lib/osmGeocode';
@@ -120,7 +120,7 @@ export default function LeadCommandCenter({leads,onOpen,onSchedule,onLeadsPatche
         <span><b className={`lead-stage stage-${l.status}`}>{srStatus(l.status).name}</b><small className="lead-score-line">Score {score(l)} · {temp(l)}</small></span>
         <span>{next.at?<><strong className={next.overdue?'overdue-text':''}>{next.text}</strong><small>{l.last_contacted_at?`Last contact ${new Date(l.last_contacted_at).toLocaleDateString()}`:'No contact logged'}</small></>:<><strong>No next action</strong><small>Set a follow-up to keep it moving</small></>}</span>
         <span><strong>{money(Number(l.estimated_value||0))}</strong><small>{l.contact_attempt_count||0} attempts</small></span>
-        <span className="lead-row-actions">{l.phone&&<a href={`tel:${l.phone}`} title="Call"><Phone size={16}/></a>}{l.latitude&&l.longitude&&<button onClick={()=>openMaps(l)} title="Navigate"><Navigation size={16}/></button>}{onSchedule&&<button onClick={()=>onSchedule(l)} title="Schedule"><CalendarPlus size={16}/></button>}<button onClick={()=>onOpen(l)} title="Open"><ChevronRight size={17}/></button></span>
+        <span className="lead-row-actions">{telHref(l.phone)&&<a href={telHref(l.phone)} title="Call"><Phone size={16}/></a>}{l.latitude&&l.longitude&&<button onClick={()=>openMaps(l)} title="Navigate"><Navigation size={16}/></button>}{onSchedule&&<button onClick={()=>onSchedule(l)} title="Schedule"><CalendarPlus size={16}/></button>}<button onClick={()=>onOpen(l)} title="Open"><ChevronRight size={17}/></button></span>
       </div>})}
       {!rows.length&&<div className="ns-empty">No leads match these filters.</div>}
     </div>}

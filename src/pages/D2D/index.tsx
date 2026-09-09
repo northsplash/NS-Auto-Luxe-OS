@@ -36,7 +36,7 @@ import { planAppointmentTiming, toLocalInput } from '@/lib/scheduling';
 import {
   APPOINTMENT_STATUSES, CONTACTED_STATUSES, DOOR_STATUSES,
   SOLD_STATUSES, doorStatus, doorStreetLabel, formatDistance, haversineMeters, localDateTime, optimizeWalkingRoute, rankNextBestHouse,
-  percent, sameLocalDay, smsHref,
+  percent, sameLocalDay, smsHref, telHref, localDateKey,
 } from '@/lib/fieldOps';
 import { CANVASS_FILTER_KEYS, CLOSE_AFTER_KNOCK, NEEDS_TIME_KEYS, canvassTerritoryStats } from '@/lib/canvass';
 import { sendCommunication, notifyCustomer } from '@/lib/communications';
@@ -64,7 +64,7 @@ const emptyForm=()=>({
 });
 
 export default function D2DPortal(){
-  const {user,profile,loading}=useAuth();
+  const {user,profile,profileError,loading,reloadProfile}=useAuth();
   const navigate=useNavigate();
   const [tab,setTab]=useState<Tab>('territory');
   const [sidebar,setSidebar]=useState(false);
@@ -106,8 +106,9 @@ export default function D2DPortal(){
   useEffect(()=>{
     if(loading)return;
     if(!user){navigate('/login',{replace:true});return;}
+    if(profileError)return;
     if(!['d2d','owner'].includes(profile?.portal_role||''))navigate('/portal');
-  },[user,profile,loading,navigate]);
+  },[user,profile,profileError,loading,navigate]);
 
   const load=async()=>{
     if(!user){setBusy(false);return;}
@@ -126,10 +127,12 @@ export default function D2DPortal(){
       supabase.from('lead_territories').select('*').eq('assigned_employee_id',emp.id).eq('status','active').order('priority',{ascending:false}),
       supabase.from('sales_records').select('*').eq('employee_id',emp.id).order('sold_at',{ascending:false}),
       supabase.from('time_entries').select('*').eq('employee_id',emp.id).order('clock_in',{ascending:false}).limit(60),
-      supabase.from('d2d_daily_goals').select('*').eq('employee_id',emp.id).eq('goal_date',new Date().toISOString().slice(0,10)).maybeSingle(),
+      supabase.from('d2d_daily_goals').select('*').eq('employee_id',emp.id).eq('goal_date',localDateKey()).maybeSingle(),
       supabase.from('territory_routes').select('*').eq('employee_id',emp.id).in('status',['active','paused']).order('started_at',{ascending:false}).limit(1).maybeSingle(),
       supabase.from('appointments').select('*').or(`sales_rep_employee_id.eq.${emp.id},assigned_employee_id.eq.${emp.id}`).order('scheduled_at'),
     ]);
+    const failed=[l,t,s,ti,g,r,a].find(row=>row.error)?.error;
+    if(failed)throw new Error(failed.message);
     setLeads(l.data??[]);setTerritories(t.data??[]);setSales(s.data??[]);setTimes(ti.data??[]);setGoals(g.data??null);setRoute(r.data??null);setAppointments(a.data??[]);cacheJobs(a.data??[]);
     const currentTerritory=selectedTerritory||(t.data?.[0]?.id??'');
     setSelectedTerritory(currentTerritory);
@@ -438,6 +441,7 @@ export default function D2DPortal(){
     const duration=minutesForService(service,120);
     const dest={lat:selectedDoor?.latitude??lead.latitude,lng:selectedDoor?.longitude??lead.longitude,address:form.address||lead.address};
     const plan=await planAppointmentTiming({appointments,durationMinutes:duration,destination:dest,requestedStart:new Date(source.appointment_at),shopLane:true});
+    if(plan.noWindow)throw new Error(plan.label);
     if(plan.previous)await supabase.from('appointments').update({travel_buffer_minutes:plan.inboundMinutes}).eq('id',plan.previous.id);
     if(plan.snapped)setForm((p:any)=>({...p,appointment_at:toLocalInput(plan.start)}));
     const {data,error}=await supabase.from('appointments').insert({
@@ -576,8 +580,8 @@ export default function D2DPortal(){
     void supabase.from('d2d_presentation_events').insert({employee_id:employee.id,lead_id:selectedDoor?.lead_id||null,territory_id:selectedTerritory||null,event_type:event,event_data:detail}).then(()=>{},()=>{});
   };
 
-  const clock=async()=>{if(!employee)return;if(openEntry){const pos=await getPosition();const {data,error}=await supabase.from('time_entries').update({clock_out:new Date().toISOString(),clock_out_latitude:pos?.latitude??null,clock_out_longitude:pos?.longitude??null}).eq('id',openEntry.id).select().single();if(error)return alert(error.message);setTimes(p=>p.map(t=>t.id===openEntry.id?data:t));showToast('Clocked out','Your hours are on the timesheet.');}
-    else{const pos=await getPosition();const {data,error}=await supabase.from('time_entries').insert({employee_id:employee.id,clock_in:new Date().toISOString(),clock_in_latitude:pos?.latitude??null,clock_in_longitude:pos?.longitude??null,status:'pending'}).select().single();if(error)return alert(error.message);setTimes(p=>[data,...p]);showToast('Clocked in','Location is recorded for this shift.');}};
+  const clock=async()=>{if(!employee)return;if(openEntry){const pos=await getPosition();const {data,error}=await supabase.from('time_entries').update({clock_out:new Date().toISOString(),clock_out_latitude:pos?.latitude??null,clock_out_longitude:pos?.longitude??null}).eq('id',openEntry.id).select().single();if(error)return showToast('Clock out failed',error.message);setTimes(p=>p.map(t=>t.id===openEntry.id?data:t));showToast('Clocked out','Your hours are on the timesheet.');}
+    else{const pos=await getPosition();const {data,error}=await supabase.from('time_entries').insert({employee_id:employee.id,clock_in:new Date().toISOString(),clock_in_latitude:pos?.latitude??null,clock_in_longitude:pos?.longitude??null,status:'pending'}).select().single();if(error)return showToast('Clock in failed',error.message);setTimes(p=>[data,...p]);showToast('Clocked in','Location is recorded for this shift.');}};
 
   const createCalendarAppointment=async(payload:Record<string,unknown>)=>{
     if(!employee)return;
@@ -591,6 +595,7 @@ export default function D2DPortal(){
 
   const logout=async()=>{await signOut().catch(()=>{});navigate('/')};
   if(loading||busy)return <WorkspaceGate busy title="Opening D2D" body="Loading territories, doors, and today's knocks." />;
+  if(profileError)return <WorkspaceGate title="Could not load your profile" body={profileError} onRetry={()=>void reloadProfile()} homeHref="/login" homeLabel="Back to sign in" />;
   if(loadError&&!employee)return <WorkspaceGate title="Could not open D2D" body={loadError} onRetry={()=>{setBusy(true);void load()}} homeHref="/login" homeLabel="Back to sign in" />;
   if(!employee)return <WorkspaceGate title="D2D profile not linked" body="Ask an owner to link your login in People → Permissions." homeHref="/login" homeLabel="Back to sign in" />;
 
@@ -698,7 +703,7 @@ export default function D2DPortal(){
 
         {tab==='calendar'&&<div className="tab-content v2-page"><SharedCalendar mode="rep" appointments={appointments} employees={employee?[employee]:[]} employeeId={employee.id} leads={leads} title="My Customer Calendar" onCreate={createCalendarAppointment} onUpdate={updateCalendarAppointment}/></div>}
 
-        {tab==='followups'&&<div className="tab-content"><div className="v2-page-head"><div><span className="eyebrow">Callbacks</span><h2>Follow-up queue</h2><p>Highest-priority callbacks and revisits first.</p></div></div><div className="followup-grid">{dueFollowups.sort((a,b)=>new Date(a.follow_up_at||0).getTime()-new Date(b.follow_up_at||0).getTime()).map(l=><div className="followup-card" key={l.id}><div><span className="eyebrow">{l.follow_up_at&&new Date(l.follow_up_at)<new Date()?'OVERDUE':'FOLLOW UP'}</span><h3>{leadDisplayName(l)}</h3><p>{l.address}</p></div><div className="followup-meta"><span>{l.follow_up_at?localDateTime(l.follow_up_at):'No date set'}</span><strong>{money(Number(l.estimated_value||0))}</strong></div><div className="followup-actions">{l.phone&&<a className="btn-outline" href={`tel:${l.phone}`}><Phone size={14}/> Call</a>}{l.phone&&<a className="btn-outline" href={smsHref(l.phone,`Hi ${leadDisplayName(l).split(' ')[0]}, this is North Splash Auto Luxe.`)}><MessageCircle size={14}/> Text</a>}<button className="btn-primary" onClick={()=>{const door=doors.find(d=>d.id===l.territory_door_id)||doors.find(d=>d.lead_id===l.id);setTab('territory');void pickDoor(door||{id:l.territory_door_id||undefined,lead_id:l.id,latitude:Number(l.latitude||0),longitude:Number(l.longitude||0),address:l.address,territory_id:l.territory_id,status:l.status,notes:l.notes})}}>Open house</button></div></div>)}{!dueFollowups.length&&<div className="ns-empty"><strong>You're caught up</strong><p>No follow-ups are due. New revisits from the map land here automatically.</p></div>}</div></div>}
+        {tab==='followups'&&<div className="tab-content"><div className="v2-page-head"><div><span className="eyebrow">Callbacks</span><h2>Follow-up queue</h2><p>Highest-priority callbacks and revisits first.</p></div></div><div className="followup-grid">{dueFollowups.sort((a,b)=>new Date(a.follow_up_at||0).getTime()-new Date(b.follow_up_at||0).getTime()).map(l=><div className="followup-card" key={l.id}><div><span className="eyebrow">{l.follow_up_at&&new Date(l.follow_up_at)<new Date()?'OVERDUE':'FOLLOW UP'}</span><h3>{leadDisplayName(l)}</h3><p>{l.address}</p></div><div className="followup-meta"><span>{l.follow_up_at?localDateTime(l.follow_up_at):'No date set'}</span><strong>{money(Number(l.estimated_value||0))}</strong></div><div className="followup-actions">{telHref(l.phone)&&<a className="btn-outline" href={telHref(l.phone)}><Phone size={14}/> Call</a>}{l.phone&&<a className="btn-outline" href={smsHref(l.phone,`Hi ${leadDisplayName(l).split(' ')[0]}, this is North Splash Auto Luxe.`)}><MessageCircle size={14}/> Text</a>}<button className="btn-primary" onClick={()=>{const door=doors.find(d=>d.id===l.territory_door_id)||doors.find(d=>d.lead_id===l.id);setTab('territory');void pickDoor(door||{id:l.territory_door_id||undefined,lead_id:l.id,latitude:Number(l.latitude||0),longitude:Number(l.longitude||0),address:l.address,territory_id:l.territory_id,status:l.status,notes:l.notes})}}>Open house</button></div></div>)}{!dueFollowups.length&&<div className="ns-empty"><strong>You're caught up</strong><p>No follow-ups are due. New revisits from the map land here automatically.</p></div>}</div></div>}
 
         {tab==='presentation'&&<div className="tab-content d2d-presentation-page v2-page"><div className="v2-page-head"><div><span className="eyebrow">Pitch</span><h2>Sales presentation</h2><p>Hand the screen to the customer, then open their portal account and apply the offer without leaving the door.</p></div><div className="v2-head-actions"><button className="btn-outline" onClick={()=>openPitch('d2d_tab_account','account')}><UserRound size={15}/> Customer account</button><button className="btn-primary" onClick={()=>openPitch('d2d_tab')}><Presentation size={15}/> Present to customer</button></div></div>
           <div className="d2d-presentation-launch">

@@ -9,7 +9,10 @@ import { APPT_SLOTS, formatJobWindow, isTodayStamp, jobMatchesDay, liveOpenSlots
 import { channelLabel, COMM_GROUPS, COMM_VARIABLES, fillTemplate, SAMPLE_VARS } from '@/lib/communicationCatalog';
 import { emptyEmployeeDraft, SYSTEM_ROLES, type EmployeeDraft } from '@/lib/rolePresets';
 import { firstWord, isSettledPayment, money, prettyLabel, trendLabel } from '@/lib/data';
-import { DETAIL_FAMILY_COPY, packagesForFamily } from '@/lib/detailCatalog';
+import { DETAIL_FAMILY_COPY, minutesForService, packagesForFamily } from '@/lib/detailCatalog';
+import { DEFAULT_TRAVEL_BUFFER_MINUTES } from '@/lib/driveTime';
+import { smsHref, telHref } from '@/lib/fieldOps';
+import { showToast } from '@/components/AppToast';
 import { ServiceMenuSelect } from '@/components/DetailSelfPicker';
 import { remainingStepLabels } from '@/lib/onboarding';
 import { MARKET } from '@/lib/market';
@@ -862,7 +865,7 @@ export function CalendarView({ onOpen }: { onOpen: (id: string) => void }) {
   }, new Map<string, OsJob[]>());
   const bookAppointment = (confirm: boolean) => {
     if (!draft.customer.trim()) return;
-    if (slotConflict(os.jobs, draft.detailer, pickedDate, draft.time)) {
+    if (slotConflict(os.jobs, draft.detailer, pickedDate, draft.time, undefined, minutesForService(draft.service, 120) + DEFAULT_TRAVEL_BUFFER_MINUTES)) {
       setBookError(`${draft.detailer} needs job time plus a travel buffer through ${draft.time} on ${label}. Pick a later window or another tech.`);
       return;
     }
@@ -1510,7 +1513,7 @@ export function D2DView({ onBook, onPipeline }: { onBook?: (jobId: string) => vo
                 <div key={a.id} style={{ fontSize: 12, color: 'var(--os-muted)', padding: '6px 0', borderTop: '1px solid var(--os-line)' }}>{a.at} · {a.author} · {a.body}</div>
               ))}
               <div className="nsos-sr-card-actions">
-                {lead.phone && <a className="nsos-btn ghost" href={`tel:${lead.phone}`}>Call</a>}
+                {lead.phone && telHref(lead.phone) && <a className="nsos-btn ghost" href={telHref(lead.phone)}>Call</a>}
                 <button className="nsos-btn" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setPane('pitch')}>Pitch & book a window</button>
               </div>
             </div>
@@ -1702,7 +1705,7 @@ export function PipelineView({ onBook }: { onBook?: (jobId: string) => void }) {
             <h3>{leadDisplayName(picked)}</h3>
             <p>{picked.address || 'Address pending'}{picked.phone ? ` · ${picked.phone}` : ''}</p>
             <div className="nsos-actions">
-              {picked.phone && <a className="nsos-btn ghost" href={`tel:${picked.phone}`}>Call</a>}
+              {picked.phone && telHref(picked.phone) && <a className="nsos-btn ghost" href={telHref(picked.phone)}>Call</a>}
               <button type="button" className="nsos-btn" onClick={() => { const id = os.convertLead(picked.id); if (id) onBook?.(id); }}>Book job</button>
             </div>
           </div>
@@ -1898,8 +1901,8 @@ export function JobDetail({ job }: { job: OsJob }) {
         </label>
         <div className="nsos-actions" style={{ marginTop: 14 }}>
           <a className="nsos-btn ghost" href={`https://maps.apple.com/?q=${encodeURIComponent(job.address)}`} target="_blank" rel="noreferrer"><Navigation size={14} />Directions</a>
-          {job.phone && <a className="nsos-btn ghost" href={`tel:${job.phone}`}><Smartphone size={14} />Call</a>}
-          {job.phone && <a className="nsos-btn ghost" href={`sms:${job.phone}`}><MessageCircle size={14} />Text</a>}
+          {job.phone && telHref(job.phone) && <a className="nsos-btn ghost" href={telHref(job.phone)}><Smartphone size={14} />Call</a>}
+          {job.phone && smsHref(job.phone) && <a className="nsos-btn ghost" href={smsHref(job.phone)}><MessageCircle size={14} />Text</a>}
           {job.status !== 'completed' && job.status !== 'en_route' && job.status !== 'arrived' && job.status !== 'in_progress' && (
             <button className="nsos-btn" onClick={() => os.setJobStatus(job.id, 'en_route')}>En route</button>
           )}
@@ -1909,7 +1912,12 @@ export function JobDetail({ job }: { job: OsJob }) {
           {job.payment === 'due' && <button className="nsos-btn" onClick={() => os.collectJob(job.id)}><CreditCard size={14} />Collect {money(job.price)}</button>}
           <button className="nsos-btn ghost" onClick={() => {
             const crew = os.chats.find((c) => c.channel_type === 'crew' || (c.kind === 'space' && String(c.name || '').toLowerCase().includes('crew')));
-            if (crew) os.shareToChat(crew.id, `${job.customer} · ${job.service} is ${prettyLabel(job.status)} at ${job.address}`);
+            if (!crew) {
+              showToast('No crew channel', 'Create a crew chat first, then share this job.');
+              return;
+            }
+            os.shareToChat(crew.id, `${job.customer} · ${job.service} is ${prettyLabel(job.status)} at ${job.address}`);
+            showToast('Shared to crew', crew.name);
           }}>Share to crew</button>
         </div>
       </div>
@@ -2093,7 +2101,7 @@ export function HireView({ onHire, onOpen }: { onHire: (name?: string, title?: s
             {c.notes ? <p className="nsos-hire-notes">{c.notes}</p> : <p className="nsos-hire-empty">No written answers on this card yet.</p>}
             <p className="nsos-hire-meta">Next: {c.checklist?.find((item) => !item.done)?.label || 'Convert to teammate'}</p>
             <div className="nsos-hire-actions">
-              {c.phone ? <a className="nsos-btn ghost" href={`tel:${c.phone.replace(/\D/g, '')}`}>Call</a> : null}
+              {telHref(c.phone) ? <a className="nsos-btn ghost" href={telHref(c.phone)}>Call</a> : null}
               <button className="nsos-btn ghost" type="button" onClick={() => onHire(c.name, c.role)}>Hire</button>
             </div>
           </>

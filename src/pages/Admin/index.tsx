@@ -17,6 +17,7 @@ import { sameLocalDay } from '@/lib/fieldOps';
 import { sendCommunication, notifyCustomer } from '@/lib/communications';
 import { canCollectJob, markJobCollected, type CollectMethod } from '@/lib/collectPayment';
 import { appointmentPartyName, isUpcomingJob, toLocalInput } from '@/lib/scheduling';
+import { setOwnerFocusJob } from '@/lib/ownerJump';
 import type { BusinessSection } from './BusinessSuite';
 import type { EnterpriseSection } from './EnterpriseSuite';
 import type { ExpansionSection } from './OperationsExpansion';
@@ -111,7 +112,7 @@ function StatusBadge({ status }: { status?: string | null }) {
 }
 
 export default function Admin() {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, profileError, loading, reloadProfile } = useAuth();
   const navigate = useNavigate();
   const ownerMode = (() => {
     const path = window.location.pathname.replace(/\/$/, '') || '/';
@@ -141,6 +142,8 @@ export default function Admin() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [visits, setVisits] = useState<{ id?:string; page: string; referrer?:string|null; session_id?:string|null; user_agent?:string|null; user_id?:string|null; visited_at:string }[]>([]);
+  const [visitsError, setVisitsError] = useState('');
+  const [visitsReady, setVisitsReady] = useState(false);
   const [visitorRange,setVisitorRange]=useState<'1h'|'6h'|'12h'|'24h'|'3d'|'7d'|'14d'|'30d'|'90d'|'6m'|'1y'>('24h');
   const [selectedEmployeeId,setSelectedEmployeeId]=useState('');
   const [profileInitialTab,setProfileInitialTab]=useState<'onboarding'|'overview'|undefined>(undefined);
@@ -172,6 +175,7 @@ const [availabilityForm, setAvailabilityForm] = useState({
       navigate('/login', { replace: true });
       return;
     }
+    if (profileError) return;
     if (!hasWorkspaceAccess) {
       navigate('/portal', { replace: true });
     }
@@ -248,6 +252,9 @@ const [availabilityForm, setAvailabilityForm] = useState({
     .order('date', { ascending: true }),
 ]);
 
+      const firstErr = [custs, apts, openApts, pays, emps, avail].find((row) => row.error)?.error;
+      if (firstErr) throw new Error(firstErr.message);
+
       const mergedAppointments=[...(apts.data ?? []), ...(openApts.data ?? [])];
       const byId=new Map(mergedAppointments.map((a:any)=>[a.id,a]));
       const safeAppointments=[...byId.values()]
@@ -292,7 +299,7 @@ const [availabilityForm, setAvailabilityForm] = useState({
   }, [hasWorkspaceAccess]);
 
   useEffect(() => {
-    if (!hasWorkspaceAccess || tab !== 'visitors' || visits.length) return;
+    if (!hasWorkspaceAccess || tab !== 'visitors' || visitsReady) return;
     (async () => {
       let visitQuery = await supabase
         .from('site_visits')
@@ -303,9 +310,16 @@ const [availabilityForm, setAvailabilityForm] = useState({
       if(visitQuery.error && /user_id/i.test(visitQuery.error.message||'')){
         visitQuery=await supabase.from('site_visits').select('id,page,referrer,session_id,user_agent,visited_at').gte('visited_at',new Date(Date.now()-365*86400000).toISOString()).order('visited_at',{ascending:false}).limit(8000) as any;
       }
-      setVisits((visitQuery.data ?? []) as any);
+      if (visitQuery.error) {
+        setVisitsError(visitQuery.error.message || 'Could not load site visits. The analytics log may not be installed yet.');
+        setVisits([]);
+      } else {
+        setVisitsError('');
+        setVisits((visitQuery.data ?? []) as any);
+      }
+      setVisitsReady(true);
     })();
-  }, [hasWorkspaceAccess, tab, visits.length]);
+  }, [hasWorkspaceAccess, tab, visitsReady]);
 
   useEffect(() => {
     if (!hasWorkspaceAccess) return;
@@ -598,6 +612,10 @@ const handleDeleteAvailability = async (id: string) => {
     );
   }
 
+  if (profileError) {
+    return <WorkspaceGate title="Could not load your profile" body={profileError} onRetry={() => void reloadProfile()} homeHref="/login" homeLabel="Back to sign in" />;
+  }
+
   if (!hasWorkspaceAccess) {
     return <WorkspaceGate title="This workspace is closed" body="Your account does not have Owner or Admin access." homeHref="/portal" homeLabel="Open customer portal" />;
   }
@@ -802,7 +820,7 @@ const handleDeleteAvailability = async (id: string) => {
           <div className="os-command-input"><Search size={18}/><input autoFocus placeholder="Search pages, customers, appointments or employees…" value={commandQuery} onChange={e=>setCommandQuery(e.target.value)}/><button onClick={()=>setCommandOpen(false)}>ESC</button></div>
           <div className="os-command-results">
             {navItems.filter(n=>!(ownerMode&&n.id==='dashboard')&&n.label.toLowerCase().includes(commandQuery.toLowerCase())).slice(0,8).map(n=><button key={n.id} onClick={()=>{setTab(n.id);setCommandOpen(false);setCommandQuery('')}}><n.Icon size={16}/><span>{n.label}</span><small>Open workspace</small></button>)}
-            {commandQuery.trim().length>=2&&appointments.filter(a=>!a.archived&&[a.customer_name,a.service_name,a.service_address,a.customer_phone].filter(Boolean).join(' ').toLowerCase().includes(commandQuery.toLowerCase())).slice(0,6).map(a=><button key={a.id} onClick={()=>{setTab('dispatch');setCommandOpen(false);setCommandQuery('')}}><Calendar size={16}/><span>{appointmentPartyName(a)}</span><small>{a.service_name} · {a.scheduled_at?new Date(a.scheduled_at).toLocaleString():'Unscheduled'}</small></button>)}
+            {commandQuery.trim().length>=2&&appointments.filter(a=>!a.archived&&[a.customer_name,a.service_name,a.service_address,a.customer_phone].filter(Boolean).join(' ').toLowerCase().includes(commandQuery.toLowerCase())).slice(0,6).map(a=><button key={a.id} onClick={()=>{setOwnerFocusJob(a.id);setTab('dispatch');setCommandOpen(false);setCommandQuery('')}}><Calendar size={16}/><span>{appointmentPartyName(a)}</span><small>{a.service_name} · {a.scheduled_at?new Date(a.scheduled_at).toLocaleString():'Unscheduled'}</small></button>)}
             {customers.filter(c=>[c.full_name,c.email,c.phone].filter(Boolean).join(' ').toLowerCase().includes(commandQuery.toLowerCase())).slice(0,5).map(c=><button key={c.id} onClick={()=>{setTab('crm');setCommandOpen(false)}}><Users size={16}/><span>{c.full_name||c.email||c.phone||'Guest'}</span><small>{c.email||c.phone||'Open CRM'}</small></button>)}
             {employees.filter(e=>[e.name,e.email,e.role].filter(Boolean).join(' ').toLowerCase().includes(commandQuery.toLowerCase())).slice(0,5).map(e=><button key={e.id} onClick={()=>{setTab('employees');setCommandOpen(false)}}><UserCheck size={16}/><span>{e.name}</span><small>{e.role}</small></button>)}
           </div>
@@ -983,7 +1001,7 @@ const handleDeleteAvailability = async (id: string) => {
                   )})}
                   {Array.from(new Map<string,Appointment>(appointments.filter(a=>!a.user_id&&(a.customer_email||a.customer_name)).map(a=>[String(a.customer_email||a.customer_phone||a.customer_name),a] as [string,Appointment])).values()).filter(a=>!customerQuery||[a.customer_name,a.customer_email,a.customer_phone].filter(Boolean).join(' ').toLowerCase().includes(customerQuery.toLowerCase())).map(a => (
                     <div key={`guest-${a.id}`} className="data-table-row guest-customer-row">
-                      <div className="dt-cell dt-name"><div className="dt-avatar">{(a.customer_name||a.customer_email||'G')[0].toUpperCase()}</div><div><strong>{a.customer_name||'Guest customer'}</strong>{a.customer_phone&&<span>{a.customer_phone}</span>}</div></div>
+                      <div className="dt-cell dt-name"><div className="dt-avatar">{(appointmentPartyName(a, customers)||'G')[0].toUpperCase()}</div><div><strong>{appointmentPartyName(a, customers)}</strong>{a.customer_phone&&<span>{a.customer_phone}</span>}</div></div>
                       <span className="dt-cell">{a.customer_email||'—'}</span>
                       <span className="dt-cell">{a.service_name} · {a.scheduled_at?new Date(a.scheduled_at).toLocaleDateString():'unscheduled'}</span>
                       <span className="dt-cell">{money(Number(a.price||0))}</span>
@@ -1404,7 +1422,7 @@ const handleDeleteAvailability = async (id: string) => {
             const pageMap=new Map<string,number>();const refMap=new Map<string,number>();const deviceMap=new Map<string,number>();
             filtered.forEach(v=>{pageMap.set(v.page,(pageMap.get(v.page)||0)+1);const ref=v.referrer?(()=>{try{return new URL(v.referrer!).hostname}catch{return v.referrer!}})():'Direct';refMap.set(ref,(refMap.get(ref)||0)+1);const ua=(v.user_agent||'').toLowerCase();const device=/iphone|android.*mobile/.test(ua)?'Mobile':/ipad|tablet/.test(ua)?'Tablet':'Desktop';deviceMap.set(device,(deviceMap.get(device)||0)+1)});
             const pages=[...pageMap].sort((a,b)=>b[1]-a[1]);const refs=[...refMap].sort((a,b)=>b[1]-a[1]);const max=pages[0]?.[1]||1;
-            return <div className="tab-content visitors-v21"><div className="tab-header"><div><span className="eyebrow">AUDIENCE ANALYTICS</span><h2>Site Visitors</h2><p>See traffic from the last hour through the last year, including sessions, pages, sources and devices.</p></div><div className="visitor-range-tabs">{(['1h','6h','12h','24h','3d','7d','14d','30d','90d','6m','1y'] as const).map(r=><button key={r} className={visitorRange===r?'active':''} onClick={()=>setVisitorRange(r)}>{r==='1h'?'1 Hour':r==='6h'?'6 Hours':r==='12h'?'12 Hours':r==='24h'?'1 Day':r==='3d'?'3 Days':r==='7d'?'7 Days':r==='14d'?'14 Days':r==='30d'?'30 Days':r==='90d'?'90 Days':r==='6m'?'6 Months':'1 Year'}</button>)}</div></div><div className="admin-stats-row visitor-kpis"><StatCard label="Page Views" value={String(filtered.length)} icon={Eye}/><StatCard label="Unique Sessions" value={String(sessions.size)} icon={Users}/><StatCard label="Known Visitors" value={String(new Set(filtered.map(v=>v.user_id).filter(Boolean)).size)} icon={UserCheck}/><StatCard label="Pages Viewed" value={String(pages.length)} icon={Globe}/><StatCard label="Views / Session" value={sessions.size?(filtered.length/sessions.size).toFixed(1):'0'} icon={Activity}/></div><div className="visitor-analytics-grid"><section className="admin-card"><div className="admin-card-header"><h3>Top Pages</h3><span>{filtered.length} views</span></div><div className="visitors-list">{pages.slice(0,15).map(([page,count])=><div key={page} className="visitor-row"><span className="visitor-page">{page}</span><div className="visitor-bar-wrap"><div className="visitor-bar" style={{width:`${count/max*100}%`}}/></div><strong className="visitor-count">{count}</strong></div>)}{!pages.length&&<div className="ns-empty">No visits in this time range.</div>}</div></section><section className="admin-card"><div className="admin-card-header"><h3>Traffic Sources</h3></div><div className="visitor-source-list">{refs.slice(0,12).map(([ref,count])=><div key={ref}><span>{ref}</span><strong>{count}</strong></div>)}</div><div className="visitor-device-grid">{[...deviceMap].map(([device,count])=><div key={device}><strong>{count}</strong><span>{device}</span></div>)}</div></section></div><section className="admin-card visitor-live-table"><div className="admin-card-header"><h3>Recent Visits</h3><span>Newest first</span></div><div className="data-table"><div className="data-table-head"><span>Time</span><span>Visitor</span><span>Page</span><span>Source</span><span>Device</span><span>Session</span></div>{filtered.slice(0,100).map((v,i)=>{const ua=(v.user_agent||'').toLowerCase();const device=/iphone|android.*mobile/.test(ua)?'Mobile':/ipad|tablet/.test(ua)?'Tablet':'Desktop';let ref='Direct';if(v.referrer){try{ref=new URL(v.referrer).hostname}catch{ref=v.referrer}}const known=customers.find(c=>c.id===v.user_id);return <div className="data-table-row" key={v.id||`${v.visited_at}-${i}`}><span className="dt-cell">{new Date(v.visited_at).toLocaleString()}</span><span className="dt-cell v23-visitor-person">{known&&<EmployeeAvatar profileId={known.id} name={known.full_name||known.email||'Visitor'} avatarUrl={known.avatar_url} size="sm"/>}<strong>{known?.full_name||known?.email||(v.session_id?`Visitor ${v.session_id.slice(0,6)}`:'Anonymous')}</strong></span><span className="dt-cell"><strong>{v.page}</strong></span><span className="dt-cell">{ref}</span><span className="dt-cell">{device}</span><span className="dt-cell visitor-session">{v.session_id?.slice(0,8)||'—'}</span></div>})}</div></section></div>
+            return <div className="tab-content visitors-v21"><div className="tab-header"><div><span className="eyebrow">AUDIENCE ANALYTICS</span><h2>Site Visitors</h2><p>{visitsError?`Could not load visits: ${visitsError}`:'Traffic from the public site when the visit log is installed. Empty here means no rows yet — not a live audience feed until the site_visits function is applied.'}</p></div><div className="visitor-range-tabs">{(['1h','6h','12h','24h','3d','7d','14d','30d','90d','6m','1y'] as const).map(r=><button key={r} className={visitorRange===r?'active':''} onClick={()=>setVisitorRange(r)}>{r==='1h'?'1 Hour':r==='6h'?'6 Hours':r==='12h'?'12 Hours':r==='24h'?'1 Day':r==='3d'?'3 Days':r==='7d'?'7 Days':r==='14d'?'14 Days':r==='30d'?'30 Days':r==='90d'?'90 Days':r==='6m'?'6 Months':'1 Year'}</button>)}</div></div><div className="admin-stats-row visitor-kpis"><StatCard label="Page Views" value={String(filtered.length)} icon={Eye}/><StatCard label="Unique Sessions" value={String(sessions.size)} icon={Users}/><StatCard label="Known Visitors" value={String(new Set(filtered.map(v=>v.user_id).filter(Boolean)).size)} icon={UserCheck}/><StatCard label="Pages Viewed" value={String(pages.length)} icon={Globe}/><StatCard label="Views / Session" value={sessions.size?(filtered.length/sessions.size).toFixed(1):'0'} icon={Activity}/></div><div className="visitor-analytics-grid"><section className="admin-card"><div className="admin-card-header"><h3>Top Pages</h3><span>{filtered.length} views</span></div><div className="visitors-list">{pages.slice(0,15).map(([page,count])=><div key={page} className="visitor-row"><span className="visitor-page">{page}</span><div className="visitor-bar-wrap"><div className="visitor-bar" style={{width:`${count/max*100}%`}}/></div><strong className="visitor-count">{count}</strong></div>)}{!pages.length&&<div className="ns-empty">No visits in this time range.</div>}</div></section><section className="admin-card"><div className="admin-card-header"><h3>Traffic Sources</h3></div><div className="visitor-source-list">{refs.slice(0,12).map(([ref,count])=><div key={ref}><span>{ref}</span><strong>{count}</strong></div>)}</div><div className="visitor-device-grid">{[...deviceMap].map(([device,count])=><div key={device}><strong>{count}</strong><span>{device}</span></div>)}</div></section></div><section className="admin-card visitor-live-table"><div className="admin-card-header"><h3>Recent Visits</h3><span>Newest first</span></div><div className="data-table"><div className="data-table-head"><span>Time</span><span>Visitor</span><span>Page</span><span>Source</span><span>Device</span><span>Session</span></div>{filtered.slice(0,100).map((v,i)=>{const ua=(v.user_agent||'').toLowerCase();const device=/iphone|android.*mobile/.test(ua)?'Mobile':/ipad|tablet/.test(ua)?'Tablet':'Desktop';let ref='Direct';if(v.referrer){try{ref=new URL(v.referrer).hostname}catch{ref=v.referrer}}const known=customers.find(c=>c.id===v.user_id);return <div className="data-table-row" key={v.id||`${v.visited_at}-${i}`}><span className="dt-cell">{new Date(v.visited_at).toLocaleString()}</span><span className="dt-cell v23-visitor-person">{known&&<EmployeeAvatar profileId={known.id} name={known.full_name||known.email||'Visitor'} avatarUrl={known.avatar_url} size="sm"/>}<strong>{known?.full_name||known?.email||(v.session_id?`Visitor ${v.session_id.slice(0,6)}`:'Anonymous')}</strong></span><span className="dt-cell"><strong>{v.page}</strong></span><span className="dt-cell">{ref}</span><span className="dt-cell">{device}</span><span className="dt-cell visitor-session">{v.session_id?.slice(0,8)||'—'}</span></div>})}</div></section></div>
           })()}
         </div>
 

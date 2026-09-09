@@ -7,7 +7,7 @@ import { money } from '@/lib/data';
 import { MARKET } from '@/lib/market';
 import { notifyCustomer } from '@/lib/communications';
 import { ServiceMenuSelect } from '@/components/DetailSelfPicker';
-import { DOOR_STATUSES, doorStatus } from '@/lib/fieldOps';
+import { DOOR_STATUSES, doorStatus, smsHref, telHref } from '@/lib/fieldOps';
 import {
   composedLeadIdentity, emptySrLeadFields, fieldsFromLead, leadDisplayName, leadNextAction, notesWithAltPhone, SR_KNOCK_KEYS, SR_PIPELINE_KEYS, srStatus,
   type SrLeadFields, type SrStatusKey,
@@ -631,6 +631,10 @@ function LeadInspector({
         requestedStart: requested,
         shopLane: true,
       });
+      if (plan.noWindow) {
+        alert(plan.label);
+        return;
+      }
       if (plan.previous) await supabase.from('appointments').update({ travel_buffer_minutes: plan.inboundMinutes }).eq('id', plan.previous.id);
       const { data, error } = await supabase.from('appointments').insert({
         customer_name: identity.name || selected.customer_name,
@@ -724,7 +728,7 @@ function LeadInspector({
         <button className="btn-primary" type="submit">Save details</button>
       </form>
       <div className="lead-direct-actions">
-        {fields.phone && <><a href={`tel:${fields.phone}`}>Call</a><a href={`sms:${fields.phone}`}>Text</a></>}
+        {telHref(fields.phone) && <><a href={telHref(fields.phone)}>Call</a><a href={smsHref(fields.phone)}>Text</a></>}
         {mapUrl && <a target="_blank" rel="noreferrer" href={directionsUrl || mapUrl}>Map</a>}
       </div>
       {!archived && (

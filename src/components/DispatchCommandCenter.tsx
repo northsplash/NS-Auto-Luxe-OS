@@ -6,12 +6,12 @@ import {
 import { supabase } from '@/lib/supabase';
 import type { Appointment, Employee } from '@/lib/supabase';
 import { money, prettyLabel } from '@/lib/data';
-import { appointmentPartyName, dayKey, jobDurationMinutes as duration, timeLabel, travelBufferMinutes as buffer } from '@/lib/scheduling';
+import { appointmentPartyName, dayKey, employeeConflicts, jobDurationMinutes as duration, timeLabel, travelBufferMinutes as buffer } from '@/lib/scheduling';
+import { takeOwnerBoardFilter, takeOwnerFocusJob } from '@/lib/ownerJump';
 import EmployeeAvatar from '@/components/EmployeeAvatar';
 import { employeeCanDetail } from '@/lib/workCapabilities';
 import FieldContactBar from '@/components/FieldContactBar';
 import { canCollectJob, isJobPaid, markJobCollected } from '@/lib/collectPayment';
-import { takeOwnerBoardFilter } from '@/lib/ownerJump';
 import { sendCommunication } from '@/lib/communications';
 
 type Props={employees:Employee[];appointments:Appointment[];setAppointments:React.Dispatch<React.SetStateAction<Appointment[]>>};
@@ -36,6 +36,7 @@ export default function DispatchCommandCenter({employees,appointments,setAppoint
   const [selected,setSelected]=useState<Appointment|null>(null);
   const [saving,setSaving]=useState('');
   const [boardFilter]=useState(()=>takeOwnerBoardFilter());
+  const focusJobId=useRef(takeOwnerFocusJob());
   const jumpApplied=useRef(false);
   useEffect(()=>{
     if(boardFilter==='unassigned')setMode('people');
@@ -55,6 +56,15 @@ export default function DispatchCommandCenter({employees,appointments,setAppoint
     }
     jumpApplied.current=true;
   },[appointments,boardFilter]);
+  useEffect(()=>{
+    const id=focusJobId.current;
+    if(!id)return;
+    const job=appointments.find(a=>a.id===id);
+    if(!job)return;
+    if(job.scheduled_at)setDate(dayKey(job.scheduled_at));
+    setSelected(job);
+    focusJobId.current='';
+  },[appointments]);
   const detailers=useMemo(()=>employees.filter(e=>e.status!=='inactive'&&employeeCanDetail(e)),[employees]);
   const jobs=useMemo(()=>{
     const day=appointments.filter(a=>a.scheduled_at&&dayKey(a.scheduled_at)===date&&!['cancelled','no_show'].includes(a.status)).sort((a,b)=>+new Date(a.scheduled_at!)-+new Date(b.scheduled_at!));
@@ -79,11 +89,15 @@ export default function DispatchCommandCenter({employees,appointments,setAppoint
     setSelected(s=>s?.id===id?data:s);
   };
   const assign=async(id:string,employeeId:string|null)=>{
-    await setJob(id,{assigned_employee_id:employeeId,dispatch_status:employeeId?'assigned':'unassigned'});
     const job=appointments.find(a=>a.id===id);
     const detailer=employees.find(e=>e.id===employeeId);
+    if(job?.scheduled_at&&employeeId){
+      const conflicts=employeeConflicts(appointments,employeeId,new Date(job.scheduled_at),duration(job),id);
+      if(conflicts.length&&!window.confirm(`${detailer?.name||'This detailer'} already has ${appointmentPartyName(conflicts[0])} at ${timeLabel(conflicts[0].scheduled_at!)}. Assign anyway?`))return;
+    }
+    await setJob(id,{assigned_employee_id:employeeId,dispatch_status:employeeId?'assigned':'unassigned'});
     if(job?.customer_email&&detailer){
-      sendCommunication('detailer_assigned',{appointment_id:job.id,recipient_email:job.customer_email,variables:{customer_name:job.customer_name||'Customer',employee_name:detailer.name,service_name:job.service_name}}).catch(console.warn);
+      sendCommunication('detailer_assigned',{appointment_id:job.id,recipient_email:job.customer_email,variables:{customer_name:appointmentPartyName(job),employee_name:detailer.name,service_name:job.service_name}}).catch(console.warn);
     }
   };
   const collectSelected=async(method:'cash'|'check'|'card')=>{
@@ -142,7 +156,7 @@ export default function DispatchCommandCenter({employees,appointments,setAppoint
 
     {mode==='status'&&<div className="dispatch-v16-status-board">{STATUS_COLUMNS.map(([id,label])=>{const rows=statusRows(id);return <section key={id} onDragOver={e=>e.preventDefault()} onDrop={e=>dropStatus(e,id)}><header><strong>{label}</strong><b>{rows.length}</b></header><div>{rows.map(j=><JobCard job={j} key={j.id}/>)}</div></section>})}</div>}
 
-    {mode==='timeline'&&<div className="dispatch-v16-timeline"><div className="dispatch-v16-time-head"><span>Team</span>{Array.from({length:17},(_,i)=>i+6).map(h=><span key={h}>{new Date(`2026-01-01T${String(h).padStart(2,'0')}:00`).toLocaleTimeString([],{hour:'numeric'})}</span>)}</div>{detailers.map(emp=><div className="dispatch-v16-time-row" key={emp.id}><div><strong>{emp.name}</strong><small>{conflictCount(emp.id)?`${conflictCount(emp.id)} conflict`:'Clear'}</small></div><div className="dispatch-v16-time-track">{jobs.filter(j=>j.assigned_employee_id===emp.id&&j.scheduled_at).map(j=>{const d=asDate(j.scheduled_at)!;const start=((d.getHours()+d.getMinutes()/60)-6)/17*100;const width=Math.max(3,duration(j)/60/17*100);return <button key={j.id} onClick={()=>setSelected(j)} className={`timeline-job state-${jobStatus(j)}`} style={{left:`${Math.max(0,start)}%`,width:`${Math.min(100-Math.max(0,start),width)}%`}}><span>{timeLabel(j.scheduled_at!)}</span><b>{j.customer_name||j.service_name}</b></button>})}</div></div>)}</div>}
+    {mode==='timeline'&&<div className="dispatch-v16-timeline"><div className="dispatch-v16-time-head"><span>Team</span>{Array.from({length:17},(_,i)=>i+6).map(h=><span key={h}>{new Date(`2026-01-01T${String(h).padStart(2,'0')}:00`).toLocaleTimeString([],{hour:'numeric'})}</span>)}</div>{detailers.map(emp=><div className="dispatch-v16-time-row" key={emp.id}><div><strong>{emp.name}</strong><small>{conflictCount(emp.id)?`${conflictCount(emp.id)} conflict`:'Clear'}</small></div><div className="dispatch-v16-time-track">{jobs.filter(j=>j.assigned_employee_id===emp.id&&j.scheduled_at).map(j=>{const d=asDate(j.scheduled_at);if(!d||Number.isNaN(d.getTime()))return null;const start=((d.getHours()+d.getMinutes()/60)-6)/17*100;if(!Number.isFinite(start))return null;const width=Math.max(3,duration(j)/60/17*100);return <button key={j.id} onClick={()=>setSelected(j)} className={`timeline-job state-${jobStatus(j)}`} style={{left:`${Math.max(0,start)}%`,width:`${Math.min(100-Math.max(0,start),width)}%`}}><span>{timeLabel(j.scheduled_at!)}</span><b>{appointmentPartyName(j)}</b></button>})}</div></div>)}</div>}
 
     {selected&&<div className="dispatch-v16-drawer-backdrop" onClick={()=>setSelected(null)}><aside className="dispatch-v16-drawer" onClick={e=>e.stopPropagation()}><div className="dispatch-v16-drawer-head"><div><span className="eyebrow">JOB CONTROL</span><h3>{appointmentPartyName(selected)}</h3><p>{selected.service_name} · {money(Number(selected.price||0))}</p></div><button onClick={()=>setSelected(null)}>×</button></div>{(()=>{const liveStep=selected.status==='completed'||selected.field_status==='completed'?5:selected.field_status==='finished'?4:selected.field_status==='started'||selected.status==='in_progress'?3:selected.field_status==='arrived'?2:selected.field_status==='en_route'?1:selected.assigned_employee_id?0:0;const steps=['Booked','En route','On site','In progress','Finished','Done'];return <div className="uber-live-tracker" aria-label="Live job status">{steps.map((label,i)=><div key={label} className={i<liveStep?'done':i===liveStep?'current':''}><b>{label}</b></div>)}</div>})()}<div className="dispatch-v16-detail-grid"><div><span>Scheduled</span><strong>{selected.scheduled_at?new Date(selected.scheduled_at).toLocaleString():'—'}</strong></div><div><span>Duration</span><strong>{duration(selected)} min</strong></div><div><span>Payment</span><strong>{statusLabel(selected.payment_status||'unpaid')}</strong></div><div><span>Status</span><strong>{statusLabel(jobStatus(selected))}</strong></div></div><div className="dispatch-v16-address"><MapPin/><div><strong>{selected.service_address||'Address pending'}</strong><small>{selected.vehicle_info||'Vehicle not listed'}</small></div></div><FieldContactBar phone={selected.customer_phone} address={selected.service_address} name={appointmentPartyName(selected)}/><label className="dispatch-v16-field"><span>Assigned detailer</span><select value={selected.assigned_employee_id||''} onChange={e=>assign(selected.id,e.target.value||null)}><option value="">Unassigned</option>{detailers.map(d=><option value={d.id} key={d.id}>{d.name}</option>)}</select></label><label className="dispatch-v16-field"><span>Operational status</span><select value={jobStatus(selected)} onChange={e=>moveStatus(selected.id,e.target.value)}><option value="scheduled">Scheduled</option><option value="en_route">En Route</option><option value="arrived">Arrived</option><option value="in_progress">In Progress</option><option value="finished">Finished / QC</option><option value="completed">Completed</option></select></label>{selected.notes&&<div className="dispatch-v16-notes"><strong>Customer notes</strong><p>{selected.notes}</p></div>}{selected.internal_notes&&<div className="dispatch-v16-notes internal"><strong>Internal notes</strong><p>{selected.internal_notes}</p></div>}{(canCollectJob(selected)||isJobPaid(selected))&&<div className="job-collect-bar dispatch-collect">{isJobPaid(selected)?<><CheckCircle2 size={16}/><div><strong>Collected</strong><span>{money(Number(selected.price||0))} marked paid.</span></div></>:<><DollarSign size={16}/><div><strong>Collect {money(Number(selected.price||0))}</strong><span>Collect cash, check, or card after finish. QC still happens in Manager. The job closes when both are done.</span></div><button type="button" className="btn-outline" onClick={()=>void collectSelected('cash')}>Cash</button><button type="button" className="btn-outline" onClick={()=>void collectSelected('check')}>Check</button><button type="button" className="btn-primary" onClick={()=>void collectSelected('card')}>Card collected</button></>}</div>}<div className="dispatch-v16-drawer-actions">{selected.service_address&&<a target="_blank" rel="noreferrer" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selected.service_address)}`}><Route/>Map</a>}<button onClick={()=>setSelected(null)}>Done<ChevronRight/></button></div></aside></div>}
   </div>

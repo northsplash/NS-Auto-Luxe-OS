@@ -321,7 +321,7 @@ export default function TeamMessaging({employee,employees=[],portalKind='employe
           <div ref={endRef}/>
         </div>
         <form className="message-composer" onSubmit={send}>
-          {sendError&&<div className="message-send-error" role="alert">{sendError}</div>}
+          {sendError&&<div className="message-send-error" role="alert">{sendError}<button type="button" onClick={()=>void send()}>Retry</button></div>}
           {!user&&<div className="message-send-error" role="alert">You are not signed in, so messages cannot send.</div>}
           <div className="message-composer-box"><div className="message-composer-toolbar"><button type="button" disabled title="File attachments are not available yet"><Plus size={16}/></button><button type="button" disabled title="File attachments are not available yet"><Paperclip size={15}/></button><span>{kind && kind!=='message'?prettyLabel(kind):'Message'}</span></div><div className="message-composer-row"><textarea ref={composerRef} value={draft} onChange={e=>setDraft(e.target.value)} onKeyDown={onComposerKeyDown} placeholder={`Message #${String(active.name||'').toLowerCase().replaceAll(' ','-')}`} rows={1}/><button type="submit" className="message-send-btn" disabled={sending||!draft.trim()}><Send size={18}/><span>{sending?'Sending':'Send'}</span></button></div><p className="message-composer-hint">Enter to send · Shift+Enter for a new line</p></div>
         </form>

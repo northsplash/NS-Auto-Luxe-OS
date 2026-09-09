@@ -6,7 +6,7 @@ import {
 import { CANVASS_KNOCK_KEYS, NEEDS_TIME_KEYS } from '@/lib/canvass';
 import { MARKET } from '@/lib/market';
 import { composedLeadIdentity } from '@/lib/salesRabbitLeads';
-import { doorStatus, doorStreetLabel, localDateTime } from '@/lib/fieldOps';
+import { doorStatus, doorStreetLabel, localDateTime, smsHref, telHref } from '@/lib/fieldOps';
 import { ServiceMenuSelect } from '@/components/DetailSelfPicker';
 import type { TerritoryDoorHistory } from '@/lib/supabase';
 
@@ -81,8 +81,8 @@ export default function CanvassInspector({
         </div>
 
         <div className="field-house-actions canvass-quick-links">
-          {form.phone && <a href={`tel:${form.phone}`}><Phone size={15} />Call</a>}
-          {form.phone && <a href={`sms:${form.phone}`}><MessageCircle size={15} />Text</a>}
+          {telHref(form.phone) && <a href={telHref(form.phone)}><Phone size={15} />Call</a>}
+          {smsHref(form.phone) && <a href={smsHref(form.phone)}><MessageCircle size={15} />Text</a>}
           {mapsUrl && <a target="_blank" rel="noreferrer" href={mapsUrl}><Navigation size={15} />Navigate</a>}
           {manual && <button type="button" onClick={onLocation}><Crosshair size={15} />Pin GPS</button>}
           <button type="button" className="house-pitch-btn" onClick={onPitch}><Presentation size={15} />Present</button>

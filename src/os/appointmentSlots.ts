@@ -13,7 +13,6 @@ export type OpenSlot = {
 
 export const APPT_SLOTS = ['8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '1:00 PM', '2:30 PM', '4:00 PM'] as const;
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
-const SLOT_SPAN_MINUTES = 30;
 
 export function localYmd(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -82,7 +81,7 @@ export function jobOccupyMinutes(job: OsJob) {
   return minutesForService(job.service, 120) + DEFAULT_TRAVEL_BUFFER_MINUTES;
 }
 
-export function slotConflict(jobs: OsJob[], detailer: string, date: Date, time: string, exceptId?: string) {
+export function slotConflict(jobs: OsJob[], detailer: string, date: Date, time: string, exceptId?: string, occupyNew = 120 + DEFAULT_TRAVEL_BUFFER_MINUTES) {
   if (!detailer) return false;
   const slotStart = parseClockMinutes(time);
   return jobs.some((job) => {
@@ -92,7 +91,7 @@ export function slotConflict(jobs: OsJob[], detailer: string, date: Date, time: 
     const jobStart = parseClockMinutes(clockFromStamp(job.time));
     if (jobStart == null) return clockFromStamp(job.time) === time;
     const occupy = jobOccupyMinutes(job);
-    return slotStart < jobStart + occupy && slotStart + SLOT_SPAN_MINUTES > jobStart;
+    return slotStart < jobStart + occupy && slotStart + occupyNew > jobStart;
   });
 }
 

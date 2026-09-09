@@ -29,8 +29,10 @@ export function toLocalInput(value?:string|Date|null){
 export function jobDurationMinutes(a:Appointment){
   return Math.max(SLOT_MINUTES, Number(a.estimated_duration_minutes || 120));
 }
-export function travelBufferMinutes(a:Appointment){
-  const n = Number(a.travel_buffer_minutes);
+export function travelBufferMinutes(a:Appointment | Pick<Appointment, 'travel_buffer_minutes'> | Record<string, unknown>){
+  const raw = (a as Appointment)?.travel_buffer_minutes as unknown;
+  if (raw === null || raw === undefined || raw === '') return DEFAULT_TRAVEL_BUFFER_MINUTES;
+  const n = Number(raw);
   return Number.isFinite(n) ? Math.max(0, n) : DEFAULT_TRAVEL_BUFFER_MINUTES;
 }
 export function appointmentWorkEnd(a:Appointment){
@@ -91,7 +93,39 @@ export function previousJobBefore(jobs: Appointment[], start: Date, ignoreId?: s
   return jobs.filter((a) => a.id !== ignoreId && a.scheduled_at && new Date(a.scheduled_at) < start).at(-1) || null;
 }
 
-export function clockMinutesInZone(iso: string, timeZone = 'America/New_York') {
+export const MARKET_TIME_ZONE = 'America/New_York';
+
+export function todayYmdInZone(timeZone = MARKET_TIME_ZONE) {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date());
+}
+
+/** Build an ISO timestamp for a wall-clock time in the market timezone (not the browser's). */
+export function zonedDateTimeIso(dateYmd: string, timeHm: string, timeZone = MARKET_TIME_ZONE) {
+  const [year, month, day] = dateYmd.split('-').map(Number);
+  const [hour, minute] = timeHm.split(':').map(Number);
+  const utcGuess = Date.UTC(year, (month || 1) - 1, day || 1, hour || 0, minute || 0, 0);
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(new Date(utcGuess));
+  const num = (type: string) => Number(parts.find((part) => part.type === type)?.value || 0);
+  const zoneHour = num('hour') === 24 ? 0 : num('hour');
+  const asUtc = Date.UTC(num('year'), num('month') - 1, num('day'), zoneHour, num('minute'), num('second'));
+  return new Date(utcGuess - (asUtc - utcGuess)).toISOString();
+}
+
+export function clockMinutesInZone(iso: string, timeZone = MARKET_TIME_ZONE) {
   if (!iso) return 0;
   const parsed = new Date(iso);
   if (Number.isNaN(parsed.getTime())) return 0;
@@ -121,6 +155,7 @@ export type AppointmentPlan = {
   previous: Appointment | null;
   snapped: boolean;
   label: string;
+  noWindow?: boolean;
 };
 
 export function appointmentPartyName(
@@ -241,8 +276,9 @@ export async function planAppointmentTiming(opts: {
     inboundMinutes: DEFAULT_TRAVEL_BUFFER_MINUTES,
     drive,
     previous,
-    snapped: false,
-    label: `${DEFAULT_TRAVEL_BUFFER_MINUTES} min travel buffer. No open window in the next two weeks.`,
+    snapped: true,
+    noWindow: true,
+    label: 'No open window in the next two weeks. Pick another day or shorten the job before saving.',
   };
 }
 

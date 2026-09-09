@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { Profile, getProfile } from '@/lib/auth';
@@ -7,13 +7,27 @@ export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [profileError, setProfileError] = useState('');
   const [loading, setLoading] = useState(true);
 
-  const loadProfile = async (userId: string) => {
-    const p = await getProfile(userId).catch(() => null);
-    setProfile(p);
-    setLoading(false);
-  };
+  const loadProfile = useCallback(async (userId: string) => {
+    setProfileError('');
+    try {
+      const next = await getProfile(userId);
+      setProfile(next);
+    } catch (err) {
+      setProfile(null);
+      setProfileError(err instanceof Error && err.message ? err.message : 'Could not load your profile.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const reloadProfile = useCallback(async () => {
+    if (!user) return;
+    setLoading(true);
+    await loadProfile(user.id);
+  }, [user, loadProfile]);
 
   useEffect(() => {
     const initialize = async () => {
@@ -30,12 +44,14 @@ export function useAuth() {
           await loadProfile(session.user.id);
         } else {
           setProfile(null);
+          setProfileError('');
           setLoading(false);
         }
       } catch {
         setSession(null);
         setUser(null);
         setProfile(null);
+        setProfileError('');
         setLoading(false);
       }
     };
@@ -51,16 +67,17 @@ export function useAuth() {
       if (session?.user) {
         setLoading(true);
         setTimeout(() => {
-          loadProfile(session.user.id);
+          void loadProfile(session.user.id);
         }, 0);
       } else {
         setProfile(null);
+        setProfileError('');
         setLoading(false);
       }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [loadProfile]);
 
-  return { user, session, profile, loading };
+  return { user, session, profile, profileError, loading, reloadProfile };
 }
