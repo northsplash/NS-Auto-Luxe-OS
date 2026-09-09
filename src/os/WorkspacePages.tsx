@@ -367,8 +367,8 @@ function VisitorsPage() {
       ]} />
       <div className="nsos-card">
         <Row title="/" sub="Marketing site" meta="19 views" />
-        <Row title="/book" sub="Booking flow" meta="11 views" />
-        <Row title="/login" sub="Owner / field sign-in" meta="8 views" />
+        <Row title="/apply" sub="Careers" meta="11 views" />
+        <Row title="/checkout" sub="Pay for a booked detail" meta="8 views" />
         <p className="empty-text" style={{ marginTop: 12 }}>Live traffic lands on Owner → Site Visitors when Supabase is connected. These counts are demo traffic for the cream OS.</p>
       </div>
     </div>

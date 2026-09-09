@@ -6,7 +6,7 @@ export const MARKET = {
   county: '',
   label: 'North Carolina',
   region: 'North Carolina',
-  phonePlaceholder: '919-000-0000',
+  phonePlaceholder: '330-990-3956',
   /** Default map pin (Triangle). Not a service-area claim — we work all over NC. */
   lat: 35.8722,
   lng: -78.5378,

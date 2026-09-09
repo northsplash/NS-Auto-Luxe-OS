@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
-import { signIn, signUp } from '@/lib/auth';
+import { signIn, signUp, trackPageView } from '@/lib/auth';
+import { MARKET } from '@/lib/market';
 import { supabase } from '@/lib/supabase';
 import { portalPath } from '@/lib/permissions';
 import { BRAND_LOGO } from '@/lib/brand';
@@ -27,6 +28,10 @@ export default function Login() {
   const [wasReferred, setWasReferred] = useState(false);
   const [referrerContact, setReferrerContact] = useState('');
   const navigate = useNavigate();
+
+  useEffect(() => {
+    trackPageView('/login').catch(() => {});
+  }, []);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -120,7 +125,7 @@ export default function Login() {
             </div>
             <div className="auth-field">
               <label>Phone Number</label>
-              <input type="tel" autoComplete="tel" placeholder="919-000-0000" value={phone} onChange={e => setPhone(e.target.value)} />
+              <input type="tel" autoComplete="tel" placeholder={MARKET.phonePlaceholder} value={phone} onChange={e => setPhone(e.target.value)} />
             </div>
             <div className="auth-referral">
               <label className="auth-referral-toggle">
@@ -137,7 +142,7 @@ export default function Login() {
                   <input
                     required
                     autoComplete="off"
-                    placeholder="friend@email.com or 919-000-0000"
+                    placeholder={`friend@email.com or ${MARKET.phonePlaceholder}`}
                     value={referrerContact}
                     onChange={e => setReferrerContact(e.target.value)}
                   />
