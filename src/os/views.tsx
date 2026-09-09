@@ -5,8 +5,10 @@ import {
 import AddEmployeeForm from '@/components/AddEmployeeForm';
 import SalesPresentation from '@/components/SalesPresentation';
 import OnboardingTab from './OnboardingTab';
-import { formatJobWindow, isTodayStamp, jobMatchesDay, liveOpenSlots, localYmd, parseClockMinutes, slotConflict } from './appointmentSlots';
+import { formatJobWindow, clockFromStamp, isTodayStamp, jobMatchesDay, liveOpenSlots, localYmd, parseClockMinutes, slotConflict } from './appointmentSlots';
 import AppointmentWindowPicker from '@/components/AppointmentWindowPicker';
+import TimedCalendarGrid, { type CalendarBlock } from '@/components/TimedCalendarGrid';
+import { addDays, addMonths, daysOfWeek, monthCells, monthTitle, parseYmd, weekdayShort } from '@/lib/calendarGrid';
 import { clockLabel, joinLocalInput, minutesToHm, splitLocalInput } from '@/lib/scheduling';
 import { channelLabel, COMM_GROUPS, COMM_VARIABLES, fillTemplate, SAMPLE_VARS } from '@/lib/communicationCatalog';
 import { emptyEmployeeDraft, SYSTEM_ROLES, type EmployeeDraft } from '@/lib/rolePresets';
@@ -839,41 +841,43 @@ export function ScheduleView() {
   );
 }
 
+type CalView = 'week' | 'day' | 'month' | 'agenda';
+
+function jobTone(status: string): CalendarBlock['tone'] {
+  if (status === 'en_route' || status === 'arrived' || status === 'in_progress') return 'live';
+  if (status === 'completed') return 'muted';
+  if (status === 'confirmed') return 'green';
+  if (status === 'cancelled' || status === 'no_show') return 'warn';
+  return 'gold';
+}
+
 export function CalendarView({ onOpen }: { onOpen: (id: string) => void }) {
   const os = useOs();
   const [q, setQ] = useState('');
   const [open, setOpen] = useState(false);
   const [bookError, setBookError] = useState('');
   const today = new Date();
-  const calDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const [picked, setPicked] = useState(today.getDay());
+  const todayYmd = localYmd(today);
+  const [selectedYmd, setSelectedYmd] = useState(todayYmd);
+  const [view, setView] = useState<CalView>(() => (typeof window !== 'undefined' && window.matchMedia('(max-width: 720px)').matches ? 'day' : 'week'));
   const [filter, setFilter] = useState<'all' | 'jobs' | 'leads' | 'shifts'>('all');
-  const weekStart = new Date(today);
-  weekStart.setHours(12, 0, 0, 0);
-  weekStart.setDate(today.getDate() - today.getDay());
-  const week = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(weekStart);
-    d.setDate(weekStart.getDate() + i);
-    return d;
-  });
-  const pickedDate = week[picked];
-  const dayLabel = (offset: number) => {
-    if (offset === today.getDay()) return 'Today';
-    if (offset === (today.getDay() + 1) % 7) return 'Tomorrow';
-    return calDays[offset];
-  };
+  const selectedDate = parseYmd(selectedYmd);
+  const week = daysOfWeek(selectedDate);
+  const month = monthCells(selectedDate);
+  const calDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const [draft, setDraft] = useState({
     customer: '', email: '', phone: '', service: 'Luxe Signature', vehicle: '', address: '', time: '10:00 AM',
     price: 275, detailer: os.employees.find((e) => e.role === 'detailer')?.name || 'Marcus Hale',
   });
-  const [bookValue, setBookValue] = useState(() => joinLocalInput(localYmd(today), '10:00'));
+  const [bookValue, setBookValue] = useState(() => joinLocalInput(todayYmd, '10:00'));
   const query = q.toLowerCase();
-  const label = dayLabel(picked);
-  const weekday = calDays[picked] as typeof WEEKDAYS[number];
-  const jobsToday = os.jobs.filter((j) => {
-    const hit = `${j.customer} ${j.service} ${j.vehicle} ${j.address}`.toLowerCase().includes(query);
-    return hit && jobMatchesDay(j, pickedDate);
-  });
+  const isToday = selectedYmd === todayYmd;
+  const isTomorrow = selectedYmd === localYmd(addDays(today, 1));
+  const label = isToday ? 'Today' : isTomorrow ? 'Tomorrow' : selectedDate.toLocaleDateString('en-US', { weekday: 'long' });
+  const weekday = selectedDate.toLocaleDateString('en-US', { weekday: 'short' }) as typeof WEEKDAYS[number];
+  const matchJob = (j: OsJob) => `${j.customer} ${j.service} ${j.vehicle} ${j.address}`.toLowerCase().includes(query);
+  const jobsOn = (date: Date) => os.jobs.filter((j) => matchJob(j) && jobMatchesDay(j, date));
+  const jobsToday = jobsOn(selectedDate);
   const leadsToday = os.leads.filter((l) => `${l.name} ${l.address}`.toLowerCase().includes(query) && ['appointment_set', 'interested', 'sold', 'estimate'].includes(srStatus(l.status).key));
   const shiftsToday = os.shifts.filter((s) => s.day === weekday);
   const showJobs = filter === 'all' || filter === 'jobs';
@@ -889,6 +893,39 @@ export function CalendarView({ onOpen }: { onOpen: (id: string) => void }) {
     const mins = parseClockMinutes(time);
     return mins == null ? '10:00' : minutesToHm(mins);
   };
+  const toBlock = (j: OsJob, date: Date): CalendarBlock => {
+    const start = parseClockMinutes(clockFromStamp(j.time)) ?? 10 * 60;
+    const dur = minutesForService(j.service, 120);
+    return {
+      id: j.id,
+      ymd: localYmd(date),
+      startMin: start,
+      endMin: start + dur,
+      title: j.customer,
+      subtitle: j.service,
+      meta: j.detailer,
+      tone: jobTone(j.status),
+    };
+  };
+  const gridDays = view === 'day' ? [selectedDate] : week;
+  const gridEvents = gridDays.flatMap((d) => jobsOn(d).map((j) => toBlock(j, d)));
+  const openSlot = (ymd: string, minutes: number) => {
+    setSelectedYmd(ymd);
+    setBookValue(joinLocalInput(ymd, minutesToHm(minutes)));
+    setDraft((p) => ({ ...p, time: clockLabel(minutesToHm(minutes)) }));
+    setBookError('');
+    setOpen(true);
+  };
+  const go = (dir: number) => {
+    if (view === 'month') setSelectedYmd(localYmd(addMonths(selectedDate, dir)));
+    else if (view === 'week') setSelectedYmd(localYmd(addDays(selectedDate, dir * 7)));
+    else setSelectedYmd(localYmd(addDays(selectedDate, dir)));
+  };
+  const navTitle = view === 'month'
+    ? monthTitle(selectedDate)
+    : view === 'week'
+      ? `${week[0].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${week[6].toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+      : selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
   const bookAppointment = (confirm: boolean) => {
     if (!draft.customer.trim()) return;
     const { ymd, hm } = splitLocalInput(bookValue);
@@ -923,29 +960,53 @@ export function CalendarView({ onOpen }: { onOpen: (id: string) => void }) {
     onOpen(id);
   };
   return (
-    <div className="nsos-cal">
+    <div className="nsos-cal cal8-os">
       <div className="nsos-cal-toolbar">
         <div>
           <span className="nsos-eyebrow">Appointment calendar</span>
           <h3>{label}</h3>
-          <p className="nsos-cal-date">{pickedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+          <p className="nsos-cal-date">{navTitle}</p>
         </div>
-        <button className="nsos-btn" onClick={() => { setOpen((v) => !v); setBookError(''); setBookValue(joinLocalInput(localYmd(pickedDate), clockToHm(draft.time))); }}><Plus size={14} />New appointment</button>
+        <div className="nsos-cal-toolbar-actions">
+          <div className="calendar-view-switch nsos-cal-views">
+            {(['week', 'day', 'month', 'agenda'] as CalView[]).map((id) => (
+              <button key={id} type="button" className={view === id ? 'active' : ''} onClick={() => setView(id)}>{id[0].toUpperCase() + id.slice(1)}</button>
+            ))}
+          </div>
+          <button className="nsos-btn" onClick={() => { setOpen((v) => !v); setBookError(''); setBookValue(joinLocalInput(selectedYmd, clockToHm(draft.time))); }}><Plus size={14} />New appointment</button>
+        </div>
       </div>
-      <div className="nsos-week" role="tablist" aria-label="This week">
-        {week.map((d, i) => (
-          <button key={d.toISOString()} type="button" className={picked === i ? 'active' : ''} onClick={() => setPicked(i)}>
-            <small>{calDays[i]}</small>
-            <b>{d.getDate()}</b>
-          </button>
-        ))}
+      <div className="cal8-nav">
+        <button type="button" className="nsos-btn ghost" onClick={() => go(-1)} aria-label="Previous"><ChevronLeft size={16} /></button>
+        <button type="button" className="nsos-btn ghost" onClick={() => { setSelectedYmd(todayYmd); }}>Today</button>
+        <button type="button" className="nsos-btn ghost" onClick={() => go(1)} aria-label="Next"><ChevronRight size={16} /></button>
       </div>
+      {view !== 'month' && (
+        <div className="nsos-week cal8-strip" role="tablist" aria-label="This week">
+          {week.map((d) => {
+            const ymd = localYmd(d);
+            const count = jobsOn(d).length;
+            return (
+              <button
+                key={ymd}
+                type="button"
+                className={`${ymd === selectedYmd ? 'active' : ''} ${ymd === todayYmd ? 'is-today' : ''}`}
+                onClick={() => setSelectedYmd(ymd)}
+              >
+                <small>{weekdayShort(d)}</small>
+                <b>{d.getDate()}</b>
+                <i className={count ? 'has-jobs' : ''}>{count || ''}</i>
+              </button>
+            );
+          })}
+        </div>
+      )}
       <div className="nsos-tabs" style={{ marginBottom: 12 }}>
         {([['all', 'Board'], ['jobs', 'Jobs'], ['leads', 'Leads'], ['shifts', 'Shifts']] as const).map(([id, name]) => (
           <button key={id} className={filter === id ? 'active' : ''} onClick={() => setFilter(id)}>{name}</button>
         ))}
       </div>
-      <div className="nsos-search" style={{ marginBottom: 12 }}><Search size={14} /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search the day" /></div>
+      <div className="nsos-search" style={{ marginBottom: 12 }}><Search size={14} /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search jobs, customers, or streets" /></div>
       {open && (
         <form className="nsos-card nsos-book-form" style={{ marginBottom: 14 }} onSubmit={(e) => { e.preventDefault(); bookAppointment(false); }}>
           <span className="nsos-eyebrow">Set the window</span>
@@ -973,8 +1034,7 @@ export function CalendarView({ onOpen }: { onOpen: (id: string) => void }) {
               setBookValue(next);
               const { ymd, hm } = splitLocalInput(next);
               setDraft((p) => ({ ...p, time: clockLabel(hm) }));
-              const idx = week.findIndex((d) => localYmd(d) === ymd);
-              if (idx >= 0) setPicked(idx);
+              if (ymd) setSelectedYmd(ymd);
               setBookError('');
             }}
             durationMinutes={minutesForService(draft.service, 120)}
@@ -1002,43 +1062,99 @@ export function CalendarView({ onOpen }: { onOpen: (id: string) => void }) {
           </div>
         </form>
       )}
-      {showLeads && leadsToday.length > 0 && <div className="nsos-eyebrow">Lead follow-ups</div>}
-      {showLeads && leadsToday.map((l) => (
-        <div className="nsos-job" key={l.id}>
-          <div><strong>{l.name}</strong><div style={{ color: 'var(--os-muted)', fontSize: 12 }}>{l.address} · {prettyLabel(l.status)}</div></div>
-          <span className="nsos-pill gold">{l.rep}</span>
-        </div>
-      ))}
-      {showShifts && shiftsToday.length > 0 && <div className="nsos-eyebrow">Shifts</div>}
-      {showShifts && shiftsToday.map((s) => {
-        const person = os.employees.find((e) => e.id === s.employeeId);
-        return (
-          <div className="nsos-job" key={s.id}>
-            <div><strong>{person?.name || 'Teammate'}</strong><div style={{ color: 'var(--os-muted)', fontSize: 12 }}>{s.start}–{s.end} · on shift</div></div>
-            <span className="nsos-pill">{s.day}</span>
+      {(view === 'week' || view === 'day') && (showLeads || showShifts) && (leadsToday.length > 0 || shiftsToday.length > 0) && (
+        <div className="cal8-allday">
+          <span>All day</span>
+          <div>
+            {showLeads && leadsToday.map((l) => (
+              <em key={l.id} className="cal8-chip gold">{l.name} · {prettyLabel(l.status)}</em>
+            ))}
+            {showShifts && shiftsToday.map((s) => {
+              const person = os.employees.find((e) => e.id === s.employeeId);
+              return <em key={s.id} className="cal8-chip">{person?.name || 'Teammate'} · {s.start}–{s.end}</em>;
+            })}
           </div>
-        );
-      })}
-      {showJobs && jobsToday.length === 0 && (
-        <div className="nsos-empty">Nothing booked {label.toLowerCase()}. Pick a window — it lands on this day.</div>
+        </div>
       )}
-      {filter === 'leads' && leadsToday.length === 0 && <div className="nsos-empty">No lead follow-ups sitting on the board.</div>}
-      {filter === 'shifts' && shiftsToday.length === 0 && <div className="nsos-empty">No shifts on {label}. Add them from Team → Schedule.</div>}
-      {showJobs && [...groups.entries()].map(([clock, list]) => (
-        <section key={clock} style={{ marginBottom: 16 }}>
-          <div className="nsos-eyebrow">{clock}</div>
-          {list.map((j) => (
-            <button className="nsos-job" key={j.id} onClick={() => onOpen(j.id)} style={{ width: '100%', textAlign: 'left' }}>
-              <div>
-                <strong>{j.service}</strong>
-                <div style={{ color: 'var(--os-muted)', fontSize: 12 }}>{j.customer} · {j.vehicle}</div>
-                <div style={{ color: 'var(--os-muted)', fontSize: 12 }}><CalendarDays size={12} /> {j.time} · {j.address}</div>
-              </div>
-              <span className={statusClass(j.status)}>{prettyLabel(j.status)}</span>
-            </button>
+      {(view === 'week' || view === 'day') && showJobs && (
+        <div className="cal8-shell">
+          <TimedCalendarGrid
+            days={gridDays}
+            events={gridEvents}
+            selectedYmd={selectedYmd}
+            onSlot={openSlot}
+            onEvent={onOpen}
+          />
+        </div>
+      )}
+      {view === 'month' && (
+        <div className="cal8-month">
+          <div className="cal8-month-weekdays">{calDays.map((d) => <span key={d}>{d}</span>)}</div>
+          <div className="cal8-month-grid">
+            {month.map((d) => {
+              const ymd = localYmd(d);
+              const items = jobsOn(d);
+              const outside = d.getMonth() !== selectedDate.getMonth();
+              return (
+                <button
+                  type="button"
+                  key={ymd}
+                  className={`${outside ? 'outside' : ''} ${ymd === selectedYmd ? 'selected' : ''} ${ymd === todayYmd ? 'is-today' : ''}`}
+                  onClick={() => { setSelectedYmd(ymd); }}
+                >
+                  <span>{d.getDate()}</span>
+                  <div className="cal8-month-pills">
+                    {items.slice(0, 3).map((j) => (
+                      <i key={j.id} className={`tone-${jobTone(j.status)}`}>{clockFromStamp(j.time)} {j.customer}</i>
+                    ))}
+                    {items.length > 3 && <small>+{items.length - 3} more</small>}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+      {(view === 'agenda' || view === 'month') && (
+        <div className="cal8-agenda">
+          <div className="nsos-eyebrow">{label} · {jobsToday.length} job{jobsToday.length === 1 ? '' : 's'}</div>
+          {showLeads && leadsToday.map((l) => (
+            <div className="nsos-job" key={l.id}>
+              <div><strong>{l.name}</strong><div style={{ color: 'var(--os-muted)', fontSize: 12 }}>{l.address} · {prettyLabel(l.status)}</div></div>
+              <span className="nsos-pill gold">{l.rep}</span>
+            </div>
           ))}
-        </section>
-      ))}
+          {showShifts && shiftsToday.map((s) => {
+            const person = os.employees.find((e) => e.id === s.employeeId);
+            return (
+              <div className="nsos-job" key={s.id}>
+                <div><strong>{person?.name || 'Teammate'}</strong><div style={{ color: 'var(--os-muted)', fontSize: 12 }}>{s.start}–{s.end} · on shift</div></div>
+                <span className="nsos-pill">{s.day}</span>
+              </div>
+            );
+          })}
+          {showJobs && jobsToday.length === 0 && (
+            <div className="nsos-empty">Nothing booked {label.toLowerCase()}. Tap a time on Week or Day, or New appointment.</div>
+          )}
+          {showJobs && [...groups.entries()].map(([clock, list]) => (
+            <section key={clock} style={{ marginBottom: 16 }}>
+              <div className="nsos-eyebrow">{clock}</div>
+              {list.map((j) => (
+                <button className="nsos-job" key={j.id} onClick={() => onOpen(j.id)} style={{ width: '100%', textAlign: 'left' }}>
+                  <div>
+                    <strong>{j.service}</strong>
+                    <div style={{ color: 'var(--os-muted)', fontSize: 12 }}>{j.customer} · {j.vehicle}</div>
+                    <div style={{ color: 'var(--os-muted)', fontSize: 12 }}><CalendarDays size={12} /> {j.time} · {j.address}</div>
+                  </div>
+                  <span className={statusClass(j.status)}>{prettyLabel(j.status)}</span>
+                </button>
+              ))}
+            </section>
+          ))}
+        </div>
+      )}
+      {filter === 'leads' && leadsToday.length === 0 && view === 'agenda' && <div className="nsos-empty">No lead follow-ups sitting on the board.</div>}
+      {filter === 'shifts' && shiftsToday.length === 0 && view === 'agenda' && <div className="nsos-empty">No shifts on {label}. Add them from Team → Schedule.</div>}
     </div>
   );
 }

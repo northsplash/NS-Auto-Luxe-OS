@@ -54,13 +54,13 @@ export const WORKSPACE_REFS: Record<
     kicker: 'Schedule',
     title: 'Calendar',
     modeled: 'Jobber',
-    lead: 'Week-first schedule with a day strip. Drag or tap a slot to book.',
+    lead: 'Week, day, month, and agenda. Timed blocks, a now line, tap a slot to book.',
   },
   schedule: {
     kicker: 'Schedule',
     title: 'Calendar',
     modeled: 'Jobber',
-    lead: 'Week-first schedule with a day strip. Drag or tap a slot to book.',
+    lead: 'Week, day, month, and agenda. Timed blocks, a now line, tap a slot to book.',
   },
   availability: {
     kicker: 'Schedule',
