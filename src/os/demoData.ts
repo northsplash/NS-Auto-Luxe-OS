@@ -426,6 +426,8 @@ export const seedCustomers: OsCustomer[] = [
   { id: 'cu3', name: 'James Cole', email: 'james.cole@email.com', phone: '919-555-0199', vehicle: '2021 Tesla Model Y', address: '19 Oleander Dr, Wilmington NC 28403', member: false, photo: P('614810'), notes: [] },
   { id: 'cu4', name: 'Hannah Brooks', email: 'hannah@brooks.family', phone: '919-555-4402', vehicle: '2019 Mercedes C300', address: 'Cary · Preston Village', member: false, photo: P('733872'), notes: [] },
   { id: 'cu5', name: 'Luis Ortega', email: 'luis.ortega@email.com', phone: '919-555-7720', vehicle: '2023 Audi Q5', address: 'Durham · Trinity Park', member: true, photo: P('91227'), notes: [{ id: uid(), at: 'Yesterday', author: 'Marcus Hale', body: 'Rebook in 30 days. Loved interior.' }] },
+  { id: 'cu6', name: 'Sam Wright', email: 'sam.wright@email.com', phone: '919-555-1881', vehicle: '2020 Lexus GX', address: 'Cary · MacGregor Downs', member: false, photo: P('614810'), notes: [{ id: uid(), at: 'Today', author: 'Avery Chen', body: 'Needs a tech. Prefers after school pickup.' }] },
+  { id: 'cu7', name: 'Kim Alvarez', email: 'kim.alvarez@email.com', phone: '919-555-1001', vehicle: '2019 Honda Pilot', address: '210 Ninth St, Durham NC 27705', member: false, photo: P('774909'), notes: [{ id: uid(), at: '9:04 AM', author: 'Sofia Reyes', body: 'Warm knock. Wants Signature + membership quote tonight.' }] },
 ];
 
 export const seedSettings: OsSettings = {

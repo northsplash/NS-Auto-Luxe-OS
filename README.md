@@ -36,14 +36,14 @@ Workflows follow the product that already does that job well:
 
 | Workspace | Modeled after |
 |---|---|
-| Owner Command Center / Dashboard | Stripe Dashboard |
+| Owner Command Center / Dashboard | Stripe Dashboard + ServiceTitan exceptions |
 | Employees / profiles / pay | Rippling + Gusto |
 | Scheduling | Deputy |
 | Appointments / job detail | Jobber |
 | Dispatch board | ServiceTitan |
 | D2D canvassing | Purpose-built North Splash field map (knock-first, house markers, route mode) |
 | Lead pipeline | HubSpot + SPOTIO |
-| Customers / CRM | HubSpot |
+| Customers / CRM | Jobber Client Hub |
 | Detailer jobs | Housecall Pro |
 | Live job status | Uber |
 | Team messaging | Microsoft Teams |
@@ -60,11 +60,13 @@ D2D `/d2d` is map-first canvassing. Residential buildings inside an assigned ter
 
 ## What you can do in this slice
 
-- Owner Command Center (home): exceptions first, then collected / jobs / leads, then today’s run, pipeline, and team
+- Owner Command Center (home): a work inbox of the actual jobs, callbacks, and unpaid visits that need you, then collected / jobs / leads, then today’s run, pipeline, and team
+- Customers: one household record — jobs, D2D knocks, photos, notes, Call/Text, lifetime and balance
+- Command palette (`⌘K` / `Ctrl+K`): Book, Assign, Collect, and jump to a household, job, or lead
+- ServiceTitan dispatch: unassigned rail, tech columns, drag-to-assign, next-stop marked on today’s first job
 - Admin Overview: Stripe-style balances (gross volume, this month, pending, avg. ticket), cash flow, recent appointments, and team overview
 - Rippling-style people directory (search) and Gusto-style onboarding packet (headshot, legal name, tax last-four, deposit, I-9)
 - Deputy staff schedule: Sunday–Saturday week grid per person, plus shift editor
-- ServiceTitan dispatch: unassigned rail, tech columns, drag-to-assign
 - D2D canvassing: property-level house map, one-tap dispositions, Save & Next Best House, route mode, viewport/clustered markers, and a manager Territory command center. Knock writes to `territory_doors` → `leads` → appointments / calendar / revenue.
 - HubSpot pipeline: exceptions first, New Lead, drag between stages, assign a rep, and book a job from the inspector
 - Every Owner/Admin workspace item is on `/os`: Sales (map, pipeline, territories, campaigns, follow-up), Customers (directory, records, photos, calendar, windows, slots, history, fleets), Operations (jobs through approvals), People (team through training), Finance (payroll, ledger, analytics, pay mix), and Admin (access through traffic)

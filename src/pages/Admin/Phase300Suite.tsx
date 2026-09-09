@@ -383,8 +383,8 @@ function OwnerRevenueChart({days}:{days:{label:string;rev:number}[]}){
 function MiniAvatar({name}:{name:string}){const initials=String(name||'').split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase()||'NS';return <span className="v20-mini-avatar">{initials}</span>}
 
 function CommandCenter({employees,appointments,customers,payments,onNavigate,ownerName}:{employees:Employee[];appointments:Appointment[];customers:Profile[];payments:any[];onNavigate?:(view:string)=>void;ownerName?:string}){
- const [leadSnap,setLeadSnap]=useState({hot:0,neu:0,open:0,knocked:0});
- useEffect(()=>{let live=true;supabase.from('leads').select('id,status,last_contacted_at').limit(2500).then(({data})=>{if(!live)return;const rows=data??[];const closed=new Set(['sold','lost','not_interested','do_not_knock','existing_customer']);setLeadSnap({hot:rows.filter(l=>['interested','estimate','estimate_sent','appointment_set','follow_up'].includes(String(l.status||''))).length,neu:rows.filter(l=>l.status==='new'||l.status==='unworked').length,open:rows.filter(l=>!closed.has(String(l.status||''))).length,knocked:rows.filter(l=>sameLocalDay((l as {last_contacted_at?:string}).last_contacted_at)).length})});return()=>{live=false}},[]);
+ const [leadSnap,setLeadSnap]=useState({hot:0,neu:0,open:0,knocked:0,overdue:[] as {id:string;title:string;sub:string}[]});
+ useEffect(()=>{let live=true;supabase.from('leads').select('id,status,last_contacted_at,follow_up_at,next_action_at,first_name,last_name,address').limit(2500).then(({data})=>{if(!live)return;const rows=data??[];const closed=new Set(['sold','lost','not_interested','do_not_knock','existing_customer']);const dueAt=(row:{follow_up_at?:string|null;next_action_at?:string|null})=>row.follow_up_at||row.next_action_at;const overdue=rows.filter(l=>{const status=String((l as {status?:string}).status||'');if(closed.has(status))return false;const due=dueAt(l as {follow_up_at?:string|null;next_action_at?:string|null});return Boolean(due&&new Date(String(due)).getTime()<=Date.now());}).slice(0,6).map(l=>{const row=l as {id:string;first_name?:string;last_name?:string;address?:string;follow_up_at?:string;next_action_at?:string};const name=[row.first_name,row.last_name].filter(Boolean).join(' ')||row.address||'Household';return{id:row.id,title:`Callback · ${name}`,sub:row.address||row.follow_up_at||row.next_action_at||'Due now'};});setLeadSnap({hot:rows.filter(l=>['interested','estimate','estimate_sent','appointment_set','follow_up'].includes(String(l.status||''))).length,neu:rows.filter(l=>l.status==='new'||l.status==='unworked').length,open:rows.filter(l=>!closed.has(String(l.status||''))).length,knocked:rows.filter(l=>sameLocalDay((l as {last_contacted_at?:string}).last_contacted_at)).length,overdue})});return()=>{live=false}},[]);
  const now=Date.now();
  const yesterday=new Date();yesterday.setDate(yesterday.getDate()-1);
  const jobs=appointments.filter(a=>sameLocalDay(a.scheduled_at)&&a.status!=='cancelled').sort((a,b)=>+new Date(a.scheduled_at||0)-+new Date(b.scheduled_at||0));
@@ -419,11 +419,18 @@ function CommandCenter({employees,appointments,customers,payments,onNavigate,own
  const exceptions=[
   unassigned?{n:unassigned,title:'Unassigned jobs',sub:'Need a technician',view:'dispatch',hot:true}:null,
   unpaid.length?{n:unpaid.length,title:'Unpaid finished jobs',sub:'Collect before the van leaves',view:'dispatch',hot:true}:null,
+  leadSnap.overdue.length?{n:leadSnap.overdue.length,title:'Callbacks due',sub:'Knock or call before they cool',view:'leads',hot:true}:null,
   leadSnap.hot?{n:leadSnap.hot,title:'Hot leads',sub:'Ready to book from the map',view:'leads',hot:true}:null,
   packets?{n:packets,title:'Open Gusto packets',sub:'Personal, W-4, payment, or I-9 still open',view:'employees',hot:true}:null,
   pending?{n:pending,title:'Pending bookings',sub:'Awaiting confirmation',view:'appointments',hot:false}:null,
   qc?{n:qc,title:'QC queue',sub:'Jobs waiting for quality review',view:'dispatch',hot:false}:null,
  ].filter(Boolean) as {n:number;title:string;sub:string;view:string;hot:boolean}[];
+ const unassignedJobs=appointments.filter(a=>!a.assigned_employee_id&&!['completed','cancelled'].includes(String(a.status||'')));
+ const inboxRows=[
+  ...unassignedJobs.slice(0,4).map(a=>({id:`assign-${a.id}`,kind:'Assign',hot:true,title:`Assign ${appointmentPartyName(a)}`,sub:`${time(a.scheduled_at)} · ${a.service_name||'Detail'}`,go:()=>go('dispatch','unassigned',a.id)})),
+  ...unpaid.slice(0,3).map(a=>({id:`collect-${a.id}`,kind:'Collect',hot:true,title:`Collect ${appointmentPartyName(a)}`,sub:a.service_name||'Finished work unpaid',go:()=>go('dispatch','collect',a.id)})),
+  ...leadSnap.overdue.slice(0,4).map(l=>({id:`follow-${l.id}`,kind:'Callback',hot:true,title:l.title,sub:l.sub,go:()=>go('leads')})),
+ ];
  const fieldLoop=[
   {key:'knock',n:leadSnap.knocked,label:'Knock',sub:'Contacted today',view:'leads' as const,filter:undefined as undefined|'unassigned'|'run'|'collect'},
   {key:'book',n:pending,label:'Book',sub:'Waiting confirm',view:'appointments' as const,filter:undefined},
@@ -472,13 +479,20 @@ function CommandCenter({employees,appointments,customers,payments,onNavigate,own
    <div className="ns-field-loop" id="owner-field-loop" aria-label="Field loop">
      {fieldLoop.map((step,i)=><button type="button" key={step.key} className={step.n?'hot':''} onClick={()=>go(step.view,step.filter)}><em>{step.n}</em><span><b>{step.label}</b><small>{step.sub}</small></span>{i<fieldLoop.length-1&&<i className="ns-field-loop-arrow" aria-hidden/>}</button>)}
    </div>
-   <div className="nsos-alerts" id="owner-exceptions">
-     {exceptions.length===0&&<div className="ns-next-actions">
+   <section className="nsos-inbox" id="owner-exceptions" aria-label="Work that needs you">
+     <div className="nsos-inbox-head">
+       <div>
+         <span className="eyebrow">NEEDS YOU</span>
+         <h3>{inboxRows.length||exceptions.length?`${Math.max(inboxRows.length,exceptions.length)} open`:'Board is clean'}</h3>
+       </div>
+     </div>
+     {inboxRows.length===0&&exceptions.length===0&&<div className="ns-next-actions">
        <p className="ns-next-lead">The board is quiet. Pick a next move from live company data.</p>
-       {nextMoves.map(item=><button type="button" className="nsos-alert" key={item.title} onClick={()=>go(item.view,item.filter)}><span><b>{item.title}</b><small>{item.sub}</small></span><ChevronRight size={16}/></button>)}
+       {nextMoves.map(item=><button type="button" className="nsos-inbox-row" key={item.title} onClick={()=>go(item.view,item.filter)}><em>Next</em><span><b>{item.title}</b><small>{item.sub}</small></span><ChevronRight size={16}/></button>)}
      </div>}
-     {exceptions.map(item=><button className={`nsos-alert ${item.hot?'hot':''}`} key={item.title} onClick={()=>go(item.view,item.title.includes('Unpaid')?'collect':item.view==='dispatch'&&item.title.includes('Unassigned')?'unassigned':undefined)}><em>{item.n}</em><span><b>{item.title}</b><small>{item.sub}</small></span><ChevronRight size={16}/></button>)}
-   </div>
+     {inboxRows.map(item=><button type="button" className={`nsos-inbox-row ${item.hot?'hot':''}`} key={item.id} onClick={item.go}><em>{item.kind}</em><span><b>{item.title}</b><small>{item.sub}</small></span><ChevronRight size={16}/></button>)}
+     {exceptions.filter(item=>!inboxRows.length||['Open Gusto packets','QC queue','Hot leads','Pending bookings'].includes(item.title)).map(item=><button className={`nsos-alert ${item.hot?'hot':''}`} key={item.title} onClick={()=>go(item.view,item.title.includes('Unpaid')?'collect':item.view==='dispatch'&&item.title.includes('Unassigned')?'unassigned':undefined)}><em>{item.n}</em><span><b>{item.title}</b><small>{item.sub}</small></span><ChevronRight size={16}/></button>)}
+   </section>
    <div className="owner-kpis-v17">
      <KPI label="Collected" value={money(collected)} detail={trendLabel(todayCollected,earlierCollected)} onOpen={()=>go('payments')}/>
      <KPI label="Jobs completed" value={String(completedToday.length)} detail={completedToday.length?`${completedToday.length} today`:'None finished today'} onOpen={()=>go('appointments')}/>

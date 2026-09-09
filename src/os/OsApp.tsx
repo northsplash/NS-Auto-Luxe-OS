@@ -252,6 +252,9 @@ function OsShell() {
   const [hirePreset, setHirePreset] = useState<Partial<EmployeeDraft> | undefined>();
   const [peopleId, setPeopleId] = useState<string | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
+  const [customerId, setCustomerId] = useState<string | null>(null);
+  const [leadId, setLeadId] = useState<string | null>(null);
+  const [commandActive, setCommandActive] = useState(0);
   const [newWorkOpen, setNewWorkOpen] = useState(false);
   const [mode, setMode] = useState<WorkMode>(() => {
     try { return (sessionStorage.getItem('ns-os-mode') as WorkMode) || 'owner'; } catch { return 'owner'; }
@@ -286,7 +289,10 @@ function OsShell() {
     const handler = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        setCommandOpen(true);
+        setCommandOpen((open) => {
+          if (open) setCommandQuery('');
+          return !open;
+        });
       }
     };
     window.addEventListener('keydown', handler);
@@ -309,6 +315,8 @@ function OsShell() {
     setNewWorkOpen(false);
     setPeopleId(null);
     setJobId(null);
+    if (next !== 'customers' && next !== 'crm') setCustomerId(null);
+    if (next !== 'leads') setLeadId(null);
   };
 
   const switchMode = (next: WorkMode) => {
@@ -321,6 +329,26 @@ function OsShell() {
     setJobId(id);
     if (tab === 'jobs' || tab === 'dispatch' || tab === 'crews' || tab === 'job_assignments') setTab('jobs');
     else setTab('appointments');
+  };
+
+  const openCustomer = (id: string) => {
+    setCustomerId(id);
+    setJobId(null);
+    setPeopleId(null);
+    setTab('customers');
+    setSidebarOpen(false);
+  };
+
+  const openLead = (id: string) => {
+    setLeadId(id);
+    setTab('leads');
+    setSidebarOpen(false);
+  };
+
+  const openEmployee = (id: string) => {
+    setPeopleId(id);
+    setTab('employees');
+    setSidebarOpen(false);
   };
 
   const saveHire = (draft: EmployeeDraft) => {
@@ -391,11 +419,48 @@ function OsShell() {
   ];
 
   const q = commandQuery.trim().toLowerCase();
-  const commandPages = NAV.filter((n) => n.label.toLowerCase().includes(q)).slice(0, 8);
-  const commandPeople = os.employees.filter((e) => `${e.name} ${e.title}`.toLowerCase().includes(q)).slice(0, 5);
-  const commandJobs = os.jobs.filter((j) => `${j.customer} ${j.service}`.toLowerCase().includes(q)).slice(0, 5);
-  const commandCustomers = os.customers.filter((c) => `${c.name} ${c.vehicle}`.toLowerCase().includes(q)).slice(0, 4);
-  const commandLeads = os.leads.filter((l) => `${l.name} ${l.address}`.toLowerCase().includes(q)).slice(0, 4);
+  const closeCommand = () => { setCommandOpen(false); setCommandQuery(''); setCommandActive(0); };
+  type CommandHit = { id: string; group: string; title: string; sub: string; run: () => void };
+  const commandHits: CommandHit[] = [];
+  const actions: CommandHit[] = [
+    { id: 'a-book', group: 'Actions', title: 'Book job', sub: 'Open the calendar', run: () => { go('appointments'); closeCommand(); } },
+    { id: 'a-lead', group: 'Actions', title: 'New lead', sub: 'Open the knock map', run: () => { go('sales'); closeCommand(); } },
+    { id: 'a-assign', group: 'Actions', title: 'Assign work', sub: 'Dispatch board', run: () => { go('dispatch'); closeCommand(); } },
+    { id: 'a-inbox', group: 'Actions', title: 'Needs you', sub: 'Command Center inbox', run: () => { go('command_center'); closeCommand(); } },
+    { id: 'a-collect', group: 'Actions', title: 'Collect', sub: 'Open payments', run: () => { go('payments'); closeCommand(); } },
+  ].filter((item) => !q || item.title.toLowerCase().includes(q));
+  commandHits.push(...(q ? actions : actions.slice(0, 4)));
+  (q ? NAV.filter((n) => n.label.toLowerCase().includes(q)) : NAV.slice(0, 6)).slice(0, 8).forEach((n) => {
+    commandHits.push({ id: `p-${n.id}`, group: 'Pages', title: n.label, sub: 'Open workspace', run: () => { go(n.id); closeCommand(); } });
+  });
+  if (q) {
+    os.employees.filter((e) => `${e.name} ${e.title}`.toLowerCase().includes(q)).slice(0, 5).forEach((e) => {
+      commandHits.push({ id: `e-${e.id}`, group: 'People', title: e.name, sub: e.title, run: () => { openEmployee(e.id); closeCommand(); } });
+    });
+    os.jobs.filter((j) => `${j.customer} ${j.service} ${j.address}`.toLowerCase().includes(q)).slice(0, 5).forEach((j) => {
+      commandHits.push({ id: `j-${j.id}`, group: 'Jobs', title: j.customer, sub: `${j.service} · ${j.time}`, run: () => { openJob(j.id); closeCommand(); } });
+    });
+    os.customers.filter((c) => `${c.name} ${c.vehicle} ${c.phone} ${c.address}`.toLowerCase().includes(q)).slice(0, 4).forEach((c) => {
+      commandHits.push({ id: `c-${c.id}`, group: 'Customers', title: c.name, sub: c.vehicle || c.address, run: () => { openCustomer(c.id); closeCommand(); } });
+    });
+    os.leads.filter((l) => `${l.name} ${l.address} ${l.phone}`.toLowerCase().includes(q)).slice(0, 4).forEach((l) => {
+      commandHits.push({ id: `l-${l.id}`, group: 'Leads', title: l.name, sub: `${l.address} · ${srStatus(l.status).abbr}`, run: () => { openLead(l.id); closeCommand(); } });
+    });
+  }
+  const commandGroups = [...new Set(commandHits.map((hit) => hit.group))];
+
+  useEffect(() => { setCommandActive(0); }, [commandQuery]);
+  useEffect(() => {
+    if (!commandOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { e.preventDefault(); closeCommand(); return; }
+      if (e.key === 'ArrowDown') { e.preventDefault(); setCommandActive((i) => Math.min(i + 1, Math.max(commandHits.length - 1, 0))); }
+      if (e.key === 'ArrowUp') { e.preventDefault(); setCommandActive((i) => Math.max(i - 1, 0)); }
+      if (e.key === 'Enter' && commandHits[commandActive]) { e.preventDefault(); commandHits[commandActive].run(); }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [commandOpen, commandActive, commandQuery, commandHits.length]);
 
   const inner = (() => {
     if (tab === 'messages') return null;
@@ -415,8 +480,8 @@ function OsShell() {
     if (tab === 'dispatch' || tab === 'job_assignments') return <DispatchView onOpen={openJob} />;
     if (tab === 'sales') return <D2DView onBook={openJob} onPipeline={() => go('leads')} />;
     if (tab === 'territories') return <TerritoriesView onMap={() => go('sales')} onPipeline={() => go('leads')} />;
-    if (tab === 'leads') return <PipelineView onBook={openJob} />;
-    if (tab === 'customers' || tab === 'crm') return <CustomersView onOpenJob={openJob} />;
+    if (tab === 'leads') return <PipelineView onBook={openJob} focusLeadId={leadId} />;
+    if (tab === 'customers' || tab === 'crm') return <CustomersView onOpenJob={openJob} onBook={() => go('appointments')} selectedId={customerId} onOpenLead={openLead} />;
     if (tab === 'appointments' || tab === 'schedule') {
       if (job && tab === 'appointments') return <JobDetail job={job} />;
       return <CalendarView onOpen={openJob} />;
@@ -444,6 +509,8 @@ function OsShell() {
           onOpenSchedule={() => go('appointments')}
           onOpenDispatch={() => go('dispatch')}
           onOpenMessages={() => go('messages')}
+          onOpenLead={openLead}
+          onOpenEmployee={openEmployee}
         />
       );
     }
@@ -591,40 +658,36 @@ function OsShell() {
         )}
 
         {commandOpen && (
-          <div className="os-command-backdrop" onClick={() => setCommandOpen(false)}>
+          <div className="os-command-backdrop" onClick={closeCommand}>
             <div className="os-command-palette" onClick={(e) => e.stopPropagation()}>
               <div className="os-command-input">
                 <Search size={18} />
-                <input autoFocus placeholder="Search pages, customers, appointments or employees…" value={commandQuery} onChange={(e) => setCommandQuery(e.target.value)} />
-                <button onClick={() => setCommandOpen(false)}>ESC</button>
+                <input autoFocus placeholder="Book, assign, collect, or jump to a household…" value={commandQuery} onChange={(e) => setCommandQuery(e.target.value)} />
+                <button type="button" onClick={closeCommand}>ESC</button>
               </div>
-              <div className="os-command-results">
-                {commandPages.map((n) => (
-                  <button key={n.id} onClick={() => { go(n.id); setCommandOpen(false); setCommandQuery(''); }}>
-                    <n.Icon size={16} /><span>{n.label}</span><small>Open workspace</small>
-                  </button>
+              <div className="os-command-results" role="listbox">
+                {commandGroups.map((group) => (
+                  <div className="os-command-group" key={group}>
+                    <span className="os-command-group-label">{group}</span>
+                    {commandHits.filter((hit) => hit.group === group).map((hit) => {
+                      const index = commandHits.findIndex((row) => row.id === hit.id);
+                      return (
+                        <button
+                          type="button"
+                          role="option"
+                          aria-selected={index === commandActive}
+                          className={index === commandActive ? 'active' : ''}
+                          key={hit.id}
+                          onMouseEnter={() => setCommandActive(index)}
+                          onClick={hit.run}
+                        >
+                          <span>{hit.title}</span><small>{hit.sub}</small>
+                        </button>
+                      );
+                    })}
+                  </div>
                 ))}
-                {commandPeople.map((e) => (
-                  <button key={e.id} onClick={() => { setTab('employees'); setPeopleId(e.id); setCommandOpen(false); }}>
-                    <UserCheck size={16} /><span>{e.name}</span><small>{e.title}</small>
-                  </button>
-                ))}
-                {commandJobs.map((j) => (
-                  <button key={j.id} onClick={() => { openJob(j.id); setCommandOpen(false); }}>
-                    <Calendar size={16} /><span>{j.customer}</span><small>{j.service}</small>
-                  </button>
-                ))}
-                {commandCustomers.map((c) => (
-                  <button key={c.id} onClick={() => { go('customers'); setCommandOpen(false); }}>
-                    <Users size={16} /><span>{c.name}</span><small>{c.vehicle}</small>
-                  </button>
-                ))}
-                {commandLeads.map((l) => (
-                  <button key={l.id} onClick={() => { go('sales'); setCommandOpen(false); }}>
-                    <Target size={16} /><span>{l.name}</span><small>{l.address} · {srStatus(l.status).abbr}</small>
-                  </button>
-                ))}
-                {q && !commandPages.length && !commandPeople.length && !commandJobs.length && !commandCustomers.length && !commandLeads.length && <p className="empty-text">Nothing matches.</p>}
+                {q && !commandHits.length && <p className="empty-text">Nothing matches.</p>}
               </div>
             </div>
           </div>

@@ -4038,3 +4038,147 @@ body {
   .cal8-month-grid > button { min-height: 72px; padding: 6px; }
   .cal8-month-pills i { font-size: 0; height: 6px; padding: 0; }
 }
+
+/* Operator inbox + household hub + command palette — last-wins */
+.nsos-inbox {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 16px;
+}
+.nsos-inbox-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 12px;
+}
+.nsos-inbox-head h3 {
+  margin: 2px 0 0;
+  font-size: 18px;
+  color: #1c1814;
+}
+.nsos-inbox-hot {
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: #b45444;
+  background: #fbf4f1;
+  border: 1px solid #e0b4a8;
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+.nsos-inbox-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
+  align-items: center;
+  text-align: left;
+  min-height: 56px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #fffdf8;
+  border: 1px solid #e4d9cc;
+  color: inherit;
+}
+.nsos-inbox-row.hot {
+  border-color: #e0b4a8;
+  background: #fbf4f1;
+}
+.nsos-inbox-row em {
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #b8893a;
+  min-width: 76px;
+}
+.nsos-inbox-row.hot em { color: #b45444; }
+.nsos-inbox-row b { display: block; font-size: 13px; color: #1c1814; }
+.nsos-inbox-row small { color: #6f675e; }
+.nsos-inbox-row svg { color: #6f675e; }
+.nsos-inbox .nsos-alert {
+  display: grid !important;
+  grid-template-columns: auto 1fr auto !important;
+}
+.dispatch-job.nsos-next-stop {
+  border-color: #1c1814;
+  box-shadow: inset 3px 0 0 #1c1814;
+}
+.nsos-household-next {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: #6f675e;
+}
+.nsos-household-tabs {
+  padding: 12px 0 8px !important;
+  overflow-x: auto;
+}
+.nsos-household-pane { display: grid; gap: 6px; }
+.os-command-group { display: grid; gap: 2px; padding: 6px 8px 10px; }
+.os-command-group-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #6f675e;
+  padding: 6px 10px 4px;
+}
+.os-command-results .os-command-group button,
+.portal-layout.nsos-cream .os-command-results .os-command-group button {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 9px;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  border-radius: 10px;
+  padding: 10px 11px;
+  color: #1c1814;
+  -webkit-text-fill-color: #1c1814;
+  min-height: 44px;
+}
+.os-command-results .os-command-group button small,
+.portal-layout.nsos-cream .os-command-results .os-command-group button small {
+  color: #6f675e;
+}
+.os-command-results .os-command-group button.active,
+.os-command-results .os-command-group button[aria-selected="true"],
+.portal-layout.nsos-cream .os-command-results .os-command-group button.active,
+.portal-layout.nsos-cream .os-command-results .os-command-group button[aria-selected="true"] {
+  background: #1c1814 !important;
+  color: #fffdf8 !important;
+  -webkit-text-fill-color: #fffdf8 !important;
+}
+.os-command-results .os-command-group button.active small,
+.os-command-results .os-command-group button[aria-selected="true"] small,
+.portal-layout.nsos-cream .os-command-results .os-command-group button.active small,
+.portal-layout.nsos-cream .os-command-results .os-command-group button[aria-selected="true"] small {
+  color: #d9cbb8 !important;
+}
+.portal-layout.nsos-cream .owner-command-v17 .nsos-inbox,
+.portal-layout.nsos-cream .nsos-inbox {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+}
+.portal-layout.nsos-cream .owner-command-v17 .nsos-inbox-row small,
+.portal-layout.nsos-cream .owner-command-v17 .nsos-inbox-row svg,
+.portal-layout.nsos-cream .nsos-inbox .nsos-alert small {
+  display: block !important;
+}
+.portal-layout.nsos-cream .owner-command-v17 .nsos-inbox-row svg {
+  display: block !important;
+}
+@media (max-width: 720px) {
+  .nsos-inbox-row {
+    grid-template-columns: auto 1fr !important;
+    min-height: 52px;
+    padding: 10px 12px;
+  }
+  .nsos-inbox-row svg { display: none !important; }
+  .nsos-household { grid-template-columns: 1fr !important; }
+  .nsos-household-tabs { display: flex; }
+}
