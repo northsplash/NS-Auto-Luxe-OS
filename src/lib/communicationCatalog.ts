@@ -1,3 +1,5 @@
+import { fillMerge, withEmailAliases } from '@/lib/emailLayout';
+
 export type CommCategory = 'appointments' | 'field' | 'payments' | 'retention';
 export type CommChannel = 'email' | 'sms' | 'email_sms';
 
@@ -23,6 +25,7 @@ export const COMM_VARIABLES = [
   '{vehicle}',
   '{service}',
   '{appointment_time}',
+  '{address}',
   '{price}',
   '{eta}',
   '{portal_link}',
@@ -310,17 +313,25 @@ export const DEFAULT_COMM_TEMPLATES: CommunicationTemplate[] = [
 
 export const SAMPLE_VARS: Record<string, string> = {
   customer_first_name: 'Matthew',
-  detailer_name: 'Marcus',
+  customer_name: 'Matthew Renner',
+  detailer_name: 'Marcus Hale',
+  employee_name: 'Marcus Hale',
   vehicle: '2022 BMW 330i',
+  vehicle_info: '2022 BMW 330i',
   service: 'Luxe Signature',
+  service_name: 'Luxe Signature',
   appointment_time: 'Saturday, September 12 · 10:30 AM',
+  appointment_date: 'Saturday, September 12',
   price: '$275.00',
+  amount: '$275.00',
   eta: '10:42 AM',
-  portal_link: 'northsplash.com/appointment',
+  address: '412 Forest Hills Dr, Durham NC',
+  service_address: '412 Forest Hills Dr, Durham NC',
+  portal_link: 'https://ns-auto-luxe-os.vercel.app/portal',
 };
 
 export function fillTemplate(text: string, vars: Record<string, string> = SAMPLE_VARS) {
-  return String(text || '').replace(/\{([a-z_]+)\}/gi, (_, key: string) => vars[key] ?? `{${key}}`);
+  return fillMerge(text, withEmailAliases({ ...SAMPLE_VARS, ...vars }));
 }
 
 export function channelLabel(t: Pick<CommunicationTemplate, 'email_enabled' | 'sms_enabled'>) {

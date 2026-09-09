@@ -85,6 +85,6 @@ After pulling, run `supabase/migrations/20260906120000_v29_employee_onboarding_p
 
 ## Supabase
 
-SQL lives in `supabase/migrations`. Apply the latest migration for communication template seeds after pulling. Without keys, the OS still runs on demo data.
+SQL lives in `supabase/migrations`. Apply the latest migration for communication template seeds after pulling (`20260909074000_v38_cream_customer_emails.sql` points customer mail from `appointments@northsplash.com` and replies to `hello@northsplash.com` — it does not overwrite template body copy). Without keys, the OS still runs on demo data. Customer emails are cream paper HTML (Outlook-safe tables). Preview them on Owner **Communications** or demo `/os?tab=communications`.
 
 Live D2D **Apply customer account** calls the `create-customer-account` Edge Function so the rep session is not replaced by the new customer login. Website applications from northsplash.com/apply appear on Owner **People → Hiring** and Manager **Hiring** as source Website. If guest inserts into `recruiting_candidates` are blocked, apply still writes a marked hiring record; opening Owner or Admin imports those records onto the board. Demo OS (`/os`) uses sample hiring data, not live applicants.

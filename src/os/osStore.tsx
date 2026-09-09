@@ -129,13 +129,21 @@ function load(): OsSnapshot {
 function jobVars(job: OsJob) {
   return {
     customer_first_name: firstWord(jobPartyName(job), 'Guest'),
-    detailer_name: firstWord(job.detailer, 'Detailer'),
+    customer_name: jobPartyName(job),
+    detailer_name: job.detailer || 'Your North Splash detailer',
+    employee_name: job.detailer || '',
     vehicle: job.vehicle || '',
+    vehicle_info: job.vehicle || '',
     service: job.service || '',
+    service_name: job.service || '',
     appointment_time: job.time || '',
+    appointment_date: job.time || '',
     price: money(job.price),
+    amount: money(job.price),
     eta: job.eta || 'about 15 minutes',
-    portal_link: 'northsplash.com/appointment',
+    address: job.address || '',
+    service_address: job.address || '',
+    portal_link: 'https://ns-auto-luxe-os.vercel.app/portal',
   };
 }
 
@@ -658,7 +666,7 @@ export function OsProvider({ children }: { children: ReactNode }) {
         jobs: s.jobs.map((j) => j.id !== job.id ? j : { ...j, comms: [...extra, ...list(j.comms)] }),
         activity: [{ id: uid(), at: clockNow(), text: `Test ${channelLabel(template)} sent to ${job.customer}: ${template.name}.`, kind: 'comms' }, ...s.activity],
       }));
-      flash(`Test ${extra[0].channel.toUpperCase()} sent`, extra[0].preview);
+      flash(`Test ${extra[0].channel.toUpperCase()} sent`, `${job.email || job.customer} · ${extra[0].preview}`);
     },
     saveSettings: (patch) => setState((s) => ({ ...s, settings: { ...s.settings, ...patch } })),
     renameChat: (id, name) => setState((s) => ({

@@ -1,6 +1,7 @@
 import { supabase } from './supabase';
 import type { Appointment } from './supabase';
 import { firstWord, money } from './data';
+import { EMAIL_PORTAL, formatEasternDate, formatEasternStamp } from './emailLayout';
 
 export type CommunicationEvent =
   | 'booking_received' | 'booking_confirmed' | 'booking_declined' | 'appointment_reminder' | 'appointment_reminder_24h' | 'appointment_reminder_2h'
@@ -27,6 +28,8 @@ export function notifyCustomer(
 ) {
   const email = job.customer_email;
   if (!email) return Promise.resolve();
+  const when = formatEasternStamp(job.scheduled_at);
+  const day = formatEasternDate(job.scheduled_at);
   return sendCommunication(event_key, {
     appointment_id: job.id,
     recipient_email: email,
@@ -35,10 +38,15 @@ export function notifyCustomer(
       customer_first_name: firstWord(job.customer_name, 'there'),
       service_name: job.service_name,
       service: job.service_name,
-      appointment_time: job.scheduled_at ? new Date(job.scheduled_at).toLocaleString() : '',
+      appointment_time: when,
+      appointment_date: day,
       price: money(Number(job.price || 0)),
+      amount: money(Number(job.price || 0)),
       vehicle: job.vehicle_info || '',
+      vehicle_info: job.vehicle_info || '',
+      address: job.service_address || '',
       service_address: job.service_address || '',
+      portal_link: EMAIL_PORTAL,
       ...extra,
     },
   }).catch((err) => console.warn(err));

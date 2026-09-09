@@ -24,6 +24,8 @@ import {
   reviewQueues, streetName, streetProgress, type FieldDoor,
 } from '@/lib/fieldReview';
 import { showToast } from '@/components/AppToast';
+import CustomerEmail from '@/components/CustomerEmail';
+import { EMAIL_PORTAL, withEmailAliases } from '@/lib/emailLayout';
 import { ServiceMenuSelect } from '@/components/DetailSelfPicker';
 import { remainingStepLabels } from '@/lib/onboarding';
 import { MARKET } from '@/lib/market';
@@ -2169,32 +2171,19 @@ export function CustomerPortalCard({ job }: { job: OsJob }) {
 }
 
 export function PremiumEmail({
-  headline, time, service, vehicle, detailer, price, step,
+  headline, time, service, vehicle, detailer, price, eventKey = 'booking_confirmed', body, address,
 }: {
-  headline: string; time: string; service: string; vehicle: string; detailer: string; price: string; step: number;
+  headline: string; time: string; service: string; vehicle: string; detailer: string; price: string; step?: number;
+  eventKey?: string; body?: string; address?: string;
 }) {
   return (
-    <div className="nsos-email">
-      <header>NORTH SPLASH AUTO LUXE</header>
-      <div className="hero">
-        <h2>{headline}</h2>
-        <div className="meta">
-          <div><b>{time}</b></div>
-          <div>{service}</div>
-          <div>{vehicle}</div>
-          <div className="nsos-email-detailer">
-            <span className="nsos-avatar" style={{ width: 36, height: 36, background: '#c8a96a', fontSize: 11 }}>{String(detailer || 'D').slice(0, 1)}</span>
-            <span>Assigned Detailer<br /><b>{detailer}</b></span>
-          </div>
-          <div><b>{price}</b></div>
-        </div>
-      </div>
-      <div className="cta">VIEW APPOINTMENT</div>
-      <div className="nsos-status nsos-status-light">
-        {JOB_STEP_LABELS.map((s, i) => <span key={s} className={i < step ? 'done' : i === step ? 'now' : ''}>{s}</span>)}
-      </div>
-      <footer>North Splash Auto Luxe · North Carolina · hello@northsplash.com · 330-990-3956</footer>
-    </div>
+    <CustomerEmail
+      subject={headline}
+      body={body || `${service}\n${vehicle}\n${time}${address ? `\n${address}` : ''}\n${price}`}
+      eventKey={eventKey}
+      vars={{ service, vehicle, appointment_time: time, price, detailer_name: detailer, address: address || '', portal_link: EMAIL_PORTAL }}
+      detailerName={detailer}
+    />
   );
 }
 
@@ -2210,7 +2199,8 @@ export function JobDetail({ job }: { job: OsJob }) {
     appointment_time: job.time,
     price: money(job.price),
     eta: job.eta || '15 min',
-    portal_link: 'northsplash.com/appointment',
+    address: job.address,
+    portal_link: EMAIL_PORTAL,
   };
   return (
     <div>
@@ -2583,16 +2573,18 @@ export function CommsView() {
   const [preview, setPreview] = useState<'email' | 'sms' | null>(null);
   const selected = templates.find((t) => t.id === selectedId) || templates[0];
   const liveJob = os.jobs[0];
-  const vars = liveJob ? {
+  const vars = liveJob ? withEmailAliases({
     customer_first_name: firstWord(jobPartyName(liveJob), 'Guest'),
-    detailer_name: firstWord(liveJob.detailer, 'Detailer'),
+    customer_name: jobPartyName(liveJob),
+    detailer_name: liveJob.detailer || 'Your North Splash detailer',
     vehicle: liveJob.vehicle,
     service: liveJob.service,
     appointment_time: liveJob.time,
     price: money(liveJob.price),
     eta: liveJob.eta || SAMPLE_VARS.eta,
-    portal_link: SAMPLE_VARS.portal_link,
-  } : SAMPLE_VARS;
+    address: liveJob.address,
+    portal_link: EMAIL_PORTAL,
+  }) : SAMPLE_VARS;
   const stepNow = liveJob ? stepIndex(liveJob.status) : 1;
   return (
     <div>
@@ -2647,7 +2639,7 @@ export function CommsView() {
             <div className="nsos-actions" style={{ marginTop: 12 }}>
               <button className="nsos-btn ghost" type="button" onClick={() => setPreview('email')}><Bell size={14} />Preview email</button>
               <button className="nsos-btn ghost" type="button" onClick={() => setPreview('sms')}><Smartphone size={14} />Preview SMS</button>
-              <button className="nsos-btn" type="button" onClick={() => os.sendTestComm(selected.id, liveJob?.id)}>Send test</button>
+              <button className="nsos-btn" type="button" onClick={() => os.sendTestComm(selected.id, liveJob?.id)}>Send test{liveJob?.email ? ` to ${liveJob.email}` : ''}</button>
             </div>
           </div>
         )}
@@ -2656,14 +2648,12 @@ export function CommsView() {
         <div className="nsos-modal" onClick={() => setPreview(null)}>
           <div className="sheet" onClick={(e) => e.stopPropagation()}>
             {preview === 'email' ? (
-              <PremiumEmail
-                headline={fillTemplate(selected.subject, vars)}
-                time={vars.appointment_time}
-                service={vars.service}
-                vehicle={vars.vehicle}
-                detailer={vars.detailer_name}
-                price={vars.price}
-                step={stepNow}
+              <CustomerEmail
+                subject={selected.subject}
+                body={selected.body}
+                eventKey={selected.event_key}
+                vars={vars}
+                detailerName={vars.detailer_name}
               />
             ) : (
               <div className="nsos-sms"><div className="bubble">{fillTemplate(selected.sms_body, vars)}</div></div>

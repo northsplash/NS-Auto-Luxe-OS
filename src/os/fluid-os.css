@@ -4218,3 +4218,36 @@ html.nsos-active ::selection,
 .ns-send-fab:disabled svg {
   opacity: .42;
 }
+
+/* Customer email preview: cream paper iframe. Do not restyle the D2D pitch overlay. */
+.nsos-email-frame,
+.portal-layout.nsos-cream .nsos-email-frame,
+.comm-preview-modal .nsos-email-frame,
+.nsos-modal .nsos-email-frame {
+  display: block;
+  width: 100%;
+  min-height: 640px;
+  height: min(78dvh, 760px);
+  border: 1px solid #eadfd3;
+  border-radius: 14px;
+  background: #efe8dc;
+}
+.nsos-modal .sheet:has(.nsos-email-frame),
+.portal-layout.nsos-cream .nsos-modal .sheet:has(.nsos-email-frame) {
+  width: min(680px, 100%);
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  border-color: #eadfd3 !important;
+  padding: 12px;
+}
+.comm-preview-modal {
+  max-height: 90dvh;
+  overflow: auto;
+}
+.comm-preview-modal.email,
+.portal-layout.nsos-cream .comm-preview-modal.email {
+  width: min(680px, calc(100vw - 24px));
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  border-color: #eadfd3 !important;
+}
