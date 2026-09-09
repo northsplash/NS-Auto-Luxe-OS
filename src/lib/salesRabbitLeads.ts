@@ -270,3 +270,33 @@ export function composedLeadIdentity(fields: Partial<SrLeadFields>, fallbackName
     address: composeStreetAddress(full, fallbackAddress),
   };
 }
+
+/** Never title a household "Customer". Prefer a real name, then street, then phone. */
+export function leadDisplayName(
+  lead: {
+    customer_name?: string | null;
+    name?: string | null;
+    first_name?: string | null;
+    last_name?: string | null;
+    address?: string | null;
+    phone?: string | null;
+  },
+  unnamed = 'Unnamed door',
+) {
+  const composed = composePersonName(lead.first_name, lead.last_name);
+  const name = String(lead.customer_name || lead.name || composed || '').trim();
+  if (name && !/^customer$/i.test(name)) return name;
+  const street = String(lead.address || '').trim();
+  if (street) return street;
+  const phone = String(lead.phone || '').trim();
+  if (phone) return phone;
+  return unnamed;
+}
+
+export function leadNextAction(lead: { next_action?: string | null; next_action_at?: string | null; follow_up_at?: string | null }) {
+  const at = lead.next_action_at || lead.follow_up_at;
+  if (!at) return { text: lead.next_action || 'No next action', overdue: false, at: '' };
+  const due = new Date(at).getTime() <= Date.now();
+  const when = new Date(at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  return { text: `${due ? 'Overdue' : lead.next_action || 'Next'} · ${when}`, overdue: due, at };
+}

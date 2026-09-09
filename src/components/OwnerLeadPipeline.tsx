@@ -8,8 +8,8 @@ import { notifyCustomer } from '@/lib/communications';
 import { ServiceMenuSelect } from '@/components/DetailSelfPicker';
 import { DOOR_STATUSES, doorStatus } from '@/lib/fieldOps';
 import {
-  composedLeadIdentity, emptySrLeadFields, fieldsFromLead, notesWithAltPhone, SR_KNOCK_KEYS, SR_PIPELINE_KEYS, srStatus,
-  type SrLeadFields,
+  composedLeadIdentity, emptySrLeadFields, fieldsFromLead, leadDisplayName, leadNextAction, notesWithAltPhone, SR_KNOCK_KEYS, SR_PIPELINE_KEYS, srStatus,
+  type SrLeadFields, type SrStatusKey,
 } from '@/lib/salesRabbitLeads';
 import { osmDirectionsUrl, osmPropertyUrl } from '@/lib/osmGeocode';
 import { leadAssignableEmployees, leadRepLabel, selfEmployeeForUser } from '@/lib/workCapabilities';
@@ -28,7 +28,15 @@ type Props = {
   onNavigate?: (view: string) => void;
 };
 
-const STAGES = SR_PIPELINE_KEYS.map((key) => ({
+const PIPELINE_KEYS: SrStatusKey[] = (() => {
+  const keys = [...SR_PIPELINE_KEYS];
+  if (!keys.includes('contacted')) {
+    const i = keys.indexOf('unworked');
+    keys.splice(i >= 0 ? i + 1 : 1, 0, 'contacted');
+  }
+  return keys;
+})();
+const STAGES = PIPELINE_KEYS.map((key) => ({
   key,
   label: srStatus(key).name,
   statuses: key === 'unworked' ? ['new', 'unworked'] : [key],
@@ -442,7 +450,7 @@ export default function OwnerLeadPipeline({ employees, setAppointments, onNaviga
         </div>
       )}
 
-      {view === 'pipeline' && !busy && (
+      {view === 'pipeline' && !busy && filtered.length > 0 && (
         <div className="admin-lead-kanban">
           {STAGES.map((stage) => {
             const rows = filtered.filter((l) => (stage.statuses as readonly string[]).includes(l.status)).sort((a, b) => leadScore(b) - leadScore(a));
@@ -460,7 +468,9 @@ export default function OwnerLeadPipeline({ employees, setAppointments, onNaviga
               >
                 <header><span>{stage.label}</span><strong>{rows.length}</strong></header>
                 <div>
-                  {shown.map((l) => (
+                  {shown.map((l) => {
+                    const next = leadNextAction(l);
+                    return (
                     <button
                       key={l.id}
                       type="button"
@@ -473,15 +483,16 @@ export default function OwnerLeadPipeline({ employees, setAppointments, onNaviga
                         <i style={{ background: doorStatus(l.status).color }} />
                         <span className={isHot(l) ? 'lead-score hot' : 'lead-score'}>{leadScore(l)}</span>
                       </div>
-                      <strong>{l.customer_name || l.address || 'Unnamed lead'}</strong>
+                      <strong>{leadDisplayName(l)}</strong>
                       <small>{l.address || 'No address'}</small>
                       <p>{assignedName(reps, l.assigned_employee_id)}</p>
                       <footer>
-                        <span>{l.service_interest || 'Service TBD'}</span>
+                        <span className={next.overdue ? 'overdue-text' : ''}>{next.text}</span>
                         <b>{money(Number(l.estimated_value || 0))}</b>
                       </footer>
                     </button>
-                  ))}
+                    );
+                  })}
                   {!rows.length && <div className="lead-column-empty">Drop a card here, or add a lead.</div>}
                   {rows.length > shown.length && (
                     <button type="button" className="btn-outline btn-sm" onClick={() => setExpanded((p) => ({ ...p, [stage.key]: true }))}>
@@ -500,7 +511,7 @@ export default function OwnerLeadPipeline({ employees, setAppointments, onNaviga
           <div className="lead-command-head"><span>Lead</span><span>Rep</span><span>Score</span><span>Status</span><span>Value</span><span>Follow-up</span></div>
           {filtered.sort((a, b) => leadScore(b) - leadScore(a)).map((l) => (
             <button className="lead-command-row" type="button" key={l.id} onClick={() => setSelected(l)}>
-              <span><strong>{l.customer_name || 'Unnamed lead'}</strong><small>{l.address || 'No address'} · {l.service_interest || 'No service selected'}</small></span>
+              <span><strong>{leadDisplayName(l)}</strong><small>{l.address || 'No address'} · {l.service_interest || 'No service selected'}</small></span>
               <span>{assignedName(reps, l.assigned_employee_id)}</span>
               <span><b className={isHot(l) ? 'lead-score hot' : 'lead-score'}>{leadScore(l)}</b></span>
               <span><b className="status-lozenge">{humanStatus(l.status)}</b></span>
@@ -515,7 +526,7 @@ export default function OwnerLeadPipeline({ employees, setAppointments, onNaviga
         <div className="lead-archive-grid">
           {filtered.map((l) => (
             <button className="archive-lead-card" type="button" key={l.id} onClick={() => setSelected(l)}>
-              <div><Archive size={17} /><strong>{l.customer_name || l.address || 'Archived lead'}</strong></div>
+              <div><Archive size={17} /><strong>{leadDisplayName(l, 'Archived door')}</strong></div>
               <small>{l.address || 'No address'}</small>
               <div className="archive-meta">
                 <span>{humanStatus(l.status)}</span>

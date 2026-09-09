@@ -2274,3 +2274,131 @@ html:has(.sales-presentation-overlay) .d2d-add-lead-fab,
   font-size: revert !important;
   box-shadow: revert !important;
 }
+
+/* Cream last-wins: kill leftover dark rails, bubbles, and pipeline columns. */
+.portal-layout.nsos-cream .team-messaging.messaging-v6 .message-channel-rail,
+.portal-layout.nsos-cream .messaging-v6 .message-channel-rail,
+.portal-layout.nsos-cream .message-workspace-brand,
+.portal-layout.nsos-cream .message-thread-head,
+.portal-layout.nsos-cream .message-quick-row,
+.portal-layout.nsos-cream .message-composer,
+.portal-layout.nsos-cream .message-rail-footer,
+.portal-layout.nsos-cream .message-info-rail {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+  -webkit-text-fill-color: #1c1814 !important;
+  border-color: #eadfd3 !important;
+}
+.portal-layout.nsos-cream .message-channel {
+  background: #fff !important;
+  color: #1c1814 !important;
+  border: 1px solid #eadfd3 !important;
+}
+.portal-layout.nsos-cream .message-channel.active {
+  background: #efe8dc !important;
+  border-color: #d8cbb8 !important;
+}
+.portal-layout.nsos-cream .message-channel small,
+.portal-layout.nsos-cream .message-channel time,
+.portal-layout.nsos-cream .message-section-label,
+.portal-layout.nsos-cream .message-workspace-brand small {
+  color: #6f655b !important;
+  -webkit-text-fill-color: #6f655b !important;
+}
+.portal-layout.nsos-cream .message-bubble {
+  background: #fff !important;
+  color: #1c1814 !important;
+  border: 1px solid #eadfd3 !important;
+}
+.portal-layout.nsos-cream .message-bubble.mine {
+  background: #1c1814 !important;
+  color: #fffdf8 !important;
+  -webkit-text-fill-color: #fffdf8 !important;
+  border-color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .message-bubble.mine p,
+.portal-layout.nsos-cream .message-bubble.mine strong,
+.portal-layout.nsos-cream .message-bubble.mine span {
+  color: inherit !important;
+  -webkit-text-fill-color: inherit !important;
+}
+.portal-layout.nsos-cream .message-composer-toolbar button:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+.portal-layout.nsos-cream .message-send-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 12px 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f8ece4;
+  border: 1px solid #e4c9b8;
+  color: #5c2e1f !important;
+  font-size: 13px;
+}
+.portal-layout.nsos-cream .message-send-error button {
+  flex: 0 0 auto;
+  background: #1c1814 !important;
+  color: #fffdf8 !important;
+  border: 0 !important;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.portal-layout.nsos-cream .message-member-hint {
+  display: block;
+  grid-column: 1 / -1;
+  color: #6f655b;
+  font-size: 12px;
+  padding: 4px 2px 0;
+}
+.portal-layout.nsos-cream .lead-pipeline-v26 > section,
+.portal-layout.nsos-cream .admin-lead-kanban > section,
+.portal-layout.nsos-cream .nsos-col {
+  background: #fffdf8 !important;
+  border: 1px solid #eadfd3 !important;
+  color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .lead-pipeline-v26 > section > header,
+.portal-layout.nsos-cream .admin-lead-kanban > section > header {
+  background: #f7f1e8 !important;
+  border-bottom: 1px solid #eadfd3 !important;
+  color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .lead-pipeline-v26 header span,
+.portal-layout.nsos-cream .admin-lead-kanban header strong {
+  background: #efe8dc !important;
+  color: #1c1814 !important;
+}
+.portal-layout.nsos-cream .lead-pipeline-cards-v26 article,
+.portal-layout.nsos-cream .admin-lead-kanban section > div > button:not(.btn-outline):not(.btn-sm),
+.portal-layout.nsos-cream .nsos-lead {
+  background: #fff !important;
+  color: #1c1814 !important;
+  border: 1px solid #eadfd3 !important;
+}
+.portal-layout.nsos-cream .nsos-lead.selected,
+.portal-layout.nsos-cream .admin-lead-kanban button.selected {
+  border-color: #1c1814 !important;
+  box-shadow: 0 0 0 1px #1c1814;
+}
+.portal-layout.nsos-cream .lead-status-abbr {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+.portal-layout.nsos-cream .overdue-text {
+  color: #9a3b28 !important;
+  font-weight: 700;
+}
+.portal-layout.nsos-cream .owner-picked-lead {
+  margin-top: 12px;
+}
+.portal-layout.nsos-cream .lead-column-empty {
+  color: #6f655b !important;
+  background: transparent !important;
+}

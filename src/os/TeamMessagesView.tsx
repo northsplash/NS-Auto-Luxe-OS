@@ -119,7 +119,8 @@ export default function TeamMessagesView() {
   const createGroup = (e: FormEvent) => {
     e.preventDefault();
     if (!newName.trim()) return;
-    const id = os.createChat(newName.trim(), 'space');
+    const memberNames = os.employees.filter((e) => newMembers.includes(e.id)).map((e) => e.name);
+    const id = os.createChat(newName.trim(), 'space', memberNames);
     setNewName('');
     setNewMembers([]);
     setShowCreate(false);
@@ -271,8 +272,8 @@ export default function TeamMessagesView() {
               {sendError && <div className="nsos-onboard-error" role="alert">{sendError}</div>}
               <div className="message-composer-box">
                 <div className="message-composer-toolbar">
-                  <button type="button" title="Add attachment"><Plus size={16} /></button>
-                  <button type="button" title="Attach file"><Paperclip size={15} /></button>
+                  <button type="button" disabled title="File attachments are not available yet"><Plus size={16} /></button>
+                  <button type="button" disabled title="File attachments are not available yet"><Paperclip size={15} /></button>
                   <span>{kind && kind !== 'message' ? prettyLabel(kind) : 'Message'}</span>
                 </div>
                 <div className="message-composer-row">
@@ -349,7 +350,7 @@ export default function TeamMessagesView() {
             </header>
             <label>Team name<input required value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="NC D2D Crew" /></label>
             <div className="message-member-picker">
-              <span>Members</span>
+              <span>Shown on the team</span>
               {os.employees.filter((e) => e.status === 'active').map((e) => (
                 <label key={e.id}>
                   <input type="checkbox" checked={newMembers.includes(e.id)} onChange={() => setNewMembers((p) => p.includes(e.id) ? p.filter((x) => x !== e.id) : [...p, e.id])} />
@@ -357,6 +358,7 @@ export default function TeamMessagesView() {
                   {newMembers.includes(e.id) && <Check size={14} />}
                 </label>
               ))}
+              <small className="message-member-hint">Names appear on the channel so the crew knows who belongs.</small>
             </div>
             <button className="btn-primary"><Users size={15} />Create team</button>
           </form>

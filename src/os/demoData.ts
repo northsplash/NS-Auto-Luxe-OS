@@ -140,6 +140,7 @@ export type OsChat = {
   initials: string;
   hue: string;
   topic?: string;
+  members?: string[];
   messages: OsMessage[];
 };
 

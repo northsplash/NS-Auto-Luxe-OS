@@ -12,7 +12,7 @@ import { firstWord, isSettledPayment, money, prettyLabel, trendLabel } from '@/l
 import { DETAIL_FAMILY_COPY, packagesForFamily } from '@/lib/detailCatalog';
 import { ServiceMenuSelect } from '@/components/DetailSelfPicker';
 import { remainingStepLabels } from '@/lib/onboarding';
-import { SR_STATUSES, composedLeadIdentity, fieldsFromLead, srStatus } from '@/lib/salesRabbitLeads';
+import { SR_STATUSES, composedLeadIdentity, fieldsFromLead, leadDisplayName, srStatus } from '@/lib/salesRabbitLeads';
 import { householdAsLeadFields, type ApplyOfferResult, type OfferSelection } from '@/lib/customerAccount';
 import {
   JOB_STEP_LABELS, JOB_STEPS, LEAD_STAGES, SHIFT_DAYS, WEEKDAYS, initialsOf, payLine, revenueDays,
@@ -1545,6 +1545,8 @@ export function PipelineView({ onBook }: { onBook?: (jobId: string) => void }) {
   const [q, setQ] = useState('');
   const [focus, setFocus] = useState<'all' | 'hot' | 'unassigned'>('all');
   const [compose, setCompose] = useState(false);
+  const [composeError, setComposeError] = useState('');
+  const [pickedId, setPickedId] = useState('');
   const [draft, setDraft] = useState({ first_name: '', last_name: '', phone: '', email: '', street1: '', city: '', state: 'NC', postal_code: '', value: '275' });
   const [dropStage, setDropStage] = useState('');
   const needle = q.trim().toLowerCase();
@@ -1575,7 +1577,11 @@ export function PipelineView({ onBook }: { onBook?: (jobId: string) => void }) {
         className="nsos-card owner-lead-compose"
         onSubmit={(e) => {
           e.preventDefault();
-          if (!draft.first_name.trim() && !draft.last_name.trim() && !draft.street1.trim()) return;
+          if (!draft.first_name.trim() && !draft.last_name.trim() && !draft.street1.trim()) {
+            setComposeError('Add a first name, last name, or street so this household can be found later.');
+            return;
+          }
+          setComposeError('');
           const identity = composedLeadIdentity({
             first_name: draft.first_name, last_name: draft.last_name, phone: draft.phone, alt_phone: '', email: draft.email,
             street1: draft.street1, street2: '', city: draft.city, state: draft.state, postal_code: draft.postal_code,
@@ -1594,6 +1600,7 @@ export function PipelineView({ onBook }: { onBook?: (jobId: string) => void }) {
       >
         <span className="nsos-eyebrow">NEW LEAD</span>
         <h3>Log a household</h3>
+        {composeError && <p className="nsos-onboard-error" role="alert">{composeError}</p>}
         <div className="owner-lead-compose-grid nsos-sr-lead-grid">
           <label className="nsos-field">First name<input value={draft.first_name} onChange={(e) => setDraft((p) => ({ ...p, first_name: e.target.value }))} placeholder="First" /></label>
           <label className="nsos-field">Last name<input value={draft.last_name} onChange={(e) => setDraft((p) => ({ ...p, last_name: e.target.value }))} placeholder="Last" /></label>
@@ -1629,7 +1636,7 @@ export function PipelineView({ onBook }: { onBook?: (jobId: string) => void }) {
         <div className="nsos-kpi"><span>Close rate</span><strong>{Math.round((sold / Math.max(1, os.leads.length)) * 100)}%</strong></div>
         <div className="nsos-kpi"><span>Unassigned</span><strong>{unassigned.length}</strong></div>
       </div>
-      {!rows.length && <div className="ns-empty">No leads match these filters.</div>}
+      {!rows.length ? <div className="ns-empty">No leads match these filters.</div> : (
       <div className="nsos-kanban">
         {LEAD_STAGES.map((s) => {
           const col = rows.filter((l) => l.status === s);
@@ -1647,8 +1654,17 @@ export function PipelineView({ onBook }: { onBook?: (jobId: string) => void }) {
             >
               <h3>{srStatus(s).name}<span>{col.length}</span></h3>
               {col.map((l) => (
-                <div className="nsos-lead" key={l.id} draggable onDragStart={(e) => e.dataTransfer.setData('lead', l.id)}>
-                  <strong className="nsos-lead-name">{l.name || 'Untitled lead'}</strong>
+                <div
+                  className={`nsos-lead ${pickedId === l.id ? 'selected' : ''}`}
+                  key={l.id}
+                  draggable
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setPickedId(l.id)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setPickedId(l.id); } }}
+                  onDragStart={(e) => e.dataTransfer.setData('lead', l.id)}
+                >
+                  <strong className="nsos-lead-name">{leadDisplayName(l)}</strong>
                   <small className="nsos-lead-addr">{l.address || 'No address'}</small>
                   <div className="nsos-lead-meta">
                     <span className={`nsos-temp ${l.temp}`}>{l.temp}</span>
@@ -1666,7 +1682,7 @@ export function PipelineView({ onBook }: { onBook?: (jobId: string) => void }) {
                     <b>{money(l.value)}</b>
                   </div>
                   {(s === 'appointment_set' || s === 'sold' || s === 'interested' || s === 'estimate') && (
-                    <button className="nsos-btn ghost" style={{ marginTop: 8, width: '100%', justifyContent: 'center' }} onClick={() => { const id = os.convertLead(l.id); if (id) onBook?.(id); }}>Book job</button>
+                    <button className="nsos-btn ghost" style={{ marginTop: 8, width: '100%', justifyContent: 'center' }} onClick={(e) => { e.stopPropagation(); const id = os.convertLead(l.id); if (id) onBook?.(id); }}>Book job</button>
                   )}
                 </div>
               ))}
@@ -1675,6 +1691,22 @@ export function PipelineView({ onBook }: { onBook?: (jobId: string) => void }) {
           );
         })}
       </div>
+      )}
+      {pickedId && rows.some((l) => l.id === pickedId) && (() => {
+        const picked = rows.find((l) => l.id === pickedId);
+        if (!picked) return null;
+        return (
+          <div className="nsos-card owner-picked-lead">
+            <span className="nsos-eyebrow">{srStatus(picked.status).abbr} · {srStatus(picked.status).name}</span>
+            <h3>{leadDisplayName(picked)}</h3>
+            <p>{picked.address || 'Address pending'}{picked.phone ? ` · ${picked.phone}` : ''}</p>
+            <div className="nsos-actions">
+              {picked.phone && <a className="nsos-btn ghost" href={`tel:${picked.phone}`}>Call</a>}
+              <button type="button" className="nsos-btn" onClick={() => { const id = os.convertLead(picked.id); if (id) onBook?.(id); }}>Book job</button>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

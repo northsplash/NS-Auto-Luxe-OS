@@ -70,6 +70,7 @@ export default function TeamMessaging({employee,employees=[],portalKind='employe
   const [loading,setLoading]=useState(true);
   const [sending,setSending]=useState(false);
   const [sendError,setSendError]=useState('');
+  const [threadError,setThreadError]=useState('');
   const [railFilter,setRailFilter]=useState<'all'|'unread'|'chat'|'teams'>('all');
   const [showCreate,setShowCreate]=useState(false);
   const [newName,setNewName]=useState('');
@@ -136,9 +137,10 @@ export default function TeamMessaging({employee,employees=[],portalKind='employe
     setLoading(false);
   };
   const loadMessages=async(channelId:string)=>{
-    if(!channelId){setMessages([]);return}
+    if(!channelId){setMessages([]);setThreadError('');return}
     const {data,error}=await supabase.from('employee_messages').select('*').eq('channel_id',channelId).is('deleted_at',null).order('created_at',{ascending:true}).limit(300);
-    if(error){console.warn('[messages] message load',error);return}
+    if(error){setThreadError(error.message||'Could not load this conversation.');return}
+    setThreadError('');
     setMessages((data??[]) as Message[]);
     if(user) await supabase.from('employee_message_reads').upsert({channel_id:channelId,user_id:user.id,last_read_at:new Date().toISOString()},{onConflict:'channel_id,user_id'}).then(()=>{});
     setChannelMeta(prev=>({...prev,[channelId]:{...prev[channelId],unread:0}}));
@@ -149,7 +151,12 @@ export default function TeamMessaging({employee,employees=[],portalKind='employe
     if(!activeId)return;
     const subscription=supabase.channel(`employee-messages-${activeId}`)
       .on('postgres_changes',{event:'INSERT',schema:'public',table:'employee_messages',filter:`channel_id=eq.${activeId}`},payload=>{
-        setMessages(p=>p.some(x=>x.id===(payload.new as any).id)?p:[...p,payload.new as Message]);
+        const incoming=payload.new as Message;
+        setMessages(p=>{
+          if(p.some(x=>x.id===incoming.id))return p;
+          const withoutLocal=p.filter(x=>!(String(x.id).startsWith('local-')&&x.body===incoming.body&&x.sender_user_id===incoming.sender_user_id));
+          return [...withoutLocal,incoming];
+        });
       }).subscribe();
     return()=>{supabase.removeChannel(subscription)};
   },[activeId]);
@@ -213,13 +220,34 @@ export default function TeamMessaging({employee,employees=[],portalKind='employe
       }
       let senderAvatar=employee?.avatar_url||profile?.avatar_url||null;
       if(!employee?.avatar_url){const {data:latestProfile}=await supabase.from('profiles').select('avatar_url').eq('id',user.id).maybeSingle();senderAvatar=latestProfile?.avatar_url||senderAvatar;}
-      const payload:Record<string,unknown>={channel_id:channelId,sender_user_id:user.id,sender_employee_id:employee?.id||null,sender_name:employee?.name||profile?.full_name||user.email?.split('@')[0]||'North Splash Team',sender_avatar_url:senderAvatar,body:draft.trim(),message_kind:kind||'message'};
-      let {error}=await supabase.from('employee_messages').insert(payload);
+      const body=draft.trim();
+      const payload:Record<string,unknown>={channel_id:channelId,sender_user_id:user.id,sender_employee_id:employee?.id||null,sender_name:employee?.name||profile?.full_name||user.email?.split('@')[0]||'North Splash Team',sender_avatar_url:senderAvatar,body,message_kind:kind||'message'};
+      const insertMessage=async(row:Record<string,unknown>)=>{
+        const withRow=await supabase.from('employee_messages').insert(row).select().single();
+        if(withRow.data) return {data:withRow.data as Message,error:null};
+        if(withRow.error&&/sender_avatar_url|column/i.test(withRow.error.message||'')) return {data:null as Message|null,error:withRow.error};
+        const bare=await supabase.from('employee_messages').insert(row);
+        return {data:null as Message|null,error:bare.error};
+      };
+      let {data:saved,error}=await insertMessage(payload);
       if(error&&/sender_avatar_url|column/i.test(error.message||'')){
         const rest={...payload}; delete rest.sender_avatar_url;
-        ({error}=await supabase.from('employee_messages').insert(rest));
+        ({data:saved,error}=await insertMessage(rest));
       }
       if(error)throw error;
+      const local:Message=saved||{
+        id:`local-${Date.now()}`,
+        channel_id:channelId,
+        sender_user_id:user.id,
+        sender_employee_id:employee?.id||null,
+        sender_name:String(payload.sender_name),
+        sender_avatar_url:senderAvatar,
+        body,
+        message_kind:String(payload.message_kind||'message'),
+        created_at:new Date().toISOString(),
+      };
+      setMessages(p=>p.some(x=>x.id===local.id)?p:[...p,local]);
+      setChannelMeta(prev=>({...prev,[channelId]:{lastBody:body,lastAt:local.created_at,unread:0}}));
       setDraft('');setKind('message');composerRef.current?.focus();
     }catch(err:unknown){
       setSendError(err instanceof Error?err.message:'Message could not send. Check that you are signed in and try again.');
@@ -283,13 +311,14 @@ export default function TeamMessaging({employee,employees=[],portalKind='employe
               <div className="message-body"><header>{!grouped&&<><strong>{m.sender_name}</strong><span>{new Date(m.created_at).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}</span></>}</header><p>{m.body}</p>{m.message_kind && m.message_kind!=='message'&&<small className={`message-kind kind-${m.message_kind}`}>{prettyLabel(m.message_kind)}</small>}<div className="message-hover-actions"><button type="button" title="React" onClick={()=>{setDraft(p=>`${p}${p?' ':''}👍`);composerRef.current?.focus()}}><Smile size={13}/></button><button type="button" title="Reply" onClick={()=>{setDraft(`@${m.sender_name} `);composerRef.current?.focus()}}><MessageCircle size={13}/></button></div></div>
             </article></div>;
           })}
-          {!visibleMessages.length&&!loading&&<div className="message-thread-empty"><img className="message-empty-lockup" src={BRAND_LOCKUP} alt=""/><strong>{messageSearch?'No matching messages':'Start the conversation'}</strong><span>{messageSearch?'Try a different search.':`Share the first update in ${active.name}.`}</span></div>}
+          {threadError&&<div className="message-send-error" role="alert">{threadError}<button type="button" onClick={()=>void loadMessages(active.id)}>Retry</button></div>}
+          {!visibleMessages.length&&!loading&&!threadError&&<div className="message-thread-empty"><img className="message-empty-lockup" src={BRAND_LOCKUP} alt=""/><strong>{messageSearch?'No matching messages':'Start the conversation'}</strong><span>{messageSearch?'Try a different search.':`Share the first update in ${active.name}.`}</span></div>}
           <div ref={endRef}/>
         </div>
         <form className="message-composer" onSubmit={send}>
           {sendError&&<div className="message-send-error" role="alert">{sendError}</div>}
           {!user&&<div className="message-send-error" role="alert">You are not signed in, so messages cannot send.</div>}
-          <div className="message-composer-box"><div className="message-composer-toolbar"><button type="button" title="Add attachment"><Plus size={16}/></button><button type="button" title="Attach file"><Paperclip size={15}/></button><span>{kind && kind!=='message'?prettyLabel(kind):'Message'}</span></div><div className="message-composer-row"><textarea ref={composerRef} value={draft} onChange={e=>setDraft(e.target.value)} onKeyDown={onComposerKeyDown} placeholder={`Message #${String(active.name||'').toLowerCase().replaceAll(' ','-')}`} rows={1}/><button type="submit" className="message-send-btn" disabled={sending||!draft.trim()}><Send size={18}/><span>{sending?'Sending':'Send'}</span></button></div><p className="message-composer-hint">Enter to send · Shift+Enter for a new line</p></div>
+          <div className="message-composer-box"><div className="message-composer-toolbar"><button type="button" disabled title="File attachments are not available yet"><Plus size={16}/></button><button type="button" disabled title="File attachments are not available yet"><Paperclip size={15}/></button><span>{kind && kind!=='message'?prettyLabel(kind):'Message'}</span></div><div className="message-composer-row"><textarea ref={composerRef} value={draft} onChange={e=>setDraft(e.target.value)} onKeyDown={onComposerKeyDown} placeholder={`Message #${String(active.name||'').toLowerCase().replaceAll(' ','-')}`} rows={1}/><button type="submit" className="message-send-btn" disabled={sending||!draft.trim()}><Send size={18}/><span>{sending?'Sending':'Send'}</span></button></div><p className="message-composer-hint">Enter to send · Shift+Enter for a new line</p></div>
         </form>
       </>:<div className="message-thread-empty"><img className="message-empty-lockup" src={BRAND_LOCKUP} alt=""/><strong>Select a channel</strong><span>Choose a team channel to start messaging.</span></div>}
     </section>

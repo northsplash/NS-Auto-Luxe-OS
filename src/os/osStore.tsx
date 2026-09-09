@@ -167,7 +167,7 @@ type OsApi = OsSnapshot & {
   toggleDocument: (employeeId: string, docId: string) => void;
   sendChat: (chatId: string, body: string) => void;
   markChatRead: (chatId: string) => void;
-  createChat: (name: string, kind: 'dm' | 'space') => string;
+  createChat: (name: string, kind: 'dm' | 'space', memberNames?: string[]) => string;
   setJobStatus: (id: string, status: JobStatus) => void;
   assignJob: (jobId: string, detailer: string) => void;
   addJobNote: (id: string, body: string) => void;
@@ -349,13 +349,17 @@ export function OsProvider({ children }: { children: ReactNode }) {
       ...s,
       chats: s.chats.map((c) => c.id === chatId ? { ...c, unread: 0 } : c),
     })),
-    createChat: (name, kind) => {
+    createChat: (name, kind, memberNames) => {
       const id = `c_${Date.now()}`;
+      const members = (memberNames || []).map((n) => String(n || '').trim()).filter(Boolean);
       const chat: OsChat = {
         id, name, kind, channel_type: kind === 'space' ? 'custom' : 'dm',
-        description: kind === 'space' ? 'Private team group' : undefined,
+        description: kind === 'space'
+          ? (members.length ? `Team · ${members.join(', ')}` : 'Private team group')
+          : undefined,
         preview: kind === 'space' ? 'Space created' : 'New chat', at: clockNow(), unread: 0,
         initials: initialsOf(name), hue: HUES[0], topic: kind === 'space' ? 'New space' : undefined,
+        members,
         messages: [],
       };
       setState((s) => ({ ...s, chats: [chat, ...s.chats] }));
