@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { createPortal as mountPortal } from 'react-dom';
 import {
   ArrowLeft, BadgeCheck, Car, Check, ChevronLeft, ChevronRight,
@@ -113,6 +113,26 @@ export default function SalesPresentation({
     try { if (!document.fullscreenElement) await document.documentElement.requestFullscreen?.(); } catch { /* fullscreen is optional */ }
   };
 
+  useEffect(() => {
+    if (embedded) return;
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if (e.key === 'Escape') { e.preventDefault(); onClose?.(); return; }
+      if (mode !== 'presentation') return;
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') {
+        e.preventDefault();
+        if (slide === slides.length - 1) setMode('quote');
+        else go(slide + 1);
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        go(slide - 1);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [embedded, mode, slide, onClose]);
+
   const applyNow = async (offer: OfferSelection) => {
     if (!onApplyAndSave) return;
     if (offer.createPortalAccount) {
@@ -175,10 +195,8 @@ export default function SalesPresentation({
   const content = useMemo(() => {
     switch (currentSlide.id) {
       case 'welcome': return <section className="sales-slide sales-slide-hero">
-        <div className="sales-hero-copy"><span className="sales-kicker">NORTH SPLASH AUTO LUXE</span><p>{greeting}</p><h2>Your vehicle deserves more than a quick wash.</h2><p className="sales-lead">We bring premium detailing directly to your driveway, with a repeatable process built around convenience, careful vehicle care and a finish you can actually inspect.</p><div className="sales-hero-pills"><span><Home />Mobile convenience</span><span><Sparkles />Detail-focused care</span><span><ShieldCheck />Professional process</span></div>
-          <div className="sales-hero-rep-tools"><button type="button" onClick={() => go(1)}>Start the pitch</button><button type="button" className="ghost" onClick={() => setMode('quote')}>Skip to quote</button></div>
-        </div>
-        <div className="sales-hero-mark"><img src={BRAND_LOGO} alt="North Splash Auto Luxe" /><span>PREMIUM MOBILE DETAILING</span></div>
+        <div className="sales-hero-copy"><span className="sales-kicker">NORTH SPLASH AUTO LUXE</span><p>{greeting}</p><h2>Your vehicle deserves more than a quick wash.</h2><p className="sales-lead">We bring premium detailing directly to your driveway, with a repeatable process built around convenience, careful vehicle care and a finish you can actually inspect.</p><div className="sales-hero-pills"><span><Home />Mobile convenience</span><span><Sparkles />Detail-focused care</span><span><ShieldCheck />Professional process</span></div></div>
+        <div className="sales-hero-mark"><img src={BRAND_LOGO} alt="North Splash Auto Luxe" /></div>
       </section>;
       case 'why': return <section className="sales-slide"><div className="sales-slide-heading"><span className="sales-kicker">WHY DETAILING?</span><h2>Clean is only part of the job.</h2><p>Professional detailing is about the areas, surfaces and finishing steps a quick wash usually does not address.</p></div><div className="sales-benefit-grid">
         <article><Car /><h3>Whole-vehicle attention</h3><p>Interior, exterior, glass, wheels, trim and the details that change how the entire vehicle feels.</p></article>
@@ -200,7 +218,7 @@ export default function SalesPresentation({
       case 'services': return <section className="sales-slide"><div className="sales-slide-heading"><span className="sales-kicker">ONE-TIME SERVICES</span><h2>Exterior and interior, each with three selves.</h2><p>Essential, Signature, and Elite. Final pricing can vary by vehicle size, condition and selected add-ons.</p></div><DetailSelfPicker tone={embedded ? 'cream' : 'dark'} family={family} self={self} onChange={(nextFamily, nextSelf, nextPkg) => { setFamily(nextFamily); setSelf(nextSelf); setOfferType('service'); onEvent?.('offer_view', { type: 'service', name: nextPkg.name, family: nextFamily, self: nextSelf }); }} /><div className="sales-self-quote"><button type="button" onClick={() => { setOfferType('service'); setMode('quote'); onEvent?.('offer_view', { type: 'service', name: pkg.name }); }}>Price {pkg.name}</button></div></section>;
       case 'membership': return <section className="sales-slide sales-membership-story"><div className="sales-slide-heading"><span className="sales-kicker">WHY MEMBERSHIP?</span><h2>Stop waiting until the vehicle is “bad enough” to detail.</h2><p>A membership turns vehicle care into a routine instead of another task to remember.</p></div><div className="sales-membership-flow"><article><span>1</span><h3>Set the rhythm</h3><p>Choose the maintenance plan that matches how you want the vehicle to look.</p></article><i /><article><span>2</span><h3>We keep up with it</h3><p>Regular service helps prevent the long gaps that lead to heavier buildup.</p></article><i /><article><span>3</span><h3>Stay consistently ready</h3><p>Your vehicle stays closer to “just detailed” instead of cycling between clean and neglected.</p></article></div><div className="sales-membership-banner"><Star /><div><strong>The value is consistency.</strong><span>Priority-oriented scheduling and recurring care make the membership easier to use than repeatedly starting from zero.</span></div><button type="button" onClick={() => go(6)}>Compare Plans <ChevronRight /></button></div></section>;
       case 'plans': return <section className="sales-slide"><div className="sales-slide-heading"><span className="sales-kicker">MEMBERSHIP OPTIONS</span><h2>Pick how hands-off you want vehicle care to be.</h2><p>Monthly pricing shown below. Exact service availability and terms are confirmed during enrollment.</p></div><div className="sales-product-grid memberships">{MEMBERSHIPS.map((m, i) => <article key={m.name} className={i === 1 ? 'featured' : ''}><span>{i === 1 ? 'MOST POPULAR' : 'MEMBERSHIP'}</span><h3>{m.name}</h3><strong>{money(m.price)}<small>/mo</small></strong><p>{m.desc}</p><ul>{m.features.map((f) => <li key={f}><Check />{f}</li>)}</ul><button type="button" onClick={() => { setMembershipIndex(i); setOfferType('membership'); setMode('quote'); onEvent?.('offer_view', { type: 'membership', name: m.name }); }}>Show Customer Price</button></article>)}</div></section>;
-      case 'close': return <section className="sales-slide sales-close-slide"><div className="sales-close-main"><span className="sales-kicker">READY WHEN YOU ARE</span><h2>What makes the most sense for your vehicle?</h2><p>We can start with a one-time detail or set up ongoing maintenance so you do not have to keep thinking about it.</p><div className="sales-close-options"><button type="button" onClick={() => { setOfferType('service'); setMode('quote'); }}><Sparkles /><span><strong>One-Time Detail</strong><small>Reset the vehicle now</small></span><ChevronRight /></button><button type="button" className="primary" onClick={() => { setOfferType('membership'); setMode('quote'); }}><Crown /><span><strong>Membership</strong><small>Keep it consistently maintained</small></span><ChevronRight /></button></div></div><div className="sales-close-card"><span>NORTH SPLASH AUTO LUXE</span><strong>Premium care.<br />At your door.</strong><p>Choose your service with your North Splash representative.</p></div></section>;
+      case 'close': return <section className="sales-slide sales-close-slide"><div className="sales-close-main"><span className="sales-kicker">READY WHEN YOU ARE</span><h2>What makes the most sense for your vehicle?</h2><p>We can start with a one-time detail or set up ongoing maintenance so you do not have to keep thinking about it.</p><div className="sales-close-options"><button type="button" onClick={() => { setOfferType('service'); setMode('quote'); }}><Sparkles /><span><strong>One-Time Detail</strong><small>Reset the vehicle now</small></span><ChevronRight /></button><button type="button" className="primary" onClick={() => { setOfferType('membership'); setMode('quote'); }}><Crown /><span><strong>Membership</strong><small>Keep it consistently maintained</small></span><ChevronRight /></button></div></div><div className="sales-close-card"><img src={BRAND_LOGO} alt="North Splash Auto Luxe" /><p>Choose your service with your North Splash representative.</p></div></section>;
       default: return null;
     }
   }, [currentSlide.id, greeting, onEvent, family, self, pkg.name, embedded]);
@@ -222,7 +240,7 @@ export default function SalesPresentation({
 
   const tree = <div className={embedded ? 'nsos-cream sales-presentation-embedded' : 'sales-presentation-overlay'}>
     <div className="sales-presentation-shell">
-      <header className="sales-presentation-header"><div className="sales-presentation-brand"><img src={BRAND_MARK} alt="" /><span><strong>NORTH SPLASH</strong><small>SALES PRESENTATION</small></span></div><div className="sales-presentation-mode"><button type="button" className={mode === 'presentation' ? 'active' : ''} onClick={() => setMode('presentation')}>Pitch</button><button type="button" className={mode === 'quote' ? 'active' : ''} onClick={() => setMode('quote')}>Quote</button><button type="button" className={mode === 'account' ? 'active' : ''} onClick={() => setMode('account')}>Account</button>{slots.length > 0 && <button type="button" className={mode === 'book' ? 'active' : ''} onClick={() => setMode('book')}>Times</button>}</div><div className="sales-presentation-tools">{!embedded && <button type="button" onClick={presentFullscreen} title="Full screen"><Maximize2 /></button>}{onClose && <button type="button" onClick={onClose} title="Close"><X /></button>}</div></header>
+      <header className="sales-presentation-header"><div className="sales-presentation-brand"><img src={BRAND_MARK} alt="North Splash Auto Luxe" /><span><strong>NORTH SPLASH</strong><small>AUTO LUXE</small></span></div><div className="sales-presentation-mode"><button type="button" className={mode === 'presentation' ? 'active' : ''} onClick={() => setMode('presentation')}>Pitch</button><button type="button" className={mode === 'quote' ? 'active' : ''} onClick={() => setMode('quote')}>Quote</button><button type="button" className={mode === 'account' ? 'active' : ''} onClick={() => setMode('account')}>Account</button>{slots.length > 0 && <button type="button" className={mode === 'book' ? 'active' : ''} onClick={() => setMode('book')}>Times</button>}</div><div className="sales-presentation-tools">{!embedded && <button type="button" onClick={presentFullscreen} title="Full screen"><Maximize2 /></button>}{onClose && <button type="button" onClick={onClose} title="Close"><X /></button>}</div></header>
       {mode === 'presentation' ? <>
         <div className="sales-slide-progress"><i style={{ width: `${progress}%` }} /></div>
         <div className="sales-presentation-body">{content}</div>
