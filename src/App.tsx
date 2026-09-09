@@ -33,7 +33,7 @@ function WorkspaceCrashScreen({ message, onRetry }: { message: string; onRetry: 
   }, [chunkCrash]);
   const retry = () => {
     if (hookCrash || chunkCrash) {
-      recoverStaleChunkOnce() || window.location.reload();
+      if (!recoverStaleChunkOnce()) window.location.reload();
       return;
     }
     onRetry();
