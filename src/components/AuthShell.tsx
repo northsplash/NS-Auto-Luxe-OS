@@ -40,7 +40,17 @@ export default function AuthShell({
           </div>
         </div>
       </div>
-      <div className="auth-card">{children}</div>
+      <div className="auth-card">
+        <div className="auth-portals auth-portals-phone" aria-label="Portals in this OS">
+          {PORTALS.map((portal) => (
+            <span key={portal.label}>
+              <strong>{portal.label}</strong>
+              <small>{portal.hint}</small>
+            </span>
+          ))}
+        </div>
+        {children}
+      </div>
     </div>
   );
 }

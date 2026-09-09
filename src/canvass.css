@@ -320,8 +320,8 @@ html.ns-canvas-fs body {
 }
 
 @media (max-width: 760px) {
-  .d2d-os .portal-sidebar { display: none; }
   .d2d-canvass-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .d2d-canvass-stats > :last-child:nth-child(odd) { grid-column: 1 / -1; }
   .d2d-os .d2d-primary-map .field-map-canvas { height: 62dvh !important; min-height: 52dvh !important; }
   .canvass-inspector.field-house-sheet {
     width: 100% !important;

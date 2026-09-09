@@ -1479,3 +1479,489 @@ html:has(.sales-presentation-overlay) .d2d-add-lead-fab,
     gap: 8px !important;
   }
 }
+
+.auth-portals-phone { display: none; }
+
+/* Last-wins phone shell for every portal: Owner, D2D, Detail, Manager, Customer, demo OS, login. */
+@media (max-width: 720px) {
+  html,
+  body,
+  #root {
+    background: #efe8dc !important;
+    overflow-x: clip;
+  }
+  .portal-layout.nsos-cream,
+  .portal-layout.nsos-cream.d2d-os,
+  .portal-layout.nsos-cream.employee-os,
+  .portal-layout.nsos-cream.manager-os,
+  .portal-layout.nsos-cream.customer-os,
+  .portal-layout.nsos-cream.admin-os {
+    max-width: 100vw;
+    overflow-x: clip;
+  }
+  .portal-layout.nsos-cream .portal-main,
+  .portal-layout.nsos-cream .portal-content {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+  .portal-layout.nsos-cream .portal-content {
+    padding: 12px 16px calc(92px + env(safe-area-inset-bottom)) !important;
+  }
+  .portal-layout.nsos-cream .portal-topbar {
+    display: grid !important;
+    grid-template-columns: 44px minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+    padding: env(safe-area-inset-top) 10px 0 !important;
+  }
+  .portal-layout.nsos-cream .topbar-title {
+    min-width: 0;
+    overflow: hidden;
+  }
+  .portal-layout.nsos-cream .topbar-title h1 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 16px !important;
+  }
+  .portal-layout.nsos-cream .topbar-actions {
+    display: flex !important;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+  }
+  .portal-layout.nsos-cream .clock-mini {
+    min-height: 40px !important;
+    padding: 8px 10px !important;
+    font-size: 11px !important;
+    white-space: nowrap;
+    width: auto !important;
+  }
+  .portal-layout.nsos-cream.customer-os .topbar-book {
+    width: auto !important;
+    min-height: 40px !important;
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+    white-space: nowrap;
+  }
+
+  .portal-layout.nsos-cream .os-mobile-bottom-nav,
+  .portal-layout.nsos-cream .os-mobile-bottom-nav.mobile-app-nav-v25 {
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    grid-auto-flow: column !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    overflow: visible !important;
+    flex-wrap: nowrap !important;
+    height: calc(58px + env(safe-area-inset-bottom)) !important;
+    padding: 4px 2px env(safe-area-inset-bottom) !important;
+    background: #efe8dc !important;
+    border-top: 1px solid #eadfd3 !important;
+    border-radius: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+  }
+  .portal-layout.nsos-cream.customer-os .os-mobile-bottom-nav,
+  .portal-layout.nsos-cream.customer-os .os-mobile-bottom-nav.mobile-app-nav-v25 {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+  .portal-layout.nsos-cream .os-mobile-bottom-nav button {
+    min-width: 0 !important;
+    width: auto !important;
+    max-width: none !important;
+    overflow: hidden;
+    padding: 4px 2px !important;
+    color: #8a8178 !important;
+    -webkit-text-fill-color: #8a8178 !important;
+    background: transparent !important;
+  }
+  .portal-layout.nsos-cream .os-mobile-bottom-nav button.active {
+    color: #1c1814 !important;
+    -webkit-text-fill-color: #1c1814 !important;
+    background: #f6ead4 !important;
+  }
+  .portal-layout.nsos-cream .os-mobile-bottom-nav button span {
+    display: block !important;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 10px !important;
+  }
+
+  .portal-layout.nsos-cream .d2d-kpi-strip,
+  .portal-layout.nsos-cream .d2d-canvass-stats,
+  .portal-layout.nsos-cream .manager-kpis,
+  .portal-layout.nsos-cream .employee-home-grid,
+  .portal-layout.nsos-cream .dash-stats,
+  .portal-layout.nsos-cream .phase-kpi-row,
+  .portal-layout.nsos-cream .lead-insight-strip,
+  .portal-layout.nsos-cream .lead-command-kpis {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    overflow: visible !important;
+  }
+  .portal-layout.nsos-cream .d2d-kpi-strip > :last-child:nth-child(odd),
+  .portal-layout.nsos-cream .d2d-canvass-stats > :last-child:nth-child(odd),
+  .portal-layout.nsos-cream .manager-kpis > :last-child:nth-child(odd),
+  .portal-layout.nsos-cream .employee-home-grid > :last-child:nth-child(odd),
+  .portal-layout.nsos-cream .dash-stats > :last-child:nth-child(odd),
+  .portal-layout.nsos-cream .phase-kpi-row > :last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+  .portal-layout.nsos-cream .d2d-kpi,
+  .portal-layout.nsos-cream .manager-kpi,
+  .portal-layout.nsos-cream .employee-home-card,
+  .portal-layout.nsos-cream .dash-stat-card,
+  .portal-layout.nsos-cream .phase-kpi {
+    min-width: 0 !important;
+    width: auto !important;
+    padding: 12px !important;
+    background: #fffdf8 !important;
+    color: #1c1814 !important;
+    -webkit-text-fill-color: #1c1814 !important;
+    border: 1px solid #e4d9cc !important;
+  }
+  .portal-layout.nsos-cream .d2d-kpi strong,
+  .portal-layout.nsos-cream .manager-kpi strong,
+  .portal-layout.nsos-cream .employee-home-card strong,
+  .portal-layout.nsos-cream .dash-stat-card strong,
+  .portal-layout.nsos-cream .phase-kpi strong {
+    color: #1c1814 !important;
+    -webkit-text-fill-color: #1c1814 !important;
+    font-size: 20px !important;
+    overflow-wrap: anywhere;
+  }
+  .portal-layout.nsos-cream .d2d-kpi span,
+  .portal-layout.nsos-cream .d2d-kpi small,
+  .portal-layout.nsos-cream .manager-kpi span,
+  .portal-layout.nsos-cream .manager-kpi small,
+  .portal-layout.nsos-cream .employee-home-card span,
+  .portal-layout.nsos-cream .employee-home-card small {
+    color: #6f675e !important;
+    -webkit-text-fill-color: #6f675e !important;
+  }
+
+  .portal-layout.nsos-cream .v2-head-actions,
+  .portal-layout.nsos-cream .d2d-field-actions,
+  .portal-layout.nsos-cream .d2d-presentation-cta,
+  .portal-layout.nsos-cream .qc-actions,
+  .portal-layout.nsos-cream .timeclock-actions,
+  .portal-layout.nsos-cream .followup-actions,
+  .portal-layout.nsos-cream .d2d-route-hud-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    width: 100% !important;
+    gap: 8px !important;
+  }
+  .portal-layout.nsos-cream .v2-head-actions > :last-child:nth-child(odd),
+  .portal-layout.nsos-cream .d2d-field-actions > :last-child:nth-child(odd),
+  .portal-layout.nsos-cream .d2d-presentation-cta > :last-child:nth-child(odd),
+  .portal-layout.nsos-cream .d2d-route-hud-actions > :last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+  .portal-layout.nsos-cream .v2-head-actions > *,
+  .portal-layout.nsos-cream .d2d-field-actions > *,
+  .portal-layout.nsos-cream .qc-actions > * {
+    min-width: 0 !important;
+    width: 100% !important;
+    justify-content: center;
+  }
+
+  /* D2D — command bar visible and stacked; map tall enough to work; More still opens sidebar. */
+  .d2d-field-commandbar,
+  .portal-layout.d2d-os .d2d-field-commandbar,
+  .portal-layout.nsos-cream .d2d-field-commandbar {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    margin: 0 0 10px !important;
+  }
+  .portal-layout.d2d-os .portal-sidebar,
+  .d2d-os .portal-sidebar {
+    display: flex !important;
+  }
+  .portal-layout.d2d-os .d2d-canvass-stats .d2d-kpi {
+    padding: 10px !important;
+    min-height: 0 !important;
+  }
+  .portal-layout.d2d-os .d2d-canvass-stats .d2d-kpi strong { font-size: 18px !important; }
+  .portal-layout.d2d-os .d2d-canvass-stats .d2d-kpi small { display: none !important; }
+  .portal-layout.d2d-os .d2d-primary-map .field-map-canvas,
+  .portal-layout.nsos-cream .d2d-primary-map .field-map-canvas {
+    height: min(52dvh, 420px) !important;
+    min-height: 260px !important;
+  }
+  .portal-layout.nsos-cream .d2d-map-topline,
+  .portal-layout.nsos-cream .performance-v2-grid,
+  .portal-layout.nsos-cream .d2d-presentation-launch,
+  .portal-layout.nsos-cream .d2d-route-hud,
+  .portal-layout.nsos-cream .route-hero,
+  .portal-layout.nsos-cream .route-actions {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+  .portal-layout.nsos-cream .d2d-territory-select,
+  .portal-layout.nsos-cream .d2d-canvass-search {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+  .portal-layout.nsos-cream .d2d-command-next strong {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+    max-width: none !important;
+    font-size: 13px !important;
+  }
+  .portal-layout.nsos-cream .pay-card .big-money { font-size: 32px !important; }
+
+  /* Detailer — welcome, next job, jobs, time off. */
+  .portal-layout.nsos-cream .employee-welcome {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    padding: 14px !important;
+    align-items: start;
+  }
+  .portal-layout.nsos-cream .employee-welcome h2 {
+    font-size: clamp(22px, 6.4vw, 28px) !important;
+    margin: 0 !important;
+    line-height: 1.15 !important;
+  }
+  .portal-layout.nsos-cream .employee-welcome p { margin: 6px 0 0 !important; }
+  .portal-layout.nsos-cream .employee-clock-badge {
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 48px;
+    padding: 10px 12px !important;
+    border-radius: 14px !important;
+  }
+  .portal-layout.nsos-cream .next-job-card {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    padding: 14px !important;
+  }
+  .portal-layout.nsos-cream .next-job-time {
+    display: flex !important;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .portal-layout.nsos-cream .next-job-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+  .portal-layout.nsos-cream .assigned-job-card {
+    display: grid !important;
+    grid-template-columns: 64px minmax(0, 1fr) !important;
+    gap: 8px !important;
+    text-align: left;
+  }
+  .portal-layout.nsos-cream .assigned-job-card > .field-status {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+  .portal-layout.nsos-cream .timeoff-form {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    padding: 14px !important;
+  }
+  .portal-layout.nsos-cream .timeoff-form .wide,
+  .portal-layout.nsos-cream .timeoff-form .btn-primary {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+  .portal-layout.nsos-cream .job-mode-grid,
+  .portal-layout.nsos-cream .job-mode-head,
+  .portal-layout.nsos-cream .job-completion-bar,
+  .portal-layout.nsos-cream .job-action-row {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Manager — overview, jobs, dispatch board. */
+  .portal-layout.nsos-cream .manager-hero {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    padding: 14px !important;
+    gap: 8px !important;
+  }
+  .portal-layout.nsos-cream .manager-hero > svg { display: none; }
+  .portal-layout.nsos-cream .manager-hero h2 {
+    font-size: clamp(20px, 6vw, 26px) !important;
+    margin: 4px 0 !important;
+  }
+  .portal-layout.nsos-cream .manager-overview-grid,
+  .portal-layout.nsos-cream .manager-leads-grid,
+  .portal-layout.nsos-cream .manager-crew-grid,
+  .portal-layout.nsos-cream .recruit-manager-grid,
+  .portal-layout.nsos-cream .inventory-grid-v2,
+  .portal-layout.nsos-cream .team-status-grid,
+  .portal-layout.nsos-cream .qc-grid,
+  .portal-layout.nsos-cream .task-grid,
+  .portal-layout.nsos-cream .followup-grid,
+  .portal-layout.nsos-cream .assigned-job-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+  .portal-layout.nsos-cream .manager-job-row {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    padding: 12px !important;
+  }
+  .portal-layout.nsos-cream .manager-job-row select,
+  .portal-layout.nsos-cream .recruit-manager-card select {
+    width: 100% !important;
+    min-height: 44px;
+  }
+  .portal-layout.nsos-cream .manager-line {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    gap: 8px;
+    align-items: start;
+  }
+  .portal-layout.nsos-cream .dispatch-v2,
+  .portal-layout.nsos-cream .dispatch-command-board {
+    display: flex !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    gap: 10px !important;
+    padding-bottom: 8px;
+  }
+  .portal-layout.nsos-cream .dispatch-v2-column,
+  .portal-layout.nsos-cream .dispatch-command-col {
+    flex: 0 0 min(88vw, 320px) !important;
+    width: min(88vw, 320px) !important;
+    min-width: min(88vw, 320px) !important;
+    scroll-snap-align: start;
+    background: #fffdf8 !important;
+    color: #1c1814 !important;
+    border: 1px solid #e4d9cc !important;
+  }
+  .portal-layout.nsos-cream .dispatch-v2-job,
+  .portal-layout.nsos-cream .dispatch-command-job {
+    background: #fffdf8 !important;
+    color: #1c1814 !important;
+    -webkit-text-fill-color: #1c1814 !important;
+    border: 1px solid #eadfd3 !important;
+  }
+
+  /* Customer portal — one column, 2×2 stats, 4-tab bar already set. */
+  .portal-layout.nsos-cream .dashboard-grid,
+  .portal-layout.nsos-cream.customer-os .dashboard-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  .portal-layout.nsos-cream .dash-welcome,
+  .portal-layout.nsos-cream .dash-stats,
+  .portal-layout.nsos-cream .dash-card {
+    grid-column: 1 / -1 !important;
+  }
+  .portal-layout.nsos-cream .dash-welcome {
+    display: grid !important;
+    gap: 12px !important;
+    padding: 18px 16px !important;
+  }
+  .portal-layout.nsos-cream .dash-welcome h2 {
+    font-size: clamp(22px, 6.4vw, 28px) !important;
+  }
+  .portal-layout.nsos-cream.customer-os .dash-welcome .btn-primary {
+    width: 100% !important;
+    justify-content: center;
+  }
+  .portal-layout.nsos-cream .pkg-choices,
+  .portal-layout.nsos-cream .mini-addons,
+  .portal-layout.nsos-cream .plan-grid,
+  .portal-layout.nsos-cream .detail-selves-grid,
+  .portal-layout.nsos-cream .detail-selves-families {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    max-width: none !important;
+  }
+  .portal-layout.nsos-cream .modal,
+  .portal-layout.nsos-cream .modal-form {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    border-radius: 20px 20px 0 0 !important;
+  }
+
+  /* Demo OS mode chips. */
+  .portal-layout.nsos-cream .os-mode-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+
+  /* Login — keep the form readable; show portal chips on the card. */
+  .auth-page.nsos-cream,
+  .auth-page {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    min-height: 100dvh;
+  }
+  .auth-page .auth-bg {
+    min-height: 132px !important;
+    max-height: 22vh !important;
+  }
+  .auth-page .auth-card {
+    min-height: 0 !important;
+    padding: 20px 18px calc(28px + env(safe-area-inset-bottom)) !important;
+  }
+  .auth-page .auth-form,
+  .auth-page .auth-field,
+  .auth-page .pw-wrap {
+    display: grid;
+    width: 100%;
+  }
+  .auth-page .auth-field input,
+  .auth-page .pw-wrap input,
+  .auth-page .btn-primary {
+    width: 100%;
+    min-height: 48px !important;
+  }
+  .auth-portals-phone {
+    display: flex !important;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0 0 16px;
+  }
+  .auth-portals-phone span {
+    display: grid;
+    gap: 1px;
+    min-width: 72px;
+    padding: 8px 10px;
+    border: 1px solid #eadfd3;
+    border-radius: 12px;
+    background: #fffdf8;
+  }
+  .auth-portals-phone strong {
+    font-size: 11px;
+    color: #1c1814;
+  }
+  .auth-portals-phone small {
+    font-size: 9px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: #6f675e;
+  }
+}
+
+@media (min-width: 721px) {
+  .auth-portals-phone { display: none !important; }
+}
