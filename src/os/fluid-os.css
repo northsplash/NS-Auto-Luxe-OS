@@ -4182,3 +4182,39 @@ body {
   .nsos-household { grid-template-columns: 1fr !important; }
   .nsos-household-tabs { display: flex; }
 }
+
+/* Native controls: kill browser blue, keep espresso send when idle */
+html.nsos-active ::selection,
+.portal-layout.nsos-cream ::selection {
+  background: #f4ead4;
+  color: #1c1814;
+}
+.portal-layout.nsos-cream select,
+.portal-layout.nsos-cream .nsos-select,
+.portal-layout.nsos-cream input[type='checkbox'],
+.portal-layout.nsos-cream input[type='radio'] {
+  accent-color: #b8893a;
+}
+.portal-layout.nsos-cream option,
+.portal-layout.nsos-cream optgroup {
+  background: #fffdf8 !important;
+  color: #1c1814 !important;
+}
+.portal-layout.nsos-cream option:checked,
+.portal-layout.nsos-cream option:hover,
+.portal-layout.nsos-cream option:focus {
+  background-color: #1c1814 !important;
+  background-image: linear-gradient(#1c1814, #1c1814) !important;
+  color: #fffdf8 !important;
+}
+.portal-layout.nsos-cream .ns-send-fab:disabled,
+.ns-send-fab:disabled {
+  opacity: 1 !important;
+  background: #1c1814 !important;
+  color: #fffdf8 !important;
+  -webkit-text-fill-color: #fffdf8 !important;
+}
+.portal-layout.nsos-cream .ns-send-fab:disabled svg,
+.ns-send-fab:disabled svg {
+  opacity: .42;
+}

@@ -81,6 +81,7 @@ export function ServiceMenuSelect({ value, onChange, allowEmpty }: SelectProps) 
   const known = Boolean(findDetailPackage(value));
   return (
     <select
+      className="nsos-select"
       value={known ? findDetailPackage(value)?.name || value : value}
       onChange={(e) => onChange(e.target.value, findDetailPackage(e.target.value))}
     >
